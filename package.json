@@ -1,0 +1,31 @@
+{
+  "name": "iahadut-ha-tora",
+  "version": "0.10.0",
+  "private": true,
+  "description": "Catálogo kosher multiplataforma de Iahadut HaTora",
+  "scripts": {
+    "dev": "vite --config vite.config.js",
+    "snapshot:catalog": "node scripts/generate-catalog-snapshot.mjs",
+    "snapshot:content": "node scripts/generate-content-snapshot.mjs",
+    "snapshot": "npm run snapshot:catalog && npm run snapshot:content",
+    "build": "vite build --config vite.config.js",
+    "build:release": "npm run snapshot && npm run build",
+    "build:sync": "npm run build && cap sync",
+    "cap:sync": "cap sync",
+    "cap:android": "cap open android",
+    "cap:ios": "cap open ios",
+    "cap:android:live": "cap run android --livereload --external",
+    "cap:ios:live": "cap run ios --livereload --external"
+  },
+  "dependencies": {
+    "@capacitor/camera": "^8.0.0",
+    "@capacitor/core": "^8.0.0"
+  },
+  "devDependencies": {
+    "@capacitor/android": "^8.0.0",
+    "@capacitor/cli": "^8.0.0",
+    "@capacitor/ios": "^8.0.0",
+    "linkedom": "^0.18.13",
+    "vite": "^7.0.0"
+  }
+}

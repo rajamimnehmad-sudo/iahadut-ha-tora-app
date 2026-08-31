@@ -1,0 +1,14 @@
+node_modules/
+.DS_Store
+dist/
+build/
+app/build/
+.gradle/
+android/.gradle/
+android/local.properties
+ios/App/Pods/
+ios/App/App/public/
+*.iml
+.idea/
+.codex-tools/
+*.apk
