@@ -1451,8 +1451,9 @@ import contentSnapshot from './data/content.json';
     if (cardButton && window.__ihtInfoCards) { event.preventDefault(); event.stopPropagation(); openInfoCard(window.__ihtInfoCards[Number(cardButton.dataset.infoCard)]); return; }
     if (photo) { event.preventDefault(); event.stopPropagation(); openImage(photo.currentSrc || photo.src, photo.alt || ''); }
   });
-  $('#homeForm').onsubmit = (event) => { event.preventDefault(); doSearch($('#homeQuery'), true); };
-  $('#searchForm').onsubmit = (event) => { event.preventDefault(); doSearch($('#query')); };
+  const dismissKeyboard = (input) => { input?.blur(); window.scrollTo({top: 0, behavior: 'smooth'}); };
+  $('#homeForm').onsubmit = (event) => { event.preventDefault(); dismissKeyboard($('#homeQuery')); doSearch($('#homeQuery'), true); };
+  $('#searchForm').onsubmit = (event) => { event.preventDefault(); dismissKeyboard($('#query')); doSearch($('#query')); };
   $('#homeClear').onclick = () => { $('#homeQuery').value = ''; $('#homeClear').hidden = true; };
   $('#clear').onclick = () => { $('#query').value = ''; $('#clear').hidden = true; $('#results').hidden = true; $('#searchCategories').hidden = false; $('#recentSearches').hidden = false; $('#query').focus(); };
   $('#detailSave').onclick = () => { if (currentProduct) toggleFavorite(currentProduct.url); };

@@ -599,6 +599,22 @@ body.modal-open { overflow: hidden; }
 .quick-filter:first-child > span { align-self: end; font-size: 13px; }
 .quick-filter:first-child > small { display: block; grid-column: 2; align-self: start; color: #78817a; font-size: 10px; font-weight: 500; line-height: 1.1; text-align: left; }
 
+/* Pulido conservador para la demo móvil. */
+.useful-grid .link-row { min-height: 98px; padding: 11px 13px; gap: 8px; }
+.useful-grid .link-row .info-icon { width: 23px; height: 23px; stroke-width: 1.6; }
+.update-section { padding-top: 18px; }
+.update-section .sync.update-row { min-height: 36px; padding: 6px 0; border-top: 0; justify-content: flex-start; text-align: left; gap: 8px; }
+.update-section .sync.update-row span { flex: 1; display: grid; gap: 3px; }
+.update-section .sync.update-row strong { font-size: 11px; font-weight: 650; }
+.update-section .sync.update-row small { color: #8a948d; font-size: 10px; }
+.update-section .sync.update-row > b { margin-left: auto; color: #78817a; font-size: 16px; }
+.official-source-note { opacity: .72; }
+.scan { background: #edf5ef; border: 1px solid #c7dbcc; box-shadow: none; color: #1f5d46; }
+.scan:active { background: #e0eee4; }
+.quick-filter, .quick-filter:nth-child(n+4) { min-height: 56px; padding-block: 7px; }
+#recentSearches.chips .clear-history-chip { border: 0; padding-inline: 5px; color: #8a948d; font-size: 10px; }
+.link-row .info-icon, .category-icon, .scan svg { stroke-linecap: round; stroke-linejoin: round; }
+
 /* Correcciones finales de superficie móvil. */
 .home-intro h1 { margin-top: 0; }
 .explore-categories-action { width: calc(100% + 16px); margin: 12px -8px 0; }
