@@ -102,8 +102,14 @@ import '@phosphor-icons/web/duotone';
   const phosphorIcon = (name, className = 'category-icon', weight = 'regular') => `<i class="${weight === 'duotone' ? 'ph-duotone' : 'ph'} ph-${name} ${className}" aria-hidden="true"></i>`;
   const categoryIcon = (key) => {
     if (key === 'uruguay') return '<span class="category-icon category-flag"><img src="assets/flag-uruguay.svg" alt="Bandera de Uruguay"></span>';
-    const icons = {all:'squares-four', gondola:'storefront', planta:'buildings', especial:'sparkle'};
-    return phosphorIcon(icons[key] || icons.all, 'category-icon', key === 'all' ? 'duotone' : 'regular');
+    const paths = {
+      all: '<rect x="4" y="4" width="6" height="6" rx="1"/><rect x="14" y="4" width="6" height="6" rx="1"/><rect x="4" y="14" width="6" height="6" rx="1"/><rect x="14" y="14" width="6" height="6" rx="1"/>',
+      gondola: '<path d="M4 6h2l1.4 9.2a2 2 0 0 0 2 1.7h7.8a2 2 0 0 0 1.9-1.5L21 9H7"/><circle cx="10" cy="20" r="1"/><circle cx="18" cy="20" r="1"/>',
+      planta: '<path d="M4 20h16M6 20V8h7v12M13 12h5v8M8.5 11h2M8.5 14h2M15.5 15h1"/>',
+      especial: '<path d="m12 3 2.2 6.8L21 12l-6.8 2.2L12 21l-2.2-6.8L3 12l6.8-2.2L12 3Z"/><path d="M19 3v3M17.5 4.5h3M5 17v3M3.5 18.5h3"/>',
+      uruguay: '<path d="M5 21V4a8 8 0 0 1 10 0 8 8 0 0 0 4 0v13a8 8 0 0 1-4 0 8 8 0 0 0-10 0"/>'
+    };
+    return `<svg class="category-icon" viewBox="0 0 24 24" aria-hidden="true">${paths[key] || paths.all}</svg>`;
   };
   const infoIcon = (key) => {
     const paths = {
@@ -140,7 +146,7 @@ import '@phosphor-icons/web/duotone';
 
   function syncMessage(message, tone = '') {
     const status = $('#syncStatus');
-    status.className = `sync ${tone}`;
+    status.className = `sync update-row ${tone}`;
     $('#syncMessage').textContent = message;
   }
 
@@ -509,8 +515,8 @@ import '@phosphor-icons/web/duotone';
     return result;
   }
 
-  async function fetchAlerts() {
-    if (isFresh(alertCache)) {
+  async function fetchAlerts(force = false) {
+    if (!force && isFresh(alertCache)) {
       updateRecentFromAlerts(alertCache.items);
       return alertCache.items;
     }
@@ -564,7 +570,13 @@ import '@phosphor-icons/web/duotone';
     const firstPreparation = localStorage.getItem(INITIAL_PRELOAD_KEY) !== 'done';
     if (firstPreparation) initialLoadProgress(4);
     try {
-      await fetchAlerts().catch(() => null);
+      const freshAlerts = await fetchAlerts(true).catch(() => null);
+      const latestAlerts = freshAlerts?.alta || [];
+      const latestProductsMissing = latestAlerts.slice(0, 4).some((alert) => alert.url && !products.some((product) => product.url === alert.url));
+      if (latestProductsMissing) {
+        await syncCatalog(true).catch(() => null);
+        updateRecentFromAlerts(freshAlerts);
+      }
       if (firstPreparation) initialLoadProgress(10);
       const infoKeys = Object.keys(info);
       await runPool(infoKeys, fetchInfoContent, 2, firstPreparation ? (done, total) => initialLoadProgress(10 + (done / total) * 30) : null);
@@ -653,29 +665,39 @@ import '@phosphor-icons/web/duotone';
     const updateNode = $('#officialUpdateDate');
     if (updateNode) updateNode.textContent = officialUpdateMessage();
     const recentCandidates = [...(Array.isArray(recentProducts) ? recentProducts : []), ...products];
-    const items = [...new Map(recentCandidates.map((product) => [normalize(product.title), product])).values()].slice(0, 4);
+    const items = [...new Map(recentCandidates.map((product) => [product.url, product])).values()].slice(0, 4);
     $('#recentProducts').innerHTML = items.map((product) => `<button class="recent-product" data-product="${escapeHtml(product.url)}" aria-label="Ver ${escapeHtml(product.title)}"><img src="${escapeHtml(product.image || 'assets/logo.png')}" alt="${escapeHtml(product.title)}" loading="lazy" onerror="this.onerror=null;this.src='assets/logo.png'"></button>`).join('');
     renderAlertPreview();
   }
 
-  function updateRecentFromAlerts(groups) {
+  async function updateRecentFromAlerts(groups) {
     const alerts = Array.isArray(groups) ? groups : groups?.alta || [];
     if (!alerts.length || products.length <= seed.length) return;
     const matches = [];
     for (const alert of alerts) {
       const alertText = typeof alert === 'string' ? alert : alert?.text || '';
-      const alertTitle = normalize(cleanDisplayText(alertText.replace(/\s*\([^)]*\)\s*$/, '')));
+      const displayTitle = cleanDisplayText(alertText.replace(/\s*\([^)]*\)\s*$/, ''));
+      const alertTitle = normalize(displayTitle);
       const linkedProduct = alert?.url ? products.find((product) => product.url === alert.url) : null;
       const match = products.find((product) => {
         const productTitle = normalize(cleanDisplayText(product.title));
         return productTitle.length > 8 && (alertTitle.includes(productTitle) || productTitle.includes(alertTitle));
       });
-      const candidate = linkedProduct || match;
-      if (candidate && !matches.some((product) => normalize(product.title) === normalize(candidate.title))) matches.push(candidate);
+      const candidate = linkedProduct || (match && (!alert?.url || match.url === alert.url) ? match : null) || (alert?.url ? {url:alert.url, title:displayTitle, brand:'', barcode:'', cat:'gondola', image:'assets/logo.png', description:''} : null);
+      if (candidate && !matches.some((product) => product.url === candidate.url)) matches.push(candidate);
       if (matches.length === 4) break;
     }
     if (!matches.length) return;
-    recentProducts = [...matches, ...recentProducts, ...products].filter((product, index, all) => all.findIndex((candidate) => normalize(candidate.title) === normalize(product.title)) === index).slice(0, 4);
+    recentProducts = [...matches, ...recentProducts, ...products].filter((product, index, all) => all.findIndex((candidate) => candidate.url === product.url) === index).slice(0, 4);
+    localStorage.setItem('iht_recent_products', JSON.stringify(recentProducts));
+    renderHome();
+    const missingImages = recentProducts.filter((product) => product.image === 'assets/logo.png' && product.url);
+    await Promise.all(missingImages.map(async (product) => {
+      try {
+        const official = await fetchProductContent(product);
+        if (official?.images?.[0]?.src) product.image = official.images[0].src;
+      } catch (_) {}
+    }));
     localStorage.setItem('iht_recent_products', JSON.stringify(recentProducts));
     renderHome();
   }
