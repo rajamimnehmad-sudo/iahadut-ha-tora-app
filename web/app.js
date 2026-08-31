@@ -3,6 +3,8 @@ import { App } from '@capacitor/app';
 import { APP_VERSION, accessDecision, defaultRemoteControl, loadRemoteControl } from './remote-control.js';
 import catalogSnapshot from './data/catalog.json';
 import contentSnapshot from './data/content.json';
+import '@phosphor-icons/web/regular';
+import '@phosphor-icons/web/duotone';
 
 (() => {
   'use strict';
@@ -97,15 +99,11 @@ import contentSnapshot from './data/content.json';
 
   const categoryFor = (key) => categories.find((category) => category.key === key);
   const categoryCount = (category) => products.length > seed.length ? products.filter((product) => product.cat === category.key).length : category.count;
+  const phosphorIcon = (name, className = 'category-icon', weight = 'regular') => `<i class="${weight === 'duotone' ? 'ph-duotone' : 'ph'} ph-${name} ${className}" aria-hidden="true"></i>`;
   const categoryIcon = (key) => {
     if (key === 'uruguay') return '<span class="category-icon category-flag"><img src="assets/flag-uruguay.svg" alt="Bandera de Uruguay"></span>';
-    const paths = {
-      all: '<rect x="5" y="5" width="5" height="5" rx="1"/><rect x="14" y="5" width="5" height="5" rx="1"/><rect x="5" y="14" width="5" height="5" rx="1"/><rect x="14" y="14" width="5" height="5" rx="1"/>',
-      gondola: '<path d="M3 5h2l2 10h10l3-7H6"/><circle cx="9" cy="19" r="1.5"/><circle cx="17" cy="19" r="1.5"/>',
-      planta: '<path d="M3 20h18M5 20V10h5v10M10 20V6h5v14M15 20v-7h4v7"/><path d="M12 6V3h3l1 3M7 14h1M12 10h1M17 16h1"/>',
-      especial: '<path d="m12 3 2.8 5.7 6.2.9-4.5 4.4 1.1 6.2-5.6-2.9-5.6 2.9 1.1-6.2L3 9.6l6.2-.9z"/>'
-    };
-    return `<svg class="category-icon" viewBox="0 0 24 24" aria-hidden="true">${paths[key] || paths.all}</svg>`;
+    const icons = {all:'squares-four', gondola:'storefront', planta:'buildings', especial:'sparkle'};
+    return phosphorIcon(icons[key] || icons.all, 'category-icon', key === 'all' ? 'duotone' : 'regular');
   };
   const infoIcon = (key) => {
     const paths = {
@@ -812,45 +810,25 @@ import contentSnapshot from './data/content.json';
 
   function taxonomyIcon(name) {
     const key = normalize(name);
-    let path = '<circle cx="12" cy="12" r="8"/><path d="M8.5 12h7M12 8.5v7"/>';
-    if (/carnes|fiambres|hamburguesas|chorizos|salchichas/.test(key)) path = '<path d="M7 18c-3-2-3-7 0-10s8-3 10 0 1 8-3 10-5 2-7 0Z"/><circle cx="14.5" cy="10" r="2"/>';
-    else if (/pescado|salmon/.test(key)) path = '<path d="M4 12c3-4 7-6 12-3l4-3v12l-4-3c-5 3-9 1-12-3Z"/><circle cx="14" cy="11" r=".8"/>';
-    else if (/vino/.test(key)) path = '<path d="M8 3h8l-1 6a3 3 0 0 1-6 0ZM12 12v7M8.5 21h7"/>';
-    else if (/cerveza/.test(key)) path = '<path d="M6 5h10v15H6zM16 8h2a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2h-2M8 8h6"/>';
-    else if (/espumante/.test(key)) path = '<path d="M9 3h6l-1 7a2 2 0 0 1-4 0ZM12 12v7M9 21h6M18 4h.1M20 7h.1"/>';
-    else if (/alcohol|licor|destilado/.test(key)) path = '<path d="M9 3h6v4l2 3v10H7V10l2-3zM9 7h6M9 14h6"/>';
-    else if (/agua/.test(key)) path = '<path d="M12 3s6 7 6 11a6 6 0 0 1-12 0c0-4 6-11 6-11Z"/>';
-    else if (/jugo/.test(key)) path = '<path d="M7 7h10l-1 14H8zM8 11h8M12 7V3h4"/>';
-    else if (/energizante|deportiva/.test(key)) path = '<path d="m13 2-7 12h6l-1 8 7-12h-6z"/>';
-    else if (/kombucha|saborizada|gaseosa|soda|bebida/.test(key)) path = '<path d="M9 3h6v4l2 3v10H7V10l2-3zM9 7h6M10 14h4"/>';
-    else if (/cafe/.test(key)) path = '<path d="M5 9h12v5a5 5 0 0 1-5 5h-2a5 5 0 0 1-5-5zM17 11h2a2 2 0 0 1 0 4h-2M9 4v2M13 4v2"/>';
-    else if (/yerba|mate/.test(key)) path = '<path d="M7 8h10l-1 10H8zM13 8l3-5M15 4h3"/><path d="M10 12c1-1 3-1 4 0"/>';
-    else if (/infusion|\bte\b/.test(key)) path = '<path d="M5 8h12v8a4 4 0 0 1-4 4H9a4 4 0 0 1-4-4zM17 10h2a2 2 0 0 1 0 4h-2M8 4h6"/>';
-    else if (/aceite|vinagre/.test(key)) path = '<path d="M9 3h6v4l2 3v10H7V10l2-3zM9 7h6"/><path d="M12 12c2 2 2 4 0 5-2-1-2-3 0-5Z"/>';
-    else if (/queso/.test(key)) path = '<path d="M4 10 16 4l4 6v10H4zM4 10h16"/><circle cx="10" cy="14" r="1"/><circle cx="16" cy="16" r="1"/>';
-    else if (/lacteo|leche/.test(key)) path = '<path d="M8 4h8l2 5v11H6V9zM8 4 6 9h12M10 13h4"/>';
-    else if (/yogur/.test(key)) path = '<path d="M7 7h10l-1 13H8zM6 7h12M10 4h4"/>';
-    else if (/panes|panaderia/.test(key)) path = '<path d="M5 12c0-4 3-7 7-7s7 3 7 7v7H5zM9 9l-1 3M13 8l-1 4M17 10l-1 3"/>';
-    else if (/reposteria|harina|levadura|leudante|esencia|decoracion|cacao/.test(key)) path = '<path d="M6 5c6 0 10 5 10 11M9 5c0 7 4 11 9 11M5 19h14"/><path d="M15 4l4 4"/>';
-    else if (/gallet|tostada|oblea/.test(key)) path = '<circle cx="12" cy="12" r="8"/><circle cx="9" cy="10" r="1"/><circle cx="14" cy="8" r="1"/><circle cx="14" cy="14" r="1"/><circle cx="9" cy="15" r="1"/>';
-    else if (/chocolate/.test(key)) path = '<path d="M5 5h14v14H5zM5 10h14M10 5v14M15 5v14"/>';
-    else if (/golosina|caramelo|pastilla/.test(key)) path = '<path d="m8 8 8 8M7 7l-4 2 2 4M17 17l4-2-2-4"/><rect x="7" y="7" width="10" height="10" rx="3" transform="rotate(-45 12 12)"/>';
-    else if (/miel/.test(key)) path = '<path d="M8 8h8l1 12H7zM7 5h10v3H7z"/><path d="M12 11c2 2 2 4 0 5-2-1-2-3 0-5Z"/>';
-    else if (/azucar|endulzante/.test(key)) path = '<path d="m6 9 6-4 6 4v7l-6 4-6-4zM6 9l6 4 6-4M12 13v7"/>';
-    else if (/cereal|grano|semilla|arroz|avena|maiz|quinoa|granola|polenta|cuscus|burgol/.test(key)) path = '<path d="M12 21V6M12 10c-3 0-5-2-5-5 3 0 5 2 5 5ZM12 15c3 0 5-2 5-5-3 0-5 2-5 5ZM12 19c-3 0-5-2-5-5 3 0 5 2 5 5Z"/>';
-    else if (/fruto seco|deshidratad|dietetica/.test(key)) path = '<path d="M7 12c0-5 3-8 5-8s5 3 5 8-2 8-5 8-5-3-5-8Z"/><path d="M9 9c2 1 4 1 6 0M9 14c2-1 4-1 6 0"/>';
-    else if (/untable|pasta de frutos|tahini/.test(key)) path = '<path d="M6 8h12l-1 12H7zM7 5h10v3H7zM10 13h4"/>';
-    else if (/legumbre|arveja|poroto|lenteja|tofu|soja/.test(key)) path = '<path d="M6 14c0-6 5-9 11-8 1 6-2 11-8 11-2 0-3-1-3-3Z"/><path d="M8 15c2-3 4-5 8-7"/>';
-    else if (/salsa|aderezo|condimento|mayonesa|ketchup|mostaza|especia|hierba/.test(key)) path = '<path d="M9 3h6v4l2 3v10H7V10l2-3zM9 7h6M9 13h6"/>';
-    else if (/conserva|enlatado/.test(key)) path = '<ellipse cx="12" cy="5" rx="6" ry="2"/><path d="M6 5v14c0 1 3 2 6 2s6-1 6-2V5M6 18c0 1 3 2 6 2s6-1 6-2"/>';
-    else if (/pasta|fideo|raviol/.test(key)) path = '<path d="M5 7c3-3 11-3 14 0M5 17c3 3 11 3 14 0M7 5c-3 3-3 11 0 14M17 5c3 3 3 11 0 14M9 9h6v6H9z"/>';
-    else if (/snack|papas fritas|chips|bocadito/.test(key)) path = '<path d="M7 3h10l2 18H5zM8 8h8M9 12h6"/>';
-    else if (/fruta|vegetal|verdura|hongo/.test(key)) path = '<path d="M12 7c-4-3-8 0-7 5 1 5 4 8 7 8s6-3 7-8c1-5-3-8-7-5ZM12 7c0-3 2-5 5-5M12 5c-2-2-4-2-6-1"/>';
-    else if (/congelado/.test(key)) path = '<path d="M12 3v18M4.2 7.5l15.6 9M4.2 16.5l15.6-9M9 5l3 2 3-2M9 19l3-2 3 2"/>';
-    else if (/sopa|caldo/.test(key)) path = '<path d="M4 12h16c0 5-3 8-8 8s-8-3-8-8ZM7 8c0-2 2-2 2-4M12 8c0-2 2-2 2-4"/>';
-    else if (/saludable|proteina|suplemento/.test(key)) path = '<path d="M12 20s-7-4-7-10a4 4 0 0 1 7-2 4 4 0 0 1 7 2c0 6-7 10-7 10Z"/><path d="M9 12h2l1-2 2 4 1-2h2"/>';
-    else if (/cocina internacional|asiatico/.test(key)) path = '<circle cx="12" cy="12" r="8"/><path d="M4 12h16M12 4c2 2 3 5 3 8s-1 6-3 8c-2-2-3-5-3-8s1-6 3-8Z"/>';
-    return `<svg class="taxonomy-icon" viewBox="0 0 24 24" aria-hidden="true">${path}</svg>`;
+    const icon = /carnes|fiambres|hamburguesas|chorizos|salchichas/.test(key) ? 'hamburger' :
+      /pescado|salmon/.test(key) ? 'fish-simple' : /vino/.test(key) ? 'wine' :
+      /cerveza/.test(key) ? 'beer-bottle' : /espumante/.test(key) ? 'champagne' :
+      /alcohol|licor|destilado/.test(key) ? 'martini' : /agua/.test(key) ? 'drop' :
+      /jugo|fruta/.test(key) ? 'orange' : /energizante|deportiva/.test(key) ? 'lightning' :
+      /kombucha|saborizada|gaseosa|soda|bebida/.test(key) ? 'beer-bottle' : /cafe/.test(key) ? 'coffee' :
+      /yerba|mate/.test(key) ? 'coffee-bean' : /infusion|\bte\b/.test(key) ? 'tea-bag' :
+      /aceite|vinagre/.test(key) ? 'flask' : /queso/.test(key) ? 'cheese' :
+      /lacteo|leche/.test(key) ? 'cow' : /yogur|untable|pasta de frutos|tahini/.test(key) ? 'jar' :
+      /panes|panaderia/.test(key) ? 'bread' : /reposteria|harina|levadura|leudante|esencia|decoracion|cacao/.test(key) ? 'cake' :
+      /gallet|tostada|oblea/.test(key) ? 'cookie' : /chocolate/.test(key) ? 'cookie' :
+      /golosina|caramelo|pastilla/.test(key) ? 'sparkle' : /miel/.test(key) ? 'jar' :
+      /azucar|endulzante/.test(key) ? 'cube' : /cereal|grano|semilla|arroz|avena|maiz|quinoa|granola|polenta|cuscus|burgol/.test(key) ? 'plant' :
+      /fruto seco|deshidratad|dietetica/.test(key) ? 'nut' : /legumbre|arveja|poroto|lenteja|tofu|soja/.test(key) ? 'nut' :
+      /salsa|aderezo|condimento|mayonesa|ketchup|mostaza|especia|hierba/.test(key) ? 'bowl-food' : /conserva|enlatado/.test(key) ? 'jar' :
+      /pasta|fideo|raviol/.test(key) ? 'bowl-food' : /snack|papas fritas|chips|bocadito/.test(key) ? 'popcorn' :
+      /vegetal|verdura|hongo/.test(key) ? 'carrot' : /congelado/.test(key) ? 'snowflake' : /sopa|caldo/.test(key) ? 'bowl-steam' :
+      /saludable|proteina|suplemento/.test(key) ? 'heart' : /cocina internacional|asiatico/.test(key) ? 'globe-hemisphere-west' : 'package';
+    return phosphorIcon(icon, 'taxonomy-icon', 'regular');
   }
 
   function taxonomyTone(name) {
