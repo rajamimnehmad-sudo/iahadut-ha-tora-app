@@ -122,6 +122,7 @@ import contentSnapshot from './data/content.json';
   const syncState = {running:false, last:localStorage.getItem('iht_last_sync') || (bundledProducts.length && bundledSyncTime ? String(bundledSyncTime) : ''), error:''};
   const CACHE_TTL = 12 * 60 * 60 * 1000;
   const INFO_CACHE_VERSION = 30;
+  const INITIAL_PRELOAD_KEY = `iht_initial_preload_${INFO_CACHE_VERSION}`;
   const storedInfoCache = readJson('iht_info_cache');
   const infoCache = storedInfoCache?.version === INFO_CACHE_VERSION ? (storedInfoCache.items || {}) : (contentSnapshot?.info || {});
   const storedCardCache = readJson('iht_card_cache');
@@ -395,7 +396,8 @@ import contentSnapshot from './data/content.json';
     const bankName = bank?.[1] || data.bank;
     const alias = bank?.[2] || '';
     const cuit = bank?.[3] || '';
-    return `<section class="collaboration-card"><span class="collaboration-heart" aria-hidden="true">♥</span><h3>Colaborá con nosotros</h3><p>${escapeHtml(data.text)}</p></section><section class="bank-card"><div class="bank-card-head"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 9h18M5 9v9M9 9v9M15 9v9M19 9v9M3 20h18M12 3l9 4H3z"/></svg><div><small>Datos para transferencia</small><strong>${escapeHtml(bankName)}</strong></div></div>${alias ? `<div class="bank-data-row"><span>Alias</span><strong>${escapeHtml(alias)}</strong></div>` : ''}${cuit ? `<div class="bank-data-row"><span>CUIT</span><strong>${escapeHtml(cuit)}</strong></div>` : ''}</section>`;
+    const copyData = [bankName, alias ? `Alias: ${alias}` : '', cuit ? `CUIT: ${cuit}` : ''].filter(Boolean).join('\n');
+    return `<section class="collaboration-card"><h3>Colaborá con nosotros</h3><p>${escapeHtml(data.text)}</p></section><section class="bank-card"><div class="bank-card-head"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 9h18M5 9v9M9 9v9M15 9v9M19 9v9M3 20h18M12 3l9 4H3z"/></svg><div><small>Datos para transferencia</small><strong>${escapeHtml(bankName)}</strong></div></div>${alias ? `<div class="bank-data-row"><span>Alias</span><strong>${escapeHtml(alias)}</strong></div>` : ''}${cuit ? `<div class="bank-data-row"><span>CUIT</span><strong>${escapeHtml(cuit)}</strong></div>` : ''}<button class="copy-bank-button" type="button" data-copy-bank="${escapeHtml(copyData)}"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="8" y="8" width="11" height="11" rx="2"/><path d="M16 8V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h3"/></svg><span>Copiar datos bancarios</span></button></section>`;
   }
 
   function infoContentMarkup(content) {
@@ -415,6 +417,11 @@ import contentSnapshot from './data/content.json';
       return `<svg class="info-action-icon" viewBox="0 0 24 24" aria-hidden="true">${paths[kind] || paths.email}</svg>`;
     };
     const actions = (content.actions || []).map((action) => `<a class="info-action ${escapeHtml(action.kind || '')}" href="${escapeHtml(action.href)}">${actionIcon(action.kind)}<span>${escapeHtml(action.label)}</span></a>`).join('');
+    if (content.section === 'notes' && content.images?.length) {
+      const titles = (content.cards || []).map((card) => card.title);
+      const flyers = content.images.map((image, index) => `<button class="note-flyer" type="button" data-expanded-image="${escapeHtml(image.src)}" data-expanded-caption="${escapeHtml(titles[index] || image.alt || 'Nota Kashrut')}"><img src="${escapeHtml(image.src)}" alt="${escapeHtml(titles[index] || image.alt || 'Nota Kashrut')}" loading="lazy" onerror="this.closest('.note-flyer').remove()"><span>${escapeHtml(titles[index] || image.alt || 'Nota Kashrut')}</span><small>Ver en pantalla completa</small></button>`).join('');
+      return `<div class="note-flyer-list">${flyers}</div>`;
+    }
     if (content.contact) {
       const address = content.blocks.map((block) => sanitizeOfficialText(block.text)).find((text) => /Ecuador\s+920\s+CABA/i.test(text));
       return `<div class="contact-clean-list">${actions}</div>${address ? `<div class="contact-address"><span class="contact-address-icon">${actionIcon('map')}</span><div><small>Sede</small><strong>${escapeHtml(address.replace(/^Comunidad Jafetz Jaim:\s*/i, ''))}</strong></div></div>` : ''}`;
@@ -527,28 +534,50 @@ import contentSnapshot from './data/content.json';
     });
   }
 
-  async function runPool(items, worker, concurrency = 3) {
+  async function runPool(items, worker, concurrency = 3, onProgress = null) {
     const queue = [...items];
+    let completed = 0;
     const runners = Array.from({length:Math.min(concurrency, queue.length)}, async () => {
       while (queue.length) {
         const item = queue.shift();
         try { await worker(item); } catch (_) {}
+        completed += 1;
+        onProgress?.(completed, items.length);
       }
     });
     await Promise.all(runners);
   }
 
+  function initialLoadProgress(percent, visible = true) {
+    const progress = $('#initialLoadProgress');
+    if (!progress) return;
+    progress.hidden = !visible;
+    progress.style.setProperty('--initial-load-progress', `${Math.max(4, Math.min(100, percent))}%`);
+  }
+
   async function preloadAppData() {
     if (preloadStarted || !navigator.onLine) return;
     preloadStarted = true;
+    const firstPreparation = localStorage.getItem(INITIAL_PRELOAD_KEY) !== 'done';
+    if (firstPreparation) initialLoadProgress(4);
     try {
       await fetchAlerts().catch(() => null);
-      await runPool(Object.keys(info), fetchInfoContent, 2);
+      if (firstPreparation) initialLoadProgress(10);
+      const infoKeys = Object.keys(info);
+      await runPool(infoKeys, fetchInfoContent, 2, firstPreparation ? (done, total) => initialLoadProgress(10 + (done / total) * 30) : null);
+      const cards = Object.values(infoCache).flatMap((content) => content?.cards || []).filter((card) => card.url).filter((card, index, all) => all.findIndex((candidate) => candidate.url === card.url) === index);
+      await runPool(cards, fetchCardContent, 3, firstPreparation ? (done, total) => initialLoadProgress(40 + (done / Math.max(total, 1)) * 30) : null);
       const imageUrls = [
         ...recentProducts.map((product) => product.image),
-        ...Object.values(infoCache).flatMap((content) => [...(content?.images || []).map((image) => image.src), ...(content?.cards || []).map((card) => card.image)])
-      ].filter(Boolean).filter((src, index, all) => all.indexOf(src) === index).slice(0, 28);
-      await runPool(imageUrls, preloadImage, 3);
+        ...Object.values(infoCache).flatMap((content) => [...(content?.images || []).map((image) => image.src), ...(content?.cards || []).map((card) => card.image)]),
+        ...Object.values(cardCache).flatMap((content) => content?.images || []).map((image) => image.src)
+      ].filter(Boolean).filter((src, index, all) => all.indexOf(src) === index);
+      await runPool(imageUrls, preloadImage, 4, firstPreparation ? (done, total) => initialLoadProgress(70 + (done / Math.max(total, 1)) * 30) : null);
+      if (firstPreparation) {
+        localStorage.setItem(INITIAL_PRELOAD_KEY, 'done');
+        initialLoadProgress(100);
+        window.setTimeout(() => initialLoadProgress(100, false), 450);
+      }
     } finally {
       preloadStarted = false;
     }
@@ -1013,9 +1042,10 @@ import contentSnapshot from './data/content.json';
   }
 
   function alertSection(title, key, items) {
-    if (!items.length) return '';
+    if (!items.length && key === 'general') return '';
+    const visibleItems = items.length ? items : [`No hay productos ${key === 'alta' ? 'dados de alta' : 'dados de baja'} publicados en este momento.`];
     const icon = key === 'alta' ? '✓' : key === 'baja' ? '!' : '•';
-    return `<details class="alert-group alert-${key}"><summary class="alert-group-head"><span class="alert-group-icon">${icon}</span><div><h2>${title}</h2><small>${items.length} ${items.length === 1 ? 'actualización' : 'actualizaciones'}</small></div><span class="alert-chevron" aria-hidden="true">⌄</span></summary><div class="alert-group-items">${items.map((item) => `<article class="alert-item"><span class="alert-mark" aria-hidden="true">•</span><p>${styledBrandText(item)}</p></article>`).join('')}</div></details>`;
+    return `<details class="alert-group alert-${key}"><summary class="alert-group-head"><span class="alert-group-icon">${icon}</span><div><h2>${title}</h2><small>${items.length} ${items.length === 1 ? 'actualización' : 'actualizaciones'}</small></div><svg class="alert-chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 5 7 7-7 7"/></svg></summary><div class="alert-group-items">${visibleItems.map((item) => `<article class="alert-item"><span class="alert-mark" aria-hidden="true">•</span><p>${styledBrandText(item)}</p></article>`).join('')}</div></details>`;
   }
 
   function alertMarkup(items) {
@@ -1179,9 +1209,10 @@ import contentSnapshot from './data/content.json';
   function openWebScanner(message = 'Alineá el código dentro del recuadro.', useCamera = true) {
     $('#scanMessage').textContent = message;
     $('#scanOverlay').hidden = false;
+    $('#scanOverlay').classList.toggle('manual-only', !useCamera);
     $('#barcode').value = '';
     updateModalLock();
-    if (useCamera) startCamera();
+    if (useCamera) startCamera(); else stopCamera();
   }
 
   async function openScanner() {
@@ -1210,12 +1241,14 @@ import contentSnapshot from './data/content.json';
         android:{scanningLibrary:CapacitorBarcodeScannerAndroidScanningLibrary.MLKIT}
       });
       if (result?.ScanResult) await resolveBarcode(result.ScanResult);
-    } catch (_) {
+    } catch (error) {
+      const cancellation = `${error?.code || ''} ${error?.message || error || ''}`;
+      if (/0006|cancel(?:led|ado|aci[oó]n)?/i.test(cancellation)) return;
       openWebScanner('No pudimos abrir el lector nativo. Ingresá el código manualmente.', false);
     }
   }
 
-  function closeScanner() { stopCamera(); $('#scanOverlay').hidden = true; updateModalLock(); }
+  function closeScanner() { stopCamera(); $('#scanOverlay').hidden = true; $('#scanOverlay').classList.remove('manual-only'); updateModalLock(); }
   window.__ihtCloseScanner = closeScanner;
   async function barcodeIdentity(code) {
     try {
@@ -1294,8 +1327,17 @@ import contentSnapshot from './data/content.json';
     const infoButton = event.target.closest('[data-info]'); if (infoButton) openInfo(infoButton.dataset.info);
     const savedButton = event.target.closest('[data-saved]'); if (savedButton) { favoriteOnly = true; selectedCategory = 'all'; openSearchScreen(); renderResults(''); }
     const clearHistoryButton = event.target.closest('[data-clear-history]'); if (clearHistoryButton) { if (!recent.length || window.confirm('¿Borrar el historial de búsquedas?')) { recent = []; localStorage.removeItem('iht_recent'); renderMore(); renderSearchCategories(); } }
+    const copyBankButton = event.target.closest('[data-copy-bank]');
+    if (copyBankButton) {
+      const text = copyBankButton.dataset.copyBank || '';
+      const copy = navigator.clipboard?.writeText ? navigator.clipboard.writeText(text) : Promise.reject();
+      copy.then(() => { const label = copyBankButton.querySelector('span'); label.textContent = 'Datos copiados'; window.setTimeout(() => { label.textContent = 'Copiar datos bancarios'; }, 1800); }).catch(() => window.prompt('Copiá estos datos:', text));
+      return;
+    }
     const cardButton = event.target.closest('[data-info-card]');
     const photo = event.target.closest('.info-photo');
+    const expandedImage = event.target.closest('[data-expanded-image]');
+    if (expandedImage) { event.preventDefault(); openImage(expandedImage.dataset.expandedImage, expandedImage.dataset.expandedCaption || 'Nota Kashrut'); return; }
     if (cardButton && window.__ihtInfoCards) { event.preventDefault(); event.stopPropagation(); openInfoCard(window.__ihtInfoCards[Number(cardButton.dataset.infoCard)]); return; }
     if (photo) { event.preventDefault(); event.stopPropagation(); openImage(photo.currentSrc || photo.src, photo.alt || ''); }
   });
@@ -1342,6 +1384,7 @@ import contentSnapshot from './data/content.json';
   $('#syncStatus').onclick = () => syncCatalog(true);
   renderHome(); renderSearchCategories();
   syncMessage(lastSyncMessage(), syncState.last ? 'ok' : '');
+  if (navigator.onLine && localStorage.getItem(INITIAL_PRELOAD_KEY) !== 'done') initialLoadProgress(4);
   syncCatalog(false).finally(scheduleAppPreload);
   setInterval(() => syncCatalog(false), 12 * 60 * 60 * 1000);
   document.addEventListener('visibilitychange', () => {
