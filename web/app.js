@@ -885,7 +885,7 @@ import contentSnapshot from './data/content.json';
   }
 
   function renderSearchCategories() {
-    const all = `<button class="quick-filter ${selectedCategory === 'all' ? 'active' : ''}" data-category="all" aria-label="Ver todos los productos">${categoryIcon('all')}<span>Todos</span></button>`;
+    const all = `<button class="quick-filter ${selectedCategory === 'all' ? 'active' : ''}" data-category="all" aria-label="Ver todos los productos">${categoryIcon('all')}<span>Todos los productos</span><small>Ver el catálogo completo</small></button>`;
     const filters = categories.map((category) => `<button class="quick-filter ${selectedCategory === category.key ? 'active' : ''}" data-category="${category.key}" aria-label="Filtrar por ${escapeHtml(category.name)}">${categoryIcon(category.key)}<span>${escapeHtml(category.short)}</span></button>`).join('');
     $('#searchCategories').innerHTML = `<div class="quick-filters-label">Explorar categorías</div><div class="quick-filters">${all}${filters}</div>`;
     $('#recentSearches').innerHTML = recent.slice(0,5).map((query) => `<button data-recent="${escapeHtml(query)}">${escapeHtml(query)}</button>`).join('') + (recent.length ? '<button class="clear-history-chip" data-clear-history="true" type="button">Borrar historial</button>' : '');
