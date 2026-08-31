@@ -2,6 +2,7 @@ import { defineConfig } from 'vite';
 
 export default defineConfig({
   root: 'web',
+  base: process.env.GITHUB_ACTIONS ? '/iahadut-ha-tora-app/' : '/',
   server: {
     // Permite acceder desde un celular conectado a la misma red Wi‑Fi.
     host: '0.0.0.0',

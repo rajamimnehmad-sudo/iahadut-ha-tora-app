@@ -163,7 +163,7 @@ import '@phosphor-icons/web/duotone';
   function sourceUrl(url) {
     if (Capacitor.isNativePlatform()) return url;
     const local = location.port === '5173' && (location.hostname === 'localhost' || location.hostname === '127.0.0.1');
-    if (!local) return url;
+    if (!local) return `https://syeycayasyufedwoprea.supabase.co/functions/v1/iahadut-demo/proxy?url=${encodeURIComponent(url)}`;
     const parsed = new URL(url);
     return `/vaad-api${parsed.pathname}${parsed.search}`;
   }

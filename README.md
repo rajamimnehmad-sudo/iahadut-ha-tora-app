@@ -10,7 +10,7 @@ La fuente web es compartida para Android, iOS y navegador mediante Capacitor. La
 
 La sincronización consulta las categorías oficiales, descarga sus páginas, elimina duplicados por URL y guarda el catálogo en `localStorage`. Se intenta al iniciar, al volver la app a primer plano, cuando vuelve la conexión y se puede forzar tocando el estado de sincronización. La app muestra primero la copia incluida o guardada y actualiza el contenido en segundo plano para que las secciones abran sin esperar.
 
-En Vite, las consultas pasan por el proxy local `/vaad-api`. En Android/iOS, el código usa `CapacitorHttp` nativo porque `vaad.ar` no publica CORS; de esa forma el APK puede actualizarse sin depender de un proxy de desarrollo. Las respuestas se reintentan hasta tres veces y se conserva la última copia válida si el teléfono está sin conexión.
+En Vite local, las consultas pasan por el proxy `/vaad-api`. En la web pública de GitHub Pages usan la función proxy pública de Supabase, porque `vaad.ar` no publica CORS. En Android/iOS, el código usa `CapacitorHttp` nativo; de esa forma el APK puede actualizarse sin depender de un proxy web. Las respuestas se reintentan hasta tres veces y se conserva la última copia válida si el teléfono está sin conexión.
 
 La actualización de 12 horas en el cliente se ejecuta al iniciar o reanudar la app y no puede ejecutarse mientras el teléfono está completamente cerrado. Para una garantía centralizada de frescura y monitoreo comercial todavía convendría agregar un backend o una tarea programada externa.
 
@@ -20,7 +20,7 @@ La actualización de 12 horas en el cliente se ejecuta al iniciar o reanudar la 
 - Wrapper Android original de referencia: `app/`
 - Configuración multiplataforma: `capacitor.config.json`
 - Paquete: `ar.vaad.catalogo.app`
-- Versión fuente: `0.10.0` (código 14)
+- Versión fuente: `0.11.0` (código 15)
 - APK original de referencia: `Iahadut-HaTora-v12-3.apk`
 
 ## Compilar Android Capacitor
