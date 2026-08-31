@@ -1,0 +1,15 @@
+{
+  "name": "Iahadut HaTora",
+  "short_name": "Iahadut HaTora",
+  "description": "Catálogo oficial de productos kosher",
+  "start_url": "/iahadut-ha-tora-app/",
+  "scope": "/iahadut-ha-tora-app/",
+  "display": "standalone",
+  "background_color": "#f7f8f6",
+  "theme_color": "#f7f8f6",
+  "orientation": "portrait",
+  "icons": [
+    {"src":"/iahadut-ha-tora-app/pwa-icon-192.png","sizes":"192x192","type":"image/png","purpose":"any maskable"},
+    {"src":"/iahadut-ha-tora-app/pwa-icon-512.png","sizes":"512x512","type":"image/png","purpose":"any maskable"}
+  ]
+}
