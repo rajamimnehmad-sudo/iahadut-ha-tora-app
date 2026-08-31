@@ -551,8 +551,37 @@ body.modal-open { overflow: hidden; }
 .load-more-products small { color: #778179; font-size: 10px; }
 
 @media (max-width: 700px) {
-  .app { padding-top: env(safe-area-inset-top, 0px); }
-  .search-open #searchView { padding-top: env(safe-area-inset-top, 0px); padding-bottom: max(24px, env(safe-area-inset-bottom, 0px)); }
+  :root { --app-safe-top: max(24px, env(safe-area-inset-top, 0px)); }
+  .app { padding-top: var(--app-safe-top); }
+  .topbar { top: var(--app-safe-top); }
+  .search-open #searchView { padding-top: var(--app-safe-top); padding-bottom: max(24px, env(safe-area-inset-bottom, 0px)); }
+  .search-open #searchView .search-screen-head { top: var(--app-safe-top); }
   .image-close { top: max(16px, env(safe-area-inset-top, 16px)); }
   .card-sheet > .sheet-close { top: max(12px, env(safe-area-inset-top, 12px)); }
 }
+
+/* Modales editoriales: la ampliación siempre queda por encima de la ficha. */
+.card-overlay { z-index: 120; }
+.image-overlay { z-index: 140; overflow: hidden; }
+.image-overlay figure { width: 100%; height: 100%; overflow: hidden; align-content: center; }
+.image-overlay figure img { touch-action: none; user-select: none; -webkit-user-drag: none; will-change: transform; transition: transform .08s linear; }
+.image-overlay figcaption { display: grid; gap: 3px; }
+.image-overlay figcaption small { color: #ffffffb5; font-size: 10px; }
+
+/* Evita que el título y la flecha compartan el mismo espacio en las tarjetas. */
+.useful-grid .link-row span:nth-child(2) { width: 100%; padding-right: 27px; overflow-wrap: normal; word-break: normal; }
+.useful-grid .link-row span:last-child { right: 13px; bottom: 12px; }
+
+/* Alertas: las bajas usan identidad roja completa e imágenes cuando existen. */
+.alert-product-image { width: 42px; height: 42px; padding: 3px; border: 1px solid #dce5df; border-radius: 10px; object-fit: contain; background: #fff; }
+.alert-item:has(.alert-product-image) { grid-template-columns: 42px minmax(0, 1fr); align-items: center; }
+.alert-baja { border-color: #efc9cd; }
+.alert-baja .alert-group-head { background: #fff8f8; border-bottom-color: #f2d6d8; }
+.alert-baja .alert-group-items { background: #fffafa; }
+.alert-baja .alert-item { border-bottom-color: #f0d8da; }
+.alert-baja .alert-mark { background: #fbe5e7; color: #bd2933; }
+.alert-baja .alert-item p, .alert-baja .brand-name { color: #a9232d; }
+
+.notification-more-row { margin-bottom: 8px; padding: 15px 14px; border: 1px solid #d9e5dd; border-radius: 14px; background: #f3f8f5; }
+.notification-icon { color: #2f7a59 !important; }
+.update-more-row { margin-top: 18px; border-top: 1px solid #dfe5e0; border-bottom: 0; color: #68736b; }

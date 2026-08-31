@@ -20,6 +20,7 @@ const sections = {
 const clean = (value) => String(value || '').replace(/\s+/g, ' ').trim();
 const normalize = (value) => clean(value).normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
 const absolute = (value, base) => value ? new URL(value, base).href : '';
+const phoneNumbers = (value) => [...new Set((String(value || '').match(/(?:\+?54[\s.-]*9[\s.-]*)?11[\s.-]*(?:\d[\s.-]*){8}/g) || []).map((phone) => phone.replace(/\D/g, '')).map((digits) => digits.startsWith('549') ? digits : digits.startsWith('54') ? `549${digits.slice(2)}` : `549${digits}`))];
 
 async function fetchHtml(url) {
   let lastError;
@@ -167,10 +168,7 @@ function parseCard(card, html) {
   const actions = [];
   const addAction = (label, href, kind) => { if (href && !actions.some((action) => normalize(action.href) === normalize(href) || normalize(action.label) === normalize(label))) actions.push({ label, href, kind }); };
   [...new Set(pageText.match(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,8}\b/gi) || [])].forEach((email) => addAction(email, `mailto:${email}`, 'email'));
-  [...new Set(pageText.match(/(?:\+54\s*9\s*11\s*\d{4}[-\s]\d{4}|\b11\s*\d{8}\b)/g) || [])].forEach((phone, index) => {
-    const digits = phone.replace(/\D/g, '');
-    addAction(index === 0 ? 'WhatsApp' : 'Contacto por WhatsApp', `https://wa.me/${digits.startsWith('54') ? digits : `549${digits}`}`, 'whatsapp');
-  });
+  phoneNumbers(pageText).forEach((digits, index) => addAction(index === 0 ? 'WhatsApp' : 'Contacto por WhatsApp', `https://wa.me/${digits}`, 'whatsapp'));
   [...root.querySelectorAll('a[href]')].forEach((link) => {
     const href = link.getAttribute('href') || '';
     const label = clean(link.textContent);
@@ -181,7 +179,7 @@ function parseCard(card, html) {
 
 function parseAlerts(html) {
   const document = new DOMParser().parseFromString(html, 'text/html');
-  const extract = (selector) => [...(document.querySelector(selector)?.querySelectorAll('li') || [])].map((node) => clean(node.textContent)).filter((text, index, all) => text.length > 8 && all.indexOf(text) === index);
+  const extract = (selector) => [...(document.querySelector(selector)?.querySelectorAll('li') || [])].map((node) => ({text:clean(node.textContent), url:absolute(node.querySelector('a[href]')?.getAttribute('href'), 'https://vaad.ar/alertas-de-productos/')})).filter((item, index, all) => item.text.length > 8 && all.findIndex((candidate) => candidate.text === item.text) === index);
   return { alta: extract('.card-altas'), baja: extract('.card-bajas'), general: [] };
 }
 

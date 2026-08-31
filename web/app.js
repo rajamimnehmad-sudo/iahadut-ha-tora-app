@@ -11,6 +11,7 @@ import contentSnapshot from './data/content.json';
   const clean = (value) => String(value || '').replace(/\s+/g, ' ').trim();
   const normalize = (value) => clean(value).normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
   const escapeHtml = (value) => String(value || '').replace(/[&<>"']/g, (char) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[char]));
+  const phoneNumbers = (value) => [...new Set((String(value || '').match(/(?:\+?54[\s.-]*9[\s.-]*)?11[\s.-]*(?:\d[\s.-]*){8}/g) || []).map((phone) => phone.replace(/\D/g, '')).map((digits) => digits.startsWith('549') ? digits : digits.startsWith('54') ? `549${digits.slice(2)}` : `549${digits}`))];
 
   function prepareImage(image) {
     if (!(image instanceof HTMLImageElement) || image.matches('.logo, .whatsapp-logo, .whatsapp-tile img')) return;
@@ -92,6 +93,7 @@ import contentSnapshot from './data/content.json';
   let remoteControl = {...defaultRemoteControl, configured:false, checkedAt:0};
   let remoteTaxonomyRules = [];
   let pushListenersReady = false;
+  const imageGesture = {scale:1, x:0, y:0, pointers:new Map(), startDistance:0, startScale:1};
 
   const categoryFor = (key) => categories.find((category) => category.key === key);
   const categoryCount = (category) => products.length > seed.length ? products.filter((product) => product.cat === category.key).length : category.count;
@@ -125,7 +127,7 @@ import contentSnapshot from './data/content.json';
   const bundledSyncTime = catalogSnapshot?.generatedAt ? Date.parse(catalogSnapshot.generatedAt) : 0;
   const syncState = {running:false, last:localStorage.getItem('iht_last_sync') || (bundledProducts.length && bundledSyncTime ? String(bundledSyncTime) : ''), error:''};
   const CACHE_TTL = 12 * 60 * 60 * 1000;
-  const INFO_CACHE_VERSION = 30;
+  const INFO_CACHE_VERSION = 31;
   const INITIAL_PRELOAD_KEY = `iht_initial_preload_${INFO_CACHE_VERSION}`;
   const storedInfoCache = readJson('iht_info_cache');
   const infoCache = storedInfoCache?.version === INFO_CACHE_VERSION ? (storedInfoCache.items || {}) : (contentSnapshot?.info || {});
@@ -471,8 +473,7 @@ import contentSnapshot from './data/content.json';
     const actions = [];
     const addAction = (label, href, kind) => { if (href && !actions.some((action) => normalize(action.href) === normalize(href) || normalize(action.label) === normalize(label))) actions.push({label, href, kind}); };
     [...new Set(contactText.match(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,8}\b/gi) || [])].forEach((email) => addAction(email, `mailto:${email}`, 'email'));
-    const phoneMatches = [...new Set(contactText.match(/(?:\+54\s*9\s*11\s*\d{4}[-\s]\d{4}|\b11\s*\d{8}\b)/g) || [])];
-    phoneMatches.forEach((phone, index) => { const digits = phone.replace(/\D/g, ''); const normalized = digits.startsWith('54') ? digits : `549${digits}`; addAction(index === 0 ? 'WhatsApp' : 'Contacto por WhatsApp', `https://wa.me/${normalized}`, 'whatsapp'); });
+    phoneNumbers(contactText).forEach((digits, index) => addAction(index === 0 ? 'WhatsApp' : 'Contacto por WhatsApp', `https://wa.me/${digits}`, 'whatsapp'));
     [...contentRoot.querySelectorAll('a[href]')].forEach((link) => {
       const href = link.getAttribute('href') || '';
       const label = clean(link.textContent);
@@ -519,7 +520,7 @@ import contentSnapshot from './data/content.json';
     document.querySelectorAll('script,style,noscript,nav,header,footer,form').forEach((node) => node.remove());
     const nodes = [...document.querySelectorAll('main h1, main h2, main h3, main p, main li, article h1, article h2, article h3, article p, article li, .entry-content h1, .entry-content h2, .entry-content h3, .entry-content p, .entry-content li')];
     const items = [...new Set(nodes.map((node) => clean(node.textContent)).filter((text) => text.length > 8 && !/menu|buscar|leer más|abrir chat|todos los derechos/i.test(text)))].slice(0, 40);
-    const extractGroup = (root) => [...(root?.querySelectorAll('li') || [])].map((node) => clean(node.textContent)).filter((text, index, all) => text.length > 8 && all.indexOf(text) === index);
+    const extractGroup = (root) => [...(root?.querySelectorAll('li') || [])].map((node) => ({text:clean(node.textContent), url:node.querySelector('a[href]') ? new URL(node.querySelector('a[href]').getAttribute('href'), alertUrl).href : ''})).filter((item, index, all) => item.text.length > 8 && all.findIndex((candidate) => candidate.text === item.text) === index);
     const officialGroups = {alta:extractGroup(document.querySelector('.card-altas')), baja:extractGroup(document.querySelector('.card-bajas')), general:[]};
     const result = officialGroups.alta.length || officialGroups.baja.length ? officialGroups : {alta:[], baja:[], general:items.length ? items : ['No hay alertas publicadas en este momento.']};
     alertCache = {version:INFO_CACHE_VERSION, items:result, fetchedAt:Date.now()};
@@ -664,12 +665,15 @@ import contentSnapshot from './data/content.json';
     if (!alerts.length || products.length <= seed.length) return;
     const matches = [];
     for (const alert of alerts) {
-      const alertTitle = normalize(cleanDisplayText(String(alert).replace(/\s*\([^)]*\)\s*$/, '')));
+      const alertText = typeof alert === 'string' ? alert : alert?.text || '';
+      const alertTitle = normalize(cleanDisplayText(alertText.replace(/\s*\([^)]*\)\s*$/, ''));
+      const linkedProduct = alert?.url ? products.find((product) => product.url === alert.url) : null;
       const match = products.find((product) => {
         const productTitle = normalize(cleanDisplayText(product.title));
         return productTitle.length > 8 && (alertTitle.includes(productTitle) || productTitle.includes(alertTitle));
       });
-      if (match && !matches.some((product) => normalize(product.title) === normalize(match.title))) matches.push(match);
+      const candidate = linkedProduct || match;
+      if (candidate && !matches.some((product) => normalize(product.title) === normalize(candidate.title))) matches.push(candidate);
       if (matches.length === 4) break;
     }
     if (!matches.length) return;
@@ -1051,7 +1055,14 @@ import contentSnapshot from './data/content.json';
     if (!items.length && key === 'general') return '';
     const visibleItems = items.length ? items : [`No hay productos ${key === 'alta' ? 'dados de alta' : 'dados de baja'} publicados en este momento.`];
     const icon = key === 'alta' ? '✓' : key === 'baja' ? '!' : '•';
-    return `<details class="alert-group alert-${key}"><summary class="alert-group-head"><span class="alert-group-icon">${icon}</span><div><h2>${title}</h2><small>${items.length} ${items.length === 1 ? 'actualización' : 'actualizaciones'}</small></div><svg class="alert-chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 5 7 7-7 7"/></svg></summary><div class="alert-group-items">${visibleItems.map((item) => `<article class="alert-item"><span class="alert-mark" aria-hidden="true">•</span><p>${styledBrandText(item)}</p></article>`).join('')}</div></details>`;
+    return `<details class="alert-group alert-${key}"><summary class="alert-group-head"><span class="alert-group-icon">${icon}</span><div><h2>${title}</h2><small>${items.length} ${items.length === 1 ? 'actualización' : 'actualizaciones'}</small></div><svg class="alert-chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 5 7 7-7 7"/></svg></summary><div class="alert-group-items">${visibleItems.map((item) => {
+      const text = typeof item === 'string' ? item : item?.text || '';
+      const linked = item?.url ? products.find((product) => product.url === item.url) : null;
+      const normalizedText = normalize(text.replace(/\s*\([^)]*\)\s*$/, ''));
+      const match = linked || products.find((product) => { const productTitle = normalize(product.title); return productTitle.length > 8 && (normalizedText.includes(productTitle) || productTitle.includes(normalizedText)); });
+      const visual = match?.image ? `<img class="alert-product-image" src="${escapeHtml(match.image)}" alt="" loading="lazy" onerror="this.replaceWith(document.createTextNode('•'))">` : '<span class="alert-mark" aria-hidden="true">•</span>';
+      return `<article class="alert-item">${visual}<p>${styledBrandText(text)}</p></article>`;
+    }).join('')}</div></details>`;
   }
 
   function alertMarkup(items) {
@@ -1118,6 +1129,10 @@ import contentSnapshot from './data/content.json';
 
   async function setupPushNotifications(requestPermission = false) {
     if (!Capacitor.isNativePlatform()) return 'unavailable';
+    if (!remoteControl.configured) {
+      localStorage.setItem('iht_push_status', 'pending-config');
+      return 'pending-config';
+    }
     try {
       const {PushNotifications} = await import('@capacitor/push-notifications');
       if (!pushListenersReady) {
@@ -1145,8 +1160,10 @@ import contentSnapshot from './data/content.json';
   function renderMore() {
     const saved = `<button class="more-row saved-more-row" data-saved="true">${bookmarkIcon(false)}<span><strong>Productos guardados</strong><small>${favorites.size ? `${favorites.size} productos guardados` : 'Todavía no guardaste productos'}</small></span><span class="row-arrow" aria-hidden="true">›</span></button>`;
     const decision = accessDecision(remoteControl);
-    const managed = `<button class="more-row managed-more-row" data-enable-notifications><span class="managed-icon" aria-hidden="true">●</span><span><strong>Notificaciones</strong><small>${localStorage.getItem('iht_push_status') === 'active' ? 'Activadas' : 'Recibí altas, bajas y novedades'}</small></span><span class="row-arrow" aria-hidden="true">›</span></button><button class="more-row managed-more-row" data-app-update><span class="managed-icon" aria-hidden="true">↻</span><span><strong>Actualizar aplicación</strong><small>${decision.updateAvailable ? `Nueva versión ${escapeHtml(remoteControl.latest_version)} disponible` : `Versión ${escapeHtml(APP_VERSION)}`}</small></span><span class="row-arrow" aria-hidden="true">›</span></button>`;
-    $('#moreList').innerHTML = saved + managed + Object.entries(info).map(([key, value]) => `<button class="more-row" data-info="${key}">${infoIcon(key)}<span><strong>${escapeHtml(value[0])}</strong><small>${escapeHtml(value[1])}</small></span><span class="row-arrow" aria-hidden="true">›</span></button>`).join('');
+    const pushStatus = localStorage.getItem('iht_push_status');
+    const notifications = `<button class="more-row notification-more-row" data-enable-notifications><span class="managed-icon notification-icon" aria-hidden="true">●</span><span><strong>Notificaciones</strong><small>${pushStatus === 'active' ? 'Activadas' : remoteControl.configured ? 'Recibí altas, bajas y novedades' : 'Disponibles al conectar el servicio de avisos'}</small></span><span class="row-arrow" aria-hidden="true">›</span></button>`;
+    const update = `<button class="more-row managed-more-row update-more-row" data-app-update><span class="managed-icon" aria-hidden="true">↻</span><span><strong>Actualizar aplicación</strong><small>${decision.updateAvailable ? `Nueva versión ${escapeHtml(remoteControl.latest_version)} disponible` : `Versión ${escapeHtml(APP_VERSION)}`}</small></span><span class="row-arrow" aria-hidden="true">›</span></button>`;
+    $('#moreList').innerHTML = notifications + saved + Object.entries(info).map(([key, value]) => `<button class="more-row" data-info="${key}">${infoIcon(key)}<span><strong>${escapeHtml(value[0])}</strong><small>${escapeHtml(value[1])}</small></span><span class="row-arrow" aria-hidden="true">›</span></button>`).join('') + update;
   }
 
   async function openInfo(key, options = {}) {
@@ -1198,6 +1215,7 @@ import contentSnapshot from './data/content.json';
   }
 
   function openImage(src, caption = '') {
+    resetImageZoom();
     $('#expandedImage').src = src;
     $('#expandedImage').alt = caption;
     $('#expandedCaption').textContent = caption;
@@ -1205,7 +1223,16 @@ import contentSnapshot from './data/content.json';
     updateModalLock();
   }
 
-  function closeImage() { $('#imageOverlay').hidden = true; $('#expandedImage').src = ''; updateModalLock(); }
+  function applyImageZoom() {
+    $('#expandedImage').style.transform = `translate3d(${imageGesture.x}px, ${imageGesture.y}px, 0) scale(${imageGesture.scale})`;
+  }
+
+  function resetImageZoom() {
+    imageGesture.scale = 1; imageGesture.x = 0; imageGesture.y = 0; imageGesture.pointers.clear(); imageGesture.startDistance = 0;
+    if ($('#expandedImage')) applyImageZoom();
+  }
+
+  function closeImage() { $('#imageOverlay').hidden = true; $('#expandedImage').src = ''; resetImageZoom(); updateModalLock(); }
 
   async function openInfoCard(card) {
     if (!card) return;
@@ -1447,7 +1474,26 @@ import contentSnapshot from './data/content.json';
   $('#readerBack').onclick = goBackReader;
   $('#closeImage').onclick = closeImage;
   $('#imageOverlay').onclick = (event) => { if (event.target === $('#imageOverlay')) closeImage(); };
+  $('#expandedImage').addEventListener('pointerdown', (event) => {
+    event.preventDefault(); $('#expandedImage').setPointerCapture?.(event.pointerId);
+    imageGesture.pointers.set(event.pointerId, {x:event.clientX, y:event.clientY});
+    if (imageGesture.pointers.size === 2) { const [a,b] = [...imageGesture.pointers.values()]; imageGesture.startDistance = Math.hypot(a.x - b.x, a.y - b.y); imageGesture.startScale = imageGesture.scale; }
+  });
+  $('#expandedImage').addEventListener('pointermove', (event) => {
+    if (!imageGesture.pointers.has(event.pointerId)) return;
+    const previous = imageGesture.pointers.get(event.pointerId);
+    imageGesture.pointers.set(event.pointerId, {x:event.clientX, y:event.clientY});
+    if (imageGesture.pointers.size >= 2) { const [a,b] = [...imageGesture.pointers.values()]; const distance = Math.hypot(a.x - b.x, a.y - b.y); imageGesture.scale = Math.min(5, Math.max(1, imageGesture.startScale * distance / Math.max(1, imageGesture.startDistance))); }
+    else if (imageGesture.scale > 1) { imageGesture.x += event.clientX - previous.x; imageGesture.y += event.clientY - previous.y; }
+    applyImageZoom();
+  });
+  const endImagePointer = (event) => { imageGesture.pointers.delete(event.pointerId); if (imageGesture.pointers.size < 2) imageGesture.startDistance = 0; };
+  $('#expandedImage').addEventListener('pointerup', endImagePointer);
+  $('#expandedImage').addEventListener('pointercancel', endImagePointer);
+  $('#expandedImage').addEventListener('dblclick', () => { imageGesture.scale = imageGesture.scale > 1 ? 1 : 2.5; if (imageGesture.scale === 1) { imageGesture.x = 0; imageGesture.y = 0; } applyImageZoom(); });
+  $('#expandedImage').addEventListener('wheel', (event) => { event.preventDefault(); imageGesture.scale = Math.min(5, Math.max(1, imageGesture.scale + (event.deltaY < 0 ? .25 : -.25))); if (imageGesture.scale === 1) { imageGesture.x = 0; imageGesture.y = 0; } applyImageZoom(); }, {passive:false});
   $('#closeCard').onclick = closeInfoCard;
+  $('#cardImage').onclick = () => { if ($('#cardImage').src) openImage($('#cardImage').src, $('#cardTitle').textContent || 'Imagen'); };
   $('#cardOverlay').onclick = (event) => { if (event.target === $('#cardOverlay')) closeInfoCard(); };
   $('#homeScan').onclick = openScanner; $('#searchScan').onclick = openScanner; $('#closeScan').onclick = closeScanner;
   $('#barcodeForm').onsubmit = (event) => { event.preventDefault(); const code = $('#barcode').value; closeScanner(); resolveBarcode(code); };
