@@ -10,6 +10,37 @@ if ('serviceWorker' in navigator && import.meta.env.PROD) {
   window.addEventListener('load', () => navigator.serviceWorker.register(`${import.meta.env.BASE_URL}sw.js`, {scope: import.meta.env.BASE_URL}).catch(() => {}));
 }
 
+if (import.meta.env.PROD) {
+  let installPrompt;
+  const standalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+  const gate = document.querySelector('#installGate');
+  const app = document.querySelector('.app');
+  const installButton = document.querySelector('#installApp');
+  const installHelp = document.querySelector('#installHelp');
+  if (!standalone && gate && app) {
+    gate.hidden = false;
+    app.setAttribute('aria-hidden', 'true');
+    window.addEventListener('beforeinstallprompt', (event) => {
+      event.preventDefault();
+      installPrompt = event;
+    });
+    installButton?.addEventListener('click', async () => {
+      if (installPrompt) {
+        installPrompt.prompt();
+        await installPrompt.userChoice;
+        installPrompt = null;
+        return;
+      }
+      if (installHelp) {
+        installHelp.hidden = false;
+        installHelp.textContent = /iphone|ipad|ipod/i.test(navigator.userAgent)
+          ? 'En Safari: Compartir → Agregar a pantalla de inicio.'
+          : 'Usá el menú del navegador y elegí “Instalar aplicación” o “Agregar a pantalla de inicio”.';
+      }
+    });
+  }
+}
+
 (() => {
   'use strict';
 

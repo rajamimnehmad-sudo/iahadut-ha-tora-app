@@ -524,6 +524,13 @@ body { color: #252925; }
 
 /* Ajustes de ergonomía para pantallas físicas. */
 body.modal-open { overflow: hidden; }
+.install-gate { position: fixed; inset: 0; z-index: 1000; display: grid; place-content: center; gap: 14px; padding: 28px; background: #f7f8f6; color: #214b3a; text-align: center; }
+.install-gate[hidden] { display: none; }
+.install-gate img { width: 104px; height: 104px; margin: 0 auto 4px; border-radius: 24px; box-shadow: 0 8px 24px #214b3a1c; }
+.install-gate h1 { margin: 0; color: #1f684b; font-size: 26px; }
+.install-gate p { max-width: 280px; margin: 0 auto 8px; color: #718078; font-size: 15px; line-height: 1.45; }
+.install-gate button { min-height: 52px; padding: 0 28px; border: 0; border-radius: 14px; background: #1f684b; color: #fff; font: inherit; font-weight: 750; box-shadow: 0 6px 14px #1f684b2e; }
+.install-gate small { max-width: 290px; color: #718078; font-size: 12px; line-height: 1.4; }
 .initial-load-progress { position: fixed; top: 0; left: 0; z-index: 120; width: 100%; height: 3px; overflow: hidden; background: #dce6df; pointer-events: none; }
 .initial-load-progress i { display: block; width: var(--initial-load-progress, 4%); height: 100%; border-radius: 0 3px 3px 0; background: #1f684b; transition: width .2s ease; }
 .access-overlay { position: fixed; inset: 0; z-index: 200; display: grid; place-items: center; padding: 24px; background: #f7f8f6; }
