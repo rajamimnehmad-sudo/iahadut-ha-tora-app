@@ -1,4 +1,5 @@
 import { Capacitor, CapacitorHttp } from '@capacitor/core';
+import { App } from '@capacitor/app';
 import catalogSnapshot from './data/catalog.json';
 import contentSnapshot from './data/content.json';
 
@@ -82,6 +83,11 @@ import contentSnapshot from './data/content.json';
   let scanFrame = 0;
   let searchTimer = 0;
   let activeCategoryPath = [];
+  const RESULT_BATCH_SIZE = 48;
+  let visibleProducts = [];
+  let visibleProductCursor = 0;
+  let visibleProductTarget = null;
+  let resultObserver = null;
 
   const categoryFor = (key) => categories.find((category) => category.key === key);
   const categoryCount = (category) => products.length > seed.length ? products.filter((product) => product.cat === category.key).length : category.count;
@@ -536,14 +542,13 @@ import contentSnapshot from './data/content.json';
     if (preloadStarted || !navigator.onLine) return;
     preloadStarted = true;
     try {
-      await Promise.allSettled([fetchAlerts(), ...Object.keys(info).map((key) => fetchInfoContent(key))]);
-      const cards = Object.values(infoCache).flatMap((content) => content?.cards || []).filter((card) => card.url).filter((card, index, all) => all.findIndex((candidate) => candidate.url === card.url) === index);
-      await runPool(cards, fetchCardContent, 3);
+      await fetchAlerts().catch(() => null);
+      await runPool(Object.keys(info), fetchInfoContent, 2);
       const imageUrls = [
         ...recentProducts.map((product) => product.image),
         ...Object.values(infoCache).flatMap((content) => [...(content?.images || []).map((image) => image.src), ...(content?.cards || []).map((card) => card.image)])
-      ].filter(Boolean).filter((src, index, all) => all.indexOf(src) === index);
-      await runPool(imageUrls, preloadImage, 4);
+      ].filter(Boolean).filter((src, index, all) => all.indexOf(src) === index).slice(0, 28);
+      await runPool(imageUrls, preloadImage, 3);
     } finally {
       preloadStarted = false;
     }
@@ -551,7 +556,8 @@ import contentSnapshot from './data/content.json';
 
   function scheduleAppPreload() {
     const start = () => preloadAppData();
-    window.setTimeout(start, 60);
+    if ('requestIdleCallback' in window) window.requestIdleCallback(start, {timeout:1800});
+    else window.setTimeout(start, 1200);
   }
 
   async function syncCatalog(force = false) {
@@ -835,7 +841,7 @@ import contentSnapshot from './data/content.json';
     $('#categoryProductsTop').textContent = name;
     $('#categoryProductsTitle').textContent = name;
     $('#categoryProductsMeta').textContent = `${items.length.toLocaleString('es-AR')} ${items.length === 1 ? 'producto' : 'productos'}`;
-    $('#categoryProductList').innerHTML = items.map(productMarkup).join('');
+    renderProductCollection($('#categoryProductList'), items);
     showView('categoryProductsView');
   }
 
@@ -879,6 +885,43 @@ import contentSnapshot from './data/content.json';
     return `<button class="product" data-product="${escapeHtml(product.url)}"><span>${productImage(product)}</span><span><small class="cat">${escapeHtml(category ? category.name : 'Catálogo oficial')}</small><strong>${styledBrandText(product.title)}</strong><small class="product-status"><span class="status-dot" aria-hidden="true"></span>Autorizado · ${escapeHtml(product.description ? 'Información disponible' : 'Ficha local')}</small></span><span class="save" data-favorite="${escapeHtml(product.url)}" aria-label="${favorites.has(product.url) ? 'Quitar de guardados' : 'Guardar producto'}">${bookmarkIcon(favorites.has(product.url))}</span></button>`;
   }
 
+  function observeLoadMore() {
+    resultObserver?.disconnect();
+    const trigger = visibleProductTarget?.querySelector('[data-load-more-products]');
+    if (!trigger || !('IntersectionObserver' in window)) return;
+    resultObserver = new IntersectionObserver((entries) => {
+      if (entries.some((entry) => entry.isIntersecting)) appendProductBatch();
+    }, {rootMargin:'320px 0px'});
+    resultObserver.observe(trigger);
+  }
+
+  function appendProductBatch() {
+    if (!visibleProductTarget?.isConnected || visibleProductCursor >= visibleProducts.length) return;
+    resultObserver?.disconnect();
+    visibleProductTarget.querySelector('[data-load-more-products]')?.remove();
+    const next = visibleProducts.slice(visibleProductCursor, visibleProductCursor + RESULT_BATCH_SIZE);
+    visibleProductTarget.insertAdjacentHTML('beforeend', next.map(productMarkup).join(''));
+    visibleProductCursor += next.length;
+    if (visibleProductCursor < visibleProducts.length) {
+      const remaining = visibleProducts.length - visibleProductCursor;
+      visibleProductTarget.insertAdjacentHTML('beforeend', `<button class="load-more-products" type="button" data-load-more-products><span>Mostrar más productos</span><small>${remaining.toLocaleString('es-AR')} restantes</small></button>`);
+      observeLoadMore();
+    }
+  }
+
+  function renderProductCollection(target, items, emptyMarkup = '') {
+    resultObserver?.disconnect();
+    visibleProducts = items;
+    visibleProductCursor = 0;
+    visibleProductTarget = target;
+    target.innerHTML = '';
+    if (!items.length) {
+      target.innerHTML = emptyMarkup;
+      return;
+    }
+    appendProductBatch();
+  }
+
   function renderResults(query = '') {
     const result = filtered(query);
     const title = favoriteOnly ? 'Guardados' : query ? 'Resultados' : selectedCategory === 'all' ? 'Todos los productos' : categoryFor(selectedCategory).name;
@@ -887,7 +930,7 @@ import contentSnapshot from './data/content.json';
     $('#results').hidden = false;
     $('#searchCategories').hidden = true;
     $('#recentSearches').hidden = true;
-    $('#productList').innerHTML = result.length ? result.map(productMarkup).join('') : `<div class="empty-state"><svg class="empty-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 5 5M8 10.5h5"/></svg><strong>No encontramos productos</strong><span>Probá con otra marca, nombre o categoría.</span><button class="text-btn" id="emptyReset">Hacer nueva búsqueda</button></div>`;
+    renderProductCollection($('#productList'), result, `<div class="empty-state"><svg class="empty-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 5 5M8 10.5h5"/></svg><strong>No encontramos productos</strong><span>Probá con otra marca, nombre o categoría.</span><button class="text-btn" id="emptyReset">Hacer nueva búsqueda</button></div>`);
     $('#emptyReset')?.addEventListener('click', () => { $('#query').value = ''; $('#clear').hidden = true; selectedCategory = 'all'; favoriteOnly = false; renderSearchCategories(); $('#results').hidden = true; $('#searchCategories').hidden = false; $('#recentSearches').hidden = false; $('#query').focus(); });
   }
 
@@ -1049,14 +1092,20 @@ import contentSnapshot from './data/content.json';
     }
   }
 
+  function updateModalLock() {
+    const hasOpenOverlay = [...document.querySelectorAll('.overlay')].some((overlay) => !overlay.hidden);
+    document.body.classList.toggle('modal-open', hasOpenOverlay);
+  }
+
   function openImage(src, caption = '') {
     $('#expandedImage').src = src;
     $('#expandedImage').alt = caption;
     $('#expandedCaption').textContent = caption;
     $('#imageOverlay').hidden = false;
+    updateModalLock();
   }
 
-  function closeImage() { $('#imageOverlay').hidden = true; $('#expandedImage').src = ''; }
+  function closeImage() { $('#imageOverlay').hidden = true; $('#expandedImage').src = ''; updateModalLock(); }
 
   async function openInfoCard(card) {
     if (!card) return;
@@ -1091,6 +1140,7 @@ import contentSnapshot from './data/content.json';
     const cachedCard = cardCache[card.url];
     $('#cardDetails').innerHTML = cachedCard ? infoContentMarkup(withoutTitle(cachedCard)) : '<div class="content-skeleton" aria-hidden="true"><i></i><i></i><i></i></div>';
     $('#cardOverlay').hidden = false;
+    updateModalLock();
     try {
       const content = await fetchCardContent(card);
       const details = withoutTitle(content);
@@ -1102,7 +1152,7 @@ import contentSnapshot from './data/content.json';
     }
   }
 
-  function closeInfoCard() { $('#cardOverlay').hidden = true; $('#cardImage').src = ''; }
+  function closeInfoCard() { $('#cardOverlay').hidden = true; $('#cardImage').src = ''; updateModalLock(); }
 
   function stopCamera() {
     if (scanFrame) cancelAnimationFrame(scanFrame);
@@ -1126,18 +1176,113 @@ import contentSnapshot from './data/content.json';
   window.__ihtCameraReady = startCamera;
   window.__ihtCameraDenied = () => { $('#scanMessage').textContent = 'Se necesita permiso de cámara para escanear.'; };
 
-  function openScanner() { $('#scanOverlay').hidden = false; $('#barcode').value = ''; startCamera(); }
-  function closeScanner() { stopCamera(); $('#scanOverlay').hidden = true; }
-  window.__ihtCloseScanner = closeScanner;
-  function resolveBarcode(raw) {
-    const code = String(raw || '').replace(/\D/g,'');
-    if (code === '7792180001641') return openDetail(seed[0].url);
-    const match = products.find((product) => normalize(product.title).includes(code));
-    if (match) openDetail(match.url); else { $('#scanMessage').textContent = `No encontramos el código ${code}. Podés buscar por nombre.`; $('#scanOverlay').hidden = false; }
+  function openWebScanner(message = 'Alineá el código dentro del recuadro.', useCamera = true) {
+    $('#scanMessage').textContent = message;
+    $('#scanOverlay').hidden = false;
+    $('#barcode').value = '';
+    updateModalLock();
+    if (useCamera) startCamera();
   }
+
+  async function openScanner() {
+    if (!Capacitor.isNativePlatform()) {
+      openWebScanner();
+      return;
+    }
+    try {
+      const {
+        CapacitorBarcodeScanner,
+        CapacitorBarcodeScannerAndroidScanningLibrary,
+        CapacitorBarcodeScannerCameraDirection,
+        CapacitorBarcodeScannerScanOrientation,
+        CapacitorBarcodeScannerTypeHint
+      } = await import('@capacitor/barcode-scanner');
+      const result = await CapacitorBarcodeScanner.scanBarcode({
+        hint:CapacitorBarcodeScannerTypeHint.ALL,
+        scanInstructions:'Alineá el código de barras del producto',
+        scanButton:false,
+        scanText:'Escanear',
+        cameraDirection:CapacitorBarcodeScannerCameraDirection.BACK,
+        scanOrientation:CapacitorBarcodeScannerScanOrientation.PORTRAIT,
+        cancelButtonAccessibilityLabel:'Cancelar escaneo',
+        torchButtonOnAccessibilityLabel:'Apagar linterna',
+        torchButtonOffAccessibilityLabel:'Encender linterna',
+        android:{scanningLibrary:CapacitorBarcodeScannerAndroidScanningLibrary.MLKIT}
+      });
+      if (result?.ScanResult) await resolveBarcode(result.ScanResult);
+    } catch (_) {
+      openWebScanner('No pudimos abrir el lector nativo. Ingresá el código manualmente.', false);
+    }
+  }
+
+  function closeScanner() { stopCamera(); $('#scanOverlay').hidden = true; updateModalLock(); }
+  window.__ihtCloseScanner = closeScanner;
+  async function barcodeIdentity(code) {
+    try {
+      const url = `https://world.openfoodfacts.org/api/v2/product/${encodeURIComponent(code)}.json?fields=code,product_name,product_name_es,brands`;
+      const response = Capacitor.isNativePlatform() ? await CapacitorHttp.get({url, connectTimeout:7000, readTimeout:7000}) : await fetch(url).then((value) => value.json());
+      const data = response?.data || response;
+      if (Number(data?.status) !== 1 || !data?.product) return null;
+      return {name:clean(data.product.product_name_es || data.product.product_name), brand:clean(data.product.brands?.split(',')[0])};
+    } catch (_) { return null; }
+  }
+
+  async function resolveBarcode(raw) {
+    const code = String(raw || '').replace(/\D/g,'');
+    if (!code) return;
+    const exact = products.find((product) => String(product.barcode || '') === code);
+    if (exact) { closeScanner(); openDetail(exact.url); return; }
+    const identity = await barcodeIdentity(code);
+    if (identity?.brand || identity?.name) {
+      closeScanner();
+      const query = identity.brand || identity.name;
+      openSearchScreen();
+      $('#query').value = query;
+      $('#clear').hidden = false;
+      renderResults(query);
+      $('#resultsMeta').textContent += ` · código ${code}`;
+      return;
+    }
+    stopCamera();
+    $('#barcode').value = code;
+    $('#scanMessage').textContent = `No pudimos identificar el código ${code}. Buscá el producto por nombre.`;
+    $('#scanOverlay').hidden = false;
+    updateModalLock();
+  }
+
+  function goBackTaxonomy() {
+    const parent = activeCategoryPath.slice(0, -1);
+    if (parent.length) openTaxonomyPath(parent);
+    else { renderCategoryDirectory(); showView('categoryDirectoryView'); }
+  }
+
+  function goBackReader() {
+    const target = readerHistory.pop();
+    if (target?.type === 'info') { openInfo(target.key, {fromHistory:true}); return; }
+    currentInfoKey = '';
+    showView(target?.id || 'moreView');
+  }
+
+  async function handleMobileBack() {
+    if (!$('#filterOverlay').hidden) { $('#filterOverlay').hidden = true; updateModalLock(); return; }
+    if (!$('#scanOverlay').hidden) { closeScanner(); return; }
+    if (!$('#imageOverlay').hidden) { closeImage(); return; }
+    if (!$('#cardOverlay').hidden) { closeInfoCard(); return; }
+    const activeView = document.querySelector('.view.active')?.id || 'homeView';
+    if (activeView === 'searchView') { returnHome(); return; }
+    if (activeView === 'detailView') { showView(previousView); return; }
+    if (activeView === 'readerView') { goBackReader(); return; }
+    if (activeView === 'subcategoryDirectoryView' || activeView === 'categoryProductsView') { goBackTaxonomy(); return; }
+    if (activeView === 'categoryDirectoryView' || activeView === 'alertsView' || activeView === 'moreView') { returnHome(); return; }
+    if (Capacitor.isNativePlatform()) await App.exitApp();
+  }
+
+  App.addListener('backButton', handleMobileBack).catch(() => {});
 
   document.querySelectorAll('.nav').forEach((button) => button.onclick = () => button.dataset.view === 'homeView' ? returnHome() : button.dataset.view === 'searchView' ? openSearchScreen() : showView(button.dataset.view));
   document.addEventListener('click', (event) => {
+    const loadMoreButton = event.target.closest('[data-load-more-products]');
+    if (loadMoreButton) { appendProductBatch(); return; }
     const exploreCategories = event.target.closest('[data-explore-categories]');
     if (exploreCategories) { openCategoryDirectoryFromHome(); return; }
     const taxonomyButton = event.target.closest('[data-taxonomy-path]');
@@ -1172,17 +1317,12 @@ import contentSnapshot from './data/content.json';
   $('#homeQuery').addEventListener('focus', openSearchScreen);
   $('#searchBack').onclick = returnHome;
   $('#categoryDirectoryBack').onclick = returnHome;
-  $('#subcategoryDirectoryBack').onclick = () => { const parent = activeCategoryPath.slice(0, -1); if (parent.length) openTaxonomyPath(parent); else { renderCategoryDirectory(); showView('categoryDirectoryView'); } };
-  $('#categoryProductsBack').onclick = () => { const parent = activeCategoryPath.slice(0, -1); if (parent.length) openTaxonomyPath(parent); else { renderCategoryDirectory(); showView('categoryDirectoryView'); } };
+  $('#subcategoryDirectoryBack').onclick = goBackTaxonomy;
+  $('#categoryProductsBack').onclick = goBackTaxonomy;
   $('#catalogInfo').onclick = openCatalogInfo;
   $('#seeAlerts').onclick = () => showView('alertsView');
   $('#detailBack').onclick = () => showView(previousView);
-  $('#readerBack').onclick = () => {
-    const target = readerHistory.pop();
-    if (target?.type === 'info') { openInfo(target.key, {fromHistory:true}); return; }
-    currentInfoKey = '';
-    showView(target?.id || 'moreView');
-  };
+  $('#readerBack').onclick = goBackReader;
   $('#closeImage').onclick = closeImage;
   $('#imageOverlay').onclick = (event) => { if (event.target === $('#imageOverlay')) closeImage(); };
   $('#closeCard').onclick = closeInfoCard;
@@ -1193,19 +1333,19 @@ import contentSnapshot from './data/content.json';
   function openFilters() {
     $('#filterOptions').innerHTML = `<button class="filter-option ${selectedCategory === 'all' ? 'active' : ''}" data-filter="all">${categoryIcon('all')}<span>Todos los productos</span></button>${categories.map((category) => `<button class="filter-option ${selectedCategory === category.key ? 'active' : ''}" data-filter="${category.key}">${categoryIcon(category.key)}<span>${escapeHtml(category.name)}</span></button>`).join('')}`;
     $('#filterOverlay').hidden = false;
+    updateModalLock();
   }
   $('#filterBtn').addEventListener('click', (event) => { event.preventDefault(); event.stopPropagation(); openFilters(); });
-  $('#closeFilter').onclick = () => { $('#filterOverlay').hidden = true; };
-  $('#filterOverlay').onclick = (event) => { if (event.target === $('#filterOverlay')) { $('#filterOverlay').hidden = true; return; } const filter = event.target.closest('[data-filter]'); if (filter) { selectedCategory = filter.dataset.filter; $('#filterOverlay').hidden = true; renderResults($('#query').value); } };
-  $('#resetFilter').onclick = () => { selectedCategory = 'all'; $('#filterOverlay').hidden = true; renderResults($('#query').value); };
+  $('#closeFilter').onclick = () => { $('#filterOverlay').hidden = true; updateModalLock(); };
+  $('#filterOverlay').onclick = (event) => { if (event.target === $('#filterOverlay')) { $('#filterOverlay').hidden = true; updateModalLock(); return; } const filter = event.target.closest('[data-filter]'); if (filter) { selectedCategory = filter.dataset.filter; $('#filterOverlay').hidden = true; updateModalLock(); renderResults($('#query').value); } };
+  $('#resetFilter').onclick = () => { selectedCategory = 'all'; $('#filterOverlay').hidden = true; updateModalLock(); renderResults($('#query').value); };
   $('#syncStatus').onclick = () => syncCatalog(true);
   renderHome(); renderSearchCategories();
   syncMessage(lastSyncMessage(), syncState.last ? 'ok' : '');
-  syncCatalog(false);
-  scheduleAppPreload();
+  syncCatalog(false).finally(scheduleAppPreload);
   setInterval(() => syncCatalog(false), 12 * 60 * 60 * 1000);
   document.addEventListener('visibilitychange', () => {
     if (!document.hidden) syncCatalog(false);
   });
-  window.addEventListener('online', () => { syncCatalog(false); scheduleAppPreload(); });
+  window.addEventListener('online', () => { syncCatalog(false).finally(scheduleAppPreload); });
 })();

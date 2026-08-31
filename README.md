@@ -8,7 +8,7 @@ La aplicación se desarrolla primero para Android, pero la interfaz y la lógica
 
 La fuente web es compartida para Android, iOS y navegador mediante Capacitor. La configuración multiplataforma está en `package.json` y `capacitor.config.json`.
 
-La sincronización consulta las categorías oficiales, descarga sus páginas, elimina duplicados por URL y guarda el catálogo en `localStorage`. Se intenta al iniciar, al volver la app a primer plano, cuando vuelve la conexión y se puede forzar tocando el estado de sincronización. También se revalidan cada 12 horas las páginas de información, las fichas de productos y las fichas de tiendas/catering.
+La sincronización consulta las categorías oficiales, descarga sus páginas, elimina duplicados por URL y guarda el catálogo en `localStorage`. Se intenta al iniciar, al volver la app a primer plano, cuando vuelve la conexión y se puede forzar tocando el estado de sincronización. La app muestra primero la copia incluida o guardada y actualiza el contenido en segundo plano para que las secciones abran sin esperar.
 
 En Vite, las consultas pasan por el proxy local `/vaad-api`. En Android/iOS, el código usa `CapacitorHttp` nativo porque `vaad.ar` no publica CORS; de esa forma el APK puede actualizarse sin depender de un proxy de desarrollo. Las respuestas se reintentan hasta tres veces y se conserva la última copia válida si el teléfono está sin conexión.
 
@@ -20,7 +20,7 @@ La actualización de 12 horas en el cliente se ejecuta al iniciar o reanudar la 
 - Wrapper Android original de referencia: `app/`
 - Configuración multiplataforma: `capacitor.config.json`
 - Paquete: `ar.vaad.catalogo.app`
-- Versión fuente: `0.10.0` (código 13)
+- Versión fuente: `0.10.0` (código 14)
 - APK original de referencia: `Iahadut-HaTora-v12-3.apk`
 
 ## Compilar Android Capacitor
@@ -39,6 +39,12 @@ La APK de salida queda en `android/app/build/outputs/apk/debug/app-debug.apk`.
 Requiere Node 22 o superior. Con la Mac y el dispositivo en la misma red:
 
 ```bash
+npm run dev -- --host 0.0.0.0
+```
+
+Vite muestra una dirección `Network` que se puede abrir directamente en el navegador del teléfono. Para probar además las funciones nativas dentro de la app —cámara, botón Atrás y barras del sistema— usar:
+
+```bash
 PATH=/opt/homebrew/opt/node/bin:$PATH npm run cap:android:live
 PATH=/opt/homebrew/opt/node/bin:$PATH npm run cap:ios:live
 ```
@@ -47,6 +53,8 @@ Para el trabajo diario en Android, usar `npm run build:sync` antes de abrir Andr
 
 Android requiere Android Studio, Java y un dispositivo autorizado por ADB. iPhone requiere Xcode completo, CocoaPods y un dispositivo confiado por la Mac.
 
+El lector usa el escáner nativo de Capacitor en Android/iOS. Un código externo se utiliza solo para identificar el nombre o la marca y buscar coincidencias dentro del catálogo oficial; no autoriza automáticamente productos.
+
 ## Próximas mejoras
 
-La siguiente etapa debería agregar un backend o una sincronización robusta del catálogo oficial, pruebas del lector de códigos y una base de datos local completa para uso offline.
+La siguiente etapa debería agregar monitoreo centralizado de la sincronización y pruebas físicas de regresión en varios tamaños de Android y iPhone.

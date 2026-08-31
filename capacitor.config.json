@@ -1,8 +1,5 @@
 {
   "appId": "ar.vaad.catalogo.app",
   "appName": "Iahadut HaTora",
-  "webDir": "dist",
-  "server": {
-    "cleartext": true
-  }
+  "webDir": "dist"
 }
