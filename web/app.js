@@ -666,7 +666,7 @@ import contentSnapshot from './data/content.json';
     const matches = [];
     for (const alert of alerts) {
       const alertText = typeof alert === 'string' ? alert : alert?.text || '';
-      const alertTitle = normalize(cleanDisplayText(alertText.replace(/\s*\([^)]*\)\s*$/, ''));
+      const alertTitle = normalize(cleanDisplayText(alertText.replace(/\s*\([^)]*\)\s*$/, '')));
       const linkedProduct = alert?.url ? products.find((product) => product.url === alert.url) : null;
       const match = products.find((product) => {
         const productTitle = normalize(cleanDisplayText(product.title));
