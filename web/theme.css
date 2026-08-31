@@ -526,6 +526,15 @@ body { color: #252925; }
 body.modal-open { overflow: hidden; }
 .initial-load-progress { position: fixed; top: 0; left: 0; z-index: 120; width: 100%; height: 3px; overflow: hidden; background: #dce6df; pointer-events: none; }
 .initial-load-progress i { display: block; width: var(--initial-load-progress, 4%); height: 100%; border-radius: 0 3px 3px 0; background: #1f684b; transition: width .2s ease; }
+.access-overlay { position: fixed; inset: 0; z-index: 200; display: grid; place-items: center; padding: 24px; background: #f7f8f6; }
+.access-overlay[hidden] { display: none; }
+.access-overlay section { display: grid; justify-items: center; width: min(100%, 420px); padding: 28px 22px; border: 1px solid #d9e5dd; border-radius: 22px; background: #fff; text-align: center; box-shadow: 0 16px 44px #24372d1a; }
+.access-overlay img { width: 92px; height: 66px; object-fit: contain; mix-blend-mode: multiply; }
+.access-overlay h2 { margin: 13px 0 8px; color: #1f5d46; font-size: 24px; line-height: 1.15; }
+.access-overlay p { margin: 0 0 20px; color: #566159; font-size: 14px; line-height: 1.55; }
+.access-overlay button { width: 100%; min-height: 50px; margin-top: 9px; border: 0; border-radius: 14px; background: #1f684b; color: #fff; font-size: 14px; font-weight: 750; }
+.access-overlay .access-retry { border: 1px solid #ccd9d1; background: #fff; color: #1f684b; }
+.managed-more-row .managed-status { color: #78817a; font-size: 11px; font-weight: 500; }
 .back, .icon-btn, .catalog-info { min-width: 44px; min-height: 44px; }
 .catalog-info { width: 44px; height: 44px; }
 .sheet-close, .image-close { min-width: 44px; min-height: 44px; }

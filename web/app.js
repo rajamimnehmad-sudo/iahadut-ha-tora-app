@@ -1,5 +1,6 @@
 import { Capacitor, CapacitorHttp } from '@capacitor/core';
 import { App } from '@capacitor/app';
+import { APP_VERSION, accessDecision, defaultRemoteControl, loadRemoteControl } from './remote-control.js';
 import catalogSnapshot from './data/catalog.json';
 import contentSnapshot from './data/content.json';
 
@@ -38,7 +39,7 @@ import contentSnapshot from './data/content.json';
   imageObserver.observe(document.documentElement, {childList:true, subtree:true});
   document.querySelectorAll('img').forEach(prepareImage);
 
-  const categories = [
+  let categories = [
     {key:'gondola', name:'Autorizados en góndolas', short:'Góndolas', desc:'Productos de compra habitual', count:467, url:'https://vaad.ar/categoria-producto/productos-autorizados-en-gondola/'},
     {key:'planta', name:'Plantas certificadas', short:'Plantas', desc:'Elaborados bajo certificación', count:309, url:'https://vaad.ar/categoria-producto/productos-de-plantas-certificadas/'},
     {key:'especial', name:'Producción especial', short:'Prod. especial', desc:'Producciones supervisadas', count:63, url:'https://vaad.ar/categoria-producto/produccion-especial-kosher/'},
@@ -88,6 +89,9 @@ import contentSnapshot from './data/content.json';
   let visibleProductCursor = 0;
   let visibleProductTarget = null;
   let resultObserver = null;
+  let remoteControl = {...defaultRemoteControl, configured:false, checkedAt:0};
+  let remoteTaxonomyRules = [];
+  let pushListenersReady = false;
 
   const categoryFor = (key) => categories.find((category) => category.key === key);
   const categoryCount = (category) => products.length > seed.length ? products.filter((product) => product.cat === category.key).length : category.count;
@@ -774,6 +778,8 @@ import contentSnapshot from './data/content.json';
 
   function productCategoryPath(product) {
     const text = normalize(`${product.title} ${product.description || ''}`);
+    const remoteMatch = remoteTaxonomyRules.find((rule) => rule.keywords.some((keyword) => text.includes(keyword)));
+    if (remoteMatch) return remoteMatch.path;
     const match = productCategoryRules.find(([, pattern]) => pattern.test(text));
     if (match) return match[0];
     const fallback = {gondola:'Productos de góndola', planta:'Productos de plantas certificadas', especial:'Producción especial', uruguay:'Productos de Uruguay'};
@@ -1074,9 +1080,73 @@ import contentSnapshot from './data/content.json';
     }
   }
 
+  function parseRemoteList(value) {
+    if (!value) return [];
+    try { const parsed = JSON.parse(value); return Array.isArray(parsed) ? parsed : []; } catch (_) { return []; }
+  }
+
+  function applyRemoteContent(control) {
+    const managedCategories = parseRemoteList(control.categories_json).filter((item) => item?.key && item?.name);
+    if (managedCategories.length) categories = managedCategories.map((item) => ({key:clean(item.key), name:clean(item.name), short:clean(item.short || item.name), desc:clean(item.desc), count:Number(item.count) || 0, url:clean(item.url)}));
+    remoteTaxonomyRules = parseRemoteList(control.taxonomy_rules_json).filter((item) => Array.isArray(item?.path) && Array.isArray(item?.keywords)).map((item) => ({path:item.path.map(clean).filter(Boolean), keywords:item.keywords.map(normalize).filter(Boolean)}));
+  }
+
+  function openExternal(url) {
+    if (!url) return;
+    const link = document.createElement('a'); link.href = url; link.target = '_blank'; link.rel = 'noopener';
+    document.body.appendChild(link); link.click(); link.remove();
+  }
+
+  function updateAccessOverlay(control) {
+    const decision = accessDecision(control);
+    $('#accessOverlay').hidden = decision.allowed;
+    if (decision.allowed) return decision;
+    $('#accessTitle').textContent = decision.versionBlocked ? 'Necesitás actualizar' : decision.expired ? 'Acceso finalizado' : decision.needsOnlineCheck ? 'Conectate para verificar' : 'Aplicación no disponible';
+    $('#accessMessage').textContent = decision.versionBlocked ? 'Hay una versión más nueva necesaria para continuar.' : control.maintenance_message;
+    $('#accessUpdate').hidden = !(decision.versionBlocked && control.update_url);
+    return decision;
+  }
+
+  async function refreshRemoteControl(force = false) {
+    remoteControl = await loadRemoteControl(force);
+    applyRemoteContent(remoteControl);
+    const decision = updateAccessOverlay(remoteControl);
+    renderHome(); renderSearchCategories();
+    if (document.querySelector('.view.active')?.id === 'moreView') renderMore();
+    return decision;
+  }
+
+  async function setupPushNotifications(requestPermission = false) {
+    if (!Capacitor.isNativePlatform()) return 'unavailable';
+    try {
+      const {PushNotifications} = await import('@capacitor/push-notifications');
+      if (!pushListenersReady) {
+        pushListenersReady = true;
+        await PushNotifications.addListener('registration', async ({value}) => {
+          localStorage.setItem('iht_push_token', value); localStorage.setItem('iht_push_status', 'active');
+          if (remoteControl.device_registration_url) {
+            try { await CapacitorHttp.post({url:remoteControl.device_registration_url, headers:{'Content-Type':'application/json'}, data:{token:value, platform:Capacitor.getPlatform(), topic:'catalog-updates', appVersion:APP_VERSION}}); } catch (_) {}
+          }
+          if (document.querySelector('.view.active')?.id === 'moreView') renderMore();
+        });
+        await PushNotifications.addListener('registrationError', () => localStorage.setItem('iht_push_status', 'error'));
+        await PushNotifications.addListener('pushNotificationReceived', (notification) => { $('#navDot').hidden = false; if (notification.data?.action === 'sync') syncCatalog(true); });
+        await PushNotifications.addListener('pushNotificationActionPerformed', ({notification}) => { $('#navDot').hidden = true; if (notification.data?.action === 'sync') syncCatalog(true); showView('alertsView'); });
+        await PushNotifications.createChannel({id:'catalog-updates', name:'Actualizaciones del catálogo', description:'Altas, bajas y cambios importantes', importance:4, visibility:1, vibration:true});
+      }
+      let permission = await PushNotifications.checkPermissions();
+      if (requestPermission && permission.receive === 'prompt') permission = await PushNotifications.requestPermissions();
+      if (permission.receive === 'granted') { await PushNotifications.register(); return 'active'; }
+      localStorage.setItem('iht_push_status', permission.receive === 'denied' ? 'denied' : 'pending');
+      return permission.receive;
+    } catch (_) { localStorage.setItem('iht_push_status', 'unavailable'); return 'unavailable'; }
+  }
+
   function renderMore() {
     const saved = `<button class="more-row saved-more-row" data-saved="true">${bookmarkIcon(false)}<span><strong>Productos guardados</strong><small>${favorites.size ? `${favorites.size} productos guardados` : 'Todavía no guardaste productos'}</small></span><span class="row-arrow" aria-hidden="true">›</span></button>`;
-    $('#moreList').innerHTML = saved + Object.entries(info).map(([key, value]) => `<button class="more-row" data-info="${key}">${infoIcon(key)}<span><strong>${escapeHtml(value[0])}</strong><small>${escapeHtml(value[1])}</small></span><span class="row-arrow" aria-hidden="true">›</span></button>`).join('');
+    const decision = accessDecision(remoteControl);
+    const managed = `<button class="more-row managed-more-row" data-enable-notifications><span class="managed-icon" aria-hidden="true">●</span><span><strong>Notificaciones</strong><small>${localStorage.getItem('iht_push_status') === 'active' ? 'Activadas' : 'Recibí altas, bajas y novedades'}</small></span><span class="row-arrow" aria-hidden="true">›</span></button><button class="more-row managed-more-row" data-app-update><span class="managed-icon" aria-hidden="true">↻</span><span><strong>Actualizar aplicación</strong><small>${decision.updateAvailable ? `Nueva versión ${escapeHtml(remoteControl.latest_version)} disponible` : `Versión ${escapeHtml(APP_VERSION)}`}</small></span><span class="row-arrow" aria-hidden="true">›</span></button>`;
+    $('#moreList').innerHTML = saved + managed + Object.entries(info).map(([key, value]) => `<button class="more-row" data-info="${key}">${infoIcon(key)}<span><strong>${escapeHtml(value[0])}</strong><small>${escapeHtml(value[1])}</small></span><span class="row-arrow" aria-hidden="true">›</span></button>`).join('');
   }
 
   async function openInfo(key, options = {}) {
@@ -1327,6 +1397,16 @@ import contentSnapshot from './data/content.json';
     const infoButton = event.target.closest('[data-info]'); if (infoButton) openInfo(infoButton.dataset.info);
     const savedButton = event.target.closest('[data-saved]'); if (savedButton) { favoriteOnly = true; selectedCategory = 'all'; openSearchScreen(); renderResults(''); }
     const clearHistoryButton = event.target.closest('[data-clear-history]'); if (clearHistoryButton) { if (!recent.length || window.confirm('¿Borrar el historial de búsquedas?')) { recent = []; localStorage.removeItem('iht_recent'); renderMore(); renderSearchCategories(); } }
+    const notificationButton = event.target.closest('[data-enable-notifications]');
+    if (notificationButton) { setupPushNotifications(true).then(() => renderMore()); return; }
+    const updateButton = event.target.closest('[data-app-update]');
+    if (updateButton) {
+      refreshRemoteControl(true).then((decision) => {
+        if (decision.updateAvailable && remoteControl.update_url) openExternal(remoteControl.update_url);
+        else window.alert(decision.updateAvailable ? 'La actualización todavía no tiene un enlace de descarga configurado.' : 'Ya tenés la última versión disponible.');
+      });
+      return;
+    }
     const copyBankButton = event.target.closest('[data-copy-bank]');
     if (copyBankButton) {
       const text = copyBankButton.dataset.copyBank || '';
@@ -1382,13 +1462,17 @@ import contentSnapshot from './data/content.json';
   $('#filterOverlay').onclick = (event) => { if (event.target === $('#filterOverlay')) { $('#filterOverlay').hidden = true; updateModalLock(); return; } const filter = event.target.closest('[data-filter]'); if (filter) { selectedCategory = filter.dataset.filter; $('#filterOverlay').hidden = true; updateModalLock(); renderResults($('#query').value); } };
   $('#resetFilter').onclick = () => { selectedCategory = 'all'; $('#filterOverlay').hidden = true; updateModalLock(); renderResults($('#query').value); };
   $('#syncStatus').onclick = () => syncCatalog(true);
+  $('#accessRetry').onclick = () => refreshRemoteControl(true);
+  $('#accessUpdate').onclick = () => openExternal(remoteControl.update_url);
   renderHome(); renderSearchCategories();
   syncMessage(lastSyncMessage(), syncState.last ? 'ok' : '');
   if (navigator.onLine && localStorage.getItem(INITIAL_PRELOAD_KEY) !== 'done') initialLoadProgress(4);
+  refreshRemoteControl(false);
+  setupPushNotifications(false);
   syncCatalog(false).finally(scheduleAppPreload);
   setInterval(() => syncCatalog(false), 12 * 60 * 60 * 1000);
   document.addEventListener('visibilitychange', () => {
-    if (!document.hidden) syncCatalog(false);
+    if (!document.hidden) { syncCatalog(false); refreshRemoteControl(false); }
   });
   window.addEventListener('online', () => { syncCatalog(false).finally(scheduleAppPreload); });
 })();

@@ -1,5 +1,10 @@
 {
   "appId": "ar.vaad.catalogo.app",
   "appName": "Iahadut HaTora",
-  "webDir": "dist"
+  "webDir": "dist",
+  "plugins": {
+    "PushNotifications": {
+      "presentationOptions": ["badge", "sound", "banner", "list"]
+    }
+  }
 }
