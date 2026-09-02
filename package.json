@@ -3,6 +3,9 @@
   "version": "0.11.0",
   "private": true,
   "description": "Catálogo kosher multiplataforma de Iahadut HaTora",
+  "engines": {
+    "node": ">=22.0.0"
+  },
   "scripts": {
     "dev": "vite --config vite.config.js",
     "snapshot:catalog": "node scripts/generate-catalog-snapshot.mjs",

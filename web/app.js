@@ -10,7 +10,7 @@ if ('serviceWorker' in navigator && import.meta.env.PROD) {
   window.addEventListener('load', () => navigator.serviceWorker.register(`${import.meta.env.BASE_URL}sw.js`, {scope: import.meta.env.BASE_URL}).catch(() => {}));
 }
 
-if (import.meta.env.PROD) {
+if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
   let installPrompt;
   const standalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
   const gate = document.querySelector('#installGate');
@@ -41,10 +41,16 @@ if (import.meta.env.PROD) {
   }
 }
 
-(() => {
+(async () => {
   'use strict';
 
   const $ = (selector) => document.querySelector(selector);
+  let searchFormHome;
+  let searchPlaceholderTimer;
+  let homePlaceholderTimer;
+  let searchPlaceholderSwapTimer;
+  let homePlaceholderSwapTimer;
+  const searchPlaceholders = ['Buscá un producto', 'Probá con una marca', 'Buscá por categoría', 'Escaneá un código'];
   const clean = (value) => String(value || '').replace(/\s+/g, ' ').trim();
   const normalize = (value) => clean(value).normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
   const escapeHtml = (value) => String(value || '').replace(/[&<>"']/g, (char) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[char]));
@@ -113,9 +119,11 @@ if (import.meta.env.PROD) {
   let favorites = new Set(Array.isArray(storedFavorites) ? storedFavorites : []);
   let recent = Array.isArray(storedRecent) ? storedRecent : [];
   let selectedCategory = 'all';
+  let selectedRegion = 'argentina';
   let favoriteOnly = false;
   let currentProduct = null;
   let previousView = 'homeView';
+  let previousScrollTop = 0;
   let currentInfoKey = '';
   let readerHistory = [];
   let stream = null;
@@ -127,6 +135,9 @@ if (import.meta.env.PROD) {
   let visibleProductCursor = 0;
   let visibleProductTarget = null;
   let resultObserver = null;
+  let recentCarouselTimer = null;
+  let recentCarouselOffset = 0;
+  let recentCarouselDirection = 1;
   let remoteControl = {...defaultRemoteControl, configured:false, checkedAt:0};
   let remoteTaxonomyRules = [];
   let pushListenersReady = false;
@@ -578,6 +589,19 @@ if (import.meta.env.PROD) {
     });
   }
 
+  async function preloadInitialProductImages() {
+    const candidates = [...(Array.isArray(recentProducts) ? recentProducts : []), ...products, ...bundledProducts]
+      .map((product) => product?.image)
+      .filter(Boolean)
+      .filter((src, index, all) => all.indexOf(src) === index)
+      .slice(0, 10);
+    if (!candidates.length) return;
+    await Promise.race([
+      runPool(candidates, preloadImage, 4),
+      new Promise((resolve) => window.setTimeout(resolve, 4000))
+    ]);
+  }
+
   async function runPool(items, worker, concurrency = 3, onProgress = null) {
     const queue = [...items];
     let completed = 0;
@@ -618,11 +642,12 @@ if (import.meta.env.PROD) {
       const cards = Object.values(infoCache).flatMap((content) => content?.cards || []).filter((card) => card.url).filter((card, index, all) => all.findIndex((candidate) => candidate.url === card.url) === index);
       await runPool(cards, fetchCardContent, 3, firstPreparation ? (done, total) => initialLoadProgress(40 + (done / Math.max(total, 1)) * 30) : null);
       const imageUrls = [
+        ...products.map((product) => product.image),
         ...recentProducts.map((product) => product.image),
         ...Object.values(infoCache).flatMap((content) => [...(content?.images || []).map((image) => image.src), ...(content?.cards || []).map((card) => card.image)]),
         ...Object.values(cardCache).flatMap((content) => content?.images || []).map((image) => image.src)
       ].filter(Boolean).filter((src, index, all) => all.indexOf(src) === index);
-      await runPool(imageUrls, preloadImage, 4, firstPreparation ? (done, total) => initialLoadProgress(70 + (done / Math.max(total, 1)) * 30) : null);
+      await runPool(imageUrls, preloadImage, 6, firstPreparation ? (done, total) => initialLoadProgress(70 + (done / Math.max(total, 1)) * 30) : null);
       if (firstPreparation) {
         localStorage.setItem(INITIAL_PRELOAD_KEY, 'done');
         initialLoadProgress(100);
@@ -666,8 +691,8 @@ if (import.meta.env.PROD) {
       const previousDescriptions = new Map(products.map((product) => [product.url, product.description]));
       const previousUrls = new Set(products.map((product) => product.url));
       products = unique.map((product) => ({...product, description:previousDescriptions.get(product.url) || ''}));
-      recentProducts = unique.filter((product) => !previousUrls.has(product.url)).slice(0, 4);
-      if (recentProducts.length < 4) recentProducts = unique.slice(0, 4);
+      recentProducts = unique.filter((product) => !previousUrls.has(product.url)).slice(0, 10);
+      if (recentProducts.length < 10) recentProducts = unique.slice(0, 10);
       localStorage.setItem('iht_recent_products', JSON.stringify(recentProducts));
       save();
       syncState.last = String(Date.now());
@@ -699,10 +724,105 @@ if (import.meta.env.PROD) {
     $('#homeTotal').textContent = `${totalCount().toLocaleString('es-AR')} productos en el catálogo`;
     const updateNode = $('#officialUpdateDate');
     if (updateNode) updateNode.textContent = officialUpdateMessage();
-    const recentCandidates = [...(Array.isArray(recentProducts) ? recentProducts : []), ...products];
-    const items = [...new Map(recentCandidates.map((product) => [product.url, product])).values()].slice(0, 4);
-    $('#recentProducts').innerHTML = items.map((product) => `<button class="recent-product" data-product="${escapeHtml(product.url)}" aria-label="Ver ${escapeHtml(product.title)}"><img src="${escapeHtml(product.image || 'assets/logo.png')}" alt="${escapeHtml(product.title)}" loading="lazy" onerror="this.onerror=null;this.src='assets/logo.png'"></button>`).join('');
+    const recentCandidates = [...(Array.isArray(recentProducts) ? recentProducts : []), ...products, ...bundledProducts];
+    const items = [...new Map(recentCandidates.map((product) => [product.url, product])).values()].slice(0, 10);
+    if (recentCarouselTimer) {
+      window.clearInterval(recentCarouselTimer);
+      recentCarouselTimer = null;
+    }
+    recentCarouselOffset = 0;
+    $('#recentProducts').innerHTML = items.map((product) => `<button class="recent-product" data-product="${escapeHtml(product.url)}" aria-label="Ver ${escapeHtml(product.title)}"><img class="asset-loading" src="${escapeHtml(product.image || 'assets/logo.png')}" alt="${escapeHtml(product.title)}" loading="eager" onload="this.classList.remove('asset-loading');this.classList.add('asset-ready')" onerror="this.onerror=null;this.src='assets/logo.png';this.classList.remove('asset-loading');this.classList.add('asset-ready')"></button>`).join('');
+    $('#recentProducts').style.setProperty('--recent-items', String(items.length));
+    startRecentCarousel();
     renderAlertPreview();
+  }
+
+  function startRecentCarousel() {
+    if (recentCarouselTimer) return;
+    const track = $('#recentProducts');
+    if (!track || !track.children.length || track.children.length <= 4) return;
+    const viewport = track.parentElement;
+    if (!viewport) return;
+    enableRecentCarouselTouch(viewport);
+    recentCarouselOffset = 0;
+    track.style.transition = 'none';
+    track.style.transform = 'translateX(0)';
+    const advance = () => {
+      if (!track.isConnected || !track.children.length) return;
+      const firstCard = track.children[0];
+      const styles = window.getComputedStyle(track);
+      const gap = parseFloat(styles.columnGap || styles.gap) || 0;
+      const step = firstCard.getBoundingClientRect().width + gap;
+      const maxTranslate = Math.max(0, track.scrollWidth - viewport.clientWidth);
+      if (!step || !maxTranslate) return;
+
+      recentCarouselOffset = Math.min(recentCarouselOffset + step, maxTranslate);
+      track.style.transition = 'transform 650ms cubic-bezier(.22,.61,.36,1)';
+      track.style.transform = `translate3d(-${recentCarouselOffset}px, 0, 0)`;
+
+      if (recentCarouselOffset >= maxTranslate - 0.5) {
+        window.setTimeout(() => {
+          if (!track.isConnected) return;
+          recentCarouselOffset = 0;
+          track.style.transition = 'none';
+          track.style.transform = 'translate3d(0, 0, 0)';
+        }, 700);
+      }
+    };
+    recentCarouselTimer = window.setInterval(advance, 2400);
+  }
+
+  function enableRecentCarouselTouch(viewport) {
+    if (viewport.dataset.touchReady === 'true') return;
+    viewport.dataset.touchReady = 'true';
+    let startX = 0;
+    let startOffset = 0;
+    let dragging = false;
+    let moved = false;
+
+    viewport.addEventListener('pointerdown', (event) => {
+      if (event.pointerType === 'mouse' && event.button !== 0) return;
+      const track = $('#recentProducts');
+      if (!track) return;
+      startX = event.clientX;
+      startOffset = recentCarouselOffset;
+      dragging = true;
+      moved = false;
+      track.style.transition = 'none';
+      viewport.setPointerCapture?.(event.pointerId);
+    });
+
+    viewport.addEventListener('pointermove', (event) => {
+      if (!dragging) return;
+      const track = $('#recentProducts');
+      if (!track) return;
+      const delta = event.clientX - startX;
+      if (Math.abs(delta) > 5) moved = true;
+      const maxTranslate = Math.max(0, track.scrollWidth - viewport.clientWidth);
+      recentCarouselOffset = Math.max(0, Math.min(maxTranslate, startOffset - delta));
+      track.style.transform = `translate3d(-${recentCarouselOffset}px, 0, 0)`;
+      if (moved) event.preventDefault();
+    }, {passive: false});
+
+    const finishDrag = (event) => {
+      if (!dragging) return;
+      dragging = false;
+      viewport.releasePointerCapture?.(event.pointerId);
+      const track = $('#recentProducts');
+      if (track) track.style.transition = 'transform 650ms cubic-bezier(.22,.61,.36,1)';
+      if (moved) {
+        viewport.dataset.suppressClick = 'true';
+        window.setTimeout(() => { viewport.dataset.suppressClick = 'false'; }, 80);
+      }
+    };
+    viewport.addEventListener('pointerup', finishDrag);
+    viewport.addEventListener('pointercancel', finishDrag);
+    viewport.addEventListener('click', (event) => {
+      if (viewport.dataset.suppressClick === 'true') {
+        event.preventDefault();
+        event.stopPropagation();
+      }
+    }, true);
   }
 
   async function updateRecentFromAlerts(groups) {
@@ -720,10 +840,10 @@ if (import.meta.env.PROD) {
       });
       const candidate = linkedProduct || (match && (!alert?.url || match.url === alert.url) ? match : null) || (alert?.url ? {url:alert.url, title:displayTitle, brand:'', barcode:'', cat:'gondola', image:'assets/logo.png', description:''} : null);
       if (candidate && !matches.some((product) => product.url === candidate.url)) matches.push(candidate);
-      if (matches.length === 4) break;
+      if (matches.length === 10) break;
     }
     if (!matches.length) return;
-    recentProducts = [...matches, ...recentProducts, ...products].filter((product, index, all) => all.findIndex((candidate) => candidate.url === product.url) === index).slice(0, 4);
+    recentProducts = [...matches, ...recentProducts, ...products].filter((product, index, all) => all.findIndex((candidate) => candidate.url === product.url) === index).slice(0, 10);
     localStorage.setItem('iht_recent_products', JSON.stringify(recentProducts));
     renderHome();
     const missingImages = recentProducts.filter((product) => product.image === 'assets/logo.png' && product.url);
@@ -920,14 +1040,15 @@ if (import.meta.env.PROD) {
   }
 
   function renderSearchCategories() {
-    const all = `<button class="quick-filter ${selectedCategory === 'all' ? 'active' : ''}" data-category="all" aria-label="Ver todos los productos">${categoryIcon('all')}<span>Todos los productos</span><small>Ver el catálogo completo</small></button>`;
-    const filters = categories.map((category) => `<button class="quick-filter ${selectedCategory === category.key ? 'active' : ''}" data-category="${category.key}" aria-label="Filtrar por ${escapeHtml(category.name)}">${categoryIcon(category.key)}<span>${escapeHtml(category.short)}</span></button>`).join('');
-    $('#searchCategories').innerHTML = `<div class="quick-filters-label">Explorar categorías</div><div class="quick-filters">${all}${filters}</div>`;
+    const regions = selectedRegion === 'uruguay'
+      ? `<button class="region-shortcut active" data-region="argentina" aria-label="Volver a productos de Argentina"><span class="category-icon category-flag category-flag-arg"><img src="assets/flag-argentina.svg" alt="Bandera de Argentina"></span><span>Productos de Uruguay</span><b aria-hidden="true">×</b></button>`
+      : `<button class="region-shortcut" data-region="uruguay" aria-label="Buscar productos de Uruguay">${categoryIcon('uruguay')}<span>Buscar productos de Uruguay</span><b aria-hidden="true">›</b></button>`;
+    $('#searchCategories').innerHTML = `<div class="region-shortcut-wrap" aria-label="Filtro de país">${regions}</div>`;
     $('#recentSearches').innerHTML = recent.slice(0,5).map((query) => `<button data-recent="${escapeHtml(query)}">${escapeHtml(query)}</button>`).join('') + (recent.length ? '<button class="clear-history-chip" data-clear-history="true" type="button">Borrar historial</button>' : '');
   }
 
   function productImage(product) {
-    return `<img src="${escapeHtml(product.image || 'assets/logo.png')}" alt="${escapeHtml(product.title)}" onerror="this.onerror=null;this.src='assets/logo.png'">`;
+    return `<img class="asset-loading" src="${escapeHtml(product.image || 'assets/logo.png')}" alt="${escapeHtml(product.title)}" onload="this.classList.remove('asset-loading');this.classList.add('asset-ready')" onerror="this.onerror=null;this.src='assets/logo.png';this.classList.remove('asset-loading');this.classList.add('asset-ready')">`;
   }
 
   function cleanDisplayText(value) {
@@ -947,10 +1068,12 @@ if (import.meta.env.PROD) {
   function filtered(query) {
     const term = normalize(query);
     return products.filter((product) => {
-      const matchesCategory = selectedCategory === 'all' || product.cat === selectedCategory;
+      const isUruguay = product.cat === 'uruguay' || product.category === 'uruguay';
+      const matchesRegion = selectedRegion === 'uruguay' ? isUruguay : !isUruguay;
+      const matchesCategory = selectedCategory === 'all' || (selectedCategory === 'gondola' ? product.cat === 'gondola' && !isUruguay : product.cat === selectedCategory);
       const matchesFavorite = !favoriteOnly || favorites.has(product.url);
       const text = normalize(`${product.title} ${product.brand || ''} ${product.barcode || ''} ${product.description || ''}`);
-      return matchesCategory && matchesFavorite && (!term || text.includes(term));
+      return matchesRegion && matchesCategory && matchesFavorite && (!term || text.includes(term));
     }).sort((a,b) => a.title.localeCompare(b.title, 'es'));
   }
 
@@ -998,7 +1121,7 @@ if (import.meta.env.PROD) {
 
   function renderResults(query = '') {
     const result = filtered(query);
-    const title = favoriteOnly ? 'Guardados' : query ? 'Resultados' : selectedCategory === 'all' ? 'Todos los productos' : categoryFor(selectedCategory).name;
+    const title = favoriteOnly ? 'Guardados' : query ? 'Resultados' : selectedCategory !== 'all' ? categoryFor(selectedCategory).name : selectedRegion === 'uruguay' ? 'Uruguay' : 'Argentina';
     $('#resultsTitle').textContent = title;
     $('#resultsMeta').textContent = `${result.length.toLocaleString('es-AR')} ${result.length === 1 ? 'producto' : 'productos'} en esta vista`;
     $('#results').hidden = false;
@@ -1008,32 +1131,151 @@ if (import.meta.env.PROD) {
     $('#emptyReset')?.addEventListener('click', () => { $('#query').value = ''; $('#clear').hidden = true; selectedCategory = 'all'; favoriteOnly = false; renderSearchCategories(); $('#results').hidden = true; $('#searchCategories').hidden = false; $('#recentSearches').hidden = false; $('#query').focus(); });
   }
 
-  function showView(viewId) {
-    if (viewId !== 'searchView') document.body.classList.remove('search-open');
+  function renderSaved() {
+    const items = products.filter((product) => favorites.has(product.url)).sort((a, b) => a.title.localeCompare(b.title, 'es'));
+    $('#savedMeta').textContent = items.length
+      ? `${items.length.toLocaleString('es-AR')} ${items.length === 1 ? 'producto guardado' : 'productos guardados'}`
+      : 'Todavía no guardaste productos.';
+    renderProductCollection($('#savedProductList'), items, `<div class="empty-state saved-empty-state">${bookmarkIcon(false)}<strong>No hay productos guardados</strong><span>Cuando guardes un producto, aparecerá en esta pantalla.</span></div>`);
+  }
+
+  function restoreSearchForm() {
+    const searchForm = $('#searchForm');
+    const mobileSearchDock = $('.bottom-nav');
+    if (!searchForm || !mobileSearchDock || !searchFormHome) return;
+    if (searchForm.parentElement === mobileSearchDock) {
+      searchFormHome.parent.insertBefore(searchForm, searchFormHome.before);
+      searchForm.hidden = false;
+    }
+    mobileSearchDock.classList.remove('search-mode', 'search-closing', 'has-query');
+  }
+
+  function showView(viewId, {preserveSearch = false} = {}) {
+    if (viewId !== 'searchView') {
+      document.body.classList.remove('search-open');
+      restoreSearchForm();
+    }
     document.querySelectorAll('.view').forEach((view) => view.classList.toggle('active', view.id === viewId));
     document.querySelectorAll('.nav').forEach((button) => button.classList.toggle('active', button.dataset.view === viewId));
-    if (viewId === 'searchView') { renderSearchCategories(); $('#results').hidden = true; $('#searchCategories').hidden = false; $('#recentSearches').hidden = false; }
+    if (viewId === 'searchView' && !preserveSearch) { renderSearchCategories(); $('#results').hidden = true; $('#searchCategories').hidden = false; $('#recentSearches').hidden = false; }
     if (viewId === 'alertsView') renderAlerts();
     if (viewId === 'moreView') renderMore();
+    if (viewId === 'savedView') renderSaved();
     window.scrollTo(0,0);
   }
 
+  function restoreSearchScreen() {
+    const searchForm = $('#searchForm');
+    const mobileSearchDock = window.matchMedia('(max-width: 700px)').matches ? $('.bottom-nav') : null;
+    searchForm.hidden = false;
+    if (mobileSearchDock) {
+      if (!searchFormHome) searchFormHome = {parent: searchForm.parentElement, before: $('#recentSearches')};
+      if (searchForm.parentElement !== mobileSearchDock) mobileSearchDock.append(searchForm);
+      mobileSearchDock.classList.add('search-mode');
+      mobileSearchDock.classList.toggle('has-query', Boolean($('#query').value.trim()));
+    }
+    document.body.classList.add('search-open');
+    showView('searchView', {preserveSearch:true});
+    updateSearchScanAction(Boolean($('#query').value.trim()));
+    $('#clear').hidden = !$('#query').value;
+    $('#query').blur();
+  }
+
+  function openSavedScreen() {
+    favoriteOnly = false;
+    document.activeElement?.blur();
+    $('#query')?.blur();
+    $('#homeQuery')?.blur();
+    showView('savedView');
+  }
+
   function openSearchScreen() {
+    selectedRegion = 'argentina';
+    const searchForm = $('#searchForm');
+    searchForm.hidden = false;
+    const mobileSearchDock = window.matchMedia('(max-width: 700px)').matches ? $('.bottom-nav') : null;
+    if (mobileSearchDock) {
+      if (!searchFormHome) searchFormHome = { parent: searchForm.parentElement, before: $('#recentSearches') };
+      if (searchForm.parentElement !== mobileSearchDock) mobileSearchDock.append(searchForm);
+      mobileSearchDock.classList.add('search-mode');
+    }
     document.body.classList.add('search-open');
     showView('searchView');
     $('#query').value = $('#homeQuery').value;
+    $('.bottom-nav').classList.toggle('has-query', Boolean($('#query').value));
+    updateSearchScanAction(Boolean($('#query').value.trim()));
     $('#clear').hidden = !$('#query').value;
     $('#query').focus();
+    startSearchPlaceholders();
+  }
+
+  function startSearchPlaceholders() {
+    window.clearInterval(searchPlaceholderTimer);
+    const input = $('#query');
+    if (!input || input.value.trim()) return;
+    let index = 0;
+    input.placeholder = searchPlaceholders[index];
+    searchPlaceholderTimer = window.setInterval(() => {
+      if (input.value.trim()) return window.clearInterval(searchPlaceholderTimer);
+      index = (index + 1) % searchPlaceholders.length;
+      input.classList.add('placeholder-changing');
+      window.clearTimeout(searchPlaceholderSwapTimer);
+      searchPlaceholderSwapTimer = window.setTimeout(() => {
+        input.placeholder = searchPlaceholders[index];
+        input.classList.remove('placeholder-changing');
+      }, 190);
+    }, 3200);
+  }
+
+  function startHomePlaceholders() {
+    window.clearInterval(homePlaceholderTimer);
+    const input = $('#homeQuery');
+    if (!input || input.value.trim()) return;
+    let index = 0;
+    input.placeholder = searchPlaceholders[index];
+    homePlaceholderTimer = window.setInterval(() => {
+      if (input.value.trim()) return window.clearInterval(homePlaceholderTimer);
+      index = (index + 1) % searchPlaceholders.length;
+      input.classList.add('placeholder-changing');
+      window.clearTimeout(homePlaceholderSwapTimer);
+      homePlaceholderSwapTimer = window.setTimeout(() => {
+        input.placeholder = searchPlaceholders[index];
+        input.classList.remove('placeholder-changing');
+      }, 190);
+    }, 3200);
+  }
+
+  function updateSearchScanAction(hasText) {
+    const button = $('#searchScan');
+    if (!button) return;
+    button.classList.toggle('is-clear', hasText);
+    button.innerHTML = hasText ? '<span aria-hidden="true">×</span>' : '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6V4h2M18 4h2v2M4 18v2h2M20 18v2h-2M8 8v8M10.5 8v8M13.5 8v8M16 8v8"/></svg>';
+    button.setAttribute('aria-label', hasText ? 'Borrar búsqueda' : 'Abrir escáner de código de barras');
+    button.onclick = hasText ? () => { $('#query').value = ''; updateSearchScanAction(false); $('#clear').hidden = true; $('.bottom-nav').classList.remove('has-query'); $('#results').hidden = true; $('#searchCategories').hidden = false; $('#recentSearches').hidden = false; startSearchPlaceholders(); $('#query').focus(); } : openScanner;
   }
 
   function returnHome() {
+    const mobileSearchDock = searchFormHome ? $('.bottom-nav') : null;
+    if (mobileSearchDock) {
+      mobileSearchDock.classList.add('search-closing');
+      const searchForm = $('#searchForm');
+      searchFormHome.parent.insertBefore(searchForm, searchFormHome.before);
+      searchForm.hidden = true;
+      mobileSearchDock.classList.remove('search-mode');
+      window.setTimeout(() => {
+        document.body.classList.remove('search-open');
+        mobileSearchDock.classList.remove('search-closing', 'has-query');
+        showView('homeView');
+        searchForm.hidden = false;
+      }, 180);
+    }
     selectedCategory = 'all';
     favoriteOnly = false;
     $('#homeQuery').value = '';
     $('#query').value = '';
     $('#homeClear').hidden = true;
     $('#clear').hidden = true;
-    showView('homeView');
+    if (!mobileSearchDock) showView('homeView');
   }
 
   function doSearch(input, fromHome = false) {
@@ -1049,7 +1291,9 @@ if (import.meta.env.PROD) {
     favorites.has(url) ? favorites.delete(url) : favorites.add(url);
     save();
     if (currentProduct && currentProduct.url === url) renderDetail(currentProduct);
-    renderResults($('#query').value);
+    const activeView = document.querySelector('.view.active')?.id;
+    if (activeView === 'searchView' || (activeView === 'detailView' && previousView === 'searchView')) renderResults($('#query').value);
+    if (activeView === 'savedView' || (activeView === 'detailView' && previousView === 'savedView')) renderSaved();
   }
 
   function renderDetail(product, official = null) {
@@ -1058,7 +1302,7 @@ if (import.meta.env.PROD) {
     const officialImage = official?.images?.[0]?.src || product.image;
     const officialDescription = official?.blocks?.filter((block) => block.tag === 'p').map((block) => block.text).join(' ') || product.description || 'Producto incluido en el catálogo local de Iahadut HaTora.';
     const officialCategory = official?.category || (category ? category.name : 'Catálogo oficial');
-    $('#detailContent').innerHTML = `<div class="detail-content"><img src="${escapeHtml(officialImage || 'assets/logo.png')}" alt="${escapeHtml(product.title)}" onerror="this.onerror=null;this.src='assets/logo.png'"><div class="detail-body"><span class="label">${escapeHtml(officialCategory)}</span><h1>${escapeHtml(product.title)}</h1><button class="filter-btn" id="detailFavorite">${bookmarkIcon(favorites.has(product.url))}<span>${favorites.has(product.url) ? 'Guardado' : 'Guardar producto'}</span></button><div class="verified-line"><span class="status-dot" aria-hidden="true"></span>Producto autorizado por Iahadut HaTora</div><p>${escapeHtml(officialDescription)}</p><div class="detail-facts single"><div><small>Categoría</small><strong>${escapeHtml(officialCategory)}</strong></div></div></div></div>`;
+    $('#detailContent').innerHTML = `<div class="detail-content"><img class="asset-loading" loading="eager" src="${escapeHtml(officialImage || 'assets/logo.png')}" alt="${escapeHtml(product.title)}" onload="this.classList.remove('asset-loading');this.classList.add('asset-ready')" onerror="this.onerror=null;this.src='assets/logo.png';this.classList.remove('asset-loading');this.classList.add('asset-ready')"><div class="detail-body"><span class="label">${escapeHtml(officialCategory)}</span><h1>${escapeHtml(product.title)}</h1><button class="filter-btn" id="detailFavorite">${bookmarkIcon(favorites.has(product.url))}<span>${favorites.has(product.url) ? 'Guardado' : 'Guardar producto'}</span></button><div class="verified-line"><span class="status-dot" aria-hidden="true"></span>Producto autorizado por Iahadut HaTora</div><p>${escapeHtml(officialDescription)}</p><div class="detail-facts single"><div><small>Categoría</small><strong>${escapeHtml(officialCategory)}</strong></div></div></div></div>`;
     $('#detailFavorite').onclick = () => toggleFavorite(product.url);
     $('#detailSave').innerHTML = bookmarkIcon(favorites.has(product.url));
     $('#detailSave').setAttribute('aria-label', favorites.has(product.url) ? 'Quitar de guardados' : 'Guardar producto');
@@ -1066,8 +1310,16 @@ if (import.meta.env.PROD) {
 
   function openDetail(url) {
     const product = products.find((item) => item.url === url); if (!product) return;
-    previousView = document.querySelector('.view.active').id; showView('detailView'); renderDetail(product);
+    previousView = document.querySelector('.view.active').id;
+    previousScrollTop = window.scrollY;
+    showView('detailView'); renderDetail(product);
     fetchProductContent(product).then((official) => { if (currentProduct?.url === product.url) renderDetail(product, official); }).catch(() => { if (currentProduct?.url === product.url && productCache[product.url]) renderDetail(product, productCache[product.url]); });
+  }
+
+  function returnFromDetail() {
+    if (previousView === 'searchView') restoreSearchScreen();
+    else showView(previousView);
+    window.requestAnimationFrame(() => window.scrollTo(0, previousScrollTop));
   }
 
   function renderAlertPreview() {
@@ -1096,7 +1348,9 @@ if (import.meta.env.PROD) {
       const normalizedText = normalize(text.replace(/\s*\([^)]*\)\s*$/, ''));
       const match = linked || products.find((product) => { const productTitle = normalize(product.title); return productTitle.length > 8 && (normalizedText.includes(productTitle) || productTitle.includes(normalizedText)); });
       const visual = match?.image ? `<img class="alert-product-image" src="${escapeHtml(match.image)}" alt="" loading="lazy" onerror="this.replaceWith(document.createTextNode('•'))">` : '<span class="alert-mark" aria-hidden="true">•</span>';
-      return `<article class="alert-item">${visual}<p>${styledBrandText(text)}</p></article>`;
+      const tag = match ? 'button' : 'article';
+      const productAttrs = match ? ` data-product="${escapeHtml(match.url)}" aria-label="Ver ${escapeHtml(match.title)}" type="button"` : '';
+      return `<${tag} class="alert-item${match ? ' alert-item-clickable' : ''}"${productAttrs}>${visual}<p>${styledBrandText(text)}</p>${match ? '<span class="alert-item-arrow" aria-hidden="true">›</span>' : ''}</${tag}>`;
     }).join('')}</div></details>`;
   }
 
@@ -1201,7 +1455,8 @@ if (import.meta.env.PROD) {
     if (notificationButton) notificationButton.setAttribute('aria-label', pushStatus === 'active' ? 'Notificaciones activadas' : 'Configurar notificaciones');
     if (notificationStatus) notificationStatus.hidden = pushStatus !== 'active';
     const update = `<button class="more-row managed-more-row update-more-row" data-app-update><span class="managed-icon" aria-hidden="true">↻</span><span><strong>Actualizar aplicación</strong><small>${decision.updateAvailable ? `Nueva versión ${escapeHtml(remoteControl.latest_version)} disponible` : `Versión ${escapeHtml(APP_VERSION)}`}</small></span><span class="row-arrow" aria-hidden="true">›</span></button>`;
-    $('#moreList').innerHTML = saved + Object.entries(info).map(([key, value]) => `<button class="more-row" data-info="${key}">${infoIcon(key)}<span><strong>${escapeHtml(value[0])}</strong><small>${escapeHtml(value[1])}</small></span><span class="row-arrow" aria-hidden="true">›</span></button>`).join('') + update;
+    const developerCredit = '<div class="developer-credit"><span>Y.R.N Soluciones Software</span><a class="developer-whatsapp" href="https://wa.me/5491135195674" target="_blank" rel="noopener" aria-label="Contactar por WhatsApp"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c0 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/></svg></a></div>';
+    $('#moreList').innerHTML = saved + Object.entries(info).map(([key, value]) => `<button class="more-row" data-info="${key}">${infoIcon(key)}<span><strong>${escapeHtml(value[0])}</strong><small>${escapeHtml(value[1])}</small></span><span class="row-arrow" aria-hidden="true">›</span></button>`).join('') + update + developerCredit;
   }
 
   async function openInfo(key, options = {}) {
@@ -1438,10 +1693,10 @@ if (import.meta.env.PROD) {
     if (!$('#cardOverlay').hidden) { closeInfoCard(); return; }
     const activeView = document.querySelector('.view.active')?.id || 'homeView';
     if (activeView === 'searchView') { returnHome(); return; }
-    if (activeView === 'detailView') { showView(previousView); return; }
+    if (activeView === 'detailView') { returnFromDetail(); return; }
     if (activeView === 'readerView') { goBackReader(); return; }
     if (activeView === 'subcategoryDirectoryView' || activeView === 'categoryProductsView') { goBackTaxonomy(); return; }
-    if (activeView === 'categoryDirectoryView' || activeView === 'alertsView' || activeView === 'moreView') { returnHome(); return; }
+    if (activeView === 'categoryDirectoryView' || activeView === 'alertsView' || activeView === 'moreView' || activeView === 'savedView') { returnHome(); return; }
     if (Capacitor.isNativePlatform()) await App.exitApp();
   }
 
@@ -1455,12 +1710,14 @@ if (import.meta.env.PROD) {
     if (exploreCategories) { openCategoryDirectoryFromHome(); return; }
     const taxonomyButton = event.target.closest('[data-taxonomy-path]');
     if (taxonomyButton) { openTaxonomyPath(JSON.parse(decodeURIComponent(taxonomyButton.dataset.taxonomyPath))); return; }
+    const regionButton = event.target.closest('[data-region]');
+    if (regionButton) { selectedRegion = regionButton.dataset.region; favoriteOnly = false; showView('searchView'); renderResults($('#query').value); renderSearchCategories(); return; }
     const categoryButton = event.target.closest('[data-category]'); if (categoryButton) { selectedCategory = categoryButton.dataset.category; favoriteOnly = false; showView('searchView'); renderResults(''); }
     const productButton = event.target.closest('[data-product]'); if (productButton && !event.target.closest('[data-favorite]')) openDetail(productButton.dataset.product);
     const favoriteButton = event.target.closest('[data-favorite]'); if (favoriteButton) { event.stopPropagation(); toggleFavorite(favoriteButton.dataset.favorite); }
     const recentButton = event.target.closest('[data-recent]'); if (recentButton) { $('#query').value = recentButton.dataset.recent; renderResults(recentButton.dataset.recent); }
     const infoButton = event.target.closest('[data-info]'); if (infoButton) openInfo(infoButton.dataset.info);
-    const savedButton = event.target.closest('[data-saved]'); if (savedButton) { favoriteOnly = true; selectedCategory = 'all'; openSearchScreen(); renderResults(''); }
+    const savedButton = event.target.closest('[data-saved]'); if (savedButton) { openSavedScreen(); return; }
     const clearHistoryButton = event.target.closest('[data-clear-history]'); if (clearHistoryButton) { if (!recent.length || window.confirm('¿Borrar el historial de búsquedas?')) { recent = []; localStorage.removeItem('iht_recent'); renderMore(); renderSearchCategories(); } }
     const notificationButton = event.target.closest('[data-enable-notifications]');
     if (notificationButton) { setupPushNotifications(true).then(() => renderMore()); return; }
@@ -1490,10 +1747,18 @@ if (import.meta.env.PROD) {
   $('#homeForm').onsubmit = (event) => { event.preventDefault(); dismissKeyboard($('#homeQuery')); doSearch($('#homeQuery'), true); };
   $('#searchForm').onsubmit = (event) => { event.preventDefault(); dismissKeyboard($('#query')); doSearch($('#query')); };
   $('#homeClear').onclick = () => { $('#homeQuery').value = ''; $('#homeClear').hidden = true; };
-  $('#clear').onclick = () => { $('#query').value = ''; $('#clear').hidden = true; $('#results').hidden = true; $('#searchCategories').hidden = false; $('#recentSearches').hidden = false; $('#query').focus(); };
+  $('#clear').onclick = () => { $('#query').value = ''; updateSearchScanAction(false); $('.bottom-nav').classList.remove('has-query'); $('#clear').hidden = true; $('#results').hidden = true; $('#searchCategories').hidden = false; $('#recentSearches').hidden = false; $('#query').focus(); startSearchPlaceholders(); };
   $('#detailSave').onclick = () => { if (currentProduct) toggleFavorite(currentProduct.url); };
-  $('#homeQuery').addEventListener('input', () => { $('#homeClear').hidden = !$('#homeQuery').value; });
+  $('#homeQuery').addEventListener('input', () => {
+    const hasText = Boolean($('#homeQuery').value.trim());
+    $('#homeClear').hidden = !$('#homeQuery').value;
+    if (hasText) window.clearInterval(homePlaceholderTimer); else startHomePlaceholders();
+  });
   $('#query').addEventListener('input', () => {
+    const hasText = Boolean($('#query').value.trim());
+    $('.bottom-nav').classList.toggle('has-query', hasText);
+    updateSearchScanAction(hasText);
+    if ($('#query').value.trim()) window.clearInterval(searchPlaceholderTimer); else startSearchPlaceholders();
     $('#clear').hidden = !$('#query').value;
     window.clearTimeout(searchTimer);
     searchTimer = window.setTimeout(() => {
@@ -1503,13 +1768,15 @@ if (import.meta.env.PROD) {
     }, 180);
   });
   $('#homeQuery').addEventListener('focus', openSearchScreen);
+  startHomePlaceholders();
   $('#searchBack').onclick = returnHome;
   $('#categoryDirectoryBack').onclick = returnHome;
   $('#subcategoryDirectoryBack').onclick = goBackTaxonomy;
   $('#categoryProductsBack').onclick = goBackTaxonomy;
   $('#catalogInfo').onclick = openCatalogInfo;
   $('#seeAlerts').onclick = () => showView('alertsView');
-  $('#detailBack').onclick = () => showView(previousView);
+  $('#savedBack').onclick = returnHome;
+  $('#detailBack').onclick = returnFromDetail;
   $('#readerBack').onclick = goBackReader;
   $('#closeImage').onclick = closeImage;
   $('#imageOverlay').onclick = (event) => { if (event.target === $('#imageOverlay')) closeImage(); };
@@ -1534,7 +1801,7 @@ if (import.meta.env.PROD) {
   $('#closeCard').onclick = closeInfoCard;
   $('#cardImage').onclick = () => { if ($('#cardImage').src) openImage($('#cardImage').src, $('#cardTitle').textContent || 'Imagen'); };
   $('#cardOverlay').onclick = (event) => { if (event.target === $('#cardOverlay')) closeInfoCard(); };
-  $('#homeScan').onclick = openScanner; $('#searchScan').onclick = openScanner; $('#closeScan').onclick = closeScanner;
+  $('#homeScan').onclick = openScanner; updateSearchScanAction(false); $('#closeScan').onclick = closeScanner;
   $('#barcodeForm').onsubmit = (event) => { event.preventDefault(); const code = $('#barcode').value; closeScanner(); resolveBarcode(code); };
   document.addEventListener('keydown', (event) => { if (event.key !== 'Escape') return; if (!$('#scanOverlay').hidden) closeScanner(); if (!$('#imageOverlay').hidden) closeImage(); if (!$('#cardOverlay').hidden) closeInfoCard(); });
   function openFilters() {
@@ -1549,11 +1816,15 @@ if (import.meta.env.PROD) {
   $('#syncStatus').onclick = () => syncCatalog(true);
   $('#accessRetry').onclick = () => refreshRemoteControl(true);
   $('#accessUpdate').onclick = () => openExternal(remoteControl.update_url);
+  // Start warming the first product images without delaying the first paint.
+  preloadInitialProductImages();
   renderHome(); renderSearchCategories();
   syncMessage(lastSyncMessage(), syncState.last ? 'ok' : '');
   if (navigator.onLine && localStorage.getItem(INITIAL_PRELOAD_KEY) !== 'done') initialLoadProgress(4);
   refreshRemoteControl(false);
   setupPushNotifications(false);
+  // Warm the complete catalog in the background so later screens open from cache.
+  window.setTimeout(scheduleAppPreload, 50);
   syncCatalog(false).finally(scheduleAppPreload);
   setInterval(() => syncCatalog(false), 12 * 60 * 60 * 1000);
   document.addEventListener('visibilitychange', () => {
