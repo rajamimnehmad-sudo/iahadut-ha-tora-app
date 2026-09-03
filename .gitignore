@@ -3,6 +3,8 @@ node_modules/
 dist/
 build/
 app/build/
+.barcode-enrichment-cache.json
+work/barcode-enrichment-cache.json
 .gradle/
 android/.gradle/
 android/local.properties

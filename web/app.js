@@ -168,6 +168,7 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
   let stream = null;
   let scanFrame = 0;
   let pendingScanProduct = null;
+  let kosherToastTimer = 0;
   let searchTimer = 0;
   let activeCategoryPath = [];
   const RESULT_BATCH_SIZE = 48;
@@ -683,6 +684,20 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     ]);
   }
 
+  async function preloadPriorityProductContent(firstPreparation = false) {
+    const priorityProducts = [...(Array.isArray(recentProducts) ? recentProducts : []), ...products]
+      .filter((product, index, all) => product?.url && all.findIndex((candidate) => candidate.url === product.url) === index)
+      .slice(0, firstPreparation ? products.length : 36);
+    if (!priorityProducts.length) return;
+    // On the first preparation, cache every product text once. Later sessions
+    // only warm the most visible/recent fichas to keep background usage small.
+    if (firstPreparation) await runPool(priorityProducts, fetchProductContent, 4);
+    else await Promise.race([
+      runPool(priorityProducts, fetchProductContent, 3),
+      new Promise((resolve) => window.setTimeout(resolve, 9000))
+    ]);
+  }
+
   async function runPool(items, worker, concurrency = 3, onProgress = null) {
     const queue = [...items];
     let completed = 0;
@@ -722,6 +737,7 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
       await runPool(infoKeys, fetchInfoContent, 2, firstPreparation ? (done, total) => initialLoadProgress(10 + (done / total) * 30) : null);
       const cards = Object.values(infoCache).flatMap((content) => content?.cards || []).filter((card) => card.url).filter((card, index, all) => all.findIndex((candidate) => candidate.url === card.url) === index);
       await runPool(cards, fetchCardContent, 3, firstPreparation ? (done, total) => initialLoadProgress(40 + (done / Math.max(total, 1)) * 30) : null);
+      await preloadPriorityProductContent(firstPreparation);
       const imageUrls = [
         ...products.map((product) => product.image),
         ...recentProducts.map((product) => product.image),
@@ -1061,6 +1077,11 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
 
   function productCategoryPath(product) {
     const text = normalize(`${product.title} ${product.description || ''}`);
+    // Keep cereal products together in the taxonomy, even when their title
+    // also contains a more generic term such as maíz.
+    if (/\bcereales?\b|\bcopos de maiz\b/.test(text)) {
+      return ['Cereales, granos y semillas', 'Cereales'];
+    }
     const remoteMatch = remoteTaxonomyRules.find((rule) => rule.keywords.some((keyword) => text.includes(keyword)));
     if (remoteMatch) return remoteMatch.path;
     const match = productCategoryRules.find(([, pattern]) => pattern.test(text));
@@ -1116,10 +1137,21 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     return `tone-${[...normalize(name)].reduce((sum, char) => sum + char.charCodeAt(0), 0) % 5}`;
   }
 
+  function categoryDisplayName(name) {
+    return ({
+      'Autorizados en góndolas': 'Productos autorizados',
+      'Cereales, granos y semillas': 'Cereales y granos',
+      'Salsas, aderezos y condimentos': 'Salsas y condimentos',
+      'Ingredientes para repostería': 'Repostería e ingredientes',
+      'Frutos secos y deshidratados': 'Frutos secos y frutas secas',
+      'Untables y pastas': 'Untables y pastas'
+    })[name] || name;
+  }
+
   function taxonomyRows(rows, parentPath) {
     return rows.map(([name, items]) => {
       const path = [...parentPath, name];
-      return `<button class="alphabetical-category-row" type="button" data-taxonomy-path="${encodeURIComponent(JSON.stringify(path))}"><span class="alphabetical-category-icon ${taxonomyTone(name)}">${taxonomyIcon(name)}</span><span><strong>${escapeHtml(name)}</strong><small>${items.length.toLocaleString('es-AR')} ${items.length === 1 ? 'producto' : 'productos'}</small></span><span class="row-arrow" aria-hidden="true">›</span></button>`;
+      return `<button class="alphabetical-category-row" type="button" data-taxonomy-path="${encodeURIComponent(JSON.stringify(path))}"><span class="alphabetical-category-icon ${taxonomyTone(name)}">${taxonomyIcon(name)}</span><span><strong>${escapeHtml(categoryDisplayName(name))}</strong><small>${items.length.toLocaleString('es-AR')} ${items.length === 1 ? 'producto' : 'productos'}</small></span><span class="row-arrow" aria-hidden="true">›</span></button>`;
     }).join('');
   }
 
@@ -1174,13 +1206,15 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
 
   function filtered(query) {
     const term = normalize(query);
+    const searchTokens = term.split(/\s+/).filter((token) => token.length > 1 && !['de', 'del', 'la', 'el', 'los', 'las', 'un', 'una', 'marca'].includes(token));
     return products.filter((product) => {
       const isUruguay = product.cat === 'uruguay' || product.category === 'uruguay';
       const matchesRegion = selectedRegion === 'uruguay' ? isUruguay : !isUruguay;
       const matchesCategory = selectedCategory === 'all' || (selectedCategory === 'gondola' ? product.cat === 'gondola' && !isUruguay : product.cat === selectedCategory);
       const matchesFavorite = !favoriteOnly || favorites.has(product.url);
       const text = normalize(`${product.title} ${product.brand || ''} ${product.barcode || ''} ${product.description || ''}`);
-      return matchesRegion && matchesCategory && matchesFavorite && (!term || text.includes(term));
+      const matchesSearch = !term || text.includes(term) || searchTokens.every((token) => text.includes(token));
+      return matchesRegion && matchesCategory && matchesFavorite && matchesSearch;
     }).sort((a,b) => a.title.localeCompare(b.title, 'es'));
   }
 
@@ -1275,10 +1309,19 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
   function renderPushNotifications() {
     const list = $('#pushNotificationList');
     if (!list) return;
-    const permissionButton = $('#enableAlertsButton');
-    if (permissionButton) permissionButton.hidden = localStorage.getItem('iht_push_status') === 'active';
+    renderNotificationPermission();
     $('#notificationsMeta').textContent = pushNotifications.length ? `${pushNotifications.length} aviso${pushNotifications.length === 1 ? '' : 's'} recibido${pushNotifications.length === 1 ? '' : 's'}.` : 'Todavía no recibiste avisos push.';
     list.innerHTML = pushNotifications.length ? pushNotifications.map((item) => `<article class="push-notification-item"><span class="push-notification-icon">✓</span><div><strong>${escapeHtml(item.title || 'Novedad del catálogo')}</strong><p>${escapeHtml(item.body || 'Hay una actualización disponible.')}</p><small>${escapeHtml(item.time || '')}</small></div></article>`).join('') : '<div class="empty-state"><strong>No hay notificaciones</strong><span>Cuando llegue un aviso nuevo, aparecerá acá.</span></div>';
+  }
+
+  function renderNotificationPermission() {
+    const active = localStorage.getItem('iht_push_status') === 'active';
+    document.querySelectorAll('.notification-permission').forEach((container) => {
+      container.classList.toggle('active', active);
+      container.innerHTML = active
+        ? '<strong>Notificación push activada</strong><button class="push-disable" data-disable-notifications type="button">Desactivar <span aria-hidden="true">›</span></button>'
+        : '<strong>Recibí avisos de nuevas altas y bajas</strong><button class="text-btn" data-enable-notifications type="button">Activar avisos</button>';
+    });
   }
 
   function setNotificationBadge(hasNew) {
@@ -1431,27 +1474,45 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     const detailContent = $('#detailContent');
     const existing = detailContent.querySelector('.detail-content');
     if (!existing) {
-      detailContent.innerHTML = `<div class="detail-content"><img class="asset-loading" loading="eager" src="${escapeHtml(officialImage || 'assets/logo.png')}" alt="${escapeHtml(product.title)}" onload="this.classList.remove('asset-loading');this.classList.add('asset-ready')" onerror="this.onerror=null;this.src='assets/logo.png';this.classList.remove('asset-loading');this.classList.add('asset-ready')"><div class="detail-body"><span class="label">${escapeHtml(officialCategory)}</span><h1>${escapeHtml(product.title)}</h1><button class="filter-btn" id="detailFavorite">${bookmarkIcon(favorites.has(product.url))}<span>${favorites.has(product.url) ? 'Guardado' : 'Guardar producto'}</span></button><div class="verified-line"><span class="status-dot" aria-hidden="true"></span>Producto autorizado por Iahadut HaTora</div><p>${escapeHtml(officialDescription)}</p><div class="detail-facts single"><div><small>Categoría</small><strong>${escapeHtml(officialCategory)}</strong></div></div></div></div>`;
+      detailContent.innerHTML = `<div class="detail-content"><img class="asset-loading" loading="eager" src="${escapeHtml(officialImage || 'assets/logo.png')}" alt="${escapeHtml(product.title)}" onload="this.classList.remove('asset-loading');this.classList.add('asset-ready')" onerror="this.onerror=null;this.src='assets/logo.png';this.classList.remove('asset-loading');this.classList.add('asset-ready')"><div class="detail-body"><span class="label">${escapeHtml(officialCategory)}</span><h1>${escapeHtml(product.title)}</h1><button class="filter-btn" id="detailFavorite">${bookmarkIcon(favorites.has(product.url))}<span>${favorites.has(product.url) ? 'Guardado' : 'Guardar producto'}</span></button><p>${escapeHtml(officialDescription)}</p></div></div>`;
     } else {
       const image = existing.querySelector(':scope > img');
       if (image && officialImage && image.src !== new URL(officialImage, location.href).href) image.src = officialImage;
       existing.querySelector('.label').textContent = officialCategory;
       existing.querySelector('h1').textContent = product.title;
       existing.querySelector('.detail-body p').textContent = officialDescription;
-      existing.querySelector('.detail-facts strong').textContent = officialCategory;
+      existing.querySelector('.verified-line')?.remove();
+      existing.querySelector('.detail-facts')?.remove();
     }
     $('#detailFavorite').onclick = () => toggleFavorite(product.url);
     $('#detailSave').innerHTML = bookmarkIcon(favorites.has(product.url));
     $('#detailSave').setAttribute('aria-label', favorites.has(product.url) ? 'Quitar de guardados' : 'Guardar producto');
   }
 
-  function openDetail(url) {
+  function showKosherToast(product) {
+    window.clearTimeout(kosherToastTimer);
+    document.querySelector('.kosher-toast')?.remove();
+    const toast = document.createElement('div');
+    toast.className = 'kosher-toast';
+    toast.setAttribute('role', 'status');
+    toast.setAttribute('aria-live', 'polite');
+    toast.innerHTML = `<span class="kosher-toast-mark">✓</span><span><strong>¡Es kosher!</strong><small>${escapeHtml(product.title)}</small></span>`;
+    $('#detailView').appendChild(toast);
+    window.requestAnimationFrame(() => toast.classList.add('visible'));
+    kosherToastTimer = window.setTimeout(() => {
+      toast.classList.remove('visible');
+      window.setTimeout(() => toast.remove(), 280);
+    }, 2800);
+  }
+
+  function openDetail(url, options = {}) {
     const product = [...(Array.isArray(recentProducts) ? recentProducts : []), ...products].find((item) => item.url === url); if (!product) return;
     countPopularity(product.url, 'opens');
     logAnalyticsEvent('product_open', {product_url: product.url, product_name: product.title?.slice(0, 80) || ''});
     previousView = document.querySelector('.view.active').id;
     previousScrollTop = window.scrollY;
     showView('detailView'); renderDetail(product);
+    if (options.fromScan) showKosherToast(product);
     fetchProductContent(product).then(async (official) => {
       if (currentProduct?.url !== product.url) return;
       await preloadImages((official?.images || []).slice(0, 1).map((image) => image.src));
@@ -1503,9 +1564,8 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
   }
 
   async function renderAlerts() {
+    renderNotificationPermission();
     $('#alertsMeta').textContent = 'Actualizaciones y comunicaciones del catálogo.';
-    const alertPermissionButton = $('#enableAlertsFromCatalog');
-    if (alertPermissionButton) alertPermissionButton.hidden = localStorage.getItem('iht_push_status') === 'active';
     if (alertCache?.items && !Array.isArray(alertCache.items)) {
       $('#alertList').innerHTML = alertMarkup(alertCache.items);
       $('#alertsMeta').textContent = 'Información guardada · actualizando…';
@@ -1586,6 +1646,7 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
       let permission = await PushNotifications.checkPermissions();
       if (requestPermission && permission.receive === 'prompt') permission = await PushNotifications.requestPermissions();
       if (permission.receive === 'granted') {
+        localStorage.setItem('iht_push_status', 'active');
         await PushNotifications.register();
         try {
           const {FirebaseMessaging} = await import('@capacitor-firebase/messaging');
@@ -1596,6 +1657,24 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
       localStorage.setItem('iht_push_status', permission.receive === 'denied' ? 'denied' : 'pending');
       return permission.receive;
     } catch (_) { localStorage.setItem('iht_push_status', 'unavailable'); return 'unavailable'; }
+  }
+
+  async function disablePushNotifications() {
+    localStorage.setItem('iht_push_status', 'disabled');
+    localStorage.removeItem('iht_push_token');
+    setNotificationBadge(false);
+    try {
+      const {PushNotifications} = await import('@capacitor/push-notifications');
+      try {
+        const {FirebaseMessaging} = await import('@capacitor-firebase/messaging');
+        await FirebaseMessaging.unsubscribeFromTopic({topic:'catalog-updates'});
+      } catch (_) {}
+      await PushNotifications.unregister();
+    } catch (_) {}
+    renderNotificationPermission();
+    renderAlerts();
+    renderPushNotifications();
+    renderMore();
   }
 
   function renderMore() {
@@ -1829,9 +1908,63 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     return products.find((product) => barcodeCandidates(product.barcode).some((barcode) => candidates.includes(barcode)));
   }
 
+  function findProductByIdentity(identity) {
+    const nameTokens = normalize(identity?.name).split(/\s+/).filter((token) => token.length > 2 && !['con', 'para', 'del', 'una'].includes(token));
+    const brand = normalize(identity?.brand);
+    if (nameTokens.length < 2) return null;
+    return products
+      .map((product) => {
+        const title = normalize(product.title);
+        const titleTokens = nameTokens.filter((token) => title.includes(token));
+        const brandMatch = brand && normalize(`${product.title} ${product.brand || ''}`).includes(brand);
+        const score = titleTokens.length + (brandMatch ? 3 : 0);
+        return {product, score, brandMatch};
+      })
+      .filter(({score, brandMatch}) => score >= Math.max(2, Math.ceil(nameTokens.length * .45)) && (brandMatch || nameTokens.length <= 3))
+      .sort((a, b) => b.score - a.score)[0]?.product || null;
+  }
+
+  function scanCategoryPath(identity) {
+    const text = normalize(`${identity?.name || ''} ${identity?.brand || ''} ${identity?.categories || ''}`);
+    const rules = [
+      [['Bebidas'], /bebida|beverage|drink|gaseosa|soda|cola|jugo|juice|agua|water|refresco|isoton|energy drink/],
+      [['Cereales, granos y semillas'], /cereal|corn flakes|maiz|maize|grain|grano|avena|oat|arroz|rice|granola/],
+      [['Azúcares y endulzantes'], /edulcorante|sweetener|azucar|sugar|stevia|sucralosa/],
+      [['Aceites'], /aceite|oil|oliva|olive|girasol|sunflower/],
+      [['Lácteos'], /lacteo|dairy|leche|milk|queso|cheese|yogur|yogurt|manteca|butter/],
+      [['Panadería y repostería'], /pan|bread|galleta|cookie|harina|flour|reposteria|bakery/],
+      [['Dulces y golosinas'], /chocolate|caramelo|candy|golosina|alfajor|mermelada|jam|miel|honey/],
+      [['Salsas, aderezos y condimentos'], /salsa|sauce|aderezo|dressing|condimento|spice|especia|mayonesa|ketchup|mostaza/],
+      [['Frutos secos y deshidratados'], /fruto seco|nuts?|almendra|almond|mani|peanut|nuez|walnut|pistacho|pistachio|pasas?|raisin/],
+      [['Pastas'], /pasta|fideo|noodle|raviol/],
+      [['Snacks'], /snack|chips?|papas fritas|popcorn/]
+    ];
+    return rules.find(([, pattern]) => pattern.test(text))?.[0] || identity?.categoryPath || [];
+  }
+
+  function findScanAlternatives(identity, code, limit = 4) {
+    const categoryPath = scanCategoryPath(identity);
+    if (!categoryPath.length || categoryPath[0] === 'Otros productos') return [];
+    const matched = findProductByIdentity(identity);
+    const candidates = products.filter((product) => product.image && product.url !== matched?.url);
+    const sameSubcategory = categoryPath.length > 1
+      ? candidates.filter((product) => productCategoryPath(product).slice(0, categoryPath.length).join('|') === categoryPath.join('|'))
+      : [];
+    const sameCategory = categoryPath.length
+      ? candidates.filter((product) => productCategoryPath(product)[0] === categoryPath[0])
+      : [];
+    const seedValue = [...String(code || 'scan')].reduce((hash, char) => ((hash * 33) + char.charCodeAt(0)) >>> 0, 5381);
+    const varied = (items) => [...items].sort((a, b) => {
+      const rank = (product) => [...product.url].reduce((hash, char) => ((hash * 31) + char.charCodeAt(0)) >>> 0, seedValue);
+      return rank(a) - rank(b);
+    });
+    const ordered = [...varied(sameSubcategory), ...varied(sameCategory)];
+    return [...new Map(ordered.map((product) => [product.url, product])).values()].slice(0, limit);
+  }
+
   async function barcodeIdentity(code) {
     try {
-      const url = `https://world.openfoodfacts.net/api/v2/product/${encodeURIComponent(code)}.json?fields=code,product_name,product_name_es,brands`;
+      const url = `https://world.openfoodfacts.net/api/v2/product/${encodeURIComponent(code)}.json?fields=code,product_name,product_name_es,brands,categories,categories_tags`;
       const response = Capacitor.isNativePlatform()
         ? await CapacitorHttp.get({url, connectTimeout:7000, readTimeout:7000})
         : await fetch(url, {headers:{Accept:'application/json'}});
@@ -1839,7 +1972,10 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
       if (Number(data?.status) !== 1 || !data?.product) return null;
       const name = clean(data.product.product_name_es || data.product.product_name);
       const brand = clean(String(data.product.brands || '').split(',')[0]);
-      return {name, brand, normalizedName:normalize(name), normalizedBrand:normalize(brand)};
+      const categoriesText = clean(data.product.categories || (Array.isArray(data.product.categories_tags) ? data.product.categories_tags.join(' ') : ''));
+      const categorySource = `${name} ${brand} ${categoriesText}`;
+      const categoryPath = scanCategoryPath({name, brand, categories:categoriesText, categoryPath:productCategoryPath({title:categorySource, description:''})});
+      return {name, brand, categories:categoriesText, categoryPath, normalizedName:normalize(name), normalizedBrand:normalize(brand)};
     } catch (_) { return null; }
   }
 
@@ -1856,7 +1992,11 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
       $('#scanMessage').innerHTML = `<span class="scan-result-status found">¡Kosher! =)</span><strong class="scan-result-title">${escapeHtml(product.title)}</strong><small class="scan-result-code">Código escaneado: ${escapeHtml(code)}</small><button class="scan-result-action" type="button" data-scan-open>Ver ficha del producto</button>`;
     } else {
       const identified = externalName ? `<strong class="scan-result-title">${escapeHtml(externalName)}${externalBrand ? ` · ${escapeHtml(externalBrand)}` : ''}</strong>` : '';
-      $('#scanMessage').innerHTML = `<span class="scan-result-status not-found">Producto escaneado</span>${identified}<strong class="scan-result-code">Código: ${escapeHtml(code)}</strong><span class="scan-result-note">No encontramos una coincidencia en los códigos cargados. Esto no significa necesariamente que el producto no esté en el catálogo.</span><button class="scan-result-action secondary" type="button" data-scan-again>Escanear otro producto</button>`;
+      const alternatives = findScanAlternatives(identity, code);
+      const alternativesMarkup = alternatives.length ? `<div class="scan-alternatives"><strong>Otros de esta categoría</strong><div class="scan-alternatives-grid">${alternatives.map((item) => `<button class="scan-alternative" type="button" data-scan-alternative="${escapeHtml(item.url)}"><img src="${escapeHtml(item.image)}" alt=""><span>${escapeHtml(item.title)}</span></button>`).join('')}</div></div>` : '';
+      const resultTitle = alternatives.length ? 'No encontramos ese producto' : 'No hay coincidencia en el catálogo';
+      const resultNote = alternatives.length ? 'El código no está asociado, pero encontramos otras opciones de la misma categoría.' : 'No mostramos sugerencias porque no pudimos identificar una categoría confiable para este código.';
+      $('#scanMessage').innerHTML = `<span class="scan-result-status not-found">Código no encontrado</span>${identified}<strong class="scan-result-title">${resultTitle}</strong><small class="scan-result-code">Código: ${escapeHtml(code)}</small><span class="scan-result-note">${resultNote}</span>${alternativesMarkup}<button class="scan-result-action secondary" type="button" data-scan-again>Escanear otro producto</button>`;
     }
     $('#barcode').value = code;
     updateModalLock();
@@ -1869,7 +2009,7 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     $('#scanOverlay').classList.add('scan-result', 'manual-only');
     $('#camera').hidden = true;
     $('.frame').hidden = true;
-    $('#scanMessage').innerHTML = `<span class="scan-loading-logo"><img src="assets/logo.png" alt=""><i aria-hidden="true"></i></span><strong class="scan-loading-title">Buscando el producto</strong><span class="scan-loading-copy">Estamos verificando el código escaneado…</span><small class="scan-result-code">Código: ${escapeHtml(code)}</small>`;
+    $('#scanMessage').innerHTML = `<span class="scan-loading-logo" aria-hidden="true"><i class="ph ph-barcode scan-loading-mark"></i><i class="scan-loading-shimmer"></i></span><strong class="scan-loading-title">Buscando el producto</strong><span class="scan-loading-copy">Estamos verificando el código escaneado…</span><small class="scan-result-code">Código: ${escapeHtml(code)}</small>`;
     $('#barcode').value = code;
     updateModalLock();
   }
@@ -1879,12 +2019,22 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     if (!code) return;
     stopCamera();
     const exact = findProductByBarcode(code);
-    if (exact) { showScanResult(code, exact); return; }
+    if (exact) {
+      closeScanner();
+      openDetail(exact.url, {fromScan:true});
+      return;
+    }
     showScanLoading(code);
     const identity = await barcodeIdentity(code);
-    // El nombre externo sólo sirve para informar qué código se leyó.
-    // La leyenda kosher requiere una coincidencia exacta de código en el catálogo oficial.
-    showScanResult(code, null, identity);
+    // If the catalog entry has no barcode yet, use the recognized product
+    // name/brand to open the matching local catalog record.
+    const byIdentity = findProductByIdentity(identity);
+    if (byIdentity) {
+      closeScanner();
+      openDetail(byIdentity.url, {fromScan:true});
+      return;
+    }
+    showScanResult(code, byIdentity, identity);
   }
 
   function goBackTaxonomy() {
@@ -1927,6 +2077,8 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     }
     const scanAgainButton = event.target.closest('[data-scan-again]');
     if (scanAgainButton) { openWebScanner(); return; }
+    const scanAlternative = event.target.closest('[data-scan-alternative]');
+    if (scanAlternative) { closeScanner(); openDetail(scanAlternative.dataset.scanAlternative); return; }
     const loadMoreButton = event.target.closest('[data-load-more-products]');
     if (loadMoreButton) { appendProductBatch(); return; }
     const exploreCategories = event.target.closest('[data-explore-categories]');
@@ -1944,6 +2096,8 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     const clearHistoryButton = event.target.closest('[data-clear-history]'); if (clearHistoryButton) { if (!recent.length || window.confirm('¿Borrar el historial de búsquedas?')) { recent = []; localStorage.removeItem('iht_recent'); renderMore(); renderSearchCategories(); } }
     const notificationButton = event.target.closest('[data-enable-notifications]');
     if (notificationButton) { setupPushNotifications(true).then(() => { renderAlerts(); renderPushNotifications(); renderMore(); }); return; }
+    const disableNotificationButton = event.target.closest('[data-disable-notifications]');
+    if (disableNotificationButton) { disablePushNotifications(); return; }
     const openAlertsButton = event.target.closest('[data-open-alerts]');
     if (openAlertsButton) { showView('notificationsView'); return; }
     const updateButton = event.target.closest('[data-app-update]');

@@ -28,6 +28,9 @@ public class MainActivity extends BridgeActivity {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        // Prevent Android's edge-glow/overscroll stretch from resizing the
+        // WebView and the fixed navigation dock during pull-to-boundary.
+        getBridge().getWebView().setOverScrollMode(View.OVER_SCROLL_NEVER);
         // Keep the WebView below Android's status bar so the clock and battery
         // never overlap the app content on modern edge-to-edge devices.
         applySystemBars();
