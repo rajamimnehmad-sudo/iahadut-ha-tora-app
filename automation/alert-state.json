@@ -93,5 +93,23 @@
     "type": "baja",
     "text": "Galletas de arroz marca »Arrozen» (Dado de baja el 24/08/2026)",
     "url": ""
+  },
+  "notes:Nueva nota de Kashrut (d7f581ba7da0)": {
+    "type": "notes",
+    "text": "Nueva nota de Kashrut (d7f581ba7da0)",
+    "url": "https://vaad.ar/notas-kashrut/",
+    "digest": "d7f581ba7da0893bc2cbc88003b900b92d81e660fb8b1c490e986910f94c1cc7"
+  },
+  "catering:Nuevo catering certificado (5763a0777fae)": {
+    "type": "catering",
+    "text": "Nuevo catering certificado (5763a0777fae)",
+    "url": "https://vaad.ar/servicios-de-catering/",
+    "digest": "5763a0777faee935db1144eca15c75463c926edff63bfb2040a330e0f318195a"
+  },
+  "shops:Nueva tienda certificada (f6cb3741ac27)": {
+    "type": "shops",
+    "text": "Nueva tienda certificada (f6cb3741ac27)",
+    "url": "https://vaad.ar/tiendas-kosher-certificadas/",
+    "digest": "f6cb3741ac270105ab9d3a6c9e3d6587867972c7d8a447ab586b9cb3b89648bd"
   }
 }
