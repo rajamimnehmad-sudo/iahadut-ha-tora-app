@@ -362,6 +362,12 @@ body { color: #252925; }
 .catalog-notifications i, #navDot { position: absolute; width: 9px; height: 9px; border: 2px solid #fff; border-radius: 50%; background: #54a873; box-shadow: 0 1px 4px #1f5d4640; }
 .catalog-notifications i { top: 6px; right: 5px; }
 .notification-permission { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 0 20px 16px; padding: 13px 14px; border: 1px solid #d9e5dd; border-radius: 14px; background: #f3f8f5; color: #1f5d46; font-size: 12px; }
+.push-notification-list { display: grid; gap: 9px; padding: 0 20px 28px; }
+.push-notification-item { display: grid; grid-template-columns: 32px minmax(0, 1fr); gap: 11px; padding: 14px; border: 1px solid #d9e5dd; border-radius: 15px; background: #fff; }
+.push-notification-item strong { color: #1f5d46; font-size: 13px; }
+.push-notification-item p { margin: 4px 0; color: #556058; font-size: 12px; line-height: 1.4; }
+.push-notification-item small { color: #89938c; font-size: 10px; }
+.push-notification-icon { display: grid; width: 30px; height: 30px; place-items: center; border-radius: 50%; background: #e7f4eb; color: #24704e; font-weight: 800; }
 .catalog-update-card { display: grid; gap: 6px; margin: 20px 0 14px; padding: 18px; border: 1px solid #d8e2dc; border-radius: 14px; background: #f3f8f4; }
 .catalog-update-card strong { color: #1f5d46; font-size: 20px; }
 .catalog-update-card span, .catalog-app-sync { color: #78817a; font-size: 12px; line-height: 1.45; }

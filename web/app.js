@@ -229,6 +229,8 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
   const alertUrl = 'https://vaad.ar/alertas-de-productos/';
   const storedAlertCache = readJson('iht_alert_cache');
   let alertCache = storedAlertCache?.version === INFO_CACHE_VERSION ? storedAlertCache : (contentSnapshot?.alerts ? {version:INFO_CACHE_VERSION, items:contentSnapshot.alerts, fetchedAt:Number(contentSnapshot.generatedAt) || 0} : null);
+  let pushNotifications = readJson('iht_push_notifications', []);
+  if (!Array.isArray(pushNotifications)) pushNotifications = [];
   let preloadStarted = false;
   const infoNoticeVersion = 'v3';
   const infoNoticeKeys = ['shops', 'catering', 'notes'];
@@ -1263,10 +1265,18 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     document.querySelectorAll('.view').forEach((view) => view.classList.toggle('active', view.id === viewId));
     document.querySelectorAll('.nav').forEach((button) => button.classList.toggle('active', button.dataset.view === viewId));
     if (viewId === 'searchView' && !preserveSearch) { renderSearchCategories(); $('#results').hidden = true; $('#searchCategories').hidden = false; $('#recentSearches').hidden = false; }
-    if (viewId === 'alertsView') { setNotificationBadge(false); renderAlerts(); }
+    if (viewId === 'alertsView') renderAlerts();
+    if (viewId === 'notificationsView') { setNotificationBadge(false); renderPushNotifications(); }
     if (viewId === 'moreView') renderMore();
     if (viewId === 'savedView') renderSaved();
     window.scrollTo(0,0);
+  }
+
+  function renderPushNotifications() {
+    const list = $('#pushNotificationList');
+    if (!list) return;
+    $('#notificationsMeta').textContent = pushNotifications.length ? `${pushNotifications.length} aviso${pushNotifications.length === 1 ? '' : 's'} recibido${pushNotifications.length === 1 ? '' : 's'}.` : 'Todavía no recibiste avisos push.';
+    list.innerHTML = pushNotifications.length ? pushNotifications.map((item) => `<article class="push-notification-item"><span class="push-notification-icon">✓</span><div><strong>${escapeHtml(item.title || 'Novedad del catálogo')}</strong><p>${escapeHtml(item.body || 'Hay una actualización disponible.')}</p><small>${escapeHtml(item.time || '')}</small></div></article>`).join('') : '<div class="empty-state"><strong>No hay notificaciones</strong><span>Cuando llegue un aviso nuevo, aparecerá acá.</span></div>';
   }
 
   function setNotificationBadge(hasNew) {
@@ -1565,8 +1575,8 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
           if (document.querySelector('.view.active')?.id === 'moreView') renderMore();
         });
         await PushNotifications.addListener('registrationError', () => localStorage.setItem('iht_push_status', 'error'));
-        await PushNotifications.addListener('pushNotificationReceived', (notification) => { setNotificationBadge(true); if (notification.data?.action === 'sync') syncCatalog(true); });
-        await PushNotifications.addListener('pushNotificationActionPerformed', ({notification}) => { setNotificationBadge(false); if (notification.data?.action === 'sync') syncCatalog(true); showView('alertsView'); });
+        await PushNotifications.addListener('pushNotificationReceived', (notification) => { const item = {title:notification.title || notification.data?.title || 'Novedad del catálogo', body:notification.body || notification.data?.body || 'Hay una actualización disponible.', time:new Date().toLocaleString('es-AR')}; pushNotifications = [item, ...pushNotifications].slice(0, 30); localStorage.setItem('iht_push_notifications', JSON.stringify(pushNotifications)); setNotificationBadge(true); if (notification.data?.action === 'sync') syncCatalog(true); });
+        await PushNotifications.addListener('pushNotificationActionPerformed', ({notification}) => { setNotificationBadge(false); if (notification.data?.action === 'sync') syncCatalog(true); showView('notificationsView'); });
         await PushNotifications.createChannel({id:'catalog-updates', name:'Actualizaciones del catálogo', description:'Altas, bajas y cambios importantes', importance:4, visibility:1, vibration:true});
       }
       let permission = await PushNotifications.checkPermissions();
@@ -1929,7 +1939,7 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     const notificationButton = event.target.closest('[data-enable-notifications]');
     if (notificationButton) { setupPushNotifications(true).then(() => renderMore()); return; }
     const openAlertsButton = event.target.closest('[data-open-alerts]');
-    if (openAlertsButton) { showView('alertsView'); return; }
+    if (openAlertsButton) { showView('notificationsView'); return; }
     const updateButton = event.target.closest('[data-app-update]');
     if (updateButton) {
       refreshRemoteControl(true).then((decision) => {
