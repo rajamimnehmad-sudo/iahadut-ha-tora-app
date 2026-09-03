@@ -1275,6 +1275,8 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
   function renderPushNotifications() {
     const list = $('#pushNotificationList');
     if (!list) return;
+    const permissionButton = $('#enableAlertsButton');
+    if (permissionButton) permissionButton.hidden = localStorage.getItem('iht_push_status') === 'active';
     $('#notificationsMeta').textContent = pushNotifications.length ? `${pushNotifications.length} aviso${pushNotifications.length === 1 ? '' : 's'} recibido${pushNotifications.length === 1 ? '' : 's'}.` : 'Todavía no recibiste avisos push.';
     list.innerHTML = pushNotifications.length ? pushNotifications.map((item) => `<article class="push-notification-item"><span class="push-notification-icon">✓</span><div><strong>${escapeHtml(item.title || 'Novedad del catálogo')}</strong><p>${escapeHtml(item.body || 'Hay una actualización disponible.')}</p><small>${escapeHtml(item.time || '')}</small></div></article>`).join('') : '<div class="empty-state"><strong>No hay notificaciones</strong><span>Cuando llegue un aviso nuevo, aparecerá acá.</span></div>';
   }
@@ -1502,6 +1504,8 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
 
   async function renderAlerts() {
     $('#alertsMeta').textContent = 'Actualizaciones y comunicaciones del catálogo.';
+    const alertPermissionButton = $('#enableAlertsFromCatalog');
+    if (alertPermissionButton) alertPermissionButton.hidden = localStorage.getItem('iht_push_status') === 'active';
     if (alertCache?.items && !Array.isArray(alertCache.items)) {
       $('#alertList').innerHTML = alertMarkup(alertCache.items);
       $('#alertsMeta').textContent = 'Información guardada · actualizando…';
@@ -1937,7 +1941,7 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     const savedButton = event.target.closest('[data-saved]'); if (savedButton) { openSavedScreen(); return; }
     const clearHistoryButton = event.target.closest('[data-clear-history]'); if (clearHistoryButton) { if (!recent.length || window.confirm('¿Borrar el historial de búsquedas?')) { recent = []; localStorage.removeItem('iht_recent'); renderMore(); renderSearchCategories(); } }
     const notificationButton = event.target.closest('[data-enable-notifications]');
-    if (notificationButton) { setupPushNotifications(true).then(() => renderMore()); return; }
+    if (notificationButton) { setupPushNotifications(true).then(() => { renderAlerts(); renderPushNotifications(); renderMore(); }); return; }
     const openAlertsButton = event.target.closest('[data-open-alerts]');
     if (openAlertsButton) { showView('notificationsView'); return; }
     const updateButton = event.target.closest('[data-app-update]');
