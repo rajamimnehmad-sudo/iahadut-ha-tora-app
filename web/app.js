@@ -50,7 +50,7 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
   let homePlaceholderTimer;
   let searchPlaceholderSwapTimer;
   let homePlaceholderSwapTimer;
-  const searchPlaceholders = ['Buscá un producto', 'Probá con una marca', 'Buscá por categoría', 'Escaneá un código'];
+  const searchPlaceholders = ['Buscá un producto', 'Probá con una marca', 'Encontrá una categoría', 'Escaneá un código'];
   const clean = (value) => String(value || '').replace(/\s+/g, ' ').trim();
   const normalize = (value) => clean(value).normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
   const escapeHtml = (value) => String(value || '').replace(/[&<>"']/g, (char) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[char]));
@@ -118,6 +118,17 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
   let recentProducts = readJson('iht_recent_products', []);
   let favorites = new Set(Array.isArray(storedFavorites) ? storedFavorites : []);
   let recent = Array.isArray(storedRecent) ? storedRecent : [];
+  let popularity = readJson('iht_popularity', {});
+  if (!popularity || typeof popularity !== 'object' || Array.isArray(popularity)) popularity = {};
+  let firebaseAnalytics = null;
+  if (Capacitor.isNativePlatform()) import('@capacitor-firebase/analytics').then(({FirebaseAnalytics}) => { firebaseAnalytics = FirebaseAnalytics; }).catch(() => {});
+  const logAnalyticsEvent = (name, params) => { try { firebaseAnalytics?.logEvent({name, params}); } catch (_) {} };
+  const countPopularity = (key, type) => {
+    const entry = popularity[key] || {searches: 0, opens: 0};
+    entry[type] = (entry[type] || 0) + 1;
+    popularity[key] = entry;
+    localStorage.setItem('iht_popularity', JSON.stringify(popularity));
+  };
   let selectedCategory = 'all';
   let selectedRegion = 'argentina';
   let favoriteOnly = false;
@@ -128,6 +139,7 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
   let readerHistory = [];
   let stream = null;
   let scanFrame = 0;
+  let pendingScanProduct = null;
   let searchTimer = 0;
   let activeCategoryPath = [];
   const RESULT_BATCH_SIZE = 48;
@@ -138,6 +150,7 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
   let recentCarouselTimer = null;
   let recentCarouselOffset = 0;
   let recentCarouselDirection = 1;
+  let renderedHomeItemsKey = '';
   let remoteControl = {...defaultRemoteControl, configured:false, checkedAt:0};
   let remoteTaxonomyRules = [];
   let pushListenersReady = false;
@@ -189,6 +202,36 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
   const storedAlertCache = readJson('iht_alert_cache');
   let alertCache = storedAlertCache?.version === INFO_CACHE_VERSION ? storedAlertCache : (contentSnapshot?.alerts ? {version:INFO_CACHE_VERSION, items:contentSnapshot.alerts, fetchedAt:Number(contentSnapshot.generatedAt) || 0} : null);
   let preloadStarted = false;
+  const infoNoticeVersion = 'v3';
+  const infoNoticeKeys = ['shops', 'catering', 'notes'];
+  const infoNewState = Object.fromEntries(infoNoticeKeys.map((key) => [
+    key,
+    // La novedad se muestra por defecto hasta que se abre esa sección.
+    !localStorage.getItem(`iht_info_seen_${key}_${infoNoticeVersion}`)
+  ]));
+
+  function infoContentSignature(content) {
+    if (!content) return '';
+    const {fetchedAt, ...stableContent} = content;
+    return JSON.stringify(stableContent);
+  }
+
+  function updateInfoNotice(key, isNew = infoNewState[key] === true) {
+    if (!infoNoticeKeys.includes(key)) return;
+    infoNewState[key] = isNew;
+    localStorage.setItem(`iht_info_new_${key}_${INFO_CACHE_VERSION}`, isNew ? '1' : '0');
+    document.querySelectorAll(`[data-info="${key}"]`).forEach((button) => {
+      button.classList.toggle('has-info-new', isNew);
+      button.querySelector('.info-new-dot')?.remove();
+    });
+  }
+
+  function markInfoSeen(key) {
+    if (!infoNoticeKeys.includes(key)) return;
+    updateInfoNotice(key, false);
+    const signature = infoContentSignature(infoCache[key]);
+    if (signature) localStorage.setItem(`iht_info_seen_${key}_${infoNoticeVersion}`, signature);
+  }
 
   function syncMessage(message, tone = '') {
     const status = $('#syncStatus');
@@ -281,6 +324,7 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     const value = info[key];
     if (!value) return '';
     if (isFresh(infoCache[key])) return infoCache[key];
+    const previousSignature = infoContentSignature(infoCache[key]);
     const document = new DOMParser().parseFromString(await fetchText(sourceUrl(value[3])), 'text/html');
     const certifyContent = key === 'certify' ? (() => {
       const introRoot = document.querySelector('.et_pb_text_1 .et_pb_text_inner');
@@ -378,6 +422,8 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     const result = {section:key, blocks:blocks.length ? blocks : (indexedCards.length ? [] : [{tag:'p', text:'No hay contenido oficial disponible.'}]), elements, cards:indexedCards, images, actions, cardActionLabel, contact:key === 'contact', collaboration:collaborationContent, certify:certifyContent, fetchedAt:Date.now()};
     infoCache[key] = result;
     localStorage.setItem('iht_info_cache', JSON.stringify({version:INFO_CACHE_VERSION, items:infoCache}));
+    const seenSignature = localStorage.getItem(`iht_info_seen_${key}_${infoNoticeVersion}`);
+    if (previousSignature && previousSignature !== infoContentSignature(result) && seenSignature !== infoContentSignature(result)) updateInfoNotice(key, true);
     return result;
   }
 
@@ -589,6 +635,11 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     });
   }
 
+  async function preloadImages(images = []) {
+    const unique = [...new Set(images.filter(Boolean))];
+    if (unique.length) await runPool(unique, preloadImage, 4);
+  }
+
   async function preloadInitialProductImages() {
     const candidates = [...(Array.isArray(recentProducts) ? recentProducts : []), ...products, ...bundledProducts]
       .map((product) => product?.image)
@@ -726,12 +777,31 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     if (updateNode) updateNode.textContent = officialUpdateMessage();
     const recentCandidates = [...(Array.isArray(recentProducts) ? recentProducts : []), ...products, ...bundledProducts];
     const items = [...new Map(recentCandidates.map((product) => [product.url, product])).values()].slice(0, 10);
+    const itemsKey = items.map((product) => `${product.url}|${product.image || ''}`).join('\n');
+    if (itemsKey === renderedHomeItemsKey) {
+      renderAlertPreview();
+      return;
+    }
+    renderedHomeItemsKey = itemsKey;
     if (recentCarouselTimer) {
       window.clearInterval(recentCarouselTimer);
       recentCarouselTimer = null;
     }
     recentCarouselOffset = 0;
-    $('#recentProducts').innerHTML = items.map((product) => `<button class="recent-product" data-product="${escapeHtml(product.url)}" aria-label="Ver ${escapeHtml(product.title)}"><img class="asset-loading" src="${escapeHtml(product.image || 'assets/logo.png')}" alt="${escapeHtml(product.title)}" loading="eager" onload="this.classList.remove('asset-loading');this.classList.add('asset-ready')" onerror="this.onerror=null;this.src='assets/logo.png';this.classList.remove('asset-loading');this.classList.add('asset-ready')"></button>`).join('');
+    const recentTrack = $('#recentProducts');
+    recentTrack.innerHTML = items.map((product) => `<button class="recent-product" data-product="${escapeHtml(product.url)}" aria-label="Ver ${escapeHtml(product.title)}"><img class="asset-loading" src="${escapeHtml(product.image || 'assets/logo.png')}" alt="${escapeHtml(product.title)}" loading="eager" onload="this.classList.remove('asset-loading');this.classList.add('asset-ready')" onerror="this.onerror=null;this.src='assets/logo.png';this.classList.remove('asset-loading');this.classList.add('asset-ready')"></button>`).join('');
+    if (items.length > 4) {
+      [...recentTrack.children].slice(0, 4).forEach((card) => recentTrack.append(card.cloneNode(true)));
+      recentTrack.dataset.carouselOriginalCount = String(items.length);
+    } else delete recentTrack.dataset.carouselOriginalCount;
+    recentTrack.querySelectorAll('[data-product]').forEach((card) => card.addEventListener('click', (event) => {
+      if (recentTrack.dataset.suppressClick === 'true') {
+        event.preventDefault();
+        return;
+      }
+      event.stopPropagation();
+      openDetail(card.dataset.product);
+    }));
     $('#recentProducts').style.setProperty('--recent-items', String(items.length));
     startRecentCarousel();
     renderAlertPreview();
@@ -755,12 +825,14 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
       const step = firstCard.getBoundingClientRect().width + gap;
       const maxTranslate = Math.max(0, track.scrollWidth - viewport.clientWidth);
       if (!step || !maxTranslate) return;
+      const originalCount = Number(track.dataset.carouselOriginalCount) || track.children.length;
+      const cycleDistance = step * originalCount;
 
-      recentCarouselOffset = Math.min(recentCarouselOffset + step, maxTranslate);
+      recentCarouselOffset = Math.min(recentCarouselOffset + step, cycleDistance);
       track.style.transition = 'transform 650ms cubic-bezier(.22,.61,.36,1)';
       track.style.transform = `translate3d(-${recentCarouselOffset}px, 0, 0)`;
 
-      if (recentCarouselOffset >= maxTranslate - 0.5) {
+      if (recentCarouselOffset >= cycleDistance - 0.5) {
         window.setTimeout(() => {
           if (!track.isConnected) return;
           recentCarouselOffset = 0;
@@ -789,7 +861,6 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
       dragging = true;
       moved = false;
       track.style.transition = 'none';
-      viewport.setPointerCapture?.(event.pointerId);
     });
 
     viewport.addEventListener('pointermove', (event) => {
@@ -797,7 +868,10 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
       const track = $('#recentProducts');
       if (!track) return;
       const delta = event.clientX - startX;
-      if (Math.abs(delta) > 5) moved = true;
+      if (Math.abs(delta) > 5) {
+        moved = true;
+        viewport.setPointerCapture?.(event.pointerId);
+      }
       const maxTranslate = Math.max(0, track.scrollWidth - viewport.clientWidth);
       recentCarouselOffset = Math.max(0, Math.min(maxTranslate, startOffset - delta));
       track.style.transform = `translate3d(-${recentCarouselOffset}px, 0, 0)`;
@@ -1043,8 +1117,10 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     const regions = selectedRegion === 'uruguay'
       ? `<button class="region-shortcut active" data-region="argentina" aria-label="Volver a productos de Argentina"><span class="category-icon category-flag category-flag-arg"><img src="assets/flag-argentina.svg" alt="Bandera de Argentina"></span><span>Productos de Uruguay</span><b aria-hidden="true">×</b></button>`
       : `<button class="region-shortcut" data-region="uruguay" aria-label="Buscar productos de Uruguay">${categoryIcon('uruguay')}<span>Buscar productos de Uruguay</span><b aria-hidden="true">›</b></button>`;
-    $('#searchCategories').innerHTML = `<div class="region-shortcut-wrap" aria-label="Filtro de país">${regions}</div>`;
-    $('#recentSearches').innerHTML = recent.slice(0,5).map((query) => `<button data-recent="${escapeHtml(query)}">${escapeHtml(query)}</button>`).join('') + (recent.length ? '<button class="clear-history-chip" data-clear-history="true" type="button">Borrar historial</button>' : '');
+    const popular = products.filter((product) => product.image).sort((a, b) => ((popularity[b.url]?.searches || 0) + (popularity[b.url]?.opens || 0)) - ((popularity[a.url]?.searches || 0) + (popularity[a.url]?.opens || 0))).slice(0, 6);
+    const popularMarkup = popular.length ? `<div class="popular-searches"><strong>Productos destacados</strong><div class="popular-searches-track">${popular.map((product) => `<button class="popular-search-card" type="button" data-product="${escapeHtml(product.url)}" aria-label="Ver ${escapeHtml(product.title)}"><img src="${escapeHtml(product.image)}" alt="" loading="eager"><span>${escapeHtml(product.title)}</span></button>`).join('')}</div></div>` : '';
+    $('#searchCategories').innerHTML = `<div class="region-shortcut-wrap" aria-label="Filtro de país">${regions}</div>${popularMarkup}`;
+    $('#recentSearches').innerHTML = '';
   }
 
   function productImage(product) {
@@ -1223,8 +1299,8 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
       searchPlaceholderSwapTimer = window.setTimeout(() => {
         input.placeholder = searchPlaceholders[index];
         input.classList.remove('placeholder-changing');
-      }, 190);
-    }, 3200);
+      }, 220);
+      }, 2700);
   }
 
   function startHomePlaceholders() {
@@ -1241,8 +1317,8 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
       homePlaceholderSwapTimer = window.setTimeout(() => {
         input.placeholder = searchPlaceholders[index];
         input.classList.remove('placeholder-changing');
-      }, 190);
-    }, 3200);
+      }, 220);
+    }, 2700);
   }
 
   function updateSearchScanAction(hasText) {
@@ -1281,6 +1357,8 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
   function doSearch(input, fromHome = false) {
     const value = clean(input.value);
     if (!value) return;
+    countPopularity(`query:${normalize(value)}`, 'searches');
+    logAnalyticsEvent('catalog_search', {query: value.slice(0, 80)});
     recent = [value, ...recent.filter((item) => normalize(item) !== normalize(value))].slice(0,5);
     localStorage.setItem('iht_recent', JSON.stringify(recent));
     if (fromHome) { showView('searchView'); $('#query').value = value; }
@@ -1302,18 +1380,35 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     const officialImage = official?.images?.[0]?.src || product.image;
     const officialDescription = official?.blocks?.filter((block) => block.tag === 'p').map((block) => block.text).join(' ') || product.description || 'Producto incluido en el catálogo local de Iahadut HaTora.';
     const officialCategory = official?.category || (category ? category.name : 'Catálogo oficial');
-    $('#detailContent').innerHTML = `<div class="detail-content"><img class="asset-loading" loading="eager" src="${escapeHtml(officialImage || 'assets/logo.png')}" alt="${escapeHtml(product.title)}" onload="this.classList.remove('asset-loading');this.classList.add('asset-ready')" onerror="this.onerror=null;this.src='assets/logo.png';this.classList.remove('asset-loading');this.classList.add('asset-ready')"><div class="detail-body"><span class="label">${escapeHtml(officialCategory)}</span><h1>${escapeHtml(product.title)}</h1><button class="filter-btn" id="detailFavorite">${bookmarkIcon(favorites.has(product.url))}<span>${favorites.has(product.url) ? 'Guardado' : 'Guardar producto'}</span></button><div class="verified-line"><span class="status-dot" aria-hidden="true"></span>Producto autorizado por Iahadut HaTora</div><p>${escapeHtml(officialDescription)}</p><div class="detail-facts single"><div><small>Categoría</small><strong>${escapeHtml(officialCategory)}</strong></div></div></div></div>`;
+    const detailContent = $('#detailContent');
+    const existing = detailContent.querySelector('.detail-content');
+    if (!existing) {
+      detailContent.innerHTML = `<div class="detail-content"><img class="asset-loading" loading="eager" src="${escapeHtml(officialImage || 'assets/logo.png')}" alt="${escapeHtml(product.title)}" onload="this.classList.remove('asset-loading');this.classList.add('asset-ready')" onerror="this.onerror=null;this.src='assets/logo.png';this.classList.remove('asset-loading');this.classList.add('asset-ready')"><div class="detail-body"><span class="label">${escapeHtml(officialCategory)}</span><h1>${escapeHtml(product.title)}</h1><button class="filter-btn" id="detailFavorite">${bookmarkIcon(favorites.has(product.url))}<span>${favorites.has(product.url) ? 'Guardado' : 'Guardar producto'}</span></button><div class="verified-line"><span class="status-dot" aria-hidden="true"></span>Producto autorizado por Iahadut HaTora</div><p>${escapeHtml(officialDescription)}</p><div class="detail-facts single"><div><small>Categoría</small><strong>${escapeHtml(officialCategory)}</strong></div></div></div></div>`;
+    } else {
+      const image = existing.querySelector(':scope > img');
+      if (image && officialImage && image.src !== new URL(officialImage, location.href).href) image.src = officialImage;
+      existing.querySelector('.label').textContent = officialCategory;
+      existing.querySelector('h1').textContent = product.title;
+      existing.querySelector('.detail-body p').textContent = officialDescription;
+      existing.querySelector('.detail-facts strong').textContent = officialCategory;
+    }
     $('#detailFavorite').onclick = () => toggleFavorite(product.url);
     $('#detailSave').innerHTML = bookmarkIcon(favorites.has(product.url));
     $('#detailSave').setAttribute('aria-label', favorites.has(product.url) ? 'Quitar de guardados' : 'Guardar producto');
   }
 
   function openDetail(url) {
-    const product = products.find((item) => item.url === url); if (!product) return;
+    const product = [...(Array.isArray(recentProducts) ? recentProducts : []), ...products].find((item) => item.url === url); if (!product) return;
+    countPopularity(product.url, 'opens');
+    logAnalyticsEvent('product_open', {product_url: product.url, product_name: product.title?.slice(0, 80) || ''});
     previousView = document.querySelector('.view.active').id;
     previousScrollTop = window.scrollY;
     showView('detailView'); renderDetail(product);
-    fetchProductContent(product).then((official) => { if (currentProduct?.url === product.url) renderDetail(product, official); }).catch(() => { if (currentProduct?.url === product.url && productCache[product.url]) renderDetail(product, productCache[product.url]); });
+    fetchProductContent(product).then(async (official) => {
+      if (currentProduct?.url !== product.url) return;
+      await preloadImages((official?.images || []).slice(0, 1).map((image) => image.src));
+      if (currentProduct?.url === product.url) renderDetail(product, official);
+    }).catch(() => { if (currentProduct?.url === product.url && productCache[product.url]) renderDetail(product, productCache[product.url]); });
   }
 
   function returnFromDetail() {
@@ -1440,7 +1535,14 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
       }
       let permission = await PushNotifications.checkPermissions();
       if (requestPermission && permission.receive === 'prompt') permission = await PushNotifications.requestPermissions();
-      if (permission.receive === 'granted') { await PushNotifications.register(); return 'active'; }
+      if (permission.receive === 'granted') {
+        await PushNotifications.register();
+        try {
+          const {FirebaseMessaging} = await import('@capacitor-firebase/messaging');
+          await FirebaseMessaging.subscribeToTopic({topic: 'catalog-updates'});
+        } catch (_) {}
+        return 'active';
+      }
       localStorage.setItem('iht_push_status', permission.receive === 'denied' ? 'denied' : 'pending');
       return permission.receive;
     } catch (_) { localStorage.setItem('iht_push_status', 'unavailable'); return 'unavailable'; }
@@ -1455,12 +1557,16 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     if (notificationButton) notificationButton.setAttribute('aria-label', pushStatus === 'active' ? 'Notificaciones activadas' : 'Configurar notificaciones');
     if (notificationStatus) notificationStatus.hidden = pushStatus !== 'active';
     const update = `<button class="more-row managed-more-row update-more-row" data-app-update><span class="managed-icon" aria-hidden="true">↻</span><span><strong>Actualizar aplicación</strong><small>${decision.updateAvailable ? `Nueva versión ${escapeHtml(remoteControl.latest_version)} disponible` : `Versión ${escapeHtml(APP_VERSION)}`}</small></span><span class="row-arrow" aria-hidden="true">›</span></button>`;
-    const developerCredit = '<div class="developer-credit"><span>Y.R.N Soluciones Software</span><a class="developer-whatsapp" href="https://wa.me/5491135195674" target="_blank" rel="noopener" aria-label="Contactar por WhatsApp"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c0 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/></svg></a></div>';
+    const developerWhatsApp = `https://wa.me/5491135195674?text=${encodeURIComponent('¡Me gustó la app de Iahadut HaTora! ¿Podemos hacer un proyecto juntos?')}`;
+    const developerCredit = '<div class="developer-credit"><span>Y.R.N Soluciones Software</span><a class="developer-cta" href="https://wa.me/5491135195674" target="_blank" rel="noopener">¿Necesitás una app?</a><a class="developer-whatsapp" href="https://wa.me/5491135195674" target="_blank" rel="noopener" aria-label="Contactar por WhatsApp"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c0 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/></svg></a></div>';
     $('#moreList').innerHTML = saved + Object.entries(info).map(([key, value]) => `<button class="more-row" data-info="${key}">${infoIcon(key)}<span><strong>${escapeHtml(value[0])}</strong><small>${escapeHtml(value[1])}</small></span><span class="row-arrow" aria-hidden="true">›</span></button>`).join('') + update + developerCredit;
+    document.querySelectorAll('.developer-cta, .developer-whatsapp').forEach((link) => { link.href = developerWhatsApp; });
+    infoNoticeKeys.forEach((key) => updateInfoNotice(key));
   }
 
   async function openInfo(key, options = {}) {
     const value = info[key]; if (!value) return;
+    markInfoSeen(key);
     const activeView = document.querySelector('.view.active')?.id || 'homeView';
     if (!options.fromHistory) {
       if (activeView === 'readerView' && currentInfoKey) readerHistory.push({type:'info', key:currentInfoKey});
@@ -1588,8 +1694,11 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
       stream = await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'}}, audio:false});
       $('#camera').srcObject = stream;
       if (!('BarcodeDetector' in window)) { $('#scanMessage').textContent = 'Este dispositivo no ofrece lectura automática. Ingresá el EAN o UPC.'; return; }
-      const detector = new BarcodeDetector({formats:['ean_13','ean_8','upc_a','upc_e','code_128']});
-      const tick = async () => { if (!stream) return; try { const codes = await detector.detect($('#camera')); if (codes[0] && codes[0].rawValue) { closeScanner(); resolveBarcode(codes[0].rawValue); return; } } catch (_) {} scanFrame = requestAnimationFrame(tick); };
+      const requestedFormats = ['ean_13','ean_8','upc_a','upc_e','itf14','code_128','codabar'];
+      const supportedFormats = BarcodeDetector.getSupportedFormats ? await BarcodeDetector.getSupportedFormats() : requestedFormats;
+      const formats = requestedFormats.filter((format) => supportedFormats.includes(format));
+      const detector = new BarcodeDetector(formats.length ? {formats} : undefined);
+      const tick = async () => { if (!stream) return; try { const codes = await detector.detect($('#camera')); if (codes[0] && codes[0].rawValue) { stopCamera(); resolveBarcode(codes[0].rawValue); return; } } catch (_) {} scanFrame = requestAnimationFrame(tick); };
       scanFrame = requestAnimationFrame(tick);
     } catch (_) { $('#scanMessage').textContent = 'No pudimos iniciar la cámara. Revisá el permiso o ingresá el código manualmente.'; }
   }
@@ -1597,9 +1706,13 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
   window.__ihtCameraDenied = () => { $('#scanMessage').textContent = 'Se necesita permiso de cámara para escanear.'; };
 
   function openWebScanner(message = 'Alineá el código dentro del recuadro.', useCamera = true) {
+    pendingScanProduct = null;
     $('#scanMessage').textContent = message;
     $('#scanOverlay').hidden = false;
+    $('#scanOverlay').classList.remove('scan-result');
     $('#scanOverlay').classList.toggle('manual-only', !useCamera);
+    $('#camera').hidden = false;
+    $('.frame').hidden = false;
     $('#barcode').value = '';
     updateModalLock();
     if (useCamera) startCamera(); else stopCamera();
@@ -1638,39 +1751,88 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     }
   }
 
-  function closeScanner() { stopCamera(); $('#scanOverlay').hidden = true; $('#scanOverlay').classList.remove('manual-only'); updateModalLock(); }
+  function closeScanner() {
+    stopCamera();
+    pendingScanProduct = null;
+    $('#scanOverlay').hidden = true;
+    $('#scanOverlay').classList.remove('manual-only', 'scan-result');
+    $('#camera').hidden = false;
+    $('.frame').hidden = false;
+    $('#scanMessage').textContent = 'Alineá el código dentro del recuadro.';
+    updateModalLock();
+  }
   window.__ihtCloseScanner = closeScanner;
+  function barcodeCandidates(value) {
+    const code = String(value || '').replace(/\D/g, '');
+    if (!code) return [];
+    const candidates = [code];
+    // UPC-A is commonly returned as 12 digits while catalog data stores it as EAN-13.
+    if (code.length === 12) candidates.push(`0${code}`);
+    if (code.length === 13 && code.startsWith('0')) candidates.push(code.slice(1));
+    return [...new Set(candidates)];
+  }
+
+  function findProductByBarcode(value) {
+    const candidates = barcodeCandidates(value);
+    return products.find((product) => barcodeCandidates(product.barcode).some((barcode) => candidates.includes(barcode)));
+  }
+
   async function barcodeIdentity(code) {
     try {
-      const url = `https://world.openfoodfacts.org/api/v2/product/${encodeURIComponent(code)}.json?fields=code,product_name,product_name_es,brands`;
-      const response = Capacitor.isNativePlatform() ? await CapacitorHttp.get({url, connectTimeout:7000, readTimeout:7000}) : await fetch(url).then((value) => value.json());
-      const data = response?.data || response;
+      const url = `https://world.openfoodfacts.net/api/v2/product/${encodeURIComponent(code)}.json?fields=code,product_name,product_name_es,brands`;
+      const response = Capacitor.isNativePlatform()
+        ? await CapacitorHttp.get({url, connectTimeout:7000, readTimeout:7000})
+        : await fetch(url, {headers:{Accept:'application/json'}});
+      const data = response?.data || await response.json();
       if (Number(data?.status) !== 1 || !data?.product) return null;
-      return {name:clean(data.product.product_name_es || data.product.product_name), brand:clean(data.product.brands?.split(',')[0])};
+      const name = clean(data.product.product_name_es || data.product.product_name);
+      const brand = clean(String(data.product.brands || '').split(',')[0]);
+      return {name, brand, normalizedName:normalize(name), normalizedBrand:normalize(brand)};
     } catch (_) { return null; }
+  }
+
+  function showScanResult(code, product = null, identity = null) {
+    pendingScanProduct = product;
+    stopCamera();
+    $('#scanOverlay').hidden = false;
+    $('#scanOverlay').classList.add('scan-result', 'manual-only');
+    $('#camera').hidden = true;
+    $('.frame').hidden = true;
+    const externalName = clean(identity?.name);
+    const externalBrand = clean(identity?.brand);
+    if (product) {
+      $('#scanMessage').innerHTML = `<span class="scan-result-status found">¡Kosher! =)</span><strong class="scan-result-title">${escapeHtml(product.title)}</strong><small class="scan-result-code">Código escaneado: ${escapeHtml(code)}</small><button class="scan-result-action" type="button" data-scan-open>Ver ficha del producto</button>`;
+    } else {
+      const identified = externalName ? `<strong class="scan-result-title">${escapeHtml(externalName)}${externalBrand ? ` · ${escapeHtml(externalBrand)}` : ''}</strong>` : '';
+      $('#scanMessage').innerHTML = `<span class="scan-result-status not-found">Producto escaneado</span>${identified}<strong class="scan-result-code">Código: ${escapeHtml(code)}</strong><span class="scan-result-note">No encontramos una coincidencia en los códigos cargados. Esto no significa necesariamente que el producto no esté en el catálogo.</span><button class="scan-result-action secondary" type="button" data-scan-again>Escanear otro producto</button>`;
+    }
+    $('#barcode').value = code;
+    updateModalLock();
+  }
+
+  function showScanLoading(code) {
+    pendingScanProduct = null;
+    stopCamera();
+    $('#scanOverlay').hidden = false;
+    $('#scanOverlay').classList.add('scan-result', 'manual-only');
+    $('#camera').hidden = true;
+    $('.frame').hidden = true;
+    $('#scanMessage').innerHTML = `<span class="scan-loading-logo"><img src="assets/logo.png" alt=""><i aria-hidden="true"></i></span><strong class="scan-loading-title">Buscando el producto</strong><span class="scan-loading-copy">Estamos verificando el código escaneado…</span><small class="scan-result-code">Código: ${escapeHtml(code)}</small>`;
+    $('#barcode').value = code;
+    updateModalLock();
   }
 
   async function resolveBarcode(raw) {
     const code = String(raw || '').replace(/\D/g,'');
     if (!code) return;
-    const exact = products.find((product) => String(product.barcode || '') === code);
-    if (exact) { closeScanner(); openDetail(exact.url); return; }
-    const identity = await barcodeIdentity(code);
-    if (identity?.brand || identity?.name) {
-      closeScanner();
-      const query = identity.brand || identity.name;
-      openSearchScreen();
-      $('#query').value = query;
-      $('#clear').hidden = false;
-      renderResults(query);
-      $('#resultsMeta').textContent += ` · código ${code}`;
-      return;
-    }
     stopCamera();
-    $('#barcode').value = code;
-    $('#scanMessage').textContent = `No pudimos identificar el código ${code}. Buscá el producto por nombre.`;
-    $('#scanOverlay').hidden = false;
-    updateModalLock();
+    const exact = findProductByBarcode(code);
+    if (exact) { showScanResult(code, exact); return; }
+    showScanLoading(code);
+    const identity = await barcodeIdentity(code);
+    // El nombre externo sólo sirve para informar qué código se leyó.
+    // La leyenda kosher requiere una coincidencia exacta de código en el catálogo oficial.
+    showScanResult(code, null, identity);
   }
 
   function goBackTaxonomy() {
@@ -1704,6 +1866,15 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
 
   document.querySelectorAll('.nav').forEach((button) => button.onclick = () => button.dataset.view === 'homeView' ? returnHome() : button.dataset.view === 'searchView' ? openSearchScreen() : showView(button.dataset.view));
   document.addEventListener('click', (event) => {
+    const scanOpenButton = event.target.closest('[data-scan-open]');
+    if (scanOpenButton) {
+      const product = pendingScanProduct;
+      closeScanner();
+      if (product) openDetail(product.url);
+      return;
+    }
+    const scanAgainButton = event.target.closest('[data-scan-again]');
+    if (scanAgainButton) { openWebScanner(); return; }
     const loadMoreButton = event.target.closest('[data-load-more-products]');
     if (loadMoreButton) { appendProductBatch(); return; }
     const exploreCategories = event.target.closest('[data-explore-categories]');
@@ -1818,7 +1989,7 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
   $('#accessUpdate').onclick = () => openExternal(remoteControl.update_url);
   // Start warming the first product images without delaying the first paint.
   preloadInitialProductImages();
-  renderHome(); renderSearchCategories();
+  renderHome(); renderSearchCategories(); infoNoticeKeys.forEach((key) => updateInfoNotice(key));
   syncMessage(lastSyncMessage(), syncState.last ? 'ok' : '');
   if (navigator.onLine && localStorage.getItem(INITIAL_PRELOAD_KEY) !== 'done') initialLoadProgress(4);
   refreshRemoteControl(false);

@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "705952373371",
+    "project_id": "iahadut-hatora",
+    "storage_bucket": "iahadut-hatora.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:705952373371:android:02eba2ca714397fef520de",
+        "android_client_info": {
+          "package_name": "ar.vaad.catalogo.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCzcGt4MGc3Sx-BMsClUecynMnP7Ep6Rrc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

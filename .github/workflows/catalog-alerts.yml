@@ -1,0 +1,36 @@
+name: Alertas del catálogo
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '17 */12 * * *'
+
+permissions:
+  contents: write
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Install dependencies
+        run: npm ci
+      - name: Consultar altas y bajas y enviar FCM
+        env:
+          FCM_SERVICE_ACCOUNT_JSON: ${{ secrets.FCM_SERVICE_ACCOUNT_JSON }}
+          FCM_TOPIC: catalog-updates
+          ALERT_STATE_PATH: automation/alert-state.json
+        run: node scripts/monitor-alerts.mjs
+      - name: Guardar estado de alertas
+        run: |
+          git config user.name "iahadut-alerts[bot]"
+          git config user.email "iahadut-alerts[bot]@users.noreply.github.com"
+          git add automation/alert-state.json
+          git diff --cached --quiet || git commit -m "chore: actualizar estado de alertas"
+          git push
