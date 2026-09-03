@@ -1,6 +1,7 @@
 import { Capacitor, CapacitorHttp } from '@capacitor/core';
 import { App } from '@capacitor/app';
 import { APP_VERSION, accessDecision, defaultRemoteControl, loadRemoteControl } from './remote-control.js';
+import { firebaseConfig } from './firebase-config.js';
 import catalogSnapshot from './data/catalog.json';
 import contentSnapshot from './data/content.json';
 import '@phosphor-icons/web/regular';
@@ -120,6 +121,24 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
   let recent = Array.isArray(storedRecent) ? storedRecent : [];
   let popularity = readJson('iht_popularity', {});
   if (!popularity || typeof popularity !== 'object' || Array.isArray(popularity)) popularity = {};
+  let globalPopularity = {};
+  let globalPopularityDb = null;
+  let globalPopularityApi = null;
+  const popularityDocId = (key) => [...String(key)].reduce((hash, char) => ((hash * 31) + char.charCodeAt(0)) >>> 0, 7).toString(36);
+  async function loadGlobalPopularity() {
+    if (!firebaseConfig.apiKey || !firebaseConfig.projectId || !firebaseConfig.appId) return;
+    try {
+      const [{initializeApp, getApps}, authModule, firestoreModule] = await Promise.all([import('firebase/app'), import('firebase/auth'), import('firebase/firestore')]);
+      const app = getApps()[0] || initializeApp(firebaseConfig);
+      const auth = authModule.getAuth(app);
+      if (!auth.currentUser) await authModule.signInAnonymously(auth);
+      globalPopularityDb = firestoreModule.getFirestore(app);
+      globalPopularityApi = firestoreModule;
+      const snapshot = await firestoreModule.getDocs(firestoreModule.query(firestoreModule.collection(globalPopularityDb, 'product_popularity'), firestoreModule.orderBy('score', 'desc'), firestoreModule.limit(12)));
+      globalPopularity = Object.fromEntries(snapshot.docs.map((doc) => [doc.data().productUrl, doc.data()]));
+      renderSearchCategories();
+    } catch (_) {}
+  }
   let firebaseAnalytics = null;
   if (Capacitor.isNativePlatform()) import('@capacitor-firebase/analytics').then(({FirebaseAnalytics}) => { firebaseAnalytics = FirebaseAnalytics; }).catch(() => {});
   const logAnalyticsEvent = (name, params) => { try { firebaseAnalytics?.logEvent({name, params}); } catch (_) {} };
@@ -128,6 +147,15 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     entry[type] = (entry[type] || 0) + 1;
     popularity[key] = entry;
     localStorage.setItem('iht_popularity', JSON.stringify(popularity));
+    if (globalPopularityDb && globalPopularityApi && !String(key).startsWith('query:')) {
+      const product = products.find((item) => item.url === key);
+      const ref = globalPopularityApi.doc(globalPopularityDb, 'product_popularity', popularityDocId(key));
+      globalPopularityApi.runTransaction(globalPopularityDb, async (transaction) => {
+        const snapshot = await transaction.get(ref);
+        const current = snapshot.exists() ? snapshot.data() : {};
+        transaction.set(ref, {productUrl:key, title:product?.title || key, image:product?.image || '', searches:Number(current.searches || 0) + (type === 'searches' ? 1 : 0), opens:Number(current.opens || 0) + (type === 'opens' ? 1 : 0), score:Number(current.score || 0) + 1, updatedAt:globalPopularityApi.serverTimestamp()}, {merge:true});
+      }).catch(() => {});
+    }
   };
   let selectedCategory = 'all';
   let selectedRegion = 'argentina';
@@ -1117,7 +1145,8 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     const regions = selectedRegion === 'uruguay'
       ? `<button class="region-shortcut active" data-region="argentina" aria-label="Volver a productos de Argentina"><span class="category-icon category-flag category-flag-arg"><img src="assets/flag-argentina.svg" alt="Bandera de Argentina"></span><span>Productos de Uruguay</span><b aria-hidden="true">×</b></button>`
       : `<button class="region-shortcut" data-region="uruguay" aria-label="Buscar productos de Uruguay">${categoryIcon('uruguay')}<span>Buscar productos de Uruguay</span><b aria-hidden="true">›</b></button>`;
-    const popular = products.filter((product) => product.image).sort((a, b) => ((popularity[b.url]?.searches || 0) + (popularity[b.url]?.opens || 0)) - ((popularity[a.url]?.searches || 0) + (popularity[a.url]?.opens || 0))).slice(0, 6);
+    const popularitySource = Object.keys(globalPopularity).length ? globalPopularity : popularity;
+    const popular = products.filter((product) => product.image).sort((a, b) => ((popularitySource[b.url]?.score || 0) || ((popularitySource[b.url]?.searches || 0) + (popularitySource[b.url]?.opens || 0))) - ((popularitySource[a.url]?.score || 0) || ((popularitySource[a.url]?.searches || 0) + (popularitySource[a.url]?.opens || 0)))).slice(0, 6);
     const popularMarkup = popular.length ? `<div class="popular-searches"><strong>Más buscados</strong><div class="popular-searches-track">${popular.map((product) => `<button class="popular-search-card" type="button" data-product="${escapeHtml(product.url)}" aria-label="Ver ${escapeHtml(product.title)}"><img src="${escapeHtml(product.image)}" alt="" loading="eager"><span>${escapeHtml(product.title)}</span></button>`).join('')}</div></div>` : '';
     $('#searchCategories').innerHTML = `<div class="region-shortcut-wrap" aria-label="Filtro de país">${regions}</div>${popularMarkup}`;
     $('#recentSearches').innerHTML = '';
@@ -1990,6 +2019,7 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
   // Start warming the first product images without delaying the first paint.
   preloadInitialProductImages();
   renderHome(); renderSearchCategories(); infoNoticeKeys.forEach((key) => updateInfoNotice(key));
+  loadGlobalPopularity();
   syncMessage(lastSyncMessage(), syncState.last ? 'ok' : '');
   if (navigator.onLine && localStorage.getItem(INITIAL_PRELOAD_KEY) !== 'done') initialLoadProgress(4);
   refreshRemoteControl(false);
