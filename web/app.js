@@ -1263,10 +1263,17 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     document.querySelectorAll('.view').forEach((view) => view.classList.toggle('active', view.id === viewId));
     document.querySelectorAll('.nav').forEach((button) => button.classList.toggle('active', button.dataset.view === viewId));
     if (viewId === 'searchView' && !preserveSearch) { renderSearchCategories(); $('#results').hidden = true; $('#searchCategories').hidden = false; $('#recentSearches').hidden = false; }
-    if (viewId === 'alertsView') renderAlerts();
+    if (viewId === 'alertsView') { setNotificationBadge(false); renderAlerts(); }
     if (viewId === 'moreView') renderMore();
     if (viewId === 'savedView') renderSaved();
     window.scrollTo(0,0);
+  }
+
+  function setNotificationBadge(hasNew) {
+    const value = Boolean(hasNew);
+    $('#navDot').hidden = !value;
+    $('#headerNotificationDot').hidden = !value;
+    $('#headerNotifications')?.classList.toggle('has-alerts', value);
   }
 
   function restoreSearchScreen() {
@@ -1558,8 +1565,8 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
           if (document.querySelector('.view.active')?.id === 'moreView') renderMore();
         });
         await PushNotifications.addListener('registrationError', () => localStorage.setItem('iht_push_status', 'error'));
-        await PushNotifications.addListener('pushNotificationReceived', (notification) => { $('#navDot').hidden = false; if (notification.data?.action === 'sync') syncCatalog(true); });
-        await PushNotifications.addListener('pushNotificationActionPerformed', ({notification}) => { $('#navDot').hidden = true; if (notification.data?.action === 'sync') syncCatalog(true); showView('alertsView'); });
+        await PushNotifications.addListener('pushNotificationReceived', (notification) => { setNotificationBadge(true); if (notification.data?.action === 'sync') syncCatalog(true); });
+        await PushNotifications.addListener('pushNotificationActionPerformed', ({notification}) => { setNotificationBadge(false); if (notification.data?.action === 'sync') syncCatalog(true); showView('alertsView'); });
         await PushNotifications.createChannel({id:'catalog-updates', name:'Actualizaciones del catálogo', description:'Altas, bajas y cambios importantes', importance:4, visibility:1, vibration:true});
       }
       let permission = await PushNotifications.checkPermissions();
@@ -1921,6 +1928,8 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     const clearHistoryButton = event.target.closest('[data-clear-history]'); if (clearHistoryButton) { if (!recent.length || window.confirm('¿Borrar el historial de búsquedas?')) { recent = []; localStorage.removeItem('iht_recent'); renderMore(); renderSearchCategories(); } }
     const notificationButton = event.target.closest('[data-enable-notifications]');
     if (notificationButton) { setupPushNotifications(true).then(() => renderMore()); return; }
+    const openAlertsButton = event.target.closest('[data-open-alerts]');
+    if (openAlertsButton) { showView('alertsView'); return; }
     const updateButton = event.target.closest('[data-app-update]');
     if (updateButton) {
       refreshRemoteControl(true).then((decision) => {
