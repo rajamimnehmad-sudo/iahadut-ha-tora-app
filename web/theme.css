@@ -1213,3 +1213,6 @@ body.modal-open { overflow: hidden; }
 #homeView .useful-grid .link-row:active,
 #homeView .explore-categories-action:active,
 #homeView .saved-home-action:active { border-color: #a9cbb8; background-color: #f1f7f3; box-shadow: 0 4px 12px #2f7a5914; }
+.bottom-nav { transform: translate3d(-50%, 0, 0); contain: layout paint; }
+.bottom-nav { transform: translate3d(-50%, 0, 0); contain: layout paint; }
+html, body { overscroll-behavior-y: none; }
