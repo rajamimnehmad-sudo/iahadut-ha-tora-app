@@ -1,6 +1,6 @@
 import { firebaseConfig } from './firebase-config.js';
 
-export const APP_VERSION = '0.11.0';
+export const APP_VERSION = '0.11.3';
 const CACHE_KEY = 'iht_remote_control';
 
 export const defaultRemoteControl = {
@@ -8,7 +8,7 @@ export const defaultRemoteControl = {
   maintenance_message: 'Esta versión de prueba no está disponible temporalmente.',
   minimum_version: APP_VERSION,
   latest_version: APP_VERSION,
-  update_url: '',
+  update_url: 'https://play.google.com/store/apps/details?id=ar.vaad.catalogo.app',
   trial_expires_at: '',
   enforce_online_check: false,
   offline_grace_hours: 24,
