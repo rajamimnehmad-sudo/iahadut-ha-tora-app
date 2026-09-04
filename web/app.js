@@ -803,89 +803,64 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     await Promise.all(runners);
   }
 
-  function initialLoadProgress(percent, visible = true) {
+  function updateBackgroundLoad(percent, text, visible = true, state = 'busy') {
     const progress = $('#initialLoadProgress');
-    const bar = $('#initialPreparationBar');
-    const label = $('#initialPreparationPercent');
+    const bar = $('#initialLoadProgressBar');
+    const label = $('#initialLoadMessage');
+    const percentLabel = $('#initialLoadPercent');
     const value = Math.round(Math.max(4, Math.min(100, percent)));
     if (progress) {
       progress.hidden = !visible;
+      progress.dataset.state = state;
       progress.style.setProperty('--initial-load-progress', `${value}%`);
     }
     if (bar) bar.style.width = `${value}%`;
-    if (label) label.textContent = `${value}%`;
-    document.querySelectorAll('[data-preparation-step]').forEach((step) => {
-      const threshold = Number(step.dataset.preparationStep) || 0;
-      step.classList.toggle('active', value >= threshold);
-      step.classList.toggle('done', value >= Math.min(100, threshold + 32));
-    });
+    if (label && text && label.textContent !== text) {
+      label.classList.remove('is-changing');
+      void label.offsetWidth;
+      label.textContent = text;
+      label.classList.add('is-changing');
+    }
+    if (percentLabel) percentLabel.textContent = `${value}%`;
   }
 
-  function initialLoadMessage(message, text) {
-    if (!message || message.textContent === text) return;
-    message.classList.remove('is-changing');
-    void message.offsetWidth;
-    message.textContent = text;
-    message.classList.add('is-changing');
-  }
-
-  async function completeInitialPreparation() {
-    if (!document.documentElement.classList.contains('is-first-preparing')) return;
-    const message = $('#initialPreparationMessage');
+  async function startBackgroundPreparation() {
     if (initialPreparationPreview) {
+      let previewProgress = 8;
       const previewStages = [
-        [6, `Cargando ${products.length.toLocaleString('es-AR')} productos del catálogo…`],
-        [25, 'Preparando fichas y categorías…'],
-        [46, 'Cargando las imágenes principales…'],
-        [69, 'Guardando el catálogo para acceso rápido…'],
-        [90, 'Terminando los últimos detalles…'],
+        [8, 'Consultando las novedades del catálogo…'],
+        [24, 'Preparando fichas y categorías…'],
+        [52, 'Cargando imágenes principales…'],
+        [78, 'Guardando el catálogo para uso rápido…'],
         [100, 'Catálogo listo para usar']
       ];
-      let previewProgress = 6;
-      let previewHold = 0;
-      let previewStage = -1;
-      const animatePreview = () => {
+      const previewTimer = window.setInterval(() => {
+        previewProgress = Math.min(100, previewProgress + 4);
+        const stage = previewStages.findLast(([threshold]) => previewProgress >= threshold) || previewStages[0];
+        updateBackgroundLoad(previewProgress, stage[1], true, previewProgress >= 100 ? 'done' : 'busy');
         if (previewProgress >= 100) {
-          previewHold += 1;
-          if (previewHold < 7) return;
-          previewProgress = 6;
-          previewHold = 0;
-        } else previewProgress = Math.min(100, previewProgress + 3);
-        const nextStage = previewStages.findLastIndex(([threshold]) => previewProgress >= threshold);
-        if (nextStage !== previewStage) {
-          previewStage = nextStage;
-          initialLoadMessage(message, previewStages[nextStage][1]);
+          window.clearInterval(previewTimer);
+          window.setTimeout(() => updateBackgroundLoad(100, 'Catálogo listo para usar', false, 'done'), 2200);
         }
-        initialLoadProgress(previewProgress);
-      };
-      animatePreview();
-      window.setInterval(animatePreview, 90);
-      return new Promise(() => {});
+      }, 180);
+      updateBackgroundLoad(previewProgress, previewStages[0][1]);
+      return;
     }
-    const startedAt = Date.now();
-    initialLoadProgress(10);
-    initialLoadMessage(message, `Cargando ${products.length.toLocaleString('es-AR')} productos del catálogo…`);
-    await new Promise((resolve) => window.setTimeout(resolve, 120));
-    initialLoadProgress(24);
-    initialLoadMessage(message, 'Preparando fichas y categorías…');
-    await new Promise((resolve) => window.setTimeout(resolve, 110));
-    initialLoadProgress(28);
-    initialLoadMessage(message, 'Cargando todas las fichas y las imágenes…');
-    await preloadAppData((progress, text) => {
-      initialLoadProgress(progress);
-      initialLoadMessage(message, text);
-    });
-    initialLoadProgress(98);
-    initialLoadMessage(message, 'Terminando los últimos detalles…');
-    await new Promise((resolve) => window.setTimeout(resolve, 120));
-    initialLoadProgress(100);
-    initialLoadMessage(message, 'Catálogo listo para usar');
-    localStorage.setItem('iht_initial_ready_v4', 'done');
-    const remainingMinimum = Math.max(0, 900 - (Date.now() - startedAt));
-    await new Promise((resolve) => window.setTimeout(resolve, remainingMinimum + 180));
-    document.documentElement.classList.remove('is-first-preparing');
-    $('#initialPreparation')?.setAttribute('aria-hidden', 'true');
-    initialLoadProgress(100, false);
+    if (localStorage.getItem(INITIAL_PRELOAD_KEY) === 'done') return;
+    if (!navigator.onLine) {
+      updateBackgroundLoad(100, 'Sin conexión · usando catálogo guardado', true, 'error');
+      window.setTimeout(() => updateBackgroundLoad(100, '', false, 'error'), 4200);
+      return;
+    }
+    updateBackgroundLoad(4, 'Preparando el catálogo en segundo plano…');
+    try {
+      await preloadAppData((progress, text) => updateBackgroundLoad(progress, text));
+      updateBackgroundLoad(100, 'Catálogo listo para usar', true, 'done');
+      window.setTimeout(() => updateBackgroundLoad(100, 'Catálogo listo para usar', false, 'done'), 2600);
+    } catch (_) {
+      updateBackgroundLoad(100, 'Usando el catálogo guardado', true, 'error');
+      window.setTimeout(() => updateBackgroundLoad(100, '', false, 'error'), 4200);
+    }
   }
 
   async function preloadAppData(onProgress = null) {
@@ -2550,15 +2525,14 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
   $('#accessUpdate').onclick = () => openExternal(remoteControl.update_url);
   renderHome(); renderSearchCategories(); infoNoticeKeys.forEach((key) => updateInfoNotice(key));
   syncMessage(lastSyncMessage(), syncState.last ? 'ok' : '');
-  const initialReady = completeInitialPreparation();
-  initialReady.then(() => {
-    preloadInitialProductImages();
-    loadGlobalPopularity();
-    refreshRemoteControl(false);
-    refreshPlayUpdate();
-    setupPushNotifications(false);
-    // Calentar el resto solo después de mostrar la app, para no competir con
-    // las imágenes críticas del primer arranque.
+  // La interfaz queda disponible de inmediato. La precarga completa continúa
+  // en segundo plano y comunica su estado en la barra superior.
+  preloadInitialProductImages();
+  loadGlobalPopularity();
+  refreshRemoteControl(false);
+  refreshPlayUpdate();
+  setupPushNotifications(false);
+  startBackgroundPreparation().finally(() => {
     window.setTimeout(scheduleAppPreload, 350);
     syncAndPreload(false).finally(scheduleAppPreload);
   });
