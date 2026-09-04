@@ -827,6 +827,10 @@ body.modal-open { overflow: hidden; }
 .developer-credit > span:first-child { grid-column: 1 / -1; }
 .developer-cta { color: #2f7a59; font-size: 10px; font-weight: 700; text-decoration: none; }
 .developer-cta:hover { text-decoration: underline; }
+
+/* Android ya muestra la barra de navegación del sistema. */
+.android-native-shell .bottom-nav { display: none; }
+.android-native-shell .app { padding-bottom: 24px; }
 .developer-whatsapp { display: grid; width: 18px; height: 18px; place-items: center; color: #8b948e; }
 .developer-whatsapp svg { width: 13px; height: 13px; fill: currentColor; }
 
