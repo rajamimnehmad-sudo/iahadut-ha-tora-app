@@ -34,7 +34,10 @@ function baseName(product) {
 }
 
 function searchText(product) {
-  return clean(`${product.title} ${product.brand || ''}`);
+  // The catalog title contains typographic brand markers (and often repeats
+  // the brand). Strip those before querying so external catalogues can match
+  // the actual product identity instead of an unsearchable display title.
+  return clean(`${baseName(product)} ${product.brand || ''}`).replace(/[«»]/g, ' ');
 }
 
 function matchCandidate(product, candidate) {
