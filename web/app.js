@@ -131,10 +131,11 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
   };
   const storedProducts = readJson('iht_products');
   const bundledProducts = Array.isArray(catalogSnapshot?.products) ? catalogSnapshot.products : [];
+  const bundledProductDetails = productDetailsSnapshot?.products || {};
   const productSource = Array.isArray(storedProducts) && storedProducts.length ? storedProducts : bundledProducts.length ? bundledProducts : seed;
   // Older cached catalogs could contain the site's internal data-product-id.
   // Keep only real GTIN/EAN/UPC values so those IDs can never be scanned as barcodes.
-  let products = productSource.map((product) => ({...product, barcode:canonicalBarcode(product.barcode)}));
+  let products = productSource.map((product) => ({...product, barcode:canonicalBarcode(product.barcode || bundledProductDetails[product.url]?.barcode)}));
   const storedFavorites = readJson('iht_favorites', []);
   const storedRecent = readJson('iht_recent', []);
   let recentProducts = readJson('iht_recent_products', []);
@@ -247,7 +248,6 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
   const infoCache = storedInfoCache?.version === INFO_CACHE_VERSION ? (storedInfoCache.items || {}) : (contentSnapshot?.info || {});
   const storedCardCache = readJson('iht_card_cache');
   const cardCache = storedCardCache?.version === INFO_CACHE_VERSION ? (storedCardCache.items || {}) : (contentSnapshot?.cards || {});
-  const bundledProductDetails = productDetailsSnapshot?.products || {};
   const storedProductCache = readJson('iht_product_cache');
   const productCache = {...bundledProductDetails, ...(storedProductCache?.version === INFO_CACHE_VERSION ? (storedProductCache.items || {}) : {})};
   const alertUrl = 'https://vaad.ar/alertas-de-productos/';
@@ -658,6 +658,27 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     if (!product?.url) return null;
     if (!force && productCache[product.url]) return productCache[product.url];
     const document = new DOMParser().parseFromString(await fetchText(sourceUrl(product.url)), 'text/html');
+    const structuredBarcodes = [];
+    const collectStructuredBarcodes = (value) => {
+      if (Array.isArray(value)) { value.forEach(collectStructuredBarcodes); return; }
+      if (!value || typeof value !== 'object') return;
+      Object.entries(value).forEach(([key, entry]) => {
+        if (/^gtin(?:8|12|13|14)?$/i.test(key)) structuredBarcodes.push(entry);
+        else collectStructuredBarcodes(entry);
+      });
+    };
+    document.querySelectorAll('script[type="application/ld+json"]').forEach((script) => {
+      try { collectStructuredBarcodes(JSON.parse(script.textContent)); } catch (_) {}
+    });
+    const barcodeValues = [
+      ...[...document.querySelectorAll('[itemprop^="gtin"],[data-barcode],[data-ean],[data-gtin],[data-upc]')].flatMap((node) => [node.getAttribute('content'), node.getAttribute('value'), node.getAttribute('data-barcode'), node.getAttribute('data-ean'), node.getAttribute('data-gtin'), node.getAttribute('data-upc'), node.textContent]),
+      ...structuredBarcodes
+    ];
+    const officialBarcode = barcodeValues.map(canonicalBarcode).find(Boolean) || '';
+    if (officialBarcode && !canonicalBarcode(product.barcode)) {
+      product.barcode = officialBarcode;
+      save();
+    }
     document.querySelectorAll('script,style,noscript,nav,header,footer,form').forEach((node) => node.remove());
     const contentRoot = document.querySelector('.et_pb_section_1_tb_body') || document.querySelector('.entry-content, main, article') || document.querySelector('.et_builder_inner_content.product') || document.body;
     const seen = new Set();
@@ -691,7 +712,7 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
       .map((block) => block.text)
       .join(' ')
       .trim();
-    const result = {blocks, images, category, description, descriptionAvailable:Boolean(description), beraja, fetchedAt:Date.now(), bundled:false};
+    const result = {blocks, images, category, description, descriptionAvailable:Boolean(description), beraja, barcode:officialBarcode || canonicalBarcode(product.barcode), fetchedAt:Date.now(), bundled:false};
     productCache[product.url] = result;
     localStorage.setItem('iht_product_cache', JSON.stringify({version:INFO_CACHE_VERSION, items:productCache}));
     return result;
@@ -885,7 +906,7 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
       await runPool(infoKeys, fetchInfoContent, 2, (done, total) => onProgress?.(10 + (done / Math.max(total, 1)) * 10, 'Cargando información oficial…'));
       const cards = Object.values(infoCache).flatMap((content) => content?.cards || []).filter((card) => card.url).filter((card, index, all) => all.findIndex((candidate) => candidate.url === card.url) === index);
       await runPool(cards, fetchCardContent, 3, (done, total) => onProgress?.(20 + (done / Math.max(total, 1)) * 10, 'Preparando fichas informativas…'));
-      await preloadProductContent(firstPreparation, (done, total) => onProgress?.(30 + (done / Math.max(total, 1)) * 45, firstPreparation ? 'Cargando todas las fichas de productos…' : 'Incorporando fichas nuevas…'));
+      await preloadProductContent(firstPreparation, (done, total) => onProgress?.(30 + (done / Math.max(total, 1)) * 45, firstPreparation ? 'Cargando fichas y códigos verificados…' : 'Incorporando fichas y códigos nuevos…'));
       const imageUrls = [
         ...products.map((product) => product.image),
         ...recentProducts.map((product) => product.image),
@@ -946,7 +967,16 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
         const changed = previous && ['title', 'brand', 'barcode', 'cat', 'image'].some((field) => String(previous[field] || '') !== String(product[field] || ''));
         if (changed) delete productCache[product.url];
       });
-      products = unique.map((product) => ({...product, description:previousDescriptions.get(product.url) || ''}));
+      products = unique.map((product) => {
+        const previous = previousByUrl.get(product.url);
+        return {
+          ...product,
+          // The category listing often omits the barcode. Never erase a
+          // verified code already learned from the official product page.
+          barcode:canonicalBarcode(product.barcode) || canonicalBarcode(previous?.barcode),
+          description:previousDescriptions.get(product.url) || ''
+        };
+      });
       recentProducts = unique.filter((product) => !previousUrls.has(product.url)).slice(0, 10);
       if (recentProducts.length < 10) recentProducts = unique.slice(0, 10);
       localStorage.setItem('iht_recent_products', JSON.stringify(recentProducts));

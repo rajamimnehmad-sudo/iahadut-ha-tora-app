@@ -10,6 +10,36 @@ const catalog = JSON.parse(await readFile(catalogPath, 'utf8'));
 const generatedAt = Date.now();
 const clean = (value) => String(value || '').replace(/\s+/g, ' ').trim();
 const refreshAll = process.argv.includes('--refresh');
+
+function validGtin(value) {
+  const code = String(value || '').replace(/\D/g, '');
+  if (![8, 12, 13, 14].includes(code.length) || /^0+$/.test(code)) return '';
+  let sum = 0;
+  for (let index = code.length - 2, position = 0; index >= 0; index -= 1, position += 1) sum += Number(code[index]) * (position % 2 ? 1 : 3);
+  const check = (10 - (sum % 10)) % 10;
+  return check === Number(code.at(-1)) ? code : '';
+}
+
+function extractBarcode(document) {
+  const structuredBarcodes = [];
+  const collectStructuredBarcodes = (value) => {
+    if (Array.isArray(value)) { value.forEach(collectStructuredBarcodes); return; }
+    if (!value || typeof value !== 'object') return;
+    Object.entries(value).forEach(([key, entry]) => {
+      if (/^gtin(?:8|12|13|14)?$/i.test(key)) structuredBarcodes.push(entry);
+      else collectStructuredBarcodes(entry);
+    });
+  };
+  document.querySelectorAll('script[type="application/ld+json"]').forEach((script) => {
+    try { collectStructuredBarcodes(JSON.parse(script.textContent)); } catch (_) {}
+  });
+  const values = [
+    ...[...document.querySelectorAll('[itemprop^="gtin"],[data-barcode],[data-ean],[data-gtin],[data-upc]')].flatMap((node) => [node.getAttribute('content'), node.getAttribute('value'), node.getAttribute('data-barcode'), node.getAttribute('data-ean'), node.getAttribute('data-gtin'), node.getAttribute('data-upc'), node.textContent]),
+    ...structuredBarcodes
+  ];
+  return values.map(validGtin).find(Boolean) || '';
+}
+
 let previousProducts = {};
 try {
   previousProducts = JSON.parse(await readFile(outputPath, 'utf8')).products || {};
@@ -35,6 +65,7 @@ async function fetchHtml(url) {
 
 function parseProduct(product, html) {
   const document = new DOMParser().parseFromString(html, 'text/html');
+  const barcode = extractBarcode(document);
   document.querySelectorAll('script,style,noscript,nav,header,footer,form').forEach((node) => node.remove());
   const root = document.querySelector('.et_pb_section_1_tb_body') || document.querySelector('.entry-content, main, article') || document.querySelector('.et_builder_inner_content.product') || document.body;
   const descriptionRoot = root.querySelector('.et_pb_wc_description .et_builder_inner_content.product, .et_pb_wc_description .et_pb_module_inner, .woocommerce-product-details__short-description');
@@ -60,6 +91,7 @@ function parseProduct(product, html) {
   const rawImage = imageNode && (imageNode.getAttribute('data-large_image') || imageNode.getAttribute('data-src') || imageNode.getAttribute('data-lazy-src') || imageNode.getAttribute('src'));
   const description = descriptionParts.join(' ').trim() || fallbackDescription;
   return {
+    barcode,
     images: rawImage ? [{ src: new URL(rawImage, product.url).href, alt: product.title }] : [],
     category: clean(root.querySelector('.product_meta .posted_in a')?.textContent || ''),
     description,
