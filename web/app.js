@@ -825,28 +825,7 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
   }
 
   async function startBackgroundPreparation() {
-    if (initialPreparationPreview) {
-      let previewProgress = 8;
-      const previewStages = [
-        [8, 'Consultando las novedades del catálogo…'],
-        [24, 'Preparando fichas y categorías…'],
-        [52, 'Cargando imágenes principales…'],
-        [78, 'Guardando el catálogo para uso rápido…'],
-        [100, 'Catálogo listo para usar']
-      ];
-      const previewTimer = window.setInterval(() => {
-        previewProgress = Math.min(100, previewProgress + 4);
-        const stage = previewStages.findLast(([threshold]) => previewProgress >= threshold) || previewStages[0];
-        updateBackgroundLoad(previewProgress, stage[1], true, previewProgress >= 100 ? 'done' : 'busy');
-        if (previewProgress >= 100) {
-          window.clearInterval(previewTimer);
-          window.setTimeout(() => updateBackgroundLoad(100, 'Catálogo listo para usar', false, 'done'), 2200);
-        }
-      }, 180);
-      updateBackgroundLoad(previewProgress, previewStages[0][1]);
-      return;
-    }
-    if (localStorage.getItem(INITIAL_PRELOAD_KEY) === 'done') return;
+    if (!initialPreparationPreview && localStorage.getItem(INITIAL_PRELOAD_KEY) === 'done') return;
     if (!navigator.onLine) {
       updateBackgroundLoad(100, 'Sin conexión · usando catálogo guardado', true, 'error');
       window.setTimeout(() => updateBackgroundLoad(100, '', false, 'error'), 4200);
@@ -866,7 +845,7 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
   async function preloadAppData(onProgress = null) {
     if (preloadStarted || !navigator.onLine) return;
     preloadStarted = true;
-    const firstPreparation = localStorage.getItem(INITIAL_PRELOAD_KEY) !== 'done';
+    const firstPreparation = initialPreparationPreview || localStorage.getItem(INITIAL_PRELOAD_KEY) !== 'done';
     try {
       onProgress?.(5, 'Consultando las novedades del catálogo…');
       const freshAlerts = await fetchAlerts(true).catch(() => null);
@@ -874,14 +853,14 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
       const latestProductsMissing = latestAlerts.slice(0, 4).some((alert) => alert.url && !products.some((product) => product.url === alert.url));
       if (firstPreparation || latestProductsMissing) {
         onProgress?.(8, firstPreparation ? 'Descargando el catálogo oficial completo…' : 'Incorporando productos nuevos…');
-        await syncCatalog(true).catch(() => null);
+      await syncCatalog(true, onProgress).catch(() => null);
         updateRecentFromAlerts(freshAlerts);
       }
       const infoKeys = Object.keys(info);
-      await runPool(infoKeys, fetchInfoContent, 2, (done, total) => onProgress?.(10 + (done / Math.max(total, 1)) * 10, 'Cargando información oficial…'));
+      await runPool(infoKeys, fetchInfoContent, 2, (done, total) => onProgress?.(30 + (done / Math.max(total, 1)) * 10, 'Cargando información oficial…'));
       const cards = Object.values(infoCache).flatMap((content) => content?.cards || []).filter((card) => card.url).filter((card, index, all) => all.findIndex((candidate) => candidate.url === card.url) === index);
-      await runPool(cards, fetchCardContent, 3, (done, total) => onProgress?.(20 + (done / Math.max(total, 1)) * 10, 'Preparando fichas informativas…'));
-      await preloadProductContent(firstPreparation, (done, total) => onProgress?.(30 + (done / Math.max(total, 1)) * 45, firstPreparation ? 'Cargando fichas y códigos verificados…' : 'Incorporando fichas y códigos nuevos…'));
+      await runPool(cards, fetchCardContent, 3, (done, total) => onProgress?.(40 + (done / Math.max(total, 1)) * 10, 'Preparando fichas informativas…'));
+      await preloadProductContent(firstPreparation, (done, total) => onProgress?.(50 + (done / Math.max(total, 1)) * 25, firstPreparation ? 'Cargando fichas y códigos verificados…' : 'Incorporando fichas y códigos nuevos…'));
       const imageUrls = [
         ...products.map((product) => product.image),
         ...recentProducts.map((product) => product.image),
@@ -908,7 +887,7 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     return Promise.resolve(syncCatalog(force)).then(() => preloadAppData());
   }
 
-  async function syncCatalog(force = false) {
+  async function syncCatalog(force = false, onProgress = null) {
     if (syncState.running) return;
     const twelveHours = 12 * 60 * 60 * 1000;
     const expectedCatalogTotal = categories.reduce((total, category) => total + category.count, 0);
@@ -919,14 +898,18 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     syncMessage('Sincronizando catálogo oficial…', 'busy');
     try {
       const synced = [];
-      for (const category of categories) {
+      for (const [categoryIndex, category] of categories.entries()) {
         const firstPage = await fetchCatalogPage(category.url);
         const total = catalogTotal(firstPage) || category.count;
         const pages = Math.ceil(total / 24);
+        const categoryStart = categoryIndex / categories.length;
+        const categorySpan = 1 / categories.length;
+        onProgress?.(8 + categoryStart * 22, `Descargando ${category.short}…`);
         syncMessage(`Leyendo ${category.short} · 1 de ${pages} páginas`, 'busy');
         for (let page = 1; page <= pages; page += 1) {
           const html = page === 1 ? firstPage : await fetchCatalogPage(`${category.url}?product-page=${page}`);
           synced.push(...productEntries(html, category));
+          onProgress?.(8 + ((categoryIndex + (page / pages)) / categories.length) * 22, `Descargando ${category.short} · ${page} de ${pages} páginas…`);
           syncMessage(`Leyendo ${category.short} · ${page} de ${pages} páginas`, 'busy');
         }
       }
