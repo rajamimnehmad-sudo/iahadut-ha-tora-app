@@ -4,7 +4,9 @@ import { fileURLToPath } from 'node:url';
 
 const projectRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const catalogPath = resolve(projectRoot, 'web/data/catalog.json');
-const cachePath = resolve(projectRoot, 'work/barcode-enrichment-cache.json');
+const cachePath = resolve(projectRoot, 'automation/barcode-enrichment-cache.json');
+const legacyCachePath = resolve(projectRoot, 'work/barcode-enrichment-cache.json');
+const evidencePath = resolve(projectRoot, 'automation/barcode-evidence.json');
 const endpoint = 'https://world.openfoodfacts.net/cgi/search.pl';
 const userAgent = 'IahadutHaTora/0.11 (barcode enrichment; contact: local)';
 const delayMs = Number(process.env.BARCODE_ENRICH_DELAY_MS || 6500);
@@ -66,15 +68,29 @@ async function fetchMatches(query) {
 }
 
 async function loadCache() {
-  try { return JSON.parse(await readFile(cachePath, 'utf8')); } catch (_) { return {}; }
+  for (const path of [cachePath, legacyCachePath]) {
+    try { return JSON.parse(await readFile(path, 'utf8')); } catch (_) {}
+  }
+  return {};
+}
+
+async function loadEvidence() {
+  try { return JSON.parse(await readFile(evidencePath, 'utf8')); } catch (_) { return {}; }
 }
 
 const catalog = JSON.parse(await readFile(catalogPath, 'utf8'));
 const products = Array.isArray(catalog.products) ? catalog.products : [];
 const cache = await loadCache();
+const evidence = await loadEvidence();
 const identities = [...new Map(products.map((product) => [`${normalize(product.title)}|${brandKey(product.brand)}`, product])).values()];
 const duplicateIdentities = new Set(products.map((product) => `${normalize(product.title)}|${brandKey(product.brand)}`).filter((key, index, all) => all.indexOf(key) !== index));
-const assignments = [];
+const evidenceAssignments = Object.entries(evidence).flatMap(([url, item]) => {
+  const product = products.find((candidate) => candidate.url === url);
+  const code = validGtin(item?.code);
+  if (!product || !code || product.barcode) return [];
+  return [{product, code, candidate:{product_name: item.label || product.title, source: item.source || 'evidence'}}];
+});
+const assignments = [...evidenceAssignments];
 let requests = 0;
 
 for (const product of identities) {
@@ -106,7 +122,7 @@ const safeAssignments = assignments.filter(({code}) => {
 console.log(`Identidades revisadas: ${identities.length}`);
 console.log(`Consultas nuevas: ${requests}`);
 console.log(`Códigos candidatos inequívocos: ${safeAssignments.length}`);
-for (const {product, code, candidate} of safeAssignments) console.log(`${code} · ${product.title} · fuente: ${candidate.product_name_es || candidate.product_name}`);
+for (const {product, code, candidate} of safeAssignments) console.log(`${code} · ${product.title} · fuente: ${candidate.source || candidate.product_name_es || candidate.product_name}`);
 
 if (shouldWrite && safeAssignments.length) {
   const byIdentity = new Map(safeAssignments.map(({product, code}) => [`${normalize(product.title)}|${brandKey(product.brand)}`, code]));

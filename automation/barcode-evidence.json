@@ -1,0 +1,22 @@
+{
+  "https://vaad.ar/producto/aceite-de-girasol-marca-canuelas/": {
+    "code": "7792180001641",
+    "label": "Aceite de girasol Cañuelas 900 ml",
+    "source": "https://www.lagunapaiva.gob.ar/sites/default/files/lista_de_precios_maximos_en_la_provincia_de_santa_fe_1.pdf"
+  },
+  "https://vaad.ar/producto/aceite-en-aerosol-marca-natura/": {
+    "code": "7790272000831",
+    "label": "Aceite Rocío Vegetal Natura en aerosol 120 ml",
+    "source": "https://pricely.ar/product/7790272000831"
+  },
+  "https://vaad.ar/producto/ketchup-marca-natura/": {
+    "code": "7791866000381",
+    "label": "Ketchup Natura 250 g",
+    "source": "https://diaonline.supermercadosdia.com.ar/ketchup-natura-250-gr-161513/p"
+  },
+  "https://vaad.ar/producto/mayonesa-marca-natura/": {
+    "code": "7791866001203",
+    "label": "Mayonesa Natura 250 ml / 237 g",
+    "source": "https://diaonline.supermercadosdia.com.ar/mayonesa-natura-250-ml-5539/p"
+  }
+}
