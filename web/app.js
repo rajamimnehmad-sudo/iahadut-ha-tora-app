@@ -131,11 +131,12 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
   };
   const storedProducts = readJson('iht_products');
   const bundledProducts = Array.isArray(catalogSnapshot?.products) ? catalogSnapshot.products : [];
+  const bundledProductByUrl = new Map(bundledProducts.map((product) => [product.url, product]));
   const bundledProductDetails = productDetailsSnapshot?.products || {};
   const productSource = Array.isArray(storedProducts) && storedProducts.length ? storedProducts : bundledProducts.length ? bundledProducts : seed;
   // Older cached catalogs could contain the site's internal data-product-id.
   // Keep only real GTIN/EAN/UPC values so those IDs can never be scanned as barcodes.
-  let products = productSource.map((product) => ({...product, barcode:canonicalBarcode(product.barcode || bundledProductDetails[product.url]?.barcode)}));
+  let products = productSource.map((product) => ({...product, barcode:canonicalBarcode(product.barcode || bundledProductByUrl.get(product.url)?.barcode || bundledProductDetails[product.url]?.barcode)}));
   const storedFavorites = readJson('iht_favorites', []);
   const storedRecent = readJson('iht_recent', []);
   let recentProducts = readJson('iht_recent_products', []);
