@@ -225,7 +225,7 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
   const bundledSyncTime = catalogSnapshot?.generatedAt ? Date.parse(catalogSnapshot.generatedAt) : 0;
   const syncState = {running:false, last:localStorage.getItem('iht_last_sync') || (bundledProducts.length && bundledSyncTime ? String(bundledSyncTime) : ''), error:''};
   const CACHE_TTL = 12 * 60 * 60 * 1000;
-  const INFO_CACHE_VERSION = 35;
+  const INFO_CACHE_VERSION = 36;
   const INITIAL_PRELOAD_KEY = `iht_initial_preload_${INFO_CACHE_VERSION}`;
   const storedInfoCache = readJson('iht_info_cache');
   const infoCache = storedInfoCache?.version === INFO_CACHE_VERSION ? (storedInfoCache.items || {}) : (contentSnapshot?.info || {});
@@ -239,6 +239,9 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
   let alertCache = storedAlertCache?.version === INFO_CACHE_VERSION ? storedAlertCache : (contentSnapshot?.alerts ? {version:INFO_CACHE_VERSION, items:contentSnapshot.alerts, fetchedAt:Number(contentSnapshot.generatedAt) || 0} : null);
   let pushNotifications = readJson('iht_push_notifications', []);
   if (!Array.isArray(pushNotifications)) pushNotifications = [];
+  const assetCacheKey = `iht_asset_cache_${INFO_CACHE_VERSION}`;
+  const storedAssetCache = readJson(assetCacheKey, []);
+  const assetCache = new Set(Array.isArray(storedAssetCache) ? storedAssetCache : []);
   let preloadStarted = false;
   const infoNoticeVersion = 'v3';
   const infoNoticeKeys = ['shops', 'catering', 'notes'];
@@ -690,10 +693,27 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     if (!src) return Promise.resolve();
     return new Promise((resolve) => {
       const image = new Image();
-      image.onload = image.onerror = resolve;
+      let settled = false;
+      const finish = (loaded) => {
+        if (settled) return;
+        settled = true;
+        resolve(loaded);
+      };
+      image.onload = () => finish(true);
+      image.onerror = () => finish(false);
       image.src = src;
-      if (image.complete) resolve();
+      if (image.complete) finish(image.naturalWidth > 0);
     });
+  }
+
+  async function preloadNewImages(images = [], concurrency = 4, onProgress = null) {
+    const unique = [...new Set(images.filter(Boolean))];
+    const pending = unique.filter((src) => !assetCache.has(src));
+    await runPool(pending, async (src) => {
+      if (await preloadImage(src)) assetCache.add(src);
+    }, concurrency, onProgress);
+    localStorage.setItem(assetCacheKey, JSON.stringify([...assetCache]));
+    return {total:unique.length, pending:pending.length};
   }
 
   async function preloadImages(images = []) {
@@ -714,18 +734,12 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     ]);
   }
 
-  async function preloadPriorityProductContent(firstPreparation = false) {
-    const priorityProducts = [...(Array.isArray(recentProducts) ? recentProducts : []), ...products]
+  async function preloadProductContent(firstPreparation = false, onProgress = null) {
+    const candidates = [...(Array.isArray(recentProducts) ? recentProducts : []), ...products]
       .filter((product, index, all) => product?.url && all.findIndex((candidate) => candidate.url === product.url) === index)
-      .slice(0, firstPreparation ? products.length : 36);
-    if (!priorityProducts.length) return;
-    // On the first preparation, cache every product text once. Later sessions
-    // only warm the most visible/recent fichas to keep background usage small.
-    if (firstPreparation) await runPool(priorityProducts, fetchProductContent, 4);
-    else await Promise.race([
-      runPool(priorityProducts, fetchProductContent, 3),
-      new Promise((resolve) => window.setTimeout(resolve, 9000))
-    ]);
+      .filter((product) => firstPreparation || !productCache[product.url]);
+    if (!candidates.length) return;
+    await runPool(candidates, fetchProductContent, firstPreparation ? 4 : 3, onProgress);
   }
 
   async function runPool(items, worker, concurrency = 3, onProgress = null) {
@@ -808,24 +822,18 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     initialLoadProgress(24);
     initialLoadMessage(message, 'Preparando fichas y categorías…');
     await new Promise((resolve) => window.setTimeout(resolve, 110));
-    const criticalProducts = [...(Array.isArray(recentProducts) ? recentProducts : []), ...products]
-      .filter((product, index, all) => product?.image && all.findIndex((candidate) => candidate.url === product.url) === index)
-      .slice(0, 14);
-    initialLoadMessage(message, 'Cargando las imágenes principales…');
-    await Promise.race([
-      runPool(criticalProducts, (product) => preloadImage(product.image), 5, (done, total) => {
-        const progress = 28 + (done / Math.max(total, 1)) * 62;
-        initialLoadProgress(progress);
-        if (progress >= 68) initialLoadMessage(message, 'Guardando el catálogo para acceso rápido…');
-      }),
-      new Promise((resolve) => window.setTimeout(resolve, 3500))
-    ]);
-    initialLoadProgress(94);
+    initialLoadProgress(28);
+    initialLoadMessage(message, 'Cargando todas las fichas y las imágenes…');
+    await preloadAppData((progress, text) => {
+      initialLoadProgress(progress);
+      initialLoadMessage(message, text);
+    });
+    initialLoadProgress(98);
     initialLoadMessage(message, 'Terminando los últimos detalles…');
     await new Promise((resolve) => window.setTimeout(resolve, 120));
     initialLoadProgress(100);
     initialLoadMessage(message, 'Catálogo listo para usar');
-    localStorage.setItem('iht_initial_ready_v3', 'done');
+    localStorage.setItem('iht_initial_ready_v4', 'done');
     const remainingMinimum = Math.max(0, 900 - (Date.now() - startedAt));
     await new Promise((resolve) => window.setTimeout(resolve, remainingMinimum + 180));
     document.documentElement.classList.remove('is-first-preparing');
@@ -833,30 +841,33 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     initialLoadProgress(100, false);
   }
 
-  async function preloadAppData() {
+  async function preloadAppData(onProgress = null) {
     if (preloadStarted || !navigator.onLine) return;
     preloadStarted = true;
     const firstPreparation = localStorage.getItem(INITIAL_PRELOAD_KEY) !== 'done';
     try {
+      onProgress?.(5, 'Consultando las novedades del catálogo…');
       const freshAlerts = await fetchAlerts(true).catch(() => null);
       const latestAlerts = freshAlerts?.alta || [];
       const latestProductsMissing = latestAlerts.slice(0, 4).some((alert) => alert.url && !products.some((product) => product.url === alert.url));
-      if (latestProductsMissing) {
+      if (firstPreparation || latestProductsMissing) {
+        onProgress?.(8, firstPreparation ? 'Descargando el catálogo oficial completo…' : 'Incorporando productos nuevos…');
         await syncCatalog(true).catch(() => null);
         updateRecentFromAlerts(freshAlerts);
       }
       const infoKeys = Object.keys(info);
-      await runPool(infoKeys, fetchInfoContent, 2);
+      await runPool(infoKeys, fetchInfoContent, 2, (done, total) => onProgress?.(10 + (done / Math.max(total, 1)) * 10, 'Cargando información oficial…'));
       const cards = Object.values(infoCache).flatMap((content) => content?.cards || []).filter((card) => card.url).filter((card, index, all) => all.findIndex((candidate) => candidate.url === card.url) === index);
-      await runPool(cards, fetchCardContent, 3);
-      await preloadPriorityProductContent(false);
+      await runPool(cards, fetchCardContent, 3, (done, total) => onProgress?.(20 + (done / Math.max(total, 1)) * 10, 'Preparando fichas informativas…'));
+      await preloadProductContent(firstPreparation, (done, total) => onProgress?.(30 + (done / Math.max(total, 1)) * 45, firstPreparation ? 'Cargando todas las fichas de productos…' : 'Incorporando fichas nuevas…'));
       const imageUrls = [
         ...products.map((product) => product.image),
         ...recentProducts.map((product) => product.image),
+        ...Object.values(productCache).flatMap((content) => content?.images || []).map((image) => image.src),
         ...Object.values(infoCache).flatMap((content) => [...(content?.images || []).map((image) => image.src), ...(content?.cards || []).map((card) => card.image)]),
         ...Object.values(cardCache).flatMap((content) => content?.images || []).map((image) => image.src)
       ].filter(Boolean).filter((src, index, all) => all.indexOf(src) === index);
-      await runPool(imageUrls, preloadImage, 2);
+      await preloadNewImages(imageUrls, firstPreparation ? 4 : 3, (done, total) => onProgress?.(75 + (done / Math.max(total, 1)) * 25, firstPreparation ? 'Descargando todas las imágenes…' : 'Descargando imágenes nuevas…'));
       if (firstPreparation) {
         localStorage.setItem(INITIAL_PRELOAD_KEY, 'done');
       }
@@ -869,6 +880,10 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     const start = () => preloadAppData();
     if ('requestIdleCallback' in window) window.requestIdleCallback(start, {timeout:1800});
     else window.setTimeout(start, 1200);
+  }
+
+  function syncAndPreload(force = false) {
+    return Promise.resolve(syncCatalog(force)).then(() => preloadAppData());
   }
 
   async function syncCatalog(force = false) {
@@ -895,13 +910,22 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
       }
       const unique = [...new Map(synced.map((product) => [product.url, product])).values()];
       if (unique.length < minimumCatalogTotal) throw new Error(`Catálogo incompleto (${unique.length} de al menos ${minimumCatalogTotal} productos)`);
+      const previousByUrl = new Map(products.map((product) => [product.url, product]));
       const previousDescriptions = new Map(products.map((product) => [product.url, product.description]));
       const previousUrls = new Set(products.map((product) => product.url));
+      const currentUrls = new Set(unique.map((product) => product.url));
+      Object.keys(productCache).filter((url) => !currentUrls.has(url)).forEach((url) => delete productCache[url]);
+      unique.forEach((product) => {
+        const previous = previousByUrl.get(product.url);
+        const changed = previous && ['title', 'brand', 'barcode', 'cat', 'image'].some((field) => String(previous[field] || '') !== String(product[field] || ''));
+        if (changed) delete productCache[product.url];
+      });
       products = unique.map((product) => ({...product, description:previousDescriptions.get(product.url) || ''}));
       recentProducts = unique.filter((product) => !previousUrls.has(product.url)).slice(0, 10);
       if (recentProducts.length < 10) recentProducts = unique.slice(0, 10);
       localStorage.setItem('iht_recent_products', JSON.stringify(recentProducts));
       save();
+      localStorage.setItem('iht_product_cache', JSON.stringify({version:INFO_CACHE_VERSION, items:productCache}));
       syncState.last = String(Date.now());
       localStorage.setItem('iht_last_sync', syncState.last);
       try {
@@ -2445,7 +2469,7 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
   $('#closeFilter').onclick = () => { $('#filterOverlay').hidden = true; updateModalLock(); };
   $('#filterOverlay').onclick = (event) => { if (event.target === $('#filterOverlay')) { $('#filterOverlay').hidden = true; updateModalLock(); return; } const filter = event.target.closest('[data-filter]'); if (filter) { selectedCategory = filter.dataset.filter; $('#filterOverlay').hidden = true; updateModalLock(); renderResults($('#query').value); } };
   $('#resetFilter').onclick = () => { selectedCategory = 'all'; $('#filterOverlay').hidden = true; updateModalLock(); renderResults($('#query').value); };
-  $('#syncStatus').onclick = () => syncCatalog(true);
+  $('#syncStatus').onclick = () => syncAndPreload(true);
   $('#accessRetry').onclick = () => refreshRemoteControl(true);
   $('#accessUpdate').onclick = () => openExternal(remoteControl.update_url);
   renderHome(); renderSearchCategories(); infoNoticeKeys.forEach((key) => updateInfoNotice(key));
@@ -2460,11 +2484,11 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     // Calentar el resto solo después de mostrar la app, para no competir con
     // las imágenes críticas del primer arranque.
     window.setTimeout(scheduleAppPreload, 350);
-    syncCatalog(false).finally(scheduleAppPreload);
+    syncAndPreload(false).finally(scheduleAppPreload);
   });
-  setInterval(() => syncCatalog(false), 12 * 60 * 60 * 1000);
+  setInterval(() => syncAndPreload(false), 12 * 60 * 60 * 1000);
   document.addEventListener('visibilitychange', () => {
-    if (!document.hidden) { syncCatalog(false); refreshRemoteControl(false); refreshPlayUpdate(); }
+    if (!document.hidden) { syncAndPreload(false); refreshRemoteControl(false); refreshPlayUpdate(); }
   });
-  window.addEventListener('online', () => { syncCatalog(false).finally(scheduleAppPreload); });
+  window.addEventListener('online', () => { syncAndPreload(false).finally(scheduleAppPreload); });
 })();

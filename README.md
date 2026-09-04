@@ -10,6 +10,8 @@ La fuente web es compartida para Android, iOS y navegador mediante Capacitor. La
 
 La sincronización consulta las categorías oficiales, descarga sus páginas, elimina duplicados por URL y guarda el catálogo en `localStorage`. Se intenta al iniciar, al volver la app a primer plano, cuando vuelve la conexión y se puede forzar tocando el estado de sincronización. La app muestra primero la copia incluida o guardada y actualiza el contenido en segundo plano para que las secciones abran sin esperar.
 
+En el primer arranque online se completa una preparación inicial: se descargan las fichas, las imágenes y la información necesaria para que las páginas de productos abran desde la copia local. La preparación puede tardar, pero se realiza una sola vez por versión de contenido. En las revisiones posteriores de 12 horas o al actualizar manualmente, se comparan los productos y se descargan únicamente los nuevos, eliminados o modificados, junto con sus imágenes nuevas.
+
 En Vite local, las consultas pasan por el proxy `/vaad-api`. En la web pública de GitHub Pages usan la función proxy pública de Supabase, porque `vaad.ar` no publica CORS. En Android/iOS, el código usa `CapacitorHttp` nativo; de esa forma el APK puede actualizarse sin depender de un proxy web. Las respuestas se reintentan hasta tres veces y se conserva la última copia válida si el teléfono está sin conexión.
 
 La actualización de 12 horas en el cliente se ejecuta al iniciar o reanudar la app y no puede ejecutarse mientras el teléfono está completamente cerrado. Para una garantía centralizada de frescura y monitoreo comercial todavía convendría agregar un backend o una tarea programada externa.
