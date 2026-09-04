@@ -889,23 +889,8 @@ body.modal-open { overflow: hidden; }
 .notification-round i { position: absolute; top: 5px; right: 5px; width: 7px; height: 7px; border: 1.5px solid #fff; border-radius: 50%; background: #2f7a59; }
 #searchCategories.category-list { padding: 0; }
 #searchView #searchCategories {
-  position: relative;
-  min-height: 250px;
-  overflow: hidden;
+  min-height: 0;
 }
-#searchView #searchCategories::after {
-  content: '';
-  position: absolute;
-  z-index: 0;
-  top: 54px;
-  right: 0;
-  bottom: 0;
-  left: 0;
-  pointer-events: none;
-  background: url('assets/logo.png') center 8px / 220px auto no-repeat;
-  opacity: .075;
-}
-#searchView #searchCategories > * { position: relative; z-index: 1; }
 .popular-searches { margin: 18px 20px 4px; }
 .popular-searches > strong { display: block; margin-bottom: 9px; color: #1f5d46; font-size: 13px; }
 .popular-searches-track { display: flex; gap: 9px; overflow-x: auto; padding: 2px 1px 7px; scrollbar-width: none; }
