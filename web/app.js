@@ -50,10 +50,6 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
 (async () => {
   'use strict';
 
-  // En Android usamos la navegación del sistema del teléfono (Atrás/Inicio/
-  // recientes) para evitar mostrar dos barras de navegación superpuestas.
-  document.documentElement.classList.toggle('android-native-shell', Capacitor.getPlatform() === 'android');
-
   const $ = (selector) => document.querySelector(selector);
   let searchFormHome;
   let searchPlaceholderTimer;
