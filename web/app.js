@@ -1666,7 +1666,13 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
   function toggleFavorite(url) {
     favorites.has(url) ? favorites.delete(url) : favorites.add(url);
     save();
-    if (currentProduct && currentProduct.url === url) renderDetail(currentProduct);
+    if (currentProduct && currentProduct.url === url) {
+      const detailSave = $('#detailSave');
+      if (detailSave) {
+        detailSave.innerHTML = bookmarkIcon(favorites.has(url));
+        detailSave.setAttribute('aria-label', favorites.has(url) ? 'Quitar de guardados' : 'Guardar producto');
+      }
+    }
     const activeView = document.querySelector('.view.active')?.id;
     if (activeView === 'searchView' || (activeView === 'detailView' && previousView === 'searchView')) renderResults($('#query').value);
     if (activeView === 'savedView' || (activeView === 'detailView' && previousView === 'savedView')) renderSaved();
