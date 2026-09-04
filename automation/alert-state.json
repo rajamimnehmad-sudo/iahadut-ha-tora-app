@@ -1,20 +1,115 @@
 {
-  "notes:Nueva nota de Kashrut (e3b0c44298fc)": {
+  "alta:Cereales marca »3 arroyos» sabor chocolate (02/09/2026)": {
+    "type": "alta",
+    "text": "Cereales marca »3 arroyos» sabor chocolate (02/09/2026)",
+    "url": "https://vaad.ar/producto/copos-de-maiz-marca-3-arroyos-sabor-chocolate/"
+  },
+  "alta:Cereales marca »3 arroyos» azucarados (02/09/2026)": {
+    "type": "alta",
+    "text": "Cereales marca »3 arroyos» azucarados (02/09/2026)",
+    "url": "https://vaad.ar/producto/cereales-marca-3-arroyos-azucarados/"
+  },
+  "alta:Cereales de maiz marca «Lasfor» (02/09/2026)": {
+    "type": "alta",
+    "text": "Cereales de maiz marca «Lasfor» (02/09/2026)",
+    "url": "https://vaad.ar/producto/cereales-de-maiz-marca-lasfor/"
+  },
+  "alta:Queso brie marca »Cabaña piedras blancas» (31/08/2026)": {
+    "type": "alta",
+    "text": "Queso brie marca »Cabaña piedras blancas» (31/08/2026)",
+    "url": "https://vaad.ar/producto/queso-brie-marca-cabana-piedras-blancas/"
+  },
+  "alta:Queso mini brie marca »Cabaña piedras blancas» (31/08/2026)": {
+    "type": "alta",
+    "text": "Queso mini brie marca »Cabaña piedras blancas» (31/08/2026)",
+    "url": "https://vaad.ar/producto/queso-mini-brie-marca-cabana-piedras-blancas/"
+  },
+  "alta:Queso camembert marca »Cabaña piedras blancas» (31/08/2026)": {
+    "type": "alta",
+    "text": "Queso camembert marca »Cabaña piedras blancas» (31/08/2026)",
+    "url": "https://vaad.ar/producto/queso-camembert-marca-cabana-piedras-blancas-2/"
+  },
+  "alta:Queso vacheroleau marca »Cabaña piedras blancas» (31/08/2026)": {
+    "type": "alta",
+    "text": "Queso vacheroleau marca »Cabaña piedras blancas» (31/08/2026)",
+    "url": "https://vaad.ar/producto/queso-vacheroleau-marca-cabana-piedras-blancas/"
+  },
+  "alta:Kombucha marca «Karu» sabor frambuesa (28/08/2026)": {
+    "type": "alta",
+    "text": "Kombucha marca «Karu» sabor frambuesa (28/08/2026)",
+    "url": "https://vaad.ar/producto/kombucha-marca-karu-sabor-frambuesa/"
+  },
+  "alta:Bebida de Avena marca «Amande» (27/08/2026)": {
+    "type": "alta",
+    "text": "Bebida de Avena marca «Amande» (27/08/2026)",
+    "url": "https://vaad.ar/producto/bebida-de-avena-marca-amande/"
+  },
+  "alta:Bebida alcoholica marca «Jose Cuervo» (27/08/2026)": {
+    "type": "alta",
+    "text": "Bebida alcoholica marca «Jose Cuervo» (27/08/2026)",
+    "url": "https://vaad.ar/producto/bebida-alcoholica-marca-jose-cuervo/"
+  },
+  "alta:Bebida alcoholica marca «el Jimador» (27/08/2026)": {
+    "type": "alta",
+    "text": "Bebida alcoholica marca «el Jimador» (27/08/2026)",
+    "url": "https://vaad.ar/producto/bebida-alcoholica-marca-el-jimador/"
+  },
+  "alta:Bebida alcoholica Ron marca «Mount Gay Eclipce» (27/08/2026)": {
+    "type": "alta",
+    "text": "Bebida alcoholica Ron marca «Mount Gay Eclipce» (27/08/2026)",
+    "url": "https://vaad.ar/producto/bebida-alcoholica-ron-marca-mount-gay-eclipce/"
+  },
+  "alta:Bebida alcoholica Ron marca «Bacardi» (27/08/2026)": {
+    "type": "alta",
+    "text": "Bebida alcoholica Ron marca «Bacardi» (27/08/2026)",
+    "url": "https://vaad.ar/producto/bebida-alcoholica-ron-marca-bacardi/"
+  },
+  "alta:Bebida alcoholica Ron blanco marca «Barceló» (27/08/2026)": {
+    "type": "alta",
+    "text": "Bebida alcoholica Ron blanco marca «Barceló» (27/08/2026)",
+    "url": "https://vaad.ar/producto/bebida-alcoholica-ron-marca-barcelo/"
+  },
+  "alta:Bebida alcoholica Ron marca «Myers\u0019s» (27/08/2026)": {
+    "type": "alta",
+    "text": "Bebida alcoholica Ron marca «Myers\u0019s» (27/08/2026)",
+    "url": "https://vaad.ar/producto/bebida-alcoholica-ron-marca-myerss/"
+  },
+  "alta:Pasta de cajú, pecan y coco marca »Monda» (27/08/2026)": {
+    "type": "alta",
+    "text": "Pasta de cajú, pecan y coco marca »Monda» (27/08/2026)",
+    "url": "https://vaad.ar/producto/pasta-de-caju-pecan-y-coco-marca-monda/"
+  },
+  "alta:Pasta de pecán marca »Monda» (27/08/2026)": {
+    "type": "alta",
+    "text": "Pasta de pecán marca »Monda» (27/08/2026)",
+    "url": "https://vaad.ar/producto/pasta-de-pecan-marca-monda/"
+  },
+  "alta:Pasta de almendra marca »Monda» (27/08/2026)": {
+    "type": "alta",
+    "text": "Pasta de almendra marca »Monda» (27/08/2026)",
+    "url": "https://vaad.ar/producto/pasta-de-almendra-marca-monda/"
+  },
+  "baja:Galletas de arroz marca »Arrozen» (Dado de baja el 24/08/2026)": {
+    "type": "baja",
+    "text": "Galletas de arroz marca »Arrozen» (Dado de baja el 24/08/2026)",
+    "url": ""
+  },
+  "notes:Nueva nota de Kashrut (d7f581ba7da0)": {
     "type": "notes",
-    "text": "Nueva nota de Kashrut (e3b0c44298fc)",
+    "text": "Nueva nota de Kashrut (d7f581ba7da0)",
     "url": "https://vaad.ar/notas-kashrut/",
-    "digest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    "digest": "d7f581ba7da0893bc2cbc88003b900b92d81e660fb8b1c490e986910f94c1cc7"
   },
-  "catering:Nuevo catering certificado (e3b0c44298fc)": {
+  "catering:Nuevo catering certificado (5763a0777fae)": {
     "type": "catering",
-    "text": "Nuevo catering certificado (e3b0c44298fc)",
+    "text": "Nuevo catering certificado (5763a0777fae)",
     "url": "https://vaad.ar/servicios-de-catering/",
-    "digest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    "digest": "5763a0777faee935db1144eca15c75463c926edff63bfb2040a330e0f318195a"
   },
-  "shops:Nueva tienda certificada (e3b0c44298fc)": {
+  "shops:Nueva tienda certificada (f6cb3741ac27)": {
     "type": "shops",
-    "text": "Nueva tienda certificada (e3b0c44298fc)",
+    "text": "Nueva tienda certificada (f6cb3741ac27)",
     "url": "https://vaad.ar/tiendas-kosher-certificadas/",
-    "digest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    "digest": "f6cb3741ac270105ab9d3a6c9e3d6587867972c7d8a447ab586b9cb3b89648bd"
   }
 }
