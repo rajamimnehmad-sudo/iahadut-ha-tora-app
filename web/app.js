@@ -62,6 +62,19 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
   const escapeHtml = (value) => String(value || '').replace(/[&<>"']/g, (char) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[char]));
   const phoneNumbers = (value) => [...new Set((String(value || '').match(/(?:\+?54[\s.-]*9[\s.-]*)?11[\s.-]*(?:\d[\s.-]*){8}/g) || []).map((phone) => phone.replace(/\D/g, '')).map((digits) => digits.startsWith('549') ? digits : digits.startsWith('54') ? `549${digits.slice(2)}` : `549${digits}`))];
 
+  function validGtin(value) {
+    const code = String(value || '').replace(/\D/g, '');
+    if (![8, 12, 13, 14].includes(code.length) || /^0+$/.test(code)) return '';
+    let sum = 0;
+    for (let index = code.length - 2, position = 0; index >= 0; index -= 1, position += 1) {
+      sum += Number(code[index]) * (position % 2 ? 1 : 3);
+    }
+    const check = (10 - (sum % 10)) % 10;
+    return check === Number(code.at(-1)) ? code : '';
+  }
+
+  const canonicalBarcode = (value) => validGtin(value);
+
   function prepareImage(image) {
     if (!(image instanceof HTMLImageElement) || image.matches('.logo, .whatsapp-logo, .whatsapp-tile img')) return;
     if (image.complete) {
@@ -118,7 +131,10 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
   };
   const storedProducts = readJson('iht_products');
   const bundledProducts = Array.isArray(catalogSnapshot?.products) ? catalogSnapshot.products : [];
-  let products = Array.isArray(storedProducts) && storedProducts.length ? storedProducts : bundledProducts.length ? bundledProducts : seed;
+  const productSource = Array.isArray(storedProducts) && storedProducts.length ? storedProducts : bundledProducts.length ? bundledProducts : seed;
+  // Older cached catalogs could contain the site's internal data-product-id.
+  // Keep only real GTIN/EAN/UPC values so those IDs can never be scanned as barcodes.
+  let products = productSource.map((product) => ({...product, barcode:canonicalBarcode(product.barcode)}));
   const storedFavorites = readJson('iht_favorites', []);
   const storedRecent = readJson('iht_recent', []);
   let recentProducts = readJson('iht_recent_products', []);
@@ -338,9 +354,19 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
       if (!title || title.length < 2) return;
       const imageNode = container && container.querySelector('img');
       const image = imageNode && (imageNode.getAttribute('data-src') || imageNode.getAttribute('data-lazy-src') || imageNode.getAttribute('src'));
-      const rawBarcode = container && (container.getAttribute('data-product-id') || container.getAttribute('data-barcode') || container.querySelector('[data-barcode]')?.getAttribute('data-barcode'));
+      const barcodeNode = container && container.querySelector('[data-barcode],[data-ean],[data-gtin],[data-upc]');
+      const rawBarcode = [
+        container?.getAttribute('data-barcode'),
+        container?.getAttribute('data-ean'),
+        container?.getAttribute('data-gtin'),
+        container?.getAttribute('data-upc'),
+        barcodeNode?.getAttribute('data-barcode'),
+        barcodeNode?.getAttribute('data-ean'),
+        barcodeNode?.getAttribute('data-gtin'),
+        barcodeNode?.getAttribute('data-upc')
+      ].find(Boolean);
       const brandMatch = title.match(/marca\s+(.+)$/i);
-      entries.push({url, title, brand:brandMatch ? clean(brandMatch[1]) : '', barcode:rawBarcode ? clean(rawBarcode).replace(/\D/g,'') : '', cat:category.key, image:image ? new URL(image, category.url).href : '', description:''});
+      entries.push({url, title, brand:brandMatch ? clean(brandMatch[1]) : '', barcode:canonicalBarcode(rawBarcode), cat:category.key, image:image ? new URL(image, category.url).href : '', description:''});
     });
     return entries;
   }
@@ -2164,9 +2190,13 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     return [...new Set(candidates)];
   }
 
-  function findProductByBarcode(value) {
+  function findProductsByBarcode(value) {
     const candidates = barcodeCandidates(value);
-    return products.find((product) => barcodeCandidates(product.barcode).some((barcode) => candidates.includes(barcode)));
+    if (!candidates.length) return [];
+    return products.filter((product) => {
+      const barcode = canonicalBarcode(product.barcode);
+      return barcode && barcodeCandidates(barcode).some((candidate) => candidates.includes(candidate));
+    });
   }
 
   function findProductByIdentity(identity) {
@@ -2240,7 +2270,7 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     } catch (_) { return null; }
   }
 
-  function showScanResult(code, product = null, identity = null) {
+  function showScanResult(code, product = null, identity = null, exactMatches = []) {
     pendingScanProduct = product;
     stopCamera();
     $('#scanOverlay').hidden = false;
@@ -2251,6 +2281,9 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     const externalBrand = clean(identity?.brand);
     if (product) {
       $('#scanMessage').innerHTML = `<span class="scan-result-status found">¡Kosher! =)</span><strong class="scan-result-title">${escapeHtml(product.title)}</strong><small class="scan-result-code">Código escaneado: ${escapeHtml(code)}</small><button class="scan-result-action" type="button" data-scan-open>Ver ficha del producto</button>`;
+    } else if (exactMatches.length > 1) {
+      const matchesMarkup = exactMatches.map((item) => `<button class="scan-alternative" type="button" data-scan-alternative="${escapeHtml(item.url)}"><span>${escapeHtml(item.title)}</span></button>`).join('');
+      $('#scanMessage').innerHTML = `<span class="scan-result-status found">Código reconocido</span><strong class="scan-result-title">Hay más de una ficha asociada</strong><small class="scan-result-code">Código escaneado: ${escapeHtml(code)}</small><span class="scan-result-note">Elegí la ficha correcta para continuar.</span><div class="scan-alternatives"><div class="scan-alternatives-grid">${matchesMarkup}</div></div><button class="scan-result-action secondary" type="button" data-scan-again>Escanear otro producto</button>`;
     } else {
       const identified = externalName ? `<strong class="scan-result-title">${escapeHtml(externalName)}${externalBrand ? ` · ${escapeHtml(externalBrand)}` : ''}</strong>` : '';
       const alternatives = findScanAlternatives(identity, code);
@@ -2279,23 +2312,21 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     const code = String(raw || '').replace(/\D/g,'');
     if (!code) return;
     stopCamera();
-    const exact = findProductByBarcode(code);
-    if (exact) {
+    const exactMatches = findProductsByBarcode(code);
+    if (exactMatches.length === 1) {
       closeScanner();
-      openDetail(exact.url, {fromScan:true});
+      openDetail(exactMatches[0].url, {fromScan:true});
+      return;
+    }
+    if (exactMatches.length > 1) {
+      showScanResult(code, null, null, exactMatches);
       return;
     }
     showScanLoading(code);
     const identity = await barcodeIdentity(code);
-    // If the catalog entry has no barcode yet, use the recognized product
-    // name/brand to open the matching local catalog record.
-    const byIdentity = findProductByIdentity(identity);
-    if (byIdentity) {
-      closeScanner();
-      openDetail(byIdentity.url, {fromScan:true});
-      return;
-    }
-    showScanResult(code, byIdentity, identity);
+    // A name/brand match is only a hint. It must never replace an exact
+    // barcode association, otherwise a scan can open a different product.
+    showScanResult(code, null, identity);
   }
 
   function goBackTaxonomy() {
