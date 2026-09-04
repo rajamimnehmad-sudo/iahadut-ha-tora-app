@@ -20,7 +20,7 @@ La actualización de 12 horas en el cliente se ejecuta al iniciar o reanudar la 
 - Wrapper Android original de referencia: `app/`
 - Configuración multiplataforma: `capacitor.config.json`
 - Paquete: `ar.vaad.catalogo.app`
-- Versión fuente: `0.11.0` (código 15)
+- Versión fuente: `0.11.3` (código 18)
 - APK original de referencia: `Iahadut-HaTora-v12-3.apk`
 
 ## Compilar Android Capacitor
