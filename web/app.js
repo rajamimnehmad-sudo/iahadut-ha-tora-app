@@ -2289,8 +2289,9 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
       const alternatives = findScanAlternatives(identity, code);
       const alternativesMarkup = alternatives.length ? `<div class="scan-alternatives"><strong>Otros de esta categoría</strong><div class="scan-alternatives-grid">${alternatives.map((item) => `<button class="scan-alternative" type="button" data-scan-alternative="${escapeHtml(item.url)}"><img src="${escapeHtml(item.image)}" alt=""><span>${escapeHtml(item.title)}</span></button>`).join('')}</div></div>` : '';
       const resultTitle = alternatives.length ? 'No encontramos ese producto' : 'No hay coincidencia en el catálogo';
-      const resultNote = alternatives.length ? 'El código no está asociado, pero encontramos otras opciones de la misma categoría.' : 'No mostramos sugerencias porque no pudimos identificar una categoría confiable para este código.';
-      $('#scanMessage').innerHTML = `<span class="scan-result-status not-found">Código no encontrado</span>${identified}<strong class="scan-result-title">${resultTitle}</strong><small class="scan-result-code">Código: ${escapeHtml(code)}</small><span class="scan-result-note">${resultNote}</span>${alternativesMarkup}<button class="scan-result-action secondary" type="button" data-scan-again>Escanear otro producto</button>`;
+      const resultNote = alternatives.length ? 'El código no está asociado, pero encontramos otras opciones de la misma categoría. Que no aparezca por código no significa necesariamente que el producto no esté en la lista: probá buscándolo por nombre o marca.' : 'No pudimos asociar este código automáticamente. El producto podría estar en la lista con otro registro: probá buscándolo por nombre o marca.';
+      const searchMarkup = externalName ? `<button class="scan-result-action" type="button" data-scan-search="${escapeHtml(externalName)}">Buscar en la lista</button>` : '';
+      $('#scanMessage').innerHTML = `<span class="scan-result-status not-found">Código no encontrado</span>${identified}<strong class="scan-result-title">${resultTitle}</strong><small class="scan-result-code">Código: ${escapeHtml(code)}</small><span class="scan-result-note">${resultNote}</span>${searchMarkup}${alternativesMarkup}<button class="scan-result-action secondary" type="button" data-scan-again>Escanear otro producto</button>`;
     }
     $('#barcode').value = code;
     updateModalLock();
@@ -2377,6 +2378,14 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     }
     const scanAgainButton = event.target.closest('[data-scan-again]');
     if (scanAgainButton) { openWebScanner(); return; }
+    const scanSearchButton = event.target.closest('[data-scan-search]');
+    if (scanSearchButton) {
+      $('#homeQuery').value = scanSearchButton.dataset.scanSearch || '';
+      closeScanner();
+      openSearchScreen();
+      doSearch($('#query'));
+      return;
+    }
     const scanAlternative = event.target.closest('[data-scan-alternative]');
     if (scanAlternative) { closeScanner(); openDetail(scanAlternative.dataset.scanAlternative); return; }
     const loadMoreButton = event.target.closest('[data-load-more-products]');
