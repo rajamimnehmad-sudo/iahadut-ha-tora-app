@@ -1,4 +1,4 @@
-import { Capacitor, CapacitorHttp } from '@capacitor/core';
+import { Capacitor, CapacitorHttp, registerPlugin } from '@capacitor/core';
 import { App } from '@capacitor/app';
 import { APP_VERSION, accessDecision, defaultRemoteControl, loadRemoteControl } from './remote-control.js';
 import { firebaseConfig } from './firebase-config.js';
@@ -7,6 +7,8 @@ import contentSnapshot from './data/content.json';
 import productDetailsSnapshot from './data/product-details.json';
 import '@phosphor-icons/web/regular';
 import '@phosphor-icons/web/duotone';
+
+const PlayStoreUpdates = registerPlugin('PlayStoreUpdates');
 
 const initialPreparationPreview = import.meta.env.DEV && new URLSearchParams(location.search).get('preview') === 'initial-load';
 
@@ -184,6 +186,7 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
   let recentCarouselDirection = 1;
   let renderedHomeItemsKey = '';
   let remoteControl = {...defaultRemoteControl, configured:false, checkedAt:0};
+  let playUpdateState = {available:false, downloaded:false, flexibleAllowed:false, checked:false};
   let remoteTaxonomyRules = [];
   let pushListenersReady = false;
   const imageGesture = {scale:1, x:0, y:0, pointers:new Map(), startDistance:0, startScale:1};
@@ -1797,6 +1800,20 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     document.body.appendChild(link); link.click(); link.remove();
   }
 
+  async function refreshPlayUpdate() {
+    if (!Capacitor.isNativePlatform()) return playUpdateState;
+    try {
+      const result = await PlayStoreUpdates.checkForUpdate();
+      playUpdateState = {...playUpdateState, ...result, checked:true};
+    } catch (_) {
+      // Las instalaciones de desarrollo o fuera de Google Play no tienen
+      // acceso a esta API; en esos casos queda activo el fallback remoto.
+      playUpdateState = {...playUpdateState, checked:true};
+    }
+    if (document.querySelector('.view.active')?.id === 'moreView') renderMore();
+    return playUpdateState;
+  }
+
   function updateAccessOverlay(control) {
     const decision = accessDecision(control);
     $('#accessOverlay').hidden = decision.allowed;
@@ -1881,7 +1898,16 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     const notificationStatus = $('#notificationStatus');
     if (notificationButton) notificationButton.setAttribute('aria-label', pushStatus === 'active' ? 'Notificaciones activadas' : 'Configurar notificaciones');
     if (notificationStatus) notificationStatus.hidden = pushStatus !== 'active';
-    const update = `<button class="more-row managed-more-row update-more-row${decision.updateAvailable ? ' has-update-new' : ''}" data-app-update><span class="managed-icon" aria-hidden="true">↻</span><span><strong>Actualizar aplicación</strong><small>${decision.updateAvailable ? `Nueva versión ${escapeHtml(remoteControl.latest_version)} disponible` : `Versión ${escapeHtml(APP_VERSION)}`}</small></span><span class="row-arrow" aria-hidden="true">›</span></button>`;
+    const playUpdateAvailable = Boolean(playUpdateState.available || playUpdateState.downloaded);
+    const updateAvailable = decision.updateAvailable || playUpdateAvailable;
+    const updateMessage = playUpdateState.downloaded
+      ? 'Actualización descargada · Tocá para instalar'
+      : playUpdateState.available
+        ? 'Nueva versión disponible en Google Play'
+        : decision.updateAvailable
+          ? `Nueva versión ${escapeHtml(remoteControl.latest_version)} disponible`
+          : `Versión ${escapeHtml(APP_VERSION)}`;
+    const update = `<button class="more-row managed-more-row update-more-row${updateAvailable ? ' has-update-new' : ''}" data-app-update><span class="managed-icon" aria-hidden="true">↻</span><span><strong>Actualizar aplicación</strong><small>${updateMessage}</small></span><span class="row-arrow" aria-hidden="true">›</span></button>`;
     const developerWhatsApp = `https://wa.me/5491135195674?text=${encodeURIComponent('¡Me gustó la app de Iahadut HaTora! ¿Podemos hacer un proyecto juntos?')}`;
     const developerCredit = '<div class="developer-credit"><span>Y.R.N Soluciones Software</span><a class="developer-cta" href="https://wa.me/5491135195674" target="_blank" rel="noopener">¿Necesitás una app?</a><a class="developer-whatsapp" href="https://wa.me/5491135195674" target="_blank" rel="noopener" aria-label="Contactar por WhatsApp"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c0 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/></svg></a></div>';
     const moreInfo = Object.entries(info).filter(([key]) => !['shops', 'catering', 'notes'].includes(key));
@@ -2274,6 +2300,14 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
 
   App.addListener('backButton', handleMobileBack).catch(() => {});
 
+  if (Capacitor.isNativePlatform()) {
+    PlayStoreUpdates.addListener('updateDownloaded', () => {
+      playUpdateState = {...playUpdateState, downloaded:true};
+      renderMore();
+    }).catch(() => {});
+    App.addListener('appStateChange', ({isActive}) => { if (isActive) refreshPlayUpdate(); }).catch(() => {});
+  }
+
   document.querySelectorAll('.nav').forEach((button) => button.onclick = () => button.dataset.view === 'homeView' ? returnHome() : button.dataset.view === 'searchView' ? openSearchScreen() : showView(button.dataset.view));
   document.addEventListener('click', (event) => {
     const scanOpenButton = event.target.closest('[data-scan-open]');
@@ -2310,6 +2344,14 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     if (openAlertsButton) { showView('notificationsView'); return; }
     const updateButton = event.target.closest('[data-app-update]');
     if (updateButton) {
+      if (playUpdateState.downloaded) {
+        PlayStoreUpdates.complete().then(() => { window.alert('La actualización se instalará al reiniciar la aplicación.'); refreshPlayUpdate(); }).catch(() => openExternal(remoteControl.update_url));
+        return;
+      }
+      if (playUpdateState.available) {
+        PlayStoreUpdates.start({type:'flexible'}).then((result) => { if (!result?.started) openExternal(remoteControl.update_url); }).catch(() => openExternal(remoteControl.update_url));
+        return;
+      }
       refreshRemoteControl(true).then((decision) => {
         if (decision.updateAvailable && remoteControl.update_url) openExternal(remoteControl.update_url);
         else window.alert(decision.updateAvailable ? 'La actualización todavía no tiene un enlace de descarga configurado.' : 'Ya tenés la última versión disponible.');
@@ -2410,6 +2452,7 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     preloadInitialProductImages();
     loadGlobalPopularity();
     refreshRemoteControl(false);
+    refreshPlayUpdate();
     setupPushNotifications(false);
     // Calentar el resto solo después de mostrar la app, para no competir con
     // las imágenes críticas del primer arranque.
@@ -2418,7 +2461,7 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
   });
   setInterval(() => syncCatalog(false), 12 * 60 * 60 * 1000);
   document.addEventListener('visibilitychange', () => {
-    if (!document.hidden) { syncCatalog(false); refreshRemoteControl(false); }
+    if (!document.hidden) { syncCatalog(false); refreshRemoteControl(false); refreshPlayUpdate(); }
   });
   window.addEventListener('online', () => { syncCatalog(false).finally(scheduleAppPreload); });
 })();
