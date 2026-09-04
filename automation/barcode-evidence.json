@@ -28,5 +28,20 @@
     "code": "7790070231468",
     "label": "Aceite de girasol Lira 900 ml",
     "source": "https://pricely.ar/product/7790070231468"
+  },
+  "https://vaad.ar/producto/yerba-marca-amanda/": {
+    "code": "7792710000182",
+    "label": "Yerba Amanda Tradicional 500 g",
+    "source": "https://www.masivos.com/producto/amanda-yerba-mate-tradicional-500g-34030"
+  },
+  "https://vaad.ar/producto/yerba-marca-cruz-de-malta/": {
+    "code": "7790070508614",
+    "label": "Yerba Cruz de Malta Tradicional 500 g",
+    "source": "https://mundofoods.com/productos-argentinos/2300-yerba-mate-suave-duradera-cruz-de-malta-500-gr.html"
+  },
+  "https://vaad.ar/producto/arroz-basmati-marca-zeeba/": {
+    "code": "8906163072231",
+    "label": "Arroz Basmati Zeeba 1 kg",
+    "source": "https://www.padano.com.ar/catalogo/arroz-basmati-1kg-bolsa-zeeba-03405"
   }
 }
