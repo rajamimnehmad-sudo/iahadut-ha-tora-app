@@ -87,8 +87,8 @@ const duplicateIdentities = new Set(products.map((product) => `${normalize(produ
 const evidenceAssignments = Object.entries(evidence).flatMap(([url, item]) => {
   const product = products.find((candidate) => candidate.url === url);
   const code = validGtin(item?.code);
-  if (!product || !code || product.barcode) return [];
-  return [{product, code, candidate:{product_name: item.label || product.title, source: item.source || 'evidence'}}];
+  if (!product || !code || validGtin(product.barcode) === code) return [];
+  return [{product, code, candidate:{product_name: item.label || product.title, source: item.source || 'evidence'}, evidence: true}];
 });
 const assignments = [...evidenceAssignments];
 let requests = 0;
@@ -112,7 +112,12 @@ for (const product of identities) {
   if (codes.length === 1) assignments.push({product, code: codes[0], candidate: candidates.find((candidate) => validGtin(candidate.code) === codes[0])});
 }
 
-const usedCodes = new Set(products.map((product) => validGtin(product.barcode)).filter(Boolean));
+// Evidence is keyed by URL, so it can distinguish two catalog records with
+// the same display title/brand but different packaging or variant. Exclude
+// those targets from the conflict set while their authoritative assignment is
+// being applied; unrelated products still keep their existing codes reserved.
+const evidenceUrls = new Set(Object.keys(evidence));
+const usedCodes = new Set(products.filter((product) => !evidenceUrls.has(product.url)).map((product) => validGtin(product.barcode)).filter(Boolean));
 const assignedCodes = new Set();
 const safeAssignments = assignments.filter(({code}) => {
   if (usedCodes.has(code) || assignedCodes.has(code)) return false;
@@ -125,10 +130,10 @@ console.log(`Códigos candidatos inequívocos: ${safeAssignments.length}`);
 for (const {product, code, candidate} of safeAssignments) console.log(`${code} · ${product.title} · fuente: ${candidate.source || candidate.product_name_es || candidate.product_name}`);
 
 if (shouldWrite && safeAssignments.length) {
-  const byIdentity = new Map(safeAssignments.map(({product, code}) => [`${normalize(product.title)}|${brandKey(product.brand)}`, code]));
+  const byUrl = new Map(safeAssignments.map(({product, code}) => [product.url, code]));
   for (const product of products) {
-    const code = byIdentity.get(`${normalize(product.title)}|${brandKey(product.brand)}`);
-    if (code && !product.barcode) product.barcode = code;
+    const code = byUrl.get(product.url);
+    if (code) product.barcode = code;
   }
   catalog.generatedAt = new Date().toISOString();
   await writeFile(catalogPath, `${JSON.stringify(catalog)}\n`, 'utf8');

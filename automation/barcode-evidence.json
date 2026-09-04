@@ -43,5 +43,125 @@
     "code": "8906163072231",
     "label": "Arroz Basmati Zeeba 1 kg",
     "source": "https://www.padano.com.ar/catalogo/arroz-basmati-1kg-bolsa-zeeba-03405"
+  },
+  "https://vaad.ar/producto/corn-flakes-marca-keloggs/": {
+    "code": "7896004010540",
+    "label": "Corn Flakes Kellogg's 200 g",
+    "source": "https://datos.produccion.gob.ar/dataset/sepa-precios"
+  },
+  "https://vaad.ar/producto/298020/": {
+    "code": "7798170290330",
+    "label": "Dulce de batata Blason a la vainilla 500 g",
+    "source": "https://datos.produccion.gob.ar/dataset/sepa-precios"
+  },
+  "https://vaad.ar/producto/dulce-de-membrillo-marca-blason/": {
+    "code": "7798170290101",
+    "label": "Dulce de membrillo Blason 500 g",
+    "source": "https://datos.produccion.gob.ar/dataset/sepa-precios"
+  },
+  "https://vaad.ar/producto/levadura-marca-mi-pan/": {
+    "code": "7790813150131",
+    "label": "Levadura instantanea Mi Pan 10 g",
+    "source": "https://pricely.ar/product/7790813150131"
+  },
+  "https://vaad.ar/producto/papas-marca-ciudad-del-lago/": {
+    "code": "2800011414920",
+    "label": "Papas corte tradicional Ciudad del Lago 700 g",
+    "source": "https://datos.produccion.gob.ar/dataset/sepa-precios"
+  },
+  "https://vaad.ar/producto/polenta-marca-morixe/": {
+    "code": "7790199606093",
+    "label": "Polenta instantanea Morixe 500 g",
+    "source": "https://www.masivos.com/productos/comestibles/ofertas"
+  },
+  "https://vaad.ar/producto/polenta-marca-carrefour/": {
+    "code": "7798033339572",
+    "label": "Polenta instantanea Carrefour 500 g",
+    "source": "https://datos.produccion.gob.ar/dataset/sepa-precios"
+  },
+  "https://vaad.ar/producto/papas-marca-swift/": {
+    "code": "7790360981042",
+    "label": "Papas corte tradicional Swift 700 g",
+    "source": "https://datos.produccion.gob.ar/dataset/sepa-precios"
+  },
+  "https://vaad.ar/producto/mate-cocido-marca-amanda/": {
+    "code": "7792710000151",
+    "label": "Mate cocido Amanda 25 saquitos / 75 g",
+    "source": "https://www.toledodigital.com.ar/mate-cocido-amanda-en-saquitos-25-un-7487/p"
+  },
+  "https://vaad.ar/producto/mate-cocido-marca-taragui/": {
+    "code": "7790387800050",
+    "label": "Mate cocido Taragui 25 saquitos / 75 g",
+    "source": "https://pricely.ar/product/7790387800050"
+  },
+  "https://vaad.ar/producto/gatorade-sabor-manzana/": {
+    "code": "7792170042005",
+    "label": "Gatorade sabor manzana 500 ml",
+    "source": "https://datos.produccion.gob.ar/dataset/sepa-precios"
+  },
+  "https://vaad.ar/producto/gatorade-sabor-cool-blue/": {
+    "code": "7792170042067",
+    "label": "Gatorade sabor Cool Blue 500 ml",
+    "source": "https://datos.produccion.gob.ar/dataset/sepa-precios"
+  },
+  "https://vaad.ar/producto/gatorade-sabor-naranja/": {
+    "code": "7792170042012",
+    "label": "Gatorade sabor naranja 500 ml",
+    "source": "https://datos.produccion.gob.ar/dataset/sepa-precios"
+  },
+  "https://vaad.ar/producto/choclo-marca-molto/": {
+    "code": "7798138551305",
+    "label": "Choclo blanco cremoso Molto",
+    "source": "https://datos.produccion.gob.ar/dataset/sepa-precios"
+  },
+  "https://vaad.ar/producto/anana-marca-carrefour/": {
+    "code": "7798108347891",
+    "label": "Anana en rodajas Carrefour",
+    "source": "https://datos.produccion.gob.ar/dataset/sepa-precios"
+  },
+  "https://vaad.ar/producto/polenta-marca-egran/": {
+    "code": "7791476022001",
+    "label": "Polenta Egran coccion rapida 500 g",
+    "source": "https://datos.produccion.gob.ar/dataset/sepa-precios"
+  },
+  "https://vaad.ar/producto/polenta-marca-molinos-ala/": {
+    "code": "7791120103858",
+    "label": "Polenta instantanea Molinos Ala 500 g",
+    "source": "https://datos.produccion.gob.ar/dataset/sepa-precios"
+  },
+  "https://vaad.ar/producto/pure-de-tomate-marca-corper/": {
+    "code": "7791876000319",
+    "label": "Pure de tomate Corper 520 g",
+    "source": "https://datos.produccion.gob.ar/dataset/sepa-precios"
+  },
+  "https://vaad.ar/producto/queso-brie-marca-cabana-piedras-blancas/": {
+    "code": "7798033840283",
+    "label": "Queso Brie Cabaña Piedras Blancas en cuna",
+    "source": "https://datos.produccion.gob.ar/dataset/sepa-precios"
+  },
+  "https://vaad.ar/producto/queso-brie-marca-cabana-piedras-blancas-2/": {
+    "code": "0000000785679",
+    "label": "Queso Brie Cabaña Piedras Blancas",
+    "source": "https://datos.produccion.gob.ar/dataset/sepa-precios"
+  },
+  "https://vaad.ar/producto/aceite-en-aerosol-marca-canuelas-2/": {
+    "code": "7792180131942",
+    "label": "Aceite Rocio Vegetal Cañuelas oliva aerosol",
+    "source": "https://molinocanuelas.com/sites/default/files/CATALOGO%20MASIVOS%20NOVIEMBRE%202025.pdf"
+  },
+  "https://vaad.ar/producto/aceite-en-aerosol-marca-canuelas/": {
+    "code": "7792180131935",
+    "label": "Aceite Rocio Vegetal Cañuelas girasol aerosol",
+    "source": "https://pricely.ar/product/7792180131935"
+  },
+  "https://vaad.ar/producto/aceite-en-aerosol-marca-cocinero/": {
+    "code": "7790070265333",
+    "label": "Aceite Fritolim Clasico Cocinero aerosol",
+    "source": "https://diaonline.supermercadosdia.com.ar/aceite-fritolim-clasico-cocinero-120-ml-300380/p"
+  },
+  "https://vaad.ar/producto/aceite-de-soja-y-girasol-marca-cocinero/": {
+    "code": "7790070225023",
+    "label": "Aceite mezcla soja y girasol Cocinero 1,5 L",
+    "source": "https://ahorritos.com.ar/precio/aceite-cocinero-mezcla-1-5l-7790070225023"
   }
 }
