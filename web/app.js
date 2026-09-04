@@ -756,9 +756,21 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
   async function preloadNewImages(images = [], concurrency = 4, onProgress = null) {
     const unique = [...new Set(images.filter(Boolean))];
     const pending = unique.filter((src) => !assetCache.has(src));
-    await runPool(pending, async (src) => {
-      if (await preloadImage(src)) assetCache.add(src);
-    }, concurrency, onProgress);
+    const batchSize = 36;
+    let completed = 0;
+    for (let start = 0; start < pending.length; start += batchSize) {
+      const batch = pending.slice(start, start + batchSize);
+      await runPool(batch, async (src) => {
+        if (await preloadImage(src)) assetCache.add(src);
+      }, concurrency, (done) => onProgress?.(completed + done, pending.length));
+      completed += batch.length;
+      if (start + batchSize < pending.length) {
+        await new Promise((resolve) => {
+          if ('requestIdleCallback' in window) window.requestIdleCallback(resolve, {timeout: 180});
+          else window.setTimeout(resolve, 0);
+        });
+      }
+    }
     localStorage.setItem(assetCacheKey, JSON.stringify([...assetCache]));
     return {total:unique.length, pending:pending.length};
   }
@@ -776,9 +788,12 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
       .slice(0, 10);
     if (!candidates.length) return;
     await Promise.race([
-      runPool(candidates, preloadImage, 4),
+      runPool(candidates, async (src) => {
+        if (await preloadImage(src)) assetCache.add(src);
+      }, 4),
       new Promise((resolve) => window.setTimeout(resolve, 4000))
     ]);
+    localStorage.setItem(assetCacheKey, JSON.stringify([...assetCache]));
   }
 
   async function preloadProductContent(firstPreparation = false, onProgress = null) {
@@ -903,7 +918,6 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
         const total = catalogTotal(firstPage) || category.count;
         const pages = Math.ceil(total / 24);
         const categoryStart = categoryIndex / categories.length;
-        const categorySpan = 1 / categories.length;
         onProgress?.(8 + categoryStart * 22, `Descargando ${category.short}…`);
         syncMessage(`Leyendo ${category.short} · 1 de ${pages} páginas`, 'busy');
         for (let page = 1; page <= pages; page += 1) {
