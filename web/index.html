@@ -8,6 +8,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="apple-mobile-web-app-title" content="Iahadut HaTora">
+  <script>try{const preview=/^(localhost|127\.0\.0\.1)$/.test(location.hostname)&&new URLSearchParams(location.search).get('preview')==='initial-load';if(preview||localStorage.getItem('iht_initial_ready_v3')!=='done')document.documentElement.classList.add('is-first-preparing')}catch(_){}</script>
   <link rel="manifest" href="/iahadut-ha-tora-app/manifest.webmanifest">
   <link rel="apple-touch-icon" href="/iahadut-ha-tora-app/pwa-icon-192.png">
   <title>Iahadut HaTora</title>
@@ -16,6 +17,29 @@
   <link rel="stylesheet" href="theme.css">
 </head>
 <body>
+  <div class="initial-preparation" id="initialPreparation" role="status" aria-live="polite" aria-label="Preparando el catálogo">
+    <div class="initial-preparation-glow" aria-hidden="true"><i></i><i></i><i></i></div>
+    <div class="initial-preparation-card">
+      <div class="initial-preparation-content">
+        <div class="initial-preparation-logo">
+          <span aria-hidden="true"></span>
+          <img src="assets/logo.png" alt="Iahadut HaTora">
+        </div>
+        <span class="initial-preparation-kicker"><i aria-hidden="true"></i> Catálogo oficial</span>
+        <h1>Estamos preparando tu catálogo</h1>
+        <p id="initialPreparationMessage">Cargando los productos y las imágenes principales…</p>
+      </div>
+      <div class="initial-preparation-footer">
+        <div class="initial-preparation-steps" aria-hidden="true">
+          <span data-preparation-step="12"><i></i>Productos</span>
+          <span data-preparation-step="55"><i></i>Imágenes</span>
+          <span data-preparation-step="96"><i></i>Todo listo</span>
+        </div>
+        <div class="initial-preparation-track" aria-hidden="true"><i id="initialPreparationBar"></i></div>
+        <div class="initial-preparation-meta"><small>Preparación inicial</small><small id="initialPreparationPercent">0%</small></div>
+      </div>
+    </div>
+  </div>
   <section class="install-gate" id="installGate" hidden>
     <img src="/iahadut-ha-tora-app/pwa-icon-192.png" alt="Iahadut HaTora">
     <h1>Iahadut HaTora</h1>

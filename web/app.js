@@ -4,8 +4,11 @@ import { APP_VERSION, accessDecision, defaultRemoteControl, loadRemoteControl } 
 import { firebaseConfig } from './firebase-config.js';
 import catalogSnapshot from './data/catalog.json';
 import contentSnapshot from './data/content.json';
+import productDetailsSnapshot from './data/product-details.json';
 import '@phosphor-icons/web/regular';
 import '@phosphor-icons/web/duotone';
+
+const initialPreparationPreview = import.meta.env.DEV && new URLSearchParams(location.search).get('preview') === 'initial-load';
 
 if ('serviceWorker' in navigator && import.meta.env.PROD) {
   window.addEventListener('load', () => navigator.serviceWorker.register(`${import.meta.env.BASE_URL}sw.js`, {scope: import.meta.env.BASE_URL}).catch(() => {}));
@@ -219,14 +222,15 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
   const bundledSyncTime = catalogSnapshot?.generatedAt ? Date.parse(catalogSnapshot.generatedAt) : 0;
   const syncState = {running:false, last:localStorage.getItem('iht_last_sync') || (bundledProducts.length && bundledSyncTime ? String(bundledSyncTime) : ''), error:''};
   const CACHE_TTL = 12 * 60 * 60 * 1000;
-  const INFO_CACHE_VERSION = 31;
+  const INFO_CACHE_VERSION = 35;
   const INITIAL_PRELOAD_KEY = `iht_initial_preload_${INFO_CACHE_VERSION}`;
   const storedInfoCache = readJson('iht_info_cache');
   const infoCache = storedInfoCache?.version === INFO_CACHE_VERSION ? (storedInfoCache.items || {}) : (contentSnapshot?.info || {});
   const storedCardCache = readJson('iht_card_cache');
   const cardCache = storedCardCache?.version === INFO_CACHE_VERSION ? (storedCardCache.items || {}) : (contentSnapshot?.cards || {});
+  const bundledProductDetails = productDetailsSnapshot?.products || {};
   const storedProductCache = readJson('iht_product_cache');
-  const productCache = storedProductCache?.version === INFO_CACHE_VERSION ? (storedProductCache.items || {}) : {};
+  const productCache = {...bundledProductDetails, ...(storedProductCache?.version === INFO_CACHE_VERSION ? (storedProductCache.items || {}) : {})};
   const alertUrl = 'https://vaad.ar/alertas-de-productos/';
   const storedAlertCache = readJson('iht_alert_cache');
   let alertCache = storedAlertCache?.version === INFO_CACHE_VERSION ? storedAlertCache : (contentSnapshot?.alerts ? {version:INFO_CACHE_VERSION, items:contentSnapshot.alerts, fetchedAt:Number(contentSnapshot.generatedAt) || 0} : null);
@@ -618,9 +622,9 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     return result;
   }
 
-  async function fetchProductContent(product) {
+  async function fetchProductContent(product, force = false) {
     if (!product?.url) return null;
-    if (isFresh(productCache[product.url])) return productCache[product.url];
+    if (!force && productCache[product.url]) return productCache[product.url];
     const document = new DOMParser().parseFromString(await fetchText(sourceUrl(product.url)), 'text/html');
     document.querySelectorAll('script,style,noscript,nav,header,footer,form').forEach((node) => node.remove());
     const contentRoot = document.querySelector('.et_pb_section_1_tb_body') || document.querySelector('.entry-content, main, article') || document.querySelector('.et_builder_inner_content.product') || document.body;
@@ -632,7 +636,30 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     });
     const images = [...contentRoot.querySelectorAll('img')].map((image) => ({src:image.getAttribute('data-large_image') || image.getAttribute('data-src') || image.getAttribute('data-lazy-src') || image.getAttribute('src'), alt:clean(image.getAttribute('alt') || image.getAttribute('title') || product.title)})).filter((image) => image.src).map((image) => ({...image, src:new URL(image.src, product.url).href})).filter((image, index, all) => all.findIndex((candidate) => candidate.src === image.src) === index);
     const category = clean(contentRoot.querySelector('.product_meta .posted_in a')?.textContent || '');
-    const result = {blocks, images, category, fetchedAt:Date.now()};
+    // WooCommerce/Divi no siempre publica la descripción dentro de <p>.
+    // Muchas fichas oficiales usan <div> anidados, por eso tomamos solamente
+    // los nodos hoja para conservar el texto real sin repetirlo.
+    const descriptionRoot = contentRoot.querySelector('.et_pb_wc_description .et_builder_inner_content.product, .et_pb_wc_description .et_pb_module_inner, .woocommerce-product-details__short-description');
+    const descriptionParts = descriptionRoot
+      ? [descriptionRoot, ...descriptionRoot.querySelectorAll('p, li, blockquote, address, div')]
+        .filter((node) => ![...node.children].some((child) => clean(child.textContent)))
+        .map((node) => clean(node.textContent))
+        .filter((text, index, all) => text.length > 4 && all.indexOf(text) === index)
+      : [];
+    const beraja = descriptionRoot
+      ? [descriptionRoot, ...descriptionRoot.querySelectorAll('*')]
+        .map((node) => clean(node.textContent).match(/^BERAJ[ÁA]\s*:\s*(.+)$/i))
+        .filter(Boolean)
+        .map((match) => clean(match[1]))
+        .sort((first, second) => first.length - second.length)[0] || ''
+      : '';
+    const description = descriptionParts.join(' ').trim() || blocks
+      .filter((block) => block.tag === 'p')
+      .filter((block) => !/^BERAJ[ÁA]\s*:/i.test(block.text))
+      .map((block) => block.text)
+      .join(' ')
+      .trim();
+    const result = {blocks, images, category, description, descriptionAvailable:Boolean(description), beraja, fetchedAt:Date.now(), bundled:false};
     productCache[product.url] = result;
     localStorage.setItem('iht_product_cache', JSON.stringify({version:INFO_CACHE_VERSION, items:productCache}));
     return result;
@@ -714,16 +741,99 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
 
   function initialLoadProgress(percent, visible = true) {
     const progress = $('#initialLoadProgress');
-    if (!progress) return;
-    progress.hidden = !visible;
-    progress.style.setProperty('--initial-load-progress', `${Math.max(4, Math.min(100, percent))}%`);
+    const bar = $('#initialPreparationBar');
+    const label = $('#initialPreparationPercent');
+    const value = Math.round(Math.max(4, Math.min(100, percent)));
+    if (progress) {
+      progress.hidden = !visible;
+      progress.style.setProperty('--initial-load-progress', `${value}%`);
+    }
+    if (bar) bar.style.width = `${value}%`;
+    if (label) label.textContent = `${value}%`;
+    document.querySelectorAll('[data-preparation-step]').forEach((step) => {
+      const threshold = Number(step.dataset.preparationStep) || 0;
+      step.classList.toggle('active', value >= threshold);
+      step.classList.toggle('done', value >= Math.min(100, threshold + 32));
+    });
+  }
+
+  function initialLoadMessage(message, text) {
+    if (!message || message.textContent === text) return;
+    message.classList.remove('is-changing');
+    void message.offsetWidth;
+    message.textContent = text;
+    message.classList.add('is-changing');
+  }
+
+  async function completeInitialPreparation() {
+    if (!document.documentElement.classList.contains('is-first-preparing')) return;
+    const message = $('#initialPreparationMessage');
+    if (initialPreparationPreview) {
+      const previewStages = [
+        [6, `Cargando ${products.length.toLocaleString('es-AR')} productos del catálogo…`],
+        [25, 'Preparando fichas y categorías…'],
+        [46, 'Cargando las imágenes principales…'],
+        [69, 'Guardando el catálogo para acceso rápido…'],
+        [90, 'Terminando los últimos detalles…'],
+        [100, 'Catálogo listo para usar']
+      ];
+      let previewProgress = 6;
+      let previewHold = 0;
+      let previewStage = -1;
+      const animatePreview = () => {
+        if (previewProgress >= 100) {
+          previewHold += 1;
+          if (previewHold < 7) return;
+          previewProgress = 6;
+          previewHold = 0;
+        } else previewProgress = Math.min(100, previewProgress + 3);
+        const nextStage = previewStages.findLastIndex(([threshold]) => previewProgress >= threshold);
+        if (nextStage !== previewStage) {
+          previewStage = nextStage;
+          initialLoadMessage(message, previewStages[nextStage][1]);
+        }
+        initialLoadProgress(previewProgress);
+      };
+      animatePreview();
+      window.setInterval(animatePreview, 90);
+      return new Promise(() => {});
+    }
+    const startedAt = Date.now();
+    initialLoadProgress(10);
+    initialLoadMessage(message, `Cargando ${products.length.toLocaleString('es-AR')} productos del catálogo…`);
+    await new Promise((resolve) => window.setTimeout(resolve, 120));
+    initialLoadProgress(24);
+    initialLoadMessage(message, 'Preparando fichas y categorías…');
+    await new Promise((resolve) => window.setTimeout(resolve, 110));
+    const criticalProducts = [...(Array.isArray(recentProducts) ? recentProducts : []), ...products]
+      .filter((product, index, all) => product?.image && all.findIndex((candidate) => candidate.url === product.url) === index)
+      .slice(0, 14);
+    initialLoadMessage(message, 'Cargando las imágenes principales…');
+    await Promise.race([
+      runPool(criticalProducts, (product) => preloadImage(product.image), 5, (done, total) => {
+        const progress = 28 + (done / Math.max(total, 1)) * 62;
+        initialLoadProgress(progress);
+        if (progress >= 68) initialLoadMessage(message, 'Guardando el catálogo para acceso rápido…');
+      }),
+      new Promise((resolve) => window.setTimeout(resolve, 3500))
+    ]);
+    initialLoadProgress(94);
+    initialLoadMessage(message, 'Terminando los últimos detalles…');
+    await new Promise((resolve) => window.setTimeout(resolve, 120));
+    initialLoadProgress(100);
+    initialLoadMessage(message, 'Catálogo listo para usar');
+    localStorage.setItem('iht_initial_ready_v3', 'done');
+    const remainingMinimum = Math.max(0, 900 - (Date.now() - startedAt));
+    await new Promise((resolve) => window.setTimeout(resolve, remainingMinimum + 180));
+    document.documentElement.classList.remove('is-first-preparing');
+    $('#initialPreparation')?.setAttribute('aria-hidden', 'true');
+    initialLoadProgress(100, false);
   }
 
   async function preloadAppData() {
     if (preloadStarted || !navigator.onLine) return;
     preloadStarted = true;
     const firstPreparation = localStorage.getItem(INITIAL_PRELOAD_KEY) !== 'done';
-    if (firstPreparation) initialLoadProgress(4);
     try {
       const freshAlerts = await fetchAlerts(true).catch(() => null);
       const latestAlerts = freshAlerts?.alta || [];
@@ -732,23 +842,20 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
         await syncCatalog(true).catch(() => null);
         updateRecentFromAlerts(freshAlerts);
       }
-      if (firstPreparation) initialLoadProgress(10);
       const infoKeys = Object.keys(info);
-      await runPool(infoKeys, fetchInfoContent, 2, firstPreparation ? (done, total) => initialLoadProgress(10 + (done / total) * 30) : null);
+      await runPool(infoKeys, fetchInfoContent, 2);
       const cards = Object.values(infoCache).flatMap((content) => content?.cards || []).filter((card) => card.url).filter((card, index, all) => all.findIndex((candidate) => candidate.url === card.url) === index);
-      await runPool(cards, fetchCardContent, 3, firstPreparation ? (done, total) => initialLoadProgress(40 + (done / Math.max(total, 1)) * 30) : null);
-      await preloadPriorityProductContent(firstPreparation);
+      await runPool(cards, fetchCardContent, 3);
+      await preloadPriorityProductContent(false);
       const imageUrls = [
         ...products.map((product) => product.image),
         ...recentProducts.map((product) => product.image),
         ...Object.values(infoCache).flatMap((content) => [...(content?.images || []).map((image) => image.src), ...(content?.cards || []).map((card) => card.image)]),
         ...Object.values(cardCache).flatMap((content) => content?.images || []).map((image) => image.src)
       ].filter(Boolean).filter((src, index, all) => all.indexOf(src) === index);
-      await runPool(imageUrls, preloadImage, 6, firstPreparation ? (done, total) => initialLoadProgress(70 + (done / Math.max(total, 1)) * 30) : null);
+      await runPool(imageUrls, preloadImage, 2);
       if (firstPreparation) {
         localStorage.setItem(INITIAL_PRELOAD_KEY, 'done');
-        initialLoadProgress(100);
-        window.setTimeout(() => initialLoadProgress(100, false), 450);
       }
     } finally {
       preloadStarted = false;
@@ -983,7 +1090,7 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
   }
 
   const productCategoryRules = [
-    [['Carnes y embutidos', 'Carnes y fiambres'], /bresaola|matambrito|\bcarne\b/],
+    [['Carnes y embutidos', 'Carnes y fiambres'], /bresaola|matambrito|pastron|pastrón|\bcarne\b/],
     [['Carnes y embutidos', 'Hamburguesas'], /hamburguesa/],
     [['Carnes y embutidos', 'Chorizos y salchichas'], /chorizo|salchicha/],
     [['Pescados', 'Pescados ahumados'], /salmon|salm[oó]n|pescado ahumado/],
@@ -1007,7 +1114,7 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     [['Sopas y caldos', 'Caldos y acompañamientos'], /consome|consomé|caldo|shkedei\s+marak/],
     [['Alimentos saludables', 'Productos de dietética'], /productos?\s+de\s+dietetica|mix\s+fibra/],
     [['Alimentos saludables', 'Proteínas y suplementos'], /suplemento|proteina\s+(?!de\s+soja)|proteína\s+(?!de\s+soja)/],
-    [['Bebidas', 'Bebidas alcohólicas', 'Licores y destilados'], /bebida\s+alcoholica|bebida\s+alcohólica/],
+    [['Bebidas', 'Bebidas alcohólicas', 'Otros destilados'], /bebida\s+alcoholica|bebida\s+alcohólica/],
     [['Bebidas', 'Bebidas sin alcohol', 'Bebidas deportivas'], /gatorade|bebida\s+deportiva|isotonica|isotónica/],
     [['Bebidas', 'Bebidas sin alcohol', 'Kombucha'], /kombucha/],
     [['Bebidas', 'Bebidas sin alcohol', 'Bebidas saborizadas'], /bebida\s+saborizada/],
@@ -1018,7 +1125,7 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     [['Frutas y vegetales', 'Pulpas de fruta'], /pulpa\s+de/],
     [['Frutas y vegetales', 'Hongos'], /champignon|champiñon|champiñón|hongo/],
     [['Frutas y vegetales', 'Vegetales en conserva'], /arveja|choclo|hojas?\s+de\s+parra|alcaparra/],
-    [['Frutas y vegetales', 'Vegetales deshidratados'], /espinaca|\bkale\b/],
+    [['Frutas y vegetales', 'Vegetales deshidratados'], /espinaca|\bkale\b|vegetales?\s+deshidratados|morron|morrón/],
     [['Salsas, aderezos y condimentos', 'Hierbas y especias'], /azafran|azarfan|azafrán|canela|clavo\s+de\s+olor|curry|jengibre|pimenton|pimentón|paprika|perejil|oregano|orégano|romero|salvia|tomillo|estragon|estragón|hibiscus|chimichurri|sazonador|\bsales\b|\bhierbas?\b|mix\s+para\s+(?:carnes|ensaladas)|condifran|condifrán/],
     [['Snacks', 'Chips y bocaditos'], /\bchips?\b|\bthins?\b|\bthings\b|\bbamba\b/],
     [['Dulces y golosinas', 'Obleas y pastillas'], /oblea|pastilla/],
@@ -1028,7 +1135,11 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     [['Bebidas', 'Bebidas alcohólicas', 'Espumantes'], /champagne|espumante/],
     [['Bebidas', 'Bebidas alcohólicas', 'Vinos'], /\bvino|malbec|cabernet|merlot|chardonnay|sauvignon\b/],
     [['Bebidas', 'Bebidas alcohólicas', 'Cervezas'], /\bcerveza\b/],
-    [['Bebidas', 'Bebidas alcohólicas', 'Licores y destilados'], /\blicor|vodka|whisky|gin\b|fernet|ron\b/],
+    [['Bebidas', 'Bebidas alcohólicas', 'Licores'], /\blicor\b|fernet/],
+    [['Bebidas', 'Bebidas alcohólicas', 'Vodkas'], /\bvodka\b/],
+    [['Bebidas', 'Bebidas alcohólicas', 'Whiskies'], /\bwhisk(?:y|ey)\b/],
+    [['Bebidas', 'Bebidas alcohólicas', 'Gins'], /\bgin\b/],
+    [['Bebidas', 'Bebidas alcohólicas', 'Rones'], /\bron\b/],
     [['Bebidas', 'Bebidas sin alcohol', 'Aguas'], /\bagua\b/],
     [['Bebidas', 'Bebidas sin alcohol', 'Jugos'], /\bjugo|zumo|nectar\b/],
     [['Bebidas', 'Bebidas sin alcohol', 'Gaseosas y sodas'], /gaseosa|\bsoda\b|tonica/],
@@ -1062,7 +1173,7 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     [['Salsas, aderezos y condimentos', 'Ketchup y mostazas'], /ketchup|mostaza/],
     [['Salsas, aderezos y condimentos', 'Salsas'], /\bsalsa/],
     [['Salsas, aderezos y condimentos', 'Vinagres'], /vinagre/],
-    [['Salsas, aderezos y condimentos', 'Especias y condimentos'], /especia|condimento|pimienta|\bsal\b/],
+    [['Salsas, aderezos y condimentos', 'Hierbas y especias'], /especia|condimento|pimienta|\bsal\b/],
     [['Conservas', 'Pescados en conserva'], /atun|sardina|caballa/],
     [['Conservas', 'Vegetales en conserva'], /aceituna|pickle|palmito|conserva/],
     [['Pastas', 'Pastas secas'], /fideo|spaghetti|tallar|pasta seca/],
@@ -1075,8 +1186,42 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     [['Congelados', 'Productos congelados'], /congelad|freezado/]
   ];
 
+  // Reglas de alta confianza. Se evalúan antes que las coincidencias generales
+  // para que una palabra secundaria (sabor, uso o ingrediente) no mande un
+  // producto a una categoría equivocada.
+  const priorityProductCategoryRules = [
+    [['Bebidas', 'Bebidas alcohólicas', 'Gins'], /\b(?:beefeater|bombay saphire|bombay sapphire|gordon.?s|plymouth gin|tanqueray|broker.?s)\b/],
+    [['Bebidas', 'Bebidas alcohólicas', 'Vodkas'], /\b(?:beluga|grey goose|smirnoff|stolichnaya|van gogh blue|skyy)\b/],
+    [['Bebidas', 'Bebidas alcohólicas', 'Whiskies'], /\b(?:deanston|glen moray|jack daniel.?s|johnnie walker|speyburn|chivas regal)\b/],
+    [['Bebidas', 'Bebidas alcohólicas', 'Rones'], /\b(?:don q gold|flor de cana|ron abuelo|bacardi|barcelo|mount gay|myers.?s|velho barreiro)\b/],
+    [['Bebidas', 'Bebidas alcohólicas', 'Tequilas'], /\b(?:patron|el jimador|jose cuervo|ultramark)\b/],
+    [['Bebidas', 'Bebidas alcohólicas', 'Arak y anisados'], /\b(?:elite arak|zachlawi)\b/],
+    [['Bebidas', 'Bebidas alcohólicas', 'Licores'], /\b(?:cointreau|disaronno|heering|kahlua|luxardo)\b/],
+    [['Bebidas', 'Bebidas alcohólicas', 'Vinos'], /\b(?:galilee winery|joseph gold)\b/],
+    [['Dulces y golosinas', 'Turrones'], /\bturron\b/],
+    [['Congelados', 'Frutas congeladas'], /(?:^|\s)fruta\s+congelad|(?:frambuesa|frutilla|mango|arandanos?)\s+congelad/],
+    [['Congelados', 'Vegetales congelados'], /congelad|freezado|cogelad/],
+    [['Snacks', 'Barritas'], /\bbarritas?\b/],
+    [['Panadería y repostería', 'Harinas'], /\bharina\b/],
+    [['Panadería y repostería', 'Galletitas y tostadas'], /\bgallet(?:a|as|ita|itas)\b|\bbizcoch|\btostadas?\b/],
+    [['Pastas', 'Pastas especiales'], /\b(?:fusilli|spaghetti|tallarines?|coditos|sedanini|ravioles?|sorrentinos?|capeletis?)\b/],
+    [['Untables y pastas', 'Pastas de frutos secos'], /mantequilla\s+de\s+mani/],
+    [['Untables y pastas', 'Untables vegetales'], /manteca\s+parve|veganteca/],
+    [['Bebidas', 'Bebidas sin alcohol', 'Bebidas vegetales'], /^bebida\b.*\b(?:avena|almendra|soja|coco|arroz|parve)\b/],
+    [['Frutos secos y deshidratados', 'Frutas deshidratadas'], /fruta\s+liofilizada|liofilizad[ao].*\b(?:anana|banana|frutilla|mango|fruta)\b/],
+    [['Frutos secos y deshidratados', 'Frutos secos'], /mix\s+frutos\s+tostados|nuez\s+tostada/],
+    [['Conservas', 'Frutas en conserva'], /coctel\s+de\s+frutas/],
+    [['Conservas', 'Vegetales en conserva'], /^choclo\b.*\bmarca\b/],
+    [['Salsas, aderezos y condimentos', 'Condimentos y mezclas'], /^condimentos?\b/],
+    [['Salsas, aderezos y condimentos', 'Hierbas y especias'], /^especias?\b|\bnuez\s+moscada\b/],
+    [['Salsas, aderezos y condimentos', 'Pimientas'], /\bpimientas?\b/],
+    [['Salsas, aderezos y condimentos', 'Sales'], /(?:^|\s)sal(?:\s|$)|\bsales\b/]
+  ];
+
   function productCategoryPath(product) {
     const text = normalize(`${product.title} ${product.description || ''}`);
+    const priorityMatch = priorityProductCategoryRules.find(([, pattern]) => pattern.test(text));
+    if (priorityMatch) return priorityMatch[0];
     // Keep cereal products together in the taxonomy, even when their title
     // also contains a more generic term such as maíz.
     if (/\bcereales?\b|\bcopos de maiz\b/.test(text)) {
@@ -1126,8 +1271,8 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
       /golosina|caramelo|pastilla/.test(key) ? 'sparkle' : /miel/.test(key) ? 'jar' :
       /azucar|endulzante/.test(key) ? 'cube' : /cereal|grano|semilla|arroz|avena|maiz|quinoa|granola|polenta|cuscus|burgol/.test(key) ? 'plant' :
       /fruto seco|deshidratad|dietetica/.test(key) ? 'nut' : /legumbre|arveja|poroto|lenteja|tofu|soja/.test(key) ? 'nut' :
-      /salsa|aderezo|condimento|mayonesa|ketchup|mostaza|especia|hierba/.test(key) ? 'bowl-food' : /conserva|enlatado/.test(key) ? 'jar' :
-      /pasta|fideo|raviol/.test(key) ? 'bowl-food' : /snack|papas fritas|chips|bocadito/.test(key) ? 'popcorn' :
+      /salsa|aderezo|condimento|mayonesa|ketchup|mostaza|especia|hierba|pimienta|sales?/.test(key) ? 'bowl-food' : /conserva|enlatado/.test(key) ? 'jar' :
+      /pasta|fideo|raviol/.test(key) ? 'bowl-food' : /snack|barrita|papas fritas|chips|bocadito/.test(key) ? 'popcorn' :
       /vegetal|verdura|hongo/.test(key) ? 'carrot' : /congelado/.test(key) ? 'snowflake' : /sopa|caldo/.test(key) ? 'bowl-steam' :
       /saludable|proteina|suplemento/.test(key) ? 'heart' : /cocina internacional|asiatico/.test(key) ? 'globe-hemisphere-west' : 'package';
     return phosphorIcon(icon, 'taxonomy-icon', 'regular');
@@ -1159,17 +1304,18 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     activeCategoryPath = path;
     const children = categoryDirectory(path);
     const name = path.at(-1);
+    const displayName = categoryDisplayName(name);
     if (children.length) {
-      $('#subcategoryDirectoryTop').textContent = name;
-      $('#subcategoryDirectoryTitle').textContent = name;
+      $('#subcategoryDirectoryTop').textContent = displayName;
+      $('#subcategoryDirectoryTitle').textContent = displayName;
       $('#subcategoryDirectoryMeta').textContent = `${children.length} ${children.length === 1 ? 'subcategoría' : 'subcategorías'}`;
       $('#subcategoryList').innerHTML = taxonomyRows(children, path);
       showView('subcategoryDirectoryView');
       return;
     }
     const items = productsAtPath(path).sort((a, b) => a.title.localeCompare(b.title, 'es'));
-    $('#categoryProductsTop').textContent = name;
-    $('#categoryProductsTitle').textContent = name;
+    $('#categoryProductsTop').textContent = displayName;
+    $('#categoryProductsTitle').textContent = displayName;
     $('#categoryProductsMeta').textContent = `${items.length.toLocaleString('es-AR')} ${items.length === 1 ? 'producto' : 'productos'}`;
     renderProductCollection($('#categoryProductList'), items);
     showView('categoryProductsView');
@@ -1212,15 +1358,19 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
       const matchesRegion = selectedRegion === 'uruguay' ? isUruguay : !isUruguay;
       const matchesCategory = selectedCategory === 'all' || (selectedCategory === 'gondola' ? product.cat === 'gondola' && !isUruguay : product.cat === selectedCategory);
       const matchesFavorite = !favoriteOnly || favorites.has(product.url);
-      const text = normalize(`${product.title} ${product.brand || ''} ${product.barcode || ''} ${product.description || ''}`);
+      const taxonomyPath = productCategoryPath(product);
+      const taxonomyText = [...taxonomyPath, ...taxonomyPath.map(categoryDisplayName)].join(' ');
+      const sourceCategory = categoryFor(product.cat);
+      const text = normalize(`${product.title} ${product.brand || ''} ${product.barcode || ''} ${product.description || ''} ${taxonomyText} ${sourceCategory?.name || ''} ${sourceCategory?.desc || ''}`);
       const matchesSearch = !term || text.includes(term) || searchTokens.every((token) => text.includes(token));
       return matchesRegion && matchesCategory && matchesFavorite && matchesSearch;
     }).sort((a,b) => a.title.localeCompare(b.title, 'es'));
   }
 
   function productMarkup(product) {
-    const category = categoryFor(product.cat);
-    return `<button class="product" data-product="${escapeHtml(product.url)}"><span>${productImage(product)}</span><span><small class="cat">${escapeHtml(category ? category.name : 'Catálogo oficial')}</small><strong>${styledBrandText(product.title)}</strong><small class="product-status"><span class="status-dot" aria-hidden="true"></span>Autorizado · ${escapeHtml(product.description ? 'Información disponible' : 'Ficha local')}</small></span><span class="save" data-favorite="${escapeHtml(product.url)}" aria-label="${favorites.has(product.url) ? 'Quitar de guardados' : 'Guardar producto'}">${bookmarkIcon(favorites.has(product.url))}</span></button>`;
+    const taxonomyPath = productCategoryPath(product).map(categoryDisplayName);
+    const categoryLabel = taxonomyPath.length ? taxonomyPath.join(' · ') : 'Catálogo oficial';
+    return `<button class="product" data-product="${escapeHtml(product.url)}"><span>${productImage(product)}</span><span><small class="cat">${escapeHtml(categoryLabel)}</small><strong>${styledBrandText(product.title)}</strong></span><span class="save" data-favorite="${escapeHtml(product.url)}" aria-label="${favorites.has(product.url) ? 'Quitar de guardados' : 'Guardar producto'}">${bookmarkIcon(favorites.has(product.url))}</span></button>`;
   }
 
   function observeLoadMore() {
@@ -1303,7 +1453,11 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     if (viewId === 'notificationsView') { setNotificationBadge(false); renderPushNotifications(); }
     if (viewId === 'moreView') renderMore();
     if (viewId === 'savedView') renderSaved();
+    // En el teléfono desplaza la ventana; en la vista de escritorio de Vite,
+    // el desplazamiento vive dentro del marco que simula el dispositivo.
     window.scrollTo(0,0);
+    const appShell = document.querySelector('.app');
+    if (appShell) appShell.scrollTop = 0;
   }
 
   function renderPushNotifications() {
@@ -1468,23 +1622,45 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
   function renderDetail(product, official = null) {
     currentProduct = product;
     const category = categoryFor(product.cat);
-    const officialImage = official?.images?.[0]?.src || product.image;
-    const officialDescription = official?.blocks?.filter((block) => block.tag === 'p').map((block) => block.text).join(' ') || product.description || 'Producto incluido en el catálogo local de Iahadut HaTora.';
+    // La miniatura del catálogo ya está cargada en la pantalla anterior. Usarla
+    // también en la ficha evita una segunda descarga y cualquier parpadeo.
+    const officialImage = product.image || official?.images?.[0]?.src;
+    const officialDescription = official?.loading
+      ? 'La ficha oficial está tardando un poco. Seguimos cargándola…'
+      : official?.loadFailed
+        ? 'No pudimos cargar la descripción oficial en este momento.'
+        : official?.description || official?.blocks?.filter((block) => block.tag === 'p').map((block) => block.text).join(' ') || (official?.descriptionAvailable === false ? 'La ficha oficial no incluye una descripción adicional.' : product.description || 'Consultando descripción oficial…');
+    const taxonomyPath = productCategoryPath(product);
     const officialCategory = official?.category || (category ? category.name : 'Catálogo oficial');
+    const detailCategoryClass = `detail-category-${category?.key || 'default'}`;
+    const taxonomyMarkup = taxonomyPath.length ? `<nav class="detail-taxonomy" aria-label="Categoría del catálogo"><small>Categoría en el catálogo</small><div>${taxonomyPath.map((part, index) => `${index ? '<span aria-hidden="true">→</span>' : ''}<button type="button" data-detail-taxonomy-path="${escapeHtml(encodeURIComponent(JSON.stringify(taxonomyPath.slice(0, index + 1))))}">${escapeHtml(categoryDisplayName(part))}</button>`).join('')}</div></nav>` : '';
+    const berajaMarkup = official?.beraja ? `<div class="detail-facts single"><div><small>Berajá</small><strong>${escapeHtml(official.beraja)}</strong></div></div>` : '';
     const detailContent = $('#detailContent');
-    const existing = detailContent.querySelector('.detail-content');
+    const existing = detailContent.querySelector('.detail-content:not(.detail-content-loading)');
     if (!existing) {
-      detailContent.innerHTML = `<div class="detail-content"><img class="asset-loading" loading="eager" src="${escapeHtml(officialImage || 'assets/logo.png')}" alt="${escapeHtml(product.title)}" onload="this.classList.remove('asset-loading');this.classList.add('asset-ready')" onerror="this.onerror=null;this.src='assets/logo.png';this.classList.remove('asset-loading');this.classList.add('asset-ready')"><div class="detail-body"><span class="label">${escapeHtml(officialCategory)}</span><h1>${escapeHtml(product.title)}</h1><button class="filter-btn" id="detailFavorite">${bookmarkIcon(favorites.has(product.url))}<span>${favorites.has(product.url) ? 'Guardado' : 'Guardar producto'}</span></button><p>${escapeHtml(officialDescription)}</p></div></div>`;
+      detailContent.innerHTML = `<div class="detail-content"><img class="asset-loading" loading="eager" src="${escapeHtml(officialImage || 'assets/logo.png')}" alt="${escapeHtml(product.title)}" onload="this.classList.remove('asset-loading');this.classList.add('asset-ready')" onerror="this.onerror=null;this.src='assets/logo.png';this.classList.remove('asset-loading');this.classList.add('asset-ready')"><div class="detail-body"><span class="label ${detailCategoryClass}">${escapeHtml(officialCategory)}</span><h1>${styledBrandText(product.title)}</h1><p class="detail-description">${escapeHtml(officialDescription)}</p>${berajaMarkup}${taxonomyMarkup}${official?.loadFailed ? '<button class="filter-btn detail-retry" id="detailRetry" type="button"><span>Reintentar carga</span></button>' : ''}</div></div>`;
     } else {
       const image = existing.querySelector(':scope > img');
       if (image && officialImage && image.src !== new URL(officialImage, location.href).href) image.src = officialImage;
-      existing.querySelector('.label').textContent = officialCategory;
-      existing.querySelector('h1').textContent = product.title;
-      existing.querySelector('.detail-body p').textContent = officialDescription;
+      const categoryLabel = existing.querySelector('.label');
+      categoryLabel.textContent = officialCategory;
+      categoryLabel.className = `label ${detailCategoryClass}`;
+      existing.querySelector('h1').innerHTML = styledBrandText(product.title);
+      const descriptionNode = existing.querySelector('.detail-description') || existing.querySelector('.detail-body p');
+      descriptionNode.classList.add('detail-description');
+      descriptionNode.textContent = officialDescription;
+      existing.querySelector('.detail-retry')?.remove();
       existing.querySelector('.verified-line')?.remove();
       existing.querySelector('.detail-facts')?.remove();
+      existing.querySelector('.detail-taxonomy')?.remove();
+      descriptionNode.insertAdjacentHTML('afterend', `${berajaMarkup}${taxonomyMarkup}`);
+      if (official?.loadFailed) existing.querySelector('.detail-body').insertAdjacentHTML('beforeend', '<button class="filter-btn detail-retry" id="detailRetry" type="button"><span>Reintentar carga</span></button>');
     }
-    $('#detailFavorite').onclick = () => toggleFavorite(product.url);
+    const retry = $('#detailRetry');
+    if (retry) retry.onclick = () => openDetail(product.url, {retry:true});
+    detailContent.querySelectorAll('[data-detail-taxonomy-path]').forEach((button) => {
+      button.onclick = () => openTaxonomyPath(JSON.parse(decodeURIComponent(button.dataset.detailTaxonomyPath)));
+    });
     $('#detailSave').innerHTML = bookmarkIcon(favorites.has(product.url));
     $('#detailSave').setAttribute('aria-label', favorites.has(product.url) ? 'Quitar de guardados' : 'Guardar producto');
   }
@@ -1509,15 +1685,34 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     const product = [...(Array.isArray(recentProducts) ? recentProducts : []), ...products].find((item) => item.url === url); if (!product) return;
     countPopularity(product.url, 'opens');
     logAnalyticsEvent('product_open', {product_url: product.url, product_name: product.title?.slice(0, 80) || ''});
-    previousView = document.querySelector('.view.active').id;
-    previousScrollTop = window.scrollY;
-    showView('detailView'); renderDetail(product);
+    if (!options.retry) {
+      previousView = document.querySelector('.view.active').id;
+      previousScrollTop = window.scrollY;
+    }
+    currentProduct = product;
+    showView('detailView');
+    const cachedOfficial = productCache[product.url] || null;
+    if (cachedOfficial) renderDetail(product, cachedOfficial);
+    else {
+      // No mostrar el texto local/provisional mientras llega la ficha original.
+      $('#detailContent').innerHTML = `<div class="detail-content detail-content-loading"><div class="detail-loading-image asset-loading"></div><div class="detail-body"><span class="label">Cargando ficha original</span><div class="detail-loading-line detail-loading-line-long"></div><div class="detail-loading-line"></div><div class="detail-loading-line detail-loading-line-short"></div></div></div>`;
+    }
     if (options.fromScan) showKosherToast(product);
+    if (cachedOfficial) {
+      if (!isFresh(cachedOfficial)) fetchProductContent(product, true).catch(() => {});
+      return;
+    }
+    const slowNotice = window.setTimeout(() => {
+      if (currentProduct?.url === product.url) renderDetail(product, {loading:true});
+    }, 10000);
     fetchProductContent(product).then(async (official) => {
-      if (currentProduct?.url !== product.url) return;
-      await preloadImages((official?.images || []).slice(0, 1).map((image) => image.src));
+      window.clearTimeout(slowNotice);
+      await preloadImages((official.images || []).slice(0, 1).map((image) => image.src));
       if (currentProduct?.url === product.url) renderDetail(product, official);
-    }).catch(() => { if (currentProduct?.url === product.url && productCache[product.url]) renderDetail(product, productCache[product.url]); });
+    }).catch(() => {
+      window.clearTimeout(slowNotice);
+      if (currentProduct?.url === product.url) renderDetail(product, {loadFailed:true});
+    });
   }
 
   function returnFromDetail() {
@@ -1712,7 +1907,13 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
       $('#readerTop').textContent = value[0];
       $('#readerContent').innerHTML = infoContentMarkup(content);
     };
-    if (infoCache[key]) renderInfo(infoCache[key]);
+    if (infoCache[key]) {
+      renderInfo(infoCache[key]);
+      // Actualizar la copia silenciosamente para la próxima apertura. Mantener
+      // quieta la pantalla actual evita que el texto cambie frente al usuario.
+      fetchInfoContent(key).catch(() => {});
+      return;
+    }
     try {
       const content = await fetchInfoContent(key);
       if (document.querySelector('.view.active')?.id === 'readerView' && currentInfoKey === key) renderInfo(content);
@@ -1729,13 +1930,16 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     currentInfoKey = '__catalog';
     showView('readerView');
     $('#readerTop').textContent = 'Catálogo';
-    $('#readerContent').innerHTML = '<span class="label">Información del catálogo</span><h2>Última actualización</h2><div class="content-skeleton" aria-hidden="true"><i></i><i></i><i></i></div>';
+    const renderDate = (date, note = 'Fecha publicada por Iahadut HaTora.') => {
+      $('#readerContent').innerHTML = `<span class="label">Información del catálogo</span><h2>Última actualización del catálogo</h2><div class="catalog-update-card"><strong>${escapeHtml(date)}</strong><span>${escapeHtml(note)}</span></div><p class="catalog-app-sync">Última sincronización de esta app: ${escapeHtml(lastSyncMessage())}</p>`;
+    };
+    renderDate(officialUpdateMessage());
     try {
       const officialDate = await fetchOfficialUpdateDate();
-      const date = officialDate || officialUpdateMessage();
-      $('#readerContent').innerHTML = `<span class="label">Información del catálogo</span><h2>Última actualización del catálogo</h2><div class="catalog-update-card"><strong>${escapeHtml(date)}</strong><span>Fecha publicada por Iahadut HaTora.</span></div><p class="catalog-app-sync">Última sincronización de esta app: ${escapeHtml(lastSyncMessage())}</p>`;
+      if (officialDate) localStorage.setItem('iht_official_update', officialDate);
     } catch (_) {
-      $('#readerContent').innerHTML = `<span class="label">Información del catálogo</span><h2>Última actualización del catálogo</h2><div class="catalog-update-card"><strong>${escapeHtml(officialUpdateMessage())}</strong><span>No pudimos consultar la web en este momento.</span></div>`;
+      // La fecha empaquetada sigue siendo válida aunque la actualización en
+      // segundo plano no tenga conexión.
     }
   }
 
@@ -1798,6 +2002,10 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     $('#cardDetails').innerHTML = cachedCard ? infoContentMarkup(withoutTitle(cachedCard)) : '<div class="content-skeleton" aria-hidden="true"><i></i><i></i><i></i></div>';
     $('#cardOverlay').hidden = false;
     updateModalLock();
+    if (cachedCard) {
+      fetchCardContent(card).catch(() => {});
+      return;
+    }
     try {
       const content = await fetchCardContent(card);
       const details = withoutTitle(content);
@@ -2195,17 +2403,19 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
   $('#syncStatus').onclick = () => syncCatalog(true);
   $('#accessRetry').onclick = () => refreshRemoteControl(true);
   $('#accessUpdate').onclick = () => openExternal(remoteControl.update_url);
-  // Start warming the first product images without delaying the first paint.
-  preloadInitialProductImages();
   renderHome(); renderSearchCategories(); infoNoticeKeys.forEach((key) => updateInfoNotice(key));
-  loadGlobalPopularity();
   syncMessage(lastSyncMessage(), syncState.last ? 'ok' : '');
-  if (navigator.onLine && localStorage.getItem(INITIAL_PRELOAD_KEY) !== 'done') initialLoadProgress(4);
-  refreshRemoteControl(false);
-  setupPushNotifications(false);
-  // Warm the complete catalog in the background so later screens open from cache.
-  window.setTimeout(scheduleAppPreload, 50);
-  syncCatalog(false).finally(scheduleAppPreload);
+  const initialReady = completeInitialPreparation();
+  initialReady.then(() => {
+    preloadInitialProductImages();
+    loadGlobalPopularity();
+    refreshRemoteControl(false);
+    setupPushNotifications(false);
+    // Calentar el resto solo después de mostrar la app, para no competir con
+    // las imágenes críticas del primer arranque.
+    window.setTimeout(scheduleAppPreload, 350);
+    syncCatalog(false).finally(scheduleAppPreload);
+  });
   setInterval(() => syncCatalog(false), 12 * 60 * 60 * 1000);
   document.addEventListener('visibilitychange', () => {
     if (!document.hidden) { syncCatalog(false); refreshRemoteControl(false); }
