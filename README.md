@@ -36,7 +36,7 @@ Para habilitar la primera carga hay que crear en GitHub el entorno protegido `ca
 - Wrapper Android original de referencia: `app/`
 - Configuración multiplataforma: `capacitor.config.json`
 - Paquete: `ar.vaad.catalogo.app`
-- Versión fuente: `0.11.7` (código 22)
+- Versión fuente: `0.11.8` (código 23)
 - APK original de referencia: `Iahadut-HaTora-v12-3.apk`
 
 ## Compilar Android Capacitor

@@ -33,6 +33,7 @@ public class MainActivity extends BridgeActivity {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         registerPlugin(PlayStoreUpdatesPlugin.class);
+        registerPlugin(CatalogBackgroundSyncPlugin.class);
         super.onCreate(savedInstanceState);
         // Prevent Android's edge-glow/overscroll stretch from resizing the
         // WebView and the fixed navigation dock during pull-to-boundary.

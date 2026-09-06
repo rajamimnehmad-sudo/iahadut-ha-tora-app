@@ -9,6 +9,7 @@ import '@phosphor-icons/web/regular';
 import '@phosphor-icons/web/duotone';
 
 const PlayStoreUpdates = registerPlugin('PlayStoreUpdates');
+const CatalogBackgroundSync = registerPlugin('CatalogBackgroundSync');
 
 const initialPreparationPreview = import.meta.env.DEV && new URLSearchParams(location.search).get('preview') === 'initial-load';
 
@@ -139,10 +140,27 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
   const readJson = (key, fallback = null) => {
     try { return JSON.parse(localStorage.getItem(key) || 'null') ?? fallback; } catch (_) { return fallback; }
   };
+  async function readNativeCatalogCache() {
+    if (!Capacitor.isNativePlatform() || Capacitor.getPlatform() !== 'android') return null;
+    try {
+      const result = await CatalogBackgroundSync.readCache();
+      const catalog = result?.catalog ? JSON.parse(result.catalog) : null;
+      if (!Array.isArray(catalog?.products) || catalog.products.length < 900) return null;
+      const productDetails = result.productDetails ? JSON.parse(result.productDetails) : null;
+      const content = result.content ? JSON.parse(result.content) : null;
+      return {catalog, productDetails, content};
+    } catch (_) {
+      return null;
+    }
+  }
+  const nativeCatalogCache = await readNativeCatalogCache();
+  const activeCatalogSnapshot = nativeCatalogCache?.catalog || catalogSnapshot;
+  const activeContentSnapshot = nativeCatalogCache?.content || contentSnapshot;
+  const activeProductDetailsSnapshot = nativeCatalogCache?.productDetails || productDetailsSnapshot;
   const storedProducts = readJson('iht_products');
-  const bundledProducts = Array.isArray(catalogSnapshot?.products) ? catalogSnapshot.products : [];
+  const bundledProducts = Array.isArray(activeCatalogSnapshot?.products) ? activeCatalogSnapshot.products : [];
   const bundledProductByUrl = new Map(bundledProducts.map((product) => [product.url, product]));
-  const bundledProductDetails = productDetailsSnapshot?.products || {};
+  const bundledProductDetails = activeProductDetailsSnapshot?.products || {};
   const productSource = Array.isArray(storedProducts) && storedProducts.length ? storedProducts : bundledProducts.length ? bundledProducts : seed;
   // Older cached catalogs could contain the site's internal data-product-id.
   // Keep only real GTIN/EAN/UPC values so those IDs can never be scanned as barcodes.
@@ -250,26 +268,29 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
   const bookmarkIcon = (filled = false) => `<svg class="bookmark-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 4h12v17l-6-4-6 4z"${filled ? ' fill="currentColor"' : ''}/></svg>`;
   const save = () => { localStorage.setItem('iht_products', JSON.stringify(products)); localStorage.setItem('iht_favorites', JSON.stringify([...favorites])); };
   const totalCount = () => products.length > seed.length ? products.length : categories.reduce((total, category) => total + category.count, 0);
-  const bundledSyncTime = catalogSnapshot?.generatedAt ? Date.parse(catalogSnapshot.generatedAt) : 0;
+  const bundledSyncTime = activeCatalogSnapshot?.generatedAt ? Date.parse(activeCatalogSnapshot.generatedAt) : 0;
   const syncState = {running:false, last:localStorage.getItem('iht_last_sync') || (bundledProducts.length && bundledSyncTime ? String(bundledSyncTime) : ''), error:''};
   const CACHE_TTL = 12 * 60 * 60 * 1000;
   const INFO_CACHE_VERSION = 36;
   const INITIAL_PRELOAD_KEY = `iht_initial_preload_${INFO_CACHE_VERSION}`;
   const storedInfoCache = readJson('iht_info_cache');
-  const infoCache = storedInfoCache?.version === INFO_CACHE_VERSION ? (storedInfoCache.items || {}) : (contentSnapshot?.info || {});
+  const infoCache = storedInfoCache?.version === INFO_CACHE_VERSION ? (storedInfoCache.items || {}) : (activeContentSnapshot?.info || {});
   const storedCardCache = readJson('iht_card_cache');
-  const cardCache = storedCardCache?.version === INFO_CACHE_VERSION ? (storedCardCache.items || {}) : (contentSnapshot?.cards || {});
+  const cardCache = storedCardCache?.version === INFO_CACHE_VERSION ? (storedCardCache.items || {}) : (activeContentSnapshot?.cards || {});
   const storedProductCache = readJson('iht_product_cache');
   const productCache = {...bundledProductDetails, ...(storedProductCache?.version === INFO_CACHE_VERSION ? (storedProductCache.items || {}) : {})};
   const alertUrl = 'https://vaad.ar/alertas-de-productos/';
   const storedAlertCache = readJson('iht_alert_cache');
-  let alertCache = storedAlertCache?.version === INFO_CACHE_VERSION ? storedAlertCache : (contentSnapshot?.alerts ? {version:INFO_CACHE_VERSION, items:contentSnapshot.alerts, fetchedAt:Number(contentSnapshot.generatedAt) || 0} : null);
+  let alertCache = storedAlertCache?.version === INFO_CACHE_VERSION ? storedAlertCache : (activeContentSnapshot?.alerts ? {version:INFO_CACHE_VERSION, items:activeContentSnapshot.alerts, fetchedAt:Number(activeContentSnapshot.generatedAt) || 0} : null);
   let pushNotifications = readJson('iht_push_notifications', []);
   if (!Array.isArray(pushNotifications)) pushNotifications = [];
   const assetCacheKey = `iht_asset_cache_${INFO_CACHE_VERSION}`;
   const storedAssetCache = readJson(assetCacheKey, []);
   const assetCache = new Set(Array.isArray(storedAssetCache) ? storedAssetCache : []);
   let preloadStarted = false;
+  const activeCatalogTimestamp = activeCatalogSnapshot?.generatedAt ? Date.parse(activeCatalogSnapshot.generatedAt) : 0;
+  const storedCatalogTimestamp = Number(localStorage.getItem('iht_catalog_generated_at') || 0);
+  if (activeCatalogTimestamp > storedCatalogTimestamp) localStorage.setItem('iht_catalog_generated_at', String(activeCatalogTimestamp));
   const infoNoticeVersion = 'v3';
   const infoNoticeKeys = ['shops', 'catering', 'notes'];
   const infoNewState = Object.fromEntries(infoNoticeKeys.map((key) => [
@@ -905,6 +926,32 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     }
   }
 
+  async function applyNativeCatalogCacheIfNewer() {
+    const cached = await readNativeCatalogCache();
+    if (!cached?.catalog) return false;
+    const generatedAt = Date.parse(cached.catalog.generatedAt || '') || 0;
+    const currentAt = Number(localStorage.getItem('iht_catalog_generated_at') || activeCatalogTimestamp || 0);
+    if (!generatedAt || generatedAt <= currentAt) return false;
+    const cachedProducts = Array.isArray(cached.catalog.products) ? cached.catalog.products : [];
+    if (cachedProducts.length < 900) return false;
+    products = cachedProducts.map((product) => ({
+      ...product,
+      barcode: canonicalBarcode(product.barcode || bundledProductByUrl.get(product.url)?.barcode || cached.productDetails?.products?.[product.url]?.barcode)
+    }));
+    recentProducts = products.slice(0, 10);
+    Object.assign(productCache, cached.productDetails?.products || {});
+    Object.assign(infoCache, cached.content?.info || {});
+    Object.assign(cardCache, cached.content?.cards || {});
+    localStorage.setItem('iht_catalog_generated_at', String(generatedAt));
+    localStorage.setItem('iht_recent_products', JSON.stringify(recentProducts));
+    save();
+    renderHome();
+    renderSearchCategories();
+    if (document.querySelector('.view.active')?.id === 'searchView') renderResults($('#query').value);
+    syncMessage(`Catálogo actualizado · ${products.length.toLocaleString('es-AR')} productos`, 'ok');
+    return true;
+  }
+
   function scheduleAppPreload() {
     const start = () => preloadAppData();
     if ('requestIdleCallback' in window) window.requestIdleCallback(start, {timeout:1800});
@@ -969,6 +1016,7 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
       localStorage.setItem('iht_product_cache', JSON.stringify({version:INFO_CACHE_VERSION, items:productCache}));
       syncState.last = String(Date.now());
       localStorage.setItem('iht_last_sync', syncState.last);
+      localStorage.setItem('iht_catalog_generated_at', syncState.last);
       try {
         const officialUpdate = await fetchOfficialUpdateDate();
         if (officialUpdate) {
@@ -2548,7 +2596,11 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
       playUpdateState = {...playUpdateState, downloaded:true};
       renderMore();
     }).catch(() => {});
-    App.addListener('appStateChange', ({isActive}) => { if (isActive) refreshPlayUpdate(); }).catch(() => {});
+    App.addListener('appStateChange', ({isActive}) => {
+      if (!isActive) return;
+      void applyNativeCatalogCacheIfNewer();
+      refreshPlayUpdate();
+    }).catch(() => {});
   }
 
   document.querySelectorAll('.nav').forEach((button) => button.onclick = () => button.dataset.view === 'homeView' ? returnHome() : button.dataset.view === 'searchView' ? openSearchScreen() : showView(button.dataset.view));
