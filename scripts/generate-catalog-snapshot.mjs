@@ -1,4 +1,4 @@
-import { mkdir, writeFile } from 'node:fs/promises';
+import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -21,6 +21,16 @@ const decodeHtml = (value) => String(value || '')
   }[name.toLowerCase()]))
   .replace(/\s+/g, ' ')
   .trim();
+
+let previousCatalog = { products: [] };
+try {
+  previousCatalog = JSON.parse(await readFile(outputPath, 'utf8'));
+} catch (_) {
+  // La primera carga no tiene una copia previa para conservar.
+}
+const previousBarcodeByUrl = new Map((Array.isArray(previousCatalog.products) ? previousCatalog.products : [])
+  .filter((product) => product?.url && product?.barcode)
+  .map((product) => [product.url, product.barcode]));
 
 async function fetchHtml(url) {
   let lastError;
@@ -56,7 +66,7 @@ function productsFrom(html, category) {
       url,
       title,
       brand: brandMatch ? brandMatch[1].trim() : '',
-      barcode: '',
+      barcode: previousBarcodeByUrl.get(url) || '',
       cat: category.key,
       image: image ? new URL(image, category.url).href : '',
       description: ''
