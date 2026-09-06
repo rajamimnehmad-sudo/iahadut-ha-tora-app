@@ -5,6 +5,7 @@ import { fileURLToPath } from 'node:url';
 const projectRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const outputPath = resolve(projectRoot, 'web/data/catalog.json');
 const pageSize = 24;
+const clean = (value) => String(value || '').replace(/\s+/g, ' ').trim();
 const categories = [
   { key: 'gondola', url: 'https://vaad.ar/categoria-producto/productos-autorizados-en-gondola/' },
   { key: 'planta', url: 'https://vaad.ar/categoria-producto/productos-de-plantas-certificadas/' },
@@ -86,16 +87,26 @@ for (const category of categories) {
 }
 
 const uniqueProducts = [...new Map(products.map((product) => [product.url, product])).values()];
-if (uniqueProducts.length < 900) throw new Error(`La extracción quedó incompleta: ${uniqueProducts.length} productos.`);
+const previousProducts = Array.isArray(previousCatalog.products) ? previousCatalog.products : [];
+const snapshotProducts = uniqueProducts.length >= 900
+  ? uniqueProducts
+  : previousProducts.length >= 900
+    ? previousProducts
+    : null;
+if (!snapshotProducts) throw new Error(`La extracción quedó incompleta: ${uniqueProducts.length} productos.`);
+if (uniqueProducts.length < 900) {
+  console.warn(`Fuente incompleta (${uniqueProducts.length} productos); se conserva la última copia íntegra (${previousProducts.length}).`);
+}
 
 const home = await fetchHtml('https://vaad.ar/');
-const officialUpdate = decodeHtml(home.match(/Última actualización del catálogo:\s*<strong[^>]*>([\s\S]*?)<\/strong>/i)?.[1]);
+const officialUpdate = decodeHtml(home.match(/Última actualización del catálogo:\s*<strong[^>]*>([\s\S]*?)<\/strong>/i)?.[1])
+  || clean(previousCatalog.officialUpdate);
 const snapshot = {
   generatedAt: new Date().toISOString(),
   officialUpdate,
-  products: uniqueProducts
+  products: snapshotProducts
 };
 
 await mkdir(dirname(outputPath), { recursive: true });
 await writeFile(outputPath, `${JSON.stringify(snapshot)}\n`, 'utf8');
-console.log(`Snapshot generado: ${uniqueProducts.length} productos · ${outputPath}`);
+console.log(`Snapshot generado: ${snapshotProducts.length} productos · ${outputPath}`);
