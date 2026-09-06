@@ -1,6 +1,6 @@
 {
   "name": "iahadut-ha-tora",
-  "version": "0.11.3",
+  "version": "0.11.5",
   "private": true,
   "description": "Catálogo kosher multiplataforma de Iahadut HaTora",
   "engines": {
@@ -13,6 +13,9 @@
     "snapshot:products": "node scripts/generate-product-details-snapshot.mjs",
     "snapshot": "npm run snapshot:catalog && npm run snapshot:content && npm run snapshot:products",
     "enrich:barcodes": "node scripts/enrich-catalog-barcodes.mjs",
+    "enrich:sepa": "node scripts/enrich-catalog-sepa.mjs",
+    "enrich:legacy": "python3 scripts/enrich-catalog-preciosargentina.py",
+    "sync:firebase:catalog": "node scripts/sync-firebase-catalog.mjs",
     "build": "vite build --config vite.config.js",
     "build:release": "npm run snapshot && npm run build",
     "build:sync": "npm run build && cap sync",
