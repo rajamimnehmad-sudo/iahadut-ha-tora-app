@@ -13,9 +13,29 @@ html, body {
   overscroll-behavior: none;
   overscroll-behavior-y: none;
   -webkit-overflow-scrolling: auto;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+html, body, body * {
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+input, textarea, [contenteditable="true"] {
+  -webkit-user-select: text;
+  user-select: text;
+  -webkit-touch-callout: default;
+}
+img, svg {
+  -webkit-user-drag: none;
+  user-drag: none;
 }
 body { overflow-x: hidden; }
-.app { overscroll-behavior: none; }
+.app {
+  overscroll-behavior: none;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
 .bottom-nav { will-change: transform; }
 button, a, summary { touch-action: manipulation; }
 button, a, summary, .info-card, .product, .alphabetical-category-row {
@@ -643,13 +663,14 @@ body { color: #252925; }
 .product img { width: 66px; height: 66px; border-radius: 10px; background: #fafbf9; }
 .product .cat { color: #6e7971; font-size: 9px; }
 .product strong { color: #222722; font-size: 14px; font-weight: 700; }
-.brand-name { color: #1f684b; font-weight: 850; letter-spacing: -.01em; }
+.brand-separator { display: inline-block; margin: 0 .18em 0 .24em; color: #9aa69f; font-weight: 500; }
+.brand-name { color: #1f684b; font-weight: 800; letter-spacing: -.01em; }
 .alert-item .brand-name { color: #175b41; font-weight: 800; }
 .product-status { color: #6e7971 !important; font-size: 10px !important; }
 .status-dot { background: #2f7a59; }
 .save { color: #1f5d46; }
 .detail-head { min-height: 60px; background: #fff; }
-.detail-content img { height: 224px; padding: 14px 18px 8px; background: #fff url('assets/logo.png') center / 120px auto no-repeat; }
+.detail-content img { height: 224px; padding: 14px 18px 8px; background: #fff; }
 .detail-content { padding-bottom: 92px; }
 .detail-body { margin: 0 12px; padding: 20px 18px 30px; border: 1px solid #e4eae6; border-radius: 20px 20px 14px 14px; background: #fff; box-shadow: 0 8px 24px #253b2e0a; }
 .detail-body > .label {
@@ -862,6 +883,13 @@ body.modal-open { overflow: hidden; }
 #searchView #searchCategories {
   min-height: 0;
 }
+/* El buscador no debe heredar ni pintar un logo decorativo durante el resize
+   del WebView cuando aparece el teclado del teléfono. */
+#searchView #searchCategories::after {
+  content: none !important;
+  display: none !important;
+  background: none !important;
+}
 .popular-searches { margin: 18px 20px 4px; }
 .popular-searches > strong { display: block; margin-bottom: 9px; color: #1f5d46; font-size: 13px; }
 .popular-searches-track { display: flex; gap: 9px; overflow-x: auto; padding: 2px 1px 7px; scrollbar-width: none; }
@@ -902,10 +930,56 @@ body.modal-open { overflow: hidden; }
 .search-inline-back { position: absolute; z-index: 3; top: 50%; left: 23px; width: 40px; height: 40px; display: grid; place-items: center; transform: translateY(-50%); color: #29322c; font-size: 31px; line-height: 1; }
 #searchView .search-box input { padding-left: 47px; }
 
+/* Base accesible para textos secundarios y navegación de escritorio. */
+.sr-only {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  padding: 0 !important;
+  margin: -1px !important;
+  overflow: hidden !important;
+  clip: rect(0, 0, 0, 0) !important;
+  white-space: nowrap !important;
+  border: 0 !important;
+}
+.brand > span { color: #56645b; }
+.catalog-total { color: #617269; }
+.initial-load-progress-meta span { color: #587166; }
+.official-source-note { color: #587166; }
+
+@media (min-width: 701px) {
+  .bottom-nav .nav { color: #53675b; }
+  .bottom-nav .nav.active { color: #245b45; }
+  .bottom-nav .nav[data-view="alertsView"].has-alerts { color: #7a5d20; }
+}
+
+/* El escáner también debe conservar una acción manual legible en teléfonos
+   muy angostos, sin permitir que el botón "Buscar" se parta verticalmente. */
+#scanOverlay .detail-head.dark {
+  grid-template-columns: 44px minmax(0, 1fr) auto;
+  gap: 6px;
+}
+#scanOverlay .detail-head.dark strong {
+  min-width: 0;
+  overflow: hidden;
+  font-size: clamp(12px, 4vw, 15px);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+#scanOverlay .scanner-dev-badge { flex: 0 0 auto; white-space: nowrap; }
+.manual { grid-template-columns: minmax(0, 1fr) auto; }
+.manual input { min-width: 0; }
+.manual button { min-width: 76px; padding-inline: 12px; white-space: nowrap; }
+
+@media (max-width: 320px) {
+  .manual { gap: 6px; padding-inline: 12px; }
+  .manual button { min-width: 74px; padding-inline: 10px; font-size: 12px; }
+}
+
 @media (max-width: 700px) {
   .app { padding-top: 0; }
   .topbar { top: 0; min-height: calc(70px + var(--app-safe-top)); padding-top: calc(9px + var(--app-safe-top)); background: #fff; }
-  .search-open #searchView { padding-top: var(--app-safe-top); background: #f7f8f6; }
+  .search-open #searchView { padding-top: var(--app-safe-top); background: #fff; }
   .search-open #searchView .search-row { position: relative; padding: 8px 8px 0; }
   .search-inline-back { top: 50%; left: 13px; }
   .search-open #searchView .search-box input { padding-left: 47px; }
@@ -987,6 +1061,12 @@ body.modal-open { overflow: hidden; }
 
 /* Navegación inferior flotante, inspirada en patrones de movilidad. */
 @media (max-width: 700px) {
+  body.search-open .topbar,
+  body.search-open #homeView,
+  body.search-open #homeView img,
+  body.search-open .topbar img {
+    visibility: hidden !important;
+  }
   .bottom-nav {
     bottom: max(10px, env(safe-area-inset-bottom));
     width: calc(100% - 24px);
@@ -1091,7 +1171,81 @@ body.modal-open { overflow: hidden; }
     background: #2f7a59e6;
     border-color: #9ac3aa99;
   }
-  .search-open #searchView { padding-top: 120px; padding-bottom: 24px; }
+  /* La barra de búsqueda se convierte en el dock superior. Reservamos una
+     zona opaca equivalente para que ningún resultado quede visible detrás,
+     incluso con zoom o escalado de fuente del teléfono. */
+  body.search-open {
+    --search-glass-height: clamp(128px, 16vh, 148px);
+    --search-results-padding: calc(var(--search-glass-height) - 75px);
+  }
+  .search-open #searchView {
+    /* El listado empieza debajo del dock, pero dentro del velo: así la
+       transición se percibe como vidrio esmerilado y no como un corte. */
+    padding-top: max(70px, calc(50px + var(--app-safe-top, 0px)));
+    padding-bottom: 24px;
+    overflow-anchor: none;
+  }
+  .search-open #searchView::before {
+    content: '';
+    position: fixed;
+    inset: 0 0 auto;
+    z-index: 49;
+    display: none;
+    pointer-events: none;
+  }
+  /* El contenido puede desplazarse por detrás del dock superior. Este velo
+     vive fuera de la vista desplazable y evita que asome cualquier producto. */
+  body.search-open::before {
+    content: '';
+    position: fixed;
+    inset: 0 0 auto;
+    z-index: 49;
+    height: var(--search-glass-height);
+    background: linear-gradient(180deg,
+      rgb(247 248 246 / 98%) 0%,
+      rgb(247 248 246 / 90%) 42%,
+      rgb(247 248 246 / 66%) 68%,
+      rgb(247 248 246 / 28%) 86%,
+      rgb(247 248 246 / 0%) 100%);
+    /* El desenfoque vive en el dock; aquí solo fundimos el fondo para que
+       el extremo inferior no dibuje una línea recta sobre los resultados. */
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    animation: search-glass-fade .22s ease-out both;
+    transition: height .22s cubic-bezier(.22,.8,.28,1), opacity .22s ease;
+    pointer-events: none;
+  }
+  @keyframes search-glass-fade {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  /* Con el buscador vacío, el acceso a Uruguay debe quedar disponible
+     inmediatamente debajo del dock; el velo largo se reserva para resultados. */
+  body.search-open:has(#query:placeholder-shown)::before {
+    height: 104px;
+    background: linear-gradient(180deg,
+      rgb(247 248 246 / 94%) 0%,
+      rgb(247 248 246 / 80%) 58%,
+      rgb(255 255 255 / 84%) 100%);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+  body.search-open:has(#query:placeholder-shown) #searchCategories {
+    padding-top: 34px;
+  }
+  body.search-open #searchView #results,
+  body.search-open #searchView #searchCategories,
+  body.search-open #searchView .product-list {
+    overflow-anchor: none;
+  }
+  /* Los resultados empiezan después del vidrio para que el encabezado
+     permanezca siempre visible y no quede oculto detrás del dock. */
+  body.search-open #searchView #results {
+    padding-top: var(--search-results-padding);
+  }
+  .search-open #searchView .product-list {
+    border-top-color: transparent;
+  }
   .search-open .bottom-nav.search-mode #searchForm .search-inline-back {
     display: grid;
     left: 8px;
@@ -1211,15 +1365,51 @@ body.modal-open { overflow: hidden; }
 }
 
 @keyframes search-nav-rise {
-  from { opacity: .01; transform: translateY(-10px) scale(.985); }
-  to { opacity: 1; transform: none; }
+  from { opacity: .01; }
+  to { opacity: 1; }
 }
 @keyframes search-nav-drop {
-  from { opacity: 1; transform: none; }
-  to { opacity: .01; transform: translateY(-10px) scale(.985); }
+  from { opacity: 1; }
+  to { opacity: .01; }
 }
 .search-open .bottom-nav.search-closing {
   animation: search-nav-drop .18s cubic-bezier(.55,.05,.68,.19) both;
+}
+
+.scanner-dev-badge {
+  justify-self: end;
+  padding: 4px 7px;
+  border: 1px solid #d5b66b88;
+  border-radius: 999px;
+  background: #b58b3c22;
+  color: #f3d899;
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: .02em;
+  white-space: nowrap;
+}
+
+.nav[data-view="alertsView"].has-alerts {
+  animation: none;
+  color: #b58b3c;
+  text-shadow: none;
+}
+.nav[data-view="alertsView"].has-alerts svg {
+  filter: none;
+}
+
+/* Las novedades se señalan de forma estática y discreta: sin parpadeo ni luz. */
+.catalog-notifications.has-alerts {
+  background: #f3f8f5;
+  color: #1f5d46;
+  box-shadow: none;
+}
+.catalog-notifications i,
+#navDot {
+  width: 7px;
+  height: 7px;
+  background: #b58b3c;
+  box-shadow: none;
 }
 
 /* Home con búsqueda protagonista y el mismo lenguaje del nav. */
@@ -1293,3 +1483,281 @@ body.modal-open { overflow: hidden; }
 .bottom-nav { transform: translate3d(-50%, 0, 0); contain: layout paint; }
 .bottom-nav { transform: translate3d(-50%, 0, 0); contain: layout paint; }
 html, body { overscroll-behavior-y: none; }
+
+/* Reflujo global para zoom, tamaño de fuente aumentado y teléfonos angostos.
+   La interfaz conserva la jerarquía visual, pero nunca depende de una línea fija. */
+@media (max-width: 700px) {
+  .app {
+    width: 100%;
+    max-width: 100%;
+    padding-bottom: calc(122px + env(safe-area-inset-bottom, 0px));
+  }
+
+  .topbar {
+    gap: 7px;
+    padding-inline: 12px;
+  }
+
+  .logo {
+    width: clamp(46px, 15vw, 58px);
+    height: clamp(38px, 12vw, 45px);
+    flex: 0 0 auto;
+  }
+
+  .brand {
+    min-width: 0;
+    overflow: hidden;
+  }
+
+  .brand strong {
+    max-width: 100%;
+    overflow-wrap: anywhere;
+    white-space: normal;
+    font-size: clamp(14px, 4.5vw, 18px);
+    line-height: 1.08;
+  }
+
+  .brand span {
+    font-size: clamp(9px, 2.7vw, 10px);
+    line-height: 1.15;
+  }
+
+  .topbar-actions {
+    flex: 0 0 auto;
+  }
+
+  .catalog-info,
+  .catalog-notifications {
+    width: clamp(36px, 11vw, 44px);
+    height: clamp(36px, 11vw, 44px);
+  }
+
+  .catalog-info span {
+    width: clamp(24px, 7.5vw, 28px);
+    height: clamp(24px, 7.5vw, 28px);
+    font-size: clamp(13px, 3.8vw, 15px);
+  }
+
+  .catalog-notifications svg {
+    width: clamp(20px, 6vw, 23px);
+    height: clamp(20px, 6vw, 23px);
+  }
+
+  .section,
+  .page-head {
+    padding-inline: clamp(14px, 5.5vw, 20px);
+  }
+
+  #homeView .section h2,
+  .section h2,
+  .results-head h2 {
+    max-width: 100%;
+    font-size: clamp(16px, 5vw, 20px);
+    line-height: 1.14;
+    letter-spacing: -.025em;
+    overflow-wrap: anywhere;
+    text-wrap: balance;
+  }
+
+  #homeView #homeForm {
+    width: calc(100% - clamp(28px, 11vw, 40px));
+    margin-inline: auto;
+    grid-template-columns: minmax(0, 1fr) clamp(42px, 13vw, 48px);
+    gap: 6px;
+    padding-left: clamp(8px, 3vw, 12px);
+  }
+
+  #homeView #homeForm .search-box,
+  #homeView #homeForm .search-box input {
+    min-width: 0;
+  }
+
+  #homeView #homeForm .search-box input,
+  #homeView #homeForm .search-box input::placeholder {
+    font-size: clamp(13px, 4.2vw, 15px);
+  }
+
+  #homeView #homeForm .scan {
+    width: clamp(42px, 13vw, 48px);
+    height: clamp(42px, 13vw, 48px);
+  }
+
+  #homeView .catalog-total {
+    padding-inline: 14px;
+    font-size: clamp(9px, 2.8vw, 11px);
+    line-height: 1.25;
+  }
+
+  #homeView .recent-products-section {
+    padding-top: clamp(14px, 4.5vw, 17px);
+  }
+
+  #homeView .recent-products-viewport {
+    margin-inline: -20px;
+    width: calc(100% + 40px);
+  }
+
+  #homeView .recent-products {
+    padding-inline: clamp(14px, 5.5vw, 20px);
+    gap: clamp(6px, 2.2vw, 8px);
+  }
+
+  #homeView .recent-product {
+    flex-basis: clamp(66px, 20vw, 94px);
+  }
+
+  .explore-categories-action,
+  .saved-home-action {
+    min-width: 0;
+  }
+
+  .explore-categories-action span:nth-child(2),
+  .saved-home-action span:nth-child(2) {
+    min-width: 0;
+    overflow-wrap: anywhere;
+    line-height: 1.2;
+  }
+
+  .useful-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    min-width: 0;
+  }
+
+  .useful-grid .link-row,
+  .useful-grid .link-row span:nth-child(2) {
+    min-width: 0;
+    overflow-wrap: anywhere;
+    word-break: normal;
+  }
+
+  .useful-grid .link-row span:nth-child(2) {
+    padding-right: 21px;
+    font-size: clamp(11px, 3.3vw, 12px);
+  }
+
+  .product {
+    grid-template-columns: clamp(54px, 18vw, 66px) minmax(0, 1fr) 36px;
+    gap: clamp(8px, 3vw, 12px);
+    min-width: 0;
+  }
+
+  .product img {
+    width: clamp(54px, 18vw, 66px);
+    height: clamp(54px, 18vw, 66px);
+  }
+
+  .product > span,
+  .product strong,
+  .product small,
+  .product .cat {
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+
+  .detail-head,
+  .detail-head strong,
+  .page-head,
+  .page-head h1,
+  .page-head p,
+  .results-head > div {
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+
+  .page-head h1 {
+    font-size: clamp(22px, 7.2vw, 28px);
+    line-height: 1.08;
+    text-wrap: balance;
+  }
+
+  .page-head p {
+    line-height: 1.4;
+  }
+
+  .bottom-nav {
+    width: calc(100% - 20px);
+    min-width: 0;
+    padding-inline: 4px;
+  }
+
+  .nav {
+    min-width: 0;
+    min-height: 54px;
+    gap: 3px;
+    font-size: clamp(9px, 2.8vw, 11px);
+    line-height: 1.1;
+    white-space: nowrap;
+  }
+
+  .nav svg {
+    width: clamp(20px, 6.5vw, 23px);
+    height: clamp(20px, 6.5vw, 23px);
+  }
+
+  .nav span {
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .official-source-note,
+  .update-row small,
+  .update-row strong,
+  .initial-load-progress-meta span {
+    white-space: normal !important;
+    overflow-wrap: anywhere;
+  }
+
+  .update-section .sync.update-row strong {
+    line-height: 1.25;
+  }
+
+  .quick-filter > span,
+  .search-open #searchView .quick-regions .quick-filter > span:nth-child(2) {
+    white-space: normal;
+    overflow-wrap: anywhere;
+    line-height: 1.15;
+  }
+}
+
+@media (max-width: 360px) {
+  .topbar { gap: 4px; }
+  .topbar-actions { gap: 0; }
+  .section,
+  .page-head { padding-inline: 12px; }
+  #homeView .recent-products-viewport { margin-inline: -12px; width: calc(100% + 24px); }
+  #homeView .recent-products { padding-inline: 12px; }
+  .useful-grid { gap: 7px; }
+  .useful-grid .link-row { min-height: 92px; padding-inline: 10px; }
+  .bottom-nav { width: calc(100% - 14px); }
+  .nav svg { width: 20px; height: 20px; }
+  .nav { font-size: 9px; }
+}
+
+@media (max-width: 320px) {
+  .brand strong { font-size: 13px; }
+  .brand span { font-size: 8px; }
+  .catalog-info,
+  .catalog-notifications { width: 34px; height: 34px; }
+  #homeView #homeForm { width: calc(100% - 24px); }
+  .useful-grid { grid-template-columns: 1fr; }
+  .useful-grid .link-row { min-height: 64px; }
+  .bottom-nav { width: calc(100% - 10px); }
+  .nav { gap: 2px; }
+}
+
+/* Cierre de auditoría: contraste consistente en textos secundarios y estados
+   informativos, también cuando el contenido queda cerca de la navegación. */
+.brand > span { color: #56645b; }
+#homeView .catalog-total { color: #617269; }
+.initial-load-progress-meta span,
+.update-row small,
+.official-source-note { color: #587166; }
+#syncMessage { color: #587166 !important; }
+.official-source-note { opacity: 1; }
+
+@media (min-width: 701px) {
+  .bottom-nav .nav { color: #53675b; }
+  .bottom-nav .nav.active { color: #245b45; }
+  .bottom-nav .nav[data-view="alertsView"].has-alerts { color: #7a5d20; }
+}

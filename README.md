@@ -14,7 +14,7 @@ En el primer arranque online se completa una preparación inicial: se descargan 
 
 En Vite local, las consultas pasan por el proxy `/vaad-api`. En la web pública de GitHub Pages usan la función proxy pública de Supabase, porque `vaad.ar` no publica CORS. En Android/iOS, el código usa `CapacitorHttp` nativo; de esa forma el APK puede actualizarse sin depender de un proxy web. Las respuestas se reintentan hasta tres veces y se conserva la última copia válida si el teléfono está sin conexión.
 
-La actualización de 12 horas en el cliente se ejecuta al iniciar o reanudar la app y no puede ejecutarse mientras el teléfono está completamente cerrado. Para cubrir también los teléfonos cerrados, `.github/workflows/catalog-alerts.yml` consulta la fuente oficial cada 12 horas, compara altas y bajas, actualiza las instantáneas y envía FCM al tema `catalog-updates` cuando hay una novedad. El workflow requiere el secreto de GitHub `FCM_SERVICE_ACCOUNT_JSON`.
+La actualización de 12 horas en el cliente se ejecuta al iniciar o reanudar la app y no puede ejecutarse mientras el teléfono está completamente cerrado. Para cubrir también los teléfonos cerrados, `.github/workflows/catalog-alerts.yml` consulta la fuente oficial cada 12 horas, compara altas y bajas, actualiza las instantáneas y envía FCM al tema `catalog-updates` cuando hay una novedad. El workflow requiere el secreto de GitHub `FCM_SERVICE_ACCOUNT_JSON`; si falta, falla sin confirmar el estado de la alerta para que el próximo intento no pierda el push.
 
 ## Catálogo central en Firebase
 
@@ -22,13 +22,13 @@ El catálogo central autorizado se guarda en Firestore en `catalog_products`. La
 
 El workflow `.github/workflows/firebase-catalog.yml` realiza este circuito:
 
-1. Consulta nuevamente la fuente oficial y revisa códigos de barras en fuentes web. En la carga inicial también cruza el padrón histórico argentino `preciosargentina` como segunda fuente; sólo incorpora coincidencias inequívocas.
+1. Consulta nuevamente la fuente oficial y prepara la copia autorizada del catálogo. El enriquecimiento de códigos de barras queda separado y pausado hasta una revisión específica; la sincronización no altera esos datos por accidente.
 2. Solo conserva códigos GTIN/EAN/UPC con dígito verificador válido y coincidencia inequívoca de producto, marca y variante. Las coincidencias ambiguas quedan sin código.
 3. Genera un plan de altas, cambios y bajas sin escribir todavía.
 4. Espera la aprobación del entorno protegido `catalog-production`.
 5. Recién después actualiza Firestore. Los productos dados de baja se archivan en `catalog_archive` y se eliminan de `catalog_products`, por lo que dejan de aparecer en el catálogo activo pero se conserva una trazabilidad mínima para poder auditar o restaurar.
 
-Para habilitar la primera carga hay que crear en GitHub el entorno protegido `catalog-production`, agregar al menos un revisor requerido y guardar el secreto `FIREBASE_SERVICE_ACCOUNT_JSON`. Esa cuenta debe tener únicamente permisos de servidor para Firestore; no se debe poner en la aplicación ni en el repositorio. La primera ejecución manual usa `seed`; las siguientes usan `incremental` y se ejecutan cada 12 horas, siempre con aprobación antes de escribir.
+Para habilitar la primera carga hay que crear en GitHub el entorno protegido `catalog-production`, agregar al menos un revisor requerido y guardar los secretos `FIREBASE_SERVICE_ACCOUNT_JSON` y `FCM_SERVICE_ACCOUNT_JSON` donde corresponda. Esas cuentas deben tener únicamente permisos de servidor; no se deben poner en la aplicación ni en el repositorio. La primera ejecución manual usa `seed`; las siguientes usan `incremental` y se ejecutan cada 12 horas, siempre con aprobación antes de escribir. El push real requiere instalar una APK/AAB nativa, aceptar el permiso de notificaciones y activar los avisos desde la app.
 
 - Web: `web/`
 - App Android Capacitor: `android/`

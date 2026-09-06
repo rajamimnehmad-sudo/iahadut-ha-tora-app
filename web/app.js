@@ -56,6 +56,7 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
   let homePlaceholderTimer;
   let searchPlaceholderSwapTimer;
   let homePlaceholderSwapTimer;
+  let searchFocusTimer;
   const searchPlaceholders = ['Buscá un producto', 'Probá con una marca', 'Encontrá una categoría', 'Escaneá un código'];
   const clean = (value) => String(value || '').replace(/\s+/g, ' ').trim();
   const normalize = (value) => clean(value).normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
@@ -101,11 +102,19 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
   })));
   imageObserver.observe(document.documentElement, {childList:true, subtree:true});
   document.querySelectorAll('img').forEach(prepareImage);
+  document.addEventListener('selectstart', (event) => {
+    const target = event.target instanceof Element ? event.target : null;
+    if (!target?.closest('input, textarea, [contenteditable="true"]')) event.preventDefault();
+  }, true);
+  document.addEventListener('dragstart', (event) => {
+    const target = event.target instanceof Element ? event.target : null;
+    if (!target?.closest('input, textarea, [contenteditable="true"]')) event.preventDefault();
+  }, true);
 
   let categories = [
     {key:'gondola', name:'Autorizados en góndolas', short:'Góndolas', desc:'Productos de compra habitual', count:467, url:'https://vaad.ar/categoria-producto/productos-autorizados-en-gondola/'},
     {key:'planta', name:'Plantas certificadas', short:'Plantas', desc:'Elaborados bajo certificación', count:309, url:'https://vaad.ar/categoria-producto/productos-de-plantas-certificadas/'},
-    {key:'especial', name:'Producción especial', short:'Prod. especial', desc:'Producciones supervisadas', count:63, url:'https://vaad.ar/categoria-producto/produccion-especial-kosher/'},
+    {key:'especial', name:'Producción especial', short:'Prod. especial', desc:'Producciones supervisadas', count:69, url:'https://vaad.ar/categoria-producto/produccion-especial-kosher/'},
     {key:'uruguay', name:'Góndola Uruguay', short:'Uruguay', desc:'Productos disponibles en Uruguay', count:201, url:'https://vaad.ar/categoria-producto/productos-de-gondola-en-uruguay/'}
   ];
   const info = {
@@ -722,6 +731,7 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
   async function fetchAlerts(force = false) {
     if (!force && isFresh(alertCache)) {
       updateRecentFromAlerts(alertCache.items);
+      refreshAlertBadge();
       return alertCache.items;
     }
     const document = new DOMParser().parseFromString(await fetchText(sourceUrl(alertUrl)), 'text/html');
@@ -734,6 +744,7 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     alertCache = {version:INFO_CACHE_VERSION, items:result, fetchedAt:Date.now()};
     localStorage.setItem('iht_alert_cache', JSON.stringify(alertCache));
     updateRecentFromAlerts(result);
+    refreshAlertBadge();
     return result;
   }
 
@@ -1165,8 +1176,8 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     [['Frutos secos y deshidratados', 'Frutos secos'], /avellana|\bnueces?\b|pistacho|pecan|pecán|caju|cajú|almendra|castana|castaña/],
     [['Frutos secos y deshidratados', 'Frutas deshidratadas'], /datil|dátil|damasco|damasaco|ciruela\s+seca|pasas?\s+de\s+uva|cascara\s+de|cáscara\s+de|polvo\s+de\s+(?:limon|limón|mandarina)/],
     [['Frutos secos y deshidratados', 'Coco'], /coco\s+rallado/],
-    [['Cocina internacional', 'Ingredientes asiáticos'], /\balga|\balaga|wasabi/],
-    [['Cocina internacional', 'Cuscús y burgol'], /couscous|cuscus|cuscús|burgol|brugol|bulgur/],
+    [['Condimentos'], /\balga|\balaga|wasabi/],
+    [['Cereales, granos y semillas', 'Cuscús y burgol'], /couscous|cuscus|cuscús|burgol|brugol|bulgur/],
     [['Sopas y caldos', 'Caldos y acompañamientos'], /consome|consomé|caldo|shkedei\s+marak/],
     [['Alimentos saludables', 'Productos de dietética'], /productos?\s+de\s+dietetica|mix\s+fibra/],
     [['Alimentos saludables', 'Proteínas y suplementos'], /suplemento|proteina\s+(?!de\s+soja)|proteína\s+(?!de\s+soja)/],
@@ -1182,7 +1193,7 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     [['Frutas y vegetales', 'Hongos'], /champignon|champiñon|champiñón|hongo/],
     [['Frutas y vegetales', 'Vegetales en conserva'], /arveja|choclo|hojas?\s+de\s+parra|alcaparra/],
     [['Frutas y vegetales', 'Vegetales deshidratados'], /espinaca|\bkale\b|vegetales?\s+deshidratados|morron|morrón/],
-    [['Salsas, aderezos y condimentos', 'Hierbas y especias'], /azafran|azarfan|azafrán|canela|clavo\s+de\s+olor|curry|jengibre|pimenton|pimentón|paprika|perejil|oregano|orégano|romero|salvia|tomillo|estragon|estragón|hibiscus|chimichurri|sazonador|\bsales\b|\bhierbas?\b|mix\s+para\s+(?:carnes|ensaladas)|condifran|condifrán/],
+    [['Condimentos', 'Hierbas y especias'], /azafran|azarfan|azafrán|canela|clavo\s+de\s+olor|curry|jengibre|pimenton|pimentón|paprika|perejil|oregano|orégano|romero|salvia|tomillo|estragon|estragón|hibiscus|chimichurri|\bsales\b|\bhierbas?\b|mix\s+para\s+(?:carnes|ensaladas)/],
     [['Snacks', 'Chips y bocaditos'], /\bchips?\b|\bthins?\b|\bthings\b|\bbamba\b/],
     [['Dulces y golosinas', 'Obleas y pastillas'], /oblea|pastilla/],
     [['Aceites', 'Aceite de oliva'], /aceite.+oliva|oliva.+aceite/],
@@ -1225,11 +1236,13 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     [['Cereales, granos y semillas', 'Quinoa'], /quinoa/],
     [['Cereales, granos y semillas', 'Semillas'], /semilla|chia|lino|sesamo/],
     [['Cereales, granos y semillas', 'Cereales'], /\bcereal/],
-    [['Salsas, aderezos y condimentos', 'Mayonesas'], /mayonesa/],
-    [['Salsas, aderezos y condimentos', 'Ketchup y mostazas'], /ketchup|mostaza/],
-    [['Salsas, aderezos y condimentos', 'Salsas'], /\bsalsa/],
-    [['Salsas, aderezos y condimentos', 'Vinagres'], /vinagre/],
-    [['Salsas, aderezos y condimentos', 'Hierbas y especias'], /especia|condimento|pimienta|\bsal\b/],
+    [['Aderezos', 'Mayonesas'], /mayonesa/],
+    [['Aderezos', 'Ketchup y mostazas'], /ketchup|mostaza/],
+    [['Aderezos'], /aderezo|dressing|mayonesa|ketchup|mostaza|salsa\s+(?:golf|cesar|césar|barbacoa|bbq)|alioli|tartara|tártara|ranch/],
+    [['Salsas'], /\bsalsa/],
+    [['Vinagres'], /vinagre/],
+    [['Condimentos'], /condimento|sazonador|condifran|condifrán/],
+    [['Condimentos', 'Hierbas y especias'], /especia|pimienta|\bsal\b/],
     [['Conservas', 'Pescados en conserva'], /atun|sardina|caballa/],
     [['Conservas', 'Vegetales en conserva'], /aceituna|pickle|palmito|conserva/],
     [['Pastas', 'Pastas secas'], /fideo|spaghetti|tallar|pasta seca/],
@@ -1268,40 +1281,64 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     [['Frutos secos y deshidratados', 'Frutos secos'], /mix\s+frutos\s+tostados|nuez\s+tostada/],
     [['Conservas', 'Frutas en conserva'], /coctel\s+de\s+frutas/],
     [['Conservas', 'Vegetales en conserva'], /^choclo\b.*\bmarca\b/],
-    [['Salsas, aderezos y condimentos', 'Condimentos y mezclas'], /^condimentos?\b/],
-    [['Salsas, aderezos y condimentos', 'Hierbas y especias'], /^especias?\b|\bnuez\s+moscada\b/],
-    [['Salsas, aderezos y condimentos', 'Pimientas'], /\bpimientas?\b/],
-    [['Salsas, aderezos y condimentos', 'Sales'], /(?:^|\s)sal(?:\s|$)|\bsales\b/]
+    [['Condimentos'], /^condimentos?\b|\bsazonador(?:es)?\b|condifran|condifrán/],
+    [['Condimentos', 'Hierbas y especias'], /^especias?\b|\bnuez\s+moscada\b/],
+    [['Condimentos', 'Pimientas'], /\bpimientas?\b/],
+    [['Condimentos', 'Sales'], /(?:^|\s)sal(?:\s|$)|\bsales\b/]
   ];
 
-  function productCategoryPath(product) {
+  function productCategoryPaths(product) {
     const text = normalize(`${product.title} ${product.description || ''}`);
+    const paths = [];
+    const separateCondimentPath = (path) => {
+      if (!Array.isArray(path)) return [];
+      const root = normalize(path[0]);
+      if (root !== 'salsas, aderezos y condimentos') return path;
+      const child = normalize(path[1] || '');
+      if (child === 'aderezos' || child === 'mayonesas' || child === 'ketchup y mostazas') return ['Aderezos', ...path.slice(1)];
+      if (child === 'salsas') return ['Salsas', ...path.slice(1)];
+      if (child === 'vinagres') return ['Vinagres', ...path.slice(1)];
+      if (child) return ['Condimentos', ...path.slice(1)];
+      return [];
+    };
+    const addPath = (path) => {
+      const canonicalPath = separateCondimentPath(path);
+      if (!canonicalPath.length || canonicalPath.some((part) => normalize(part) === 'cocina internacional')) return;
+      if (!paths.some((candidate) => candidate.join('|') === canonicalPath.join('|'))) paths.push(canonicalPath);
+    };
     const priorityMatch = priorityProductCategoryRules.find(([, pattern]) => pattern.test(text));
-    if (priorityMatch) return priorityMatch[0];
+    if (priorityMatch) addPath(priorityMatch[0]);
     // Keep cereal products together in the taxonomy, even when their title
     // also contains a more generic term such as maíz.
-    if (/\bcereales?\b|\bcopos de maiz\b/.test(text)) {
-      return ['Cereales, granos y semillas', 'Cereales'];
-    }
-    const remoteMatch = remoteTaxonomyRules.find((rule) => rule.keywords.some((keyword) => text.includes(keyword)));
-    if (remoteMatch) return remoteMatch.path;
-    const match = productCategoryRules.find(([, pattern]) => pattern.test(text));
-    if (match) return match[0];
+    if (/\bcereales?\b|\bcopos de maiz\b/.test(text)) addPath(['Cereales, granos y semillas', 'Cereales']);
+    const remoteMatch = remoteTaxonomyRules.find((rule) => !rule.path.some((part) => normalize(part) === 'cocina internacional') && rule.keywords.some((keyword) => text.includes(keyword)));
+    if (remoteMatch) addPath(remoteMatch.path);
+    // A product may belong to multiple useful branches. This improves
+    // discovery without changing the primary path used in product cards.
+    productCategoryRules.forEach(([path, pattern]) => { if (pattern.test(text)) addPath(path); });
+    if (paths.length) return paths;
     const fallback = {gondola:'Productos de góndola', planta:'Productos de plantas certificadas', especial:'Producción especial', uruguay:'Productos de Uruguay'};
-    return ['Otros productos', fallback[product.cat] || 'Sin clasificar'];
+    return [['Otros productos', fallback[product.cat] || 'Sin clasificar']];
+  }
+
+  function productCategoryPath(product) {
+    return productCategoryPaths(product)[0];
   }
 
   function productsAtPath(path) {
-    return products.filter((product) => path.every((part, index) => productCategoryPath(product)[index] === part));
+    return products.filter((product) => productCategoryPaths(product).some((candidate) => path.every((part, index) => candidate[index] === part)));
   }
 
   function categoryDirectory(path = []) {
     const grouped = new Map();
     productsAtPath(path).forEach((product) => {
-      const name = productCategoryPath(product)[path.length];
-      if (!name) return;
-      if (!grouped.has(name)) grouped.set(name, []);
-      grouped.get(name).push(product);
+      productCategoryPaths(product).forEach((categoryPath) => {
+        if (!path.every((part, index) => categoryPath[index] === part)) return;
+        const name = categoryPath[path.length];
+        if (!name) return;
+        if (!grouped.has(name)) grouped.set(name, []);
+        if (!grouped.get(name).some((candidate) => candidate.url === product.url)) grouped.get(name).push(product);
+      });
     });
     return [...grouped.entries()].sort(([a], [b]) => a.localeCompare(b, 'es', {sensitivity:'base'}));
   }
@@ -1313,7 +1350,11 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
 
   function taxonomyIcon(name) {
     const key = normalize(name);
-    const icon = /carnes|fiambres|hamburguesas|chorizos|salchichas/.test(key) ? 'hamburger' :
+    const icon = /salsa|condimento/.test(key) ? 'bowl-food' :
+      /aderezo|mayonesa|ketchup|mostaza/.test(key) ? 'jar' :
+      /fruto seco|frutas secas|deshidratad|dietetica/.test(key) ? 'nut' :
+      /frutas y vegetales/.test(key) ? 'carrot' :
+      /carnes|fiambres|hamburguesas|chorizos|salchichas/.test(key) ? 'hamburger' :
       /pescado|salmon/.test(key) ? 'fish-simple' : /vino/.test(key) ? 'wine' :
       /cerveza/.test(key) ? 'beer-bottle' : /espumante/.test(key) ? 'champagne' :
       /alcohol|licor|destilado/.test(key) ? 'martini' : /agua/.test(key) ? 'drop' :
@@ -1326,7 +1367,7 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
       /gallet|tostada|oblea/.test(key) ? 'cookie' : /chocolate/.test(key) ? 'cookie' :
       /golosina|caramelo|pastilla/.test(key) ? 'sparkle' : /miel/.test(key) ? 'jar' :
       /azucar|endulzante/.test(key) ? 'cube' : /cereal|grano|semilla|arroz|avena|maiz|quinoa|granola|polenta|cuscus|burgol/.test(key) ? 'plant' :
-      /fruto seco|deshidratad|dietetica/.test(key) ? 'nut' : /legumbre|arveja|poroto|lenteja|tofu|soja/.test(key) ? 'nut' :
+      /legumbre|arveja|poroto|lenteja|tofu|soja/.test(key) ? 'nut' :
       /salsa|aderezo|condimento|mayonesa|ketchup|mostaza|especia|hierba|pimienta|sales?/.test(key) ? 'bowl-food' : /conserva|enlatado/.test(key) ? 'jar' :
       /pasta|fideo|raviol/.test(key) ? 'bowl-food' : /snack|barrita|papas fritas|chips|bocadito/.test(key) ? 'popcorn' :
       /vegetal|verdura|hongo/.test(key) ? 'carrot' : /congelado/.test(key) ? 'snowflake' : /sopa|caldo/.test(key) ? 'bowl-steam' :
@@ -1342,7 +1383,6 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     return ({
       'Autorizados en góndolas': 'Productos autorizados',
       'Cereales, granos y semillas': 'Cereales y granos',
-      'Salsas, aderezos y condimentos': 'Salsas y condimentos',
       'Ingredientes para repostería': 'Repostería e ingredientes',
       'Frutos secos y deshidratados': 'Frutos secos y frutas secas',
       'Untables y pastas': 'Untables y pastas'
@@ -1373,7 +1413,7 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     $('#categoryProductsTop').textContent = displayName;
     $('#categoryProductsTitle').textContent = displayName;
     $('#categoryProductsMeta').textContent = `${items.length.toLocaleString('es-AR')} ${items.length === 1 ? 'producto' : 'productos'}`;
-    renderProductCollection($('#categoryProductList'), items);
+    renderProductCollection($('#categoryProductList'), items, `<div class="empty-state"><svg class="empty-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7.5h16M6 7.5v11h12v-11M9 7.5V5h6v2.5M9 11v4M15 11v4"/></svg><strong>Todavía no hay productos en esta categoría</strong><span>La sección queda lista para mostrar nuevos aderezos cuando sean publicados en el catálogo oficial.</span></div>`);
     showView('categoryProductsView');
   }
 
@@ -1393,23 +1433,39 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
   }
 
   function cleanDisplayText(value) {
-    return clean(String(value || '').replace(/[→➜➝➞⟶›▶►]+/g, ' ').replace(/»([^»]+)»/g, '«$1»'));
+    return clean(String(value || '')
+      .replace(/certifiacion/gi, 'certificación')
+      .replace(/[→➜➝➞⟶›▶►]+/g, ' ')
+      .replace(/»([^»]+)»/g, '«$1»'));
   }
 
   function styledBrandText(value) {
     const text = cleanDisplayText(value);
-    const match = text.match(/\bmarca\s+(.+?)(?=\s+(?:sabor|tipo|variedad|presentacion|presentación)\b|[,.;:()–—-]|$)/i);
-    if (!match) return escapeHtml(text);
+    const cleanBrand = (brand) => brand.replace(/^[«»"“”]+|[«»"“”]+$/g, '').trim();
+    const formatQuotedBrands = (source) => {
+      const quotedBrand = /«\s*([^»]+?)\s*»/g;
+      let result = '';
+      let cursor = 0;
+      let quoted;
+      while ((quoted = quotedBrand.exec(source))) {
+        result += escapeHtml(source.slice(cursor, quoted.index));
+        result += `<span class="brand-separator" aria-hidden="true">—</span><span class="brand-name">${escapeHtml(cleanBrand(quoted[1]))}</span>`;
+        cursor = quoted.index + quoted[0].length;
+      }
+      return `${result}${escapeHtml(source.slice(cursor))}`;
+    };
+    const quotedMatch = text.match(/\b(marca)\s+(«[^»]+»|“[^”]+”|"[^"]+")/i);
+    const match = quotedMatch || text.match(/\b(marca)\s+(.+?)(?=\s+(?:sabor|tipo|variedad|presentacion|presentación|azucarados|classic)\b|[,.;:()–—-]|$)/i);
+    if (!match) return formatQuotedBrands(text);
     const start = match.index;
-    const brandStart = start + match[0].toLowerCase().indexOf(match[1].toLowerCase());
-    const brandEnd = brandStart + match[1].length;
-    return `${escapeHtml(text.slice(0, brandStart))}<span class="brand-name">${escapeHtml(text.slice(brandStart, brandEnd))}</span>${escapeHtml(text.slice(brandEnd))}`;
+    const end = start + match[0].length;
+    return `${escapeHtml(text.slice(0, start))}<span class="brand-separator" aria-hidden="true">—</span><span class="brand-name">${escapeHtml(cleanBrand(match[2]))}</span>${formatQuotedBrands(text.slice(end))}`;
   }
 
   function filtered(query) {
     const term = normalize(query);
     const searchTokens = term.split(/\s+/).filter((token) => token.length > 1 && !['de', 'del', 'la', 'el', 'los', 'las', 'un', 'una', 'marca'].includes(token));
-    return products.filter((product) => {
+    return products.map((product) => {
       const isUruguay = product.cat === 'uruguay' || product.category === 'uruguay';
       const matchesRegion = selectedRegion === 'uruguay' ? isUruguay : !isUruguay;
       const matchesCategory = selectedCategory === 'all' || (selectedCategory === 'gondola' ? product.cat === 'gondola' && !isUruguay : product.cat === selectedCategory);
@@ -1417,10 +1473,25 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
       const taxonomyPath = productCategoryPath(product);
       const taxonomyText = [...taxonomyPath, ...taxonomyPath.map(categoryDisplayName)].join(' ');
       const sourceCategory = categoryFor(product.cat);
-      const text = normalize(`${product.title} ${product.brand || ''} ${product.barcode || ''} ${product.description || ''} ${taxonomyText} ${sourceCategory?.name || ''} ${sourceCategory?.desc || ''}`);
+      const titleText = normalize(`${product.title} ${product.brand || ''}`);
+      const text = normalize(`${titleText} ${product.barcode || ''} ${product.description || ''} ${taxonomyText} ${sourceCategory?.name || ''} ${sourceCategory?.desc || ''}`);
       const matchesSearch = !term || text.includes(term) || searchTokens.every((token) => text.includes(token));
-      return matchesRegion && matchesCategory && matchesFavorite && matchesSearch;
-    }).sort((a,b) => a.title.localeCompare(b.title, 'es'));
+      if (!(matchesRegion && matchesCategory && matchesFavorite && matchesSearch)) return null;
+      if (!term) return {product, relevance:0};
+      const titleTokens = new Set(titleText.split(/[^a-z0-9]+/).filter(Boolean));
+      const brandText = normalize(product.brand || '');
+      const taxonomySourceText = normalize(`${taxonomyText} ${sourceCategory?.name || ''} ${sourceCategory?.desc || ''}`);
+      const exactTitleTokens = searchTokens.filter((token) => titleTokens.has(token)).length;
+      const exactBrandTokens = searchTokens.filter((token) => brandText.split(/[^a-z0-9]+/).includes(token)).length;
+      const relevance = (titleText.startsWith(term) ? 90 : 0)
+        + (titleText.includes(term) ? 120 : 0)
+        + exactTitleTokens * 45
+        + exactBrandTokens * 30
+        + (brandText.includes(term) ? 24 : 0)
+        + (taxonomySourceText.includes(term) ? 5 : 0)
+        + (text.includes(term) ? 1 : 0);
+      return {product, relevance};
+    }).filter(Boolean).sort((a, b) => b.relevance - a.relevance || a.product.title.localeCompare(b.product.title, 'es')).map(({product}) => product);
   }
 
   function productMarkup(product) {
@@ -1497,16 +1568,28 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     mobileSearchDock.classList.remove('search-mode', 'search-closing', 'has-query');
   }
 
+  function setSearchHomeHidden(hidden) {
+    const topbar = $('.topbar');
+    if (!topbar || !window.matchMedia('(max-width: 700px)').matches) return;
+    if (hidden) topbar.setAttribute('hidden', '');
+    else topbar.removeAttribute('hidden');
+  }
+
   function showView(viewId, {preserveSearch = false} = {}) {
     if (viewId !== 'searchView') {
       document.body.classList.remove('search-open');
+      setSearchHomeHidden(false);
       restoreSearchForm();
     }
     document.querySelectorAll('.view').forEach((view) => view.classList.toggle('active', view.id === viewId));
     document.querySelectorAll('.nav').forEach((button) => button.classList.toggle('active', button.dataset.view === viewId));
     if (viewId === 'searchView' && !preserveSearch) { renderSearchCategories(); $('#results').hidden = true; $('#searchCategories').hidden = false; $('#recentSearches').hidden = false; }
-    if (viewId === 'alertsView') renderAlerts();
-    if (viewId === 'notificationsView') { setNotificationBadge(false); renderPushNotifications(); }
+    if (viewId === 'alertsView') {
+      localStorage.setItem('iht_alerts_seen_at', String(Date.now()));
+      setCatalogAlertBadge(false);
+      renderAlerts();
+    }
+    if (viewId === 'notificationsView') { setPushNotificationBadge(false); renderPushNotifications(); }
     if (viewId === 'moreView') renderMore();
     if (viewId === 'savedView') renderSaved();
     // En el teléfono desplaza la ventana; en la vista de escritorio de Vite,
@@ -1525,25 +1608,51 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
   }
 
   function renderNotificationPermission() {
-    const active = localStorage.getItem('iht_push_status') === 'active';
+    const status = localStorage.getItem('iht_push_status');
+    const active = status === 'active';
+    const failed = status === 'error' || status === 'unavailable';
     document.querySelectorAll('.notification-permission').forEach((container) => {
       container.classList.toggle('active', active);
       container.innerHTML = active
         ? '<strong>Notificación push activada</strong><button class="push-disable" data-disable-notifications type="button">Desactivar <span aria-hidden="true">›</span></button>'
-        : '<strong>Recibí avisos de nuevas altas y bajas</strong><button class="text-btn" data-enable-notifications type="button">Activar avisos</button>';
+        : `<strong>${failed ? 'No pudimos activar los avisos push' : 'Recibí avisos push de novedades'}</strong><button class="text-btn" data-enable-notifications type="button">${failed ? 'Reintentar' : 'Activar avisos'}</button>`;
     });
   }
 
-  function setNotificationBadge(hasNew) {
+  function setPushNotificationBadge(hasNew) {
     const value = Boolean(hasNew);
-    $('#navDot').hidden = !value;
     $('#headerNotificationDot').hidden = !value;
     $('#headerNotifications')?.classList.toggle('has-alerts', value);
+  }
+
+  function setCatalogAlertBadge(hasNew) {
+    const value = Boolean(hasNew);
+    $('#navDot').hidden = !value;
+    $('.nav[data-view="alertsView"]')?.classList.toggle('has-alerts', value);
+  }
+
+  function alertHasItems(items) {
+    const values = Array.isArray(items) ? items : Object.values(items || {}).flat();
+    return values.some((item) => {
+      const text = normalize(typeof item === 'string' ? item : item?.text || '');
+      return text && !/no hay alertas publicadas|no pudimos actualizar las alertas/.test(text);
+    });
+  }
+
+  function refreshAlertBadge() {
+    if (document.querySelector('.view.active')?.id === 'alertsView') return;
+    const seenAt = Number(localStorage.getItem('iht_alerts_seen_at') || 0);
+    const fetchedAt = Number(alertCache?.fetchedAt || 0);
+    setCatalogAlertBadge(alertHasItems(alertCache?.items) && (!seenAt || fetchedAt > seenAt));
   }
 
   function restoreSearchScreen() {
     const searchForm = $('#searchForm');
     const mobileSearchDock = window.matchMedia('(max-width: 700px)').matches ? $('.bottom-nav') : null;
+    // Aplicar el estado antes de mover el formulario evita que Android WebView
+    // pinte durante un frame la cabecera/logo del home al abrir el teclado.
+    if (mobileSearchDock) document.body.classList.add('search-open');
+    setSearchHomeHidden(true);
     searchForm.hidden = false;
     if (mobileSearchDock) {
       if (!searchFormHome) searchFormHome = {parent: searchForm.parentElement, before: $('#recentSearches')};
@@ -1551,11 +1660,18 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
       mobileSearchDock.classList.add('search-mode');
       mobileSearchDock.classList.toggle('has-query', Boolean($('#query').value.trim()));
     }
-    document.body.classList.add('search-open');
     showView('searchView', {preserveSearch:true});
     updateSearchScanAction(Boolean($('#query').value.trim()));
     $('#clear').hidden = !$('#query').value;
     $('#query').blur();
+  }
+
+  function focusSearchAfterLayout() {
+    window.clearTimeout(searchFocusTimer);
+    searchFocusTimer = window.setTimeout(() => {
+      if (!document.body.classList.contains('search-open')) return;
+      $('#query')?.focus({preventScroll:true});
+    }, 220);
   }
 
   function openSavedScreen() {
@@ -1568,22 +1684,26 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
 
   function openSearchScreen() {
     selectedRegion = 'argentina';
+    window.clearTimeout(searchFocusTimer);
     const searchForm = $('#searchForm');
     searchForm.hidden = false;
     const mobileSearchDock = window.matchMedia('(max-width: 700px)').matches ? $('.bottom-nav') : null;
+    // El estado visual cambia antes del reparenting para evitar el frame
+    // fugaz del encabezado/logo en WebView móvil.
+    if (mobileSearchDock) document.body.classList.add('search-open');
+    setSearchHomeHidden(true);
     if (mobileSearchDock) {
       if (!searchFormHome) searchFormHome = { parent: searchForm.parentElement, before: $('#recentSearches') };
       if (searchForm.parentElement !== mobileSearchDock) mobileSearchDock.append(searchForm);
       mobileSearchDock.classList.add('search-mode');
     }
-    document.body.classList.add('search-open');
     showView('searchView');
     $('#query').value = $('#homeQuery').value;
     $('.bottom-nav').classList.toggle('has-query', Boolean($('#query').value));
     updateSearchScanAction(Boolean($('#query').value.trim()));
     $('#clear').hidden = !$('#query').value;
-    $('#query').focus();
     startSearchPlaceholders();
+    focusSearchAfterLayout();
   }
 
   function startSearchPlaceholders() {
@@ -1632,6 +1752,7 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
   }
 
   function returnHome() {
+    window.clearTimeout(searchFocusTimer);
     const mobileSearchDock = searchFormHome ? $('.bottom-nav') : null;
     if (mobileSearchDock) {
       mobileSearchDock.classList.add('search-closing');
@@ -1695,15 +1816,19 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     const taxonomyPath = productCategoryPath(product);
     const officialCategory = official?.category || (category ? category.name : 'Catálogo oficial');
     const detailCategoryClass = `detail-category-${category?.key || 'default'}`;
+    const detailImage = officialImage && !/(^|\/)assets\/logo(?:-[^/]+)?\.png$/i.test(officialImage) ? officialImage : '';
+    const detailImageMarkup = detailImage ? `<img class="asset-loading" loading="eager" src="${escapeHtml(detailImage)}" alt="${escapeHtml(product.title)}" onload="this.classList.remove('asset-loading');this.classList.add('asset-ready')" onerror="this.remove()">` : '';
     const taxonomyMarkup = taxonomyPath.length ? `<nav class="detail-taxonomy" aria-label="Categoría del catálogo"><small>Categoría en el catálogo</small><div>${taxonomyPath.map((part, index) => `${index ? '<span aria-hidden="true">→</span>' : ''}<button type="button" data-detail-taxonomy-path="${escapeHtml(encodeURIComponent(JSON.stringify(taxonomyPath.slice(0, index + 1))))}">${escapeHtml(categoryDisplayName(part))}</button>`).join('')}</div></nav>` : '';
     const berajaMarkup = official?.beraja ? `<div class="detail-facts single"><div><small>Berajá</small><strong>${escapeHtml(official.beraja)}</strong></div></div>` : '';
     const detailContent = $('#detailContent');
     const existing = detailContent.querySelector('.detail-content:not(.detail-content-loading)');
     if (!existing) {
-      detailContent.innerHTML = `<div class="detail-content"><img class="asset-loading" loading="eager" src="${escapeHtml(officialImage || 'assets/logo.png')}" alt="${escapeHtml(product.title)}" onload="this.classList.remove('asset-loading');this.classList.add('asset-ready')" onerror="this.onerror=null;this.src='assets/logo.png';this.classList.remove('asset-loading');this.classList.add('asset-ready')"><div class="detail-body"><span class="label ${detailCategoryClass}">${escapeHtml(officialCategory)}</span><h1>${styledBrandText(product.title)}</h1><p class="detail-description">${escapeHtml(officialDescription)}</p>${berajaMarkup}${taxonomyMarkup}${official?.loadFailed ? '<button class="filter-btn detail-retry" id="detailRetry" type="button"><span>Reintentar carga</span></button>' : ''}</div></div>`;
+      detailContent.innerHTML = `<div class="detail-content">${detailImageMarkup}<div class="detail-body"><span class="label ${detailCategoryClass}">${escapeHtml(officialCategory)}</span><h1>${styledBrandText(product.title)}</h1><p class="detail-description">${escapeHtml(officialDescription)}</p>${berajaMarkup}${taxonomyMarkup}${official?.loadFailed ? '<button class="filter-btn detail-retry" id="detailRetry" type="button"><span>Reintentar carga</span></button>' : ''}</div></div>`;
     } else {
       const image = existing.querySelector(':scope > img');
-      if (image && officialImage && image.src !== new URL(officialImage, location.href).href) image.src = officialImage;
+      if (!detailImage) image?.remove();
+      else if (image && image.src !== new URL(detailImage, location.href).href) image.src = detailImage;
+      else if (!image) existing.insertAdjacentHTML('afterbegin', detailImageMarkup);
       const categoryLabel = existing.querySelector('.label');
       categoryLabel.textContent = officialCategory;
       categoryLabel.className = `label ${detailCategoryClass}`;
@@ -1820,12 +1945,40 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     return alertSection('Altas y modificaciones recientes', 'alta', groups.alta) + alertSection('Productos dados de baja', 'baja', groups.baja) + alertSection('Otras comunicaciones', 'general', groups.general);
   }
 
+  function cachePushCatalogAlert(notification) {
+    const type = notification?.data?.alertType;
+    if (type !== 'alta' && type !== 'baja') return false;
+    const text = clean(notification?.data?.text || notification?.body || (type === 'alta' ? 'Nueva alta en el catálogo' : 'Producto dado de baja'));
+    const url = clean(notification?.data?.url || '');
+    const current = alertCache?.items && !Array.isArray(alertCache.items)
+      ? alertCache.items
+      : {alta:[], baja:[], general:[]};
+    const list = Array.isArray(current[type]) ? current[type] : [];
+    const duplicate = list.some((item) => {
+      const itemText = typeof item === 'string' ? item : item?.text || '';
+      return (url && item?.url === url) || normalize(itemText) === normalize(text);
+    });
+    if (duplicate) return false;
+    const next = {
+      alta: type === 'alta' ? [{text, url}, ...list].slice(0, 40) : (current.alta || []),
+      baja: type === 'baja' ? [{text, url}, ...list].slice(0, 40) : (current.baja || []),
+      general: current.general || []
+    };
+    alertCache = {version:INFO_CACHE_VERSION, items:next, fetchedAt:Date.now()};
+    localStorage.setItem('iht_alert_cache', JSON.stringify(alertCache));
+    setCatalogAlertBadge(true);
+    if (document.querySelector('.view.active')?.id === 'alertsView') {
+      $('#alertList').innerHTML = alertMarkup(next);
+      $('#alertsMeta').textContent = 'Nueva novedad recibida · sincronizando la fuente oficial…';
+    }
+    return true;
+  }
+
   async function renderAlerts() {
-    renderNotificationPermission();
-    $('#alertsMeta').textContent = 'Actualizaciones y comunicaciones del catálogo.';
+    $('#alertsMeta').textContent = 'Altas de productos y bajas publicadas por la fuente oficial.';
     if (alertCache?.items && !Array.isArray(alertCache.items)) {
       $('#alertList').innerHTML = alertMarkup(alertCache.items);
-      $('#alertsMeta').textContent = 'Información guardada · actualizando…';
+      $('#alertsMeta').textContent = 'Información guardada · actualizando altas y bajas…';
     } else {
       $('#alertList').innerHTML = '<div class="content-skeleton alert-skeleton" aria-label="Preparando alertas"><i></i><i></i><i></i></div>';
     }
@@ -1833,12 +1986,12 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
       const items = await fetchAlerts();
       if (document.querySelector('.view.active')?.id === 'alertsView') {
         $('#alertList').innerHTML = alertMarkup(items);
-        $('#alertsMeta').textContent = 'Actualizaciones y comunicaciones del catálogo.';
+        $('#alertsMeta').textContent = 'Altas de productos y bajas publicadas por la fuente oficial.';
       }
     } catch (_) {
       const items = alertCache?.items || {alta:[], baja:['No pudimos actualizar las alertas. Revisá tu conexión e intentá nuevamente.'], general:[]};
       $('#alertList').innerHTML = alertMarkup(items);
-      $('#alertsMeta').textContent = 'Sin conexión · mostrando información guardada.';
+      $('#alertsMeta').textContent = 'Sin conexión · mostrando altas y bajas guardadas.';
     }
   }
 
@@ -1894,6 +2047,7 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
 
   async function setupPushNotifications(requestPermission = false) {
     if (!Capacitor.isNativePlatform()) return 'unavailable';
+    if (!requestPermission && localStorage.getItem('iht_push_status') === 'disabled') return 'disabled';
     if (!remoteControl.configured) {
       localStorage.setItem('iht_push_status', 'pending-config');
       return 'pending-config';
@@ -1903,26 +2057,44 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
       if (!pushListenersReady) {
         pushListenersReady = true;
         await PushNotifications.addListener('registration', async ({value}) => {
-          localStorage.setItem('iht_push_token', value); localStorage.setItem('iht_push_status', 'active');
+          localStorage.setItem('iht_push_token', value);
+          if (localStorage.getItem('iht_push_status') !== 'active') localStorage.setItem('iht_push_status', 'registered');
           if (remoteControl.device_registration_url) {
             try { await CapacitorHttp.post({url:remoteControl.device_registration_url, headers:{'Content-Type':'application/json'}, data:{token:value, platform:Capacitor.getPlatform(), topic:'catalog-updates', appVersion:APP_VERSION}}); } catch (_) {}
           }
           if (document.querySelector('.view.active')?.id === 'moreView') renderMore();
         });
-        await PushNotifications.addListener('registrationError', () => localStorage.setItem('iht_push_status', 'error'));
-        await PushNotifications.addListener('pushNotificationReceived', (notification) => { const item = {title:notification.title || notification.data?.title || 'Novedad del catálogo', body:notification.body || notification.data?.body || 'Hay una actualización disponible.', time:new Date().toLocaleString('es-AR')}; pushNotifications = [item, ...pushNotifications].slice(0, 30); localStorage.setItem('iht_push_notifications', JSON.stringify(pushNotifications)); setNotificationBadge(true); if (notification.data?.action === 'sync') syncCatalog(true); });
-        await PushNotifications.addListener('pushNotificationActionPerformed', ({notification}) => { setNotificationBadge(false); if (notification.data?.action === 'sync') syncCatalog(true); showView('notificationsView'); });
+        await PushNotifications.addListener('registrationError', () => { localStorage.setItem('iht_push_status', 'error'); renderNotificationPermission(); });
+        await PushNotifications.addListener('pushNotificationReceived', (notification) => {
+          const item = {title:notification.title || notification.data?.title || 'Novedad del catálogo', body:notification.body || notification.data?.body || 'Hay una actualización disponible.', time:new Date().toLocaleString('es-AR')};
+          cachePushCatalogAlert(notification);
+          pushNotifications = [item, ...pushNotifications].slice(0, 30);
+          localStorage.setItem('iht_push_notifications', JSON.stringify(pushNotifications));
+          setPushNotificationBadge(true);
+          if (notification.data?.action === 'sync') void syncAndPreload(true).catch(() => {});
+        });
+        await PushNotifications.addListener('pushNotificationActionPerformed', ({notification}) => {
+          cachePushCatalogAlert(notification);
+          setPushNotificationBadge(false);
+          if (notification.data?.action === 'sync') void syncAndPreload(true).catch(() => {});
+          showView('notificationsView');
+        });
         await PushNotifications.createChannel({id:'catalog-updates', name:'Actualizaciones del catálogo', description:'Altas, bajas y cambios importantes', importance:4, visibility:1, vibration:true});
       }
       let permission = await PushNotifications.checkPermissions();
       if (requestPermission && permission.receive === 'prompt') permission = await PushNotifications.requestPermissions();
       if (permission.receive === 'granted') {
-        localStorage.setItem('iht_push_status', 'active');
         await PushNotifications.register();
         try {
           const {FirebaseMessaging} = await import('@capacitor-firebase/messaging');
           await FirebaseMessaging.subscribeToTopic({topic: 'catalog-updates'});
-        } catch (_) {}
+          localStorage.setItem('iht_push_status', 'active');
+          renderNotificationPermission();
+        } catch (_) {
+          localStorage.setItem('iht_push_status', 'error');
+          renderNotificationPermission();
+          return 'error';
+        }
         return 'active';
       }
       localStorage.setItem('iht_push_status', permission.receive === 'denied' ? 'denied' : 'pending');
@@ -1933,7 +2105,7 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
   async function disablePushNotifications() {
     localStorage.setItem('iht_push_status', 'disabled');
     localStorage.removeItem('iht_push_token');
-    setNotificationBadge(false);
+    setPushNotificationBadge(false);
     try {
       const {PushNotifications} = await import('@capacitor/push-notifications');
       try {
@@ -2234,7 +2406,9 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
       [['Lácteos'], /lacteo|dairy|leche|milk|queso|cheese|yogur|yogurt|manteca|butter/],
       [['Panadería y repostería'], /pan|bread|galleta|cookie|harina|flour|reposteria|bakery/],
       [['Dulces y golosinas'], /chocolate|caramelo|candy|golosina|alfajor|mermelada|jam|miel|honey/],
-      [['Salsas, aderezos y condimentos'], /salsa|sauce|aderezo|dressing|condimento|spice|especia|mayonesa|ketchup|mostaza/],
+      [['Aderezos'], /aderezo|dressing|mayonesa|ketchup|mostaza|salsa\s+(?:golf|cesar|césar|barbacoa|bbq)/],
+      [['Condimentos'], /condimento|spice|especia|pimienta|sazonador|sal\b/],
+      [['Salsas'], /salsa|sauce/],
       [['Frutos secos y deshidratados'], /fruto seco|nuts?|almendra|almond|mani|peanut|nuez|walnut|pistacho|pistachio|pasas?|raisin/],
       [['Pastas'], /pasta|fideo|noodle|raviol/],
       [['Snacks'], /snack|chips?|papas fritas|popcorn/]
@@ -2465,12 +2639,19 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     updateSearchScanAction(hasText);
     if ($('#query').value.trim()) window.clearInterval(searchPlaceholderTimer); else startSearchPlaceholders();
     $('#clear').hidden = !$('#query').value;
+    // Al aparecer la primera letra no dejamos las categorías visibles durante
+    // la espera del filtro: de lo contrario Uruguay queda expuesto un frame
+    // debajo del vidrio y desaparece cuando termina el debounce.
+    if (hasText) {
+      $('#searchCategories').hidden = true;
+      $('#recentSearches').hidden = true;
+    }
     window.clearTimeout(searchTimer);
     searchTimer = window.setTimeout(() => {
       const value = clean($('#query').value);
       if (value) renderResults(value);
       else { $('#results').hidden = true; $('#searchCategories').hidden = false; $('#recentSearches').hidden = false; }
-    }, 180);
+    }, 0);
   });
   $('#homeQuery').addEventListener('focus', openSearchScreen);
   startHomePlaceholders();
@@ -2522,14 +2703,16 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
   $('#accessRetry').onclick = () => refreshRemoteControl(true);
   $('#accessUpdate').onclick = () => openExternal(remoteControl.update_url);
   renderHome(); renderSearchCategories(); infoNoticeKeys.forEach((key) => updateInfoNotice(key));
+  refreshAlertBadge();
   syncMessage(lastSyncMessage(), syncState.last ? 'ok' : '');
   // La interfaz queda disponible de inmediato. La precarga completa continúa
   // en segundo plano y comunica su estado en la barra superior.
   preloadInitialProductImages();
   loadGlobalPopularity();
-  refreshRemoteControl(false);
+  const remoteControlReady = refreshRemoteControl(false);
   refreshPlayUpdate();
   setupPushNotifications(false);
+  remoteControlReady.then(() => setupPushNotifications(false)).catch(() => {});
   startBackgroundPreparation().finally(() => {
     window.setTimeout(scheduleAppPreload, 350);
     syncAndPreload(false).finally(scheduleAppPreload);

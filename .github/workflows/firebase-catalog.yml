@@ -31,40 +31,16 @@ jobs:
           cache: npm
       - name: Install dependencies
         run: npm ci
-      - name: Set up Python for the one-time historical barcode seed
-        if: ${{ inputs.mode == 'seed' }}
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.12'
-      - name: Install historical barcode reader
-        if: ${{ inputs.mode == 'seed' }}
-        run: python -m pip install rdata pandas
       - name: Actualizar copia oficial del catálogo
         run: npm run snapshot
-      - name: Cruzar la primera carga con SEPA argentino
-        if: ${{ inputs.mode == 'seed' }}
-        run: npm run enrich:sepa -- --write
-      - name: Cruzar el padrón histórico argentino como segunda fuente
-        if: ${{ inputs.mode == 'seed' }}
-        run: npm run enrich:legacy -- --write
-      - name: Buscar códigos de barras inequívocos
-        env:
-          BARCODE_ENRICH_DELAY_MS: '1000'
-          BARCODE_SKIP_REVIEW_IMAGES: '1'
-        run: npm run enrich:barcodes -- --write
       - name: Generar plan sin escribir en Firebase
         run: npm run sync:firebase:catalog
       - name: Guardar paquete para aprobación
         run: |
-          mkdir -p firebase-catalog-artifact/web/data firebase-catalog-artifact/automation
+          mkdir -p firebase-catalog-artifact/web/data
           cp web/data/catalog.json firebase-catalog-artifact/web/data/catalog.json
           cp web/data/product-details.json firebase-catalog-artifact/web/data/product-details.json
           cp web/data/content.json firebase-catalog-artifact/web/data/content.json
-          cp automation/barcode-evidence.json firebase-catalog-artifact/automation/barcode-evidence.json
-          if [ -f automation/barcode-enrichment-cache.json ]; then cp automation/barcode-enrichment-cache.json firebase-catalog-artifact/automation/barcode-enrichment-cache.json; fi
-          if [ -f work/barcode-enrichment-cache.json ]; then cp work/barcode-enrichment-cache.json firebase-catalog-artifact/automation/barcode-enrichment-cache.json; fi
-          if [ -f work/barcode-review.json ]; then cp work/barcode-review.json firebase-catalog-artifact/barcode-review.json; fi
-          if [ -f work/barcode-review.html ]; then cp work/barcode-review.html firebase-catalog-artifact/barcode-review.html; fi
       - name: Subir plan y catálogo preparado
         uses: actions/upload-artifact@v4
         with:
@@ -100,8 +76,6 @@ jobs:
           cp prepared/web/data/catalog.json web/data/catalog.json
           cp prepared/web/data/product-details.json web/data/product-details.json
           cp prepared/web/data/content.json web/data/content.json
-          cp prepared/automation/barcode-evidence.json automation/barcode-evidence.json
-          if [ -f prepared/automation/barcode-enrichment-cache.json ]; then cp prepared/automation/barcode-enrichment-cache.json automation/barcode-enrichment-cache.json; fi
           if [ "${{ inputs.mode || 'incremental' }}" = "seed" ]; then
             npm run sync:firebase:catalog -- --apply --seed
           else

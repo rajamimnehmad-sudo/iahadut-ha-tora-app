@@ -27,16 +27,12 @@ jobs:
           FCM_TOPIC: catalog-updates
           ALERT_STATE_PATH: automation/alert-state.json
         run: node scripts/monitor-alerts.mjs
-      - name: Actualizar catálogo, detalles y códigos verificables
-        env:
-          BARCODE_ENRICH_DELAY_MS: '1000'
-        run: |
-          npm run snapshot
-          npm run enrich:barcodes -- --write
+      - name: Actualizar catálogo y detalles oficiales
+        run: npm run snapshot
       - name: Guardar estado de alertas
         run: |
           git config user.name "iahadut-alerts[bot]"
           git config user.email "iahadut-alerts[bot]@users.noreply.github.com"
-          git add automation/alert-state.json automation/barcode-enrichment-cache.json automation/barcode-evidence.json web/data/catalog.json web/data/product-details.json web/data/content.json
-          git diff --cached --quiet || git commit -m "chore: sincronizar catálogo y códigos verificables"
+          git add automation/alert-state.json web/data/catalog.json web/data/product-details.json web/data/content.json
+          git diff --cached --quiet || git commit -m "chore: sincronizar catálogo oficial y alertas"
           git push

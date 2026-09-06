@@ -35,13 +35,28 @@ let previous = {};
 try { previous = JSON.parse(await readFile(statePath, 'utf8')); } catch (_) {}
 const hasSectionBaseline = trackedSections.some((section) => Object.values(previous).some((item) => item?.type === section.type));
 const changes = current.filter((item) => !previous[`${item.type}:${item.text}`] && (hasSectionBaseline || !trackedSections.some((section) => section.type === item.type)));
-await mkdir(dirname(statePath), {recursive: true});
-await writeFile(statePath, `${JSON.stringify(currentMap, null, 2)}\n`, 'utf8');
+const persistState = async () => {
+  await mkdir(dirname(statePath), {recursive: true});
+  await writeFile(statePath, `${JSON.stringify(currentMap, null, 2)}\n`, 'utf8');
+};
 
-if (!changes.length || !process.env.FCM_SERVICE_ACCOUNT_JSON || process.env.SEED_ONLY === '1') {
-  console.log(changes.length ? `${changes.length} cambio(s) detectado(s); falta FCM_SERVICE_ACCOUNT_JSON o se está sembrando el estado.` : 'Sin cambios nuevos en altas, bajas o secciones informativas.');
+if (!changes.length) {
+  await persistState();
+  console.log('Sin cambios nuevos en altas, bajas o secciones informativas.');
   process.exit(0);
 }
+
+if (process.env.SEED_ONLY === '1') {
+  await persistState();
+  console.log(`${changes.length} cambio(s) detectado(s); se guardó la línea de base sin enviar push.`);
+  process.exit(0);
+}
+
+if (!process.env.FCM_SERVICE_ACCOUNT_JSON) {
+  throw new Error(`${changes.length} cambio(s) detectado(s), pero falta FCM_SERVICE_ACCOUNT_JSON. No se actualizó el estado para no perder las notificaciones.`);
+}
+
+console.log(`${changes.length} cambio(s) detectado(s); preparando notificaciones push.`);
 
 const serviceAccount = JSON.parse(process.env.FCM_SERVICE_ACCOUNT_JSON);
 const now = Math.floor(Date.now() / 1000);
@@ -55,8 +70,10 @@ if (!tokenResponse.ok) throw new Error(`No se pudo obtener autorización FCM: HT
 const {access_token: accessToken} = await tokenResponse.json();
 for (const item of changes) {
   const notificationTitle = item.type === 'alta' ? 'Nueva alta en el catálogo' : item.type === 'baja' ? 'Producto dado de baja' : item.type === 'notes' ? 'Nueva nota de Kashrut' : item.type === 'catering' ? 'Nuevo catering certificado' : 'Nueva tienda certificada';
-  const message = {message: {topic, notification: {title: notificationTitle, body: item.type === 'notes' || item.type === 'catering' || item.type === 'shops' ? 'Hay una novedad disponible para consultar.' : item.text}, data: {action: 'sync', alertType: item.type, url: item.url || ''}}};
+  const message = {message: {topic, notification: {title: notificationTitle, body: item.type === 'notes' || item.type === 'catering' || item.type === 'shops' ? 'Hay una novedad disponible para consultar.' : item.text}, android: {priority: 'HIGH', notification: {channel_id: 'catalog-updates', sound: 'default'}}, data: {action: 'sync', alertType: item.type, text: item.text, url: item.url || ''}}};
   const sendResponse = await fetch(`https://fcm.googleapis.com/v1/projects/${serviceAccount.project_id}/messages:send`, {method: 'POST', headers: {'content-type': 'application/json', Authorization: `Bearer ${accessToken}`}, body: JSON.stringify(message)});
   if (!sendResponse.ok) throw new Error(`FCM rechazó la notificación: HTTP ${sendResponse.status}`);
   console.log(`Notificación enviada: ${item.type} · ${item.text}`);
 }
+
+await persistState();
