@@ -1,6 +1,6 @@
 import { firebaseConfig } from './firebase-config.js';
 
-export const APP_VERSION = '0.11.6';
+export const APP_VERSION = '0.11.7';
 const CACHE_KEY = 'iht_remote_control';
 
 export const defaultRemoteControl = {

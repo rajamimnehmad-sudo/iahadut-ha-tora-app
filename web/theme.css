@@ -954,6 +954,35 @@ body.modal-open { overflow: hidden; }
   .bottom-nav .nav[data-view="alertsView"].has-alerts { color: #7a5d20; }
 }
 
+/* Android WebView: el long-press no debe crear selección ni mostrar el
+   encabezado del home durante la transición al buscador. Los campos siguen
+   permitiendo editar texto normalmente. */
+html body,
+html body .app,
+html body .app * {
+  -webkit-user-select: none !important;
+  user-select: none !important;
+  -webkit-touch-callout: none !important;
+}
+html body .app input,
+html body .app textarea,
+html body .app [contenteditable="true"] {
+  -webkit-user-select: text !important;
+  user-select: text !important;
+  -webkit-touch-callout: default !important;
+}
+
+@media (max-width: 700px) {
+  body.search-open .topbar,
+  body.search-open #homeView {
+    display: none !important;
+  }
+  body.search-open #searchView {
+    isolation: isolate;
+    background: #f7f8f6 !important;
+  }
+}
+
 /* El escáner también debe conservar una acción manual legible en teléfonos
    muy angostos, sin permitir que el botón "Buscar" se parta verticalmente. */
 #scanOverlay .detail-head.dark {

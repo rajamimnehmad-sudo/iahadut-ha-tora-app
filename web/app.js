@@ -61,6 +61,7 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
   const clean = (value) => String(value || '').replace(/\s+/g, ' ').trim();
   const normalize = (value) => clean(value).normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
   const escapeHtml = (value) => String(value || '').replace(/[&<>"']/g, (char) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[char]));
+  const productFallbackImage = 'assets/product-placeholder.svg';
   const phoneNumbers = (value) => [...new Set((String(value || '').match(/(?:\+?54[\s.-]*9[\s.-]*)?11[\s.-]*(?:\d[\s.-]*){8}/g) || []).map((phone) => phone.replace(/\D/g, '')).map((digits) => digits.startsWith('549') ? digits : digits.startsWith('54') ? `549${digits.slice(2)}` : `549${digits}`))];
 
   function validGtin(value) {
@@ -1009,7 +1010,7 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     }
     recentCarouselOffset = 0;
     const recentTrack = $('#recentProducts');
-    recentTrack.innerHTML = items.map((product) => `<button class="recent-product" data-product="${escapeHtml(product.url)}" aria-label="Ver ${escapeHtml(product.title)}"><img class="asset-loading" src="${escapeHtml(product.image || 'assets/logo.png')}" alt="${escapeHtml(product.title)}" loading="eager" onload="this.classList.remove('asset-loading');this.classList.add('asset-ready')" onerror="this.onerror=null;this.src='assets/logo.png';this.classList.remove('asset-loading');this.classList.add('asset-ready')"></button>`).join('');
+    recentTrack.innerHTML = items.map((product) => `<button class="recent-product" data-product="${escapeHtml(product.url)}" aria-label="Ver ${escapeHtml(product.title)}"><img class="asset-loading" src="${escapeHtml(product.image || productFallbackImage)}" alt="${escapeHtml(product.title)}" loading="eager" onload="this.classList.remove('asset-loading');this.classList.add('asset-ready')" onerror="this.onerror=null;this.src='${productFallbackImage}';this.classList.remove('asset-loading');this.classList.add('asset-ready')"></button>`).join('');
     if (items.length > 4) {
       [...recentTrack.children].slice(0, 4).forEach((card) => recentTrack.append(card.cloneNode(true)));
       recentTrack.dataset.carouselOriginalCount = String(items.length);
@@ -1132,7 +1133,7 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
         const productTitle = normalize(cleanDisplayText(product.title));
         return productTitle.length > 8 && (alertTitle.includes(productTitle) || productTitle.includes(alertTitle));
       });
-      const candidate = linkedProduct || (match && (!alert?.url || match.url === alert.url) ? match : null) || (alert?.url ? {url:alert.url, title:displayTitle, brand:'', barcode:'', cat:'gondola', image:'assets/logo.png', description:''} : null);
+      const candidate = linkedProduct || (match && (!alert?.url || match.url === alert.url) ? match : null) || (alert?.url ? {url:alert.url, title:displayTitle, brand:'', barcode:'', cat:'gondola', image:productFallbackImage, description:''} : null);
       if (candidate && !matches.some((product) => product.url === candidate.url)) matches.push(candidate);
       if (matches.length === 10) break;
     }
@@ -1140,7 +1141,7 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     recentProducts = [...matches, ...recentProducts, ...products].filter((product, index, all) => all.findIndex((candidate) => candidate.url === product.url) === index).slice(0, 10);
     localStorage.setItem('iht_recent_products', JSON.stringify(recentProducts));
     renderHome();
-    const missingImages = recentProducts.filter((product) => product.image === 'assets/logo.png' && product.url);
+    const missingImages = recentProducts.filter((product) => product.image === productFallbackImage && product.url);
     await Promise.all(missingImages.map(async (product) => {
       try {
         const official = await fetchProductContent(product);
@@ -1429,7 +1430,7 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
   }
 
   function productImage(product) {
-    return `<img class="asset-loading" src="${escapeHtml(product.image || 'assets/logo.png')}" alt="${escapeHtml(product.title)}" onload="this.classList.remove('asset-loading');this.classList.add('asset-ready')" onerror="this.onerror=null;this.src='assets/logo.png';this.classList.remove('asset-loading');this.classList.add('asset-ready')">`;
+    return `<img class="asset-loading" src="${escapeHtml(product.image || productFallbackImage)}" alt="${escapeHtml(product.title)}" onload="this.classList.remove('asset-loading');this.classList.add('asset-ready')" onerror="this.onerror=null;this.src='${productFallbackImage}';this.classList.remove('asset-loading');this.classList.add('asset-ready')">`;
   }
 
   function cleanDisplayText(value) {
@@ -1816,7 +1817,7 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     const taxonomyPath = productCategoryPath(product);
     const officialCategory = official?.category || (category ? category.name : 'Catálogo oficial');
     const detailCategoryClass = `detail-category-${category?.key || 'default'}`;
-    const detailImage = officialImage && !/(^|\/)assets\/logo(?:-[^/]+)?\.png$/i.test(officialImage) ? officialImage : '';
+    const detailImage = officialImage && !/(^|\/)assets\/(?:logo(?:-[^/]+)?\.png|product-placeholder\.svg)$/i.test(officialImage) ? officialImage : '';
     const detailImageMarkup = detailImage ? `<img class="asset-loading" loading="eager" src="${escapeHtml(detailImage)}" alt="${escapeHtml(product.title)}" onload="this.classList.remove('asset-loading');this.classList.add('asset-ready')" onerror="this.remove()">` : '';
     const taxonomyMarkup = taxonomyPath.length ? `<nav class="detail-taxonomy" aria-label="Categoría del catálogo"><small>Categoría en el catálogo</small><div>${taxonomyPath.map((part, index) => `${index ? '<span aria-hidden="true">→</span>' : ''}<button type="button" data-detail-taxonomy-path="${escapeHtml(encodeURIComponent(JSON.stringify(taxonomyPath.slice(0, index + 1))))}">${escapeHtml(categoryDisplayName(part))}</button>`).join('')}</div></nav>` : '';
     const berajaMarkup = official?.beraja ? `<div class="detail-facts single"><div><small>Berajá</small><strong>${escapeHtml(official.beraja)}</strong></div></div>` : '';
