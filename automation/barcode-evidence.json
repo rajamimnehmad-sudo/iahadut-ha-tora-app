@@ -163,5 +163,457 @@
     "code": "7790070225023",
     "label": "Aceite mezcla soja y girasol Cocinero 1,5 L",
     "source": "https://ahorritos.com.ar/precio/aceite-cocinero-mezcla-1-5l-7790070225023"
+  },
+  "https://vaad.ar/producto/burgol-marca-egran/": {
+    "code": "7791476081008",
+    "label": "Trigo Burgol Egran 500 Gr · 500 0 gr",
+    "source": "https://github.com/pdelboca/preciosargentina/blob/master/data/productos.rda",
+    "sourceType": "PRECIOSARGENTINA",
+    "sourceUpdatedAt": "legacy-dataset"
+  },
+  "https://vaad.ar/producto/pure-de-tomate-marca-caroyense/": {
+    "code": "7794759000611",
+    "label": "Pure Tomate Caroyense 2.5 Kg · 2 5 kg",
+    "source": "https://github.com/pdelboca/preciosargentina/blob/master/data/productos.rda",
+    "sourceType": "PRECIOSARGENTINA",
+    "sourceUpdatedAt": "legacy-dataset"
+  },
+  "https://vaad.ar/producto/salsa-golf-marca-cada-dia/": {
+    "code": "7791866003351",
+    "label": "Salsa Golf Cada Dia 250 Gr · 250 0 gr",
+    "source": "https://github.com/pdelboca/preciosargentina/blob/master/data/productos.rda",
+    "sourceType": "PRECIOSARGENTINA",
+    "sourceUpdatedAt": "legacy-dataset"
+  },
+  "https://vaad.ar/producto/arvejas-marca-okey/": {
+    "code": "7798085990837",
+    "label": "Arvejas Okey 350 Gr · 350 0 gr",
+    "source": "https://github.com/pdelboca/preciosargentina/blob/master/data/productos.rda",
+    "sourceType": "PRECIOSARGENTINA",
+    "sourceUpdatedAt": "legacy-dataset"
+  },
+  "https://vaad.ar/producto/cafe-marca-dolca/": {
+    "code": "7613033521164",
+    "label": "Cafe Instantaneo Clasico Dolca 100 Gr · 100 0 gr",
+    "source": "https://github.com/pdelboca/preciosargentina/blob/master/data/productos.rda",
+    "sourceType": "PRECIOSARGENTINA",
+    "sourceUpdatedAt": "legacy-dataset"
+  },
+  "https://vaad.ar/producto/champignones-laminados-marca-siete-lagos/": {
+    "code": "7791351128798",
+    "label": "Champignones Laminados Siete Lagos 400 Gr · 400 0 gr",
+    "source": "https://github.com/pdelboca/preciosargentina/blob/master/data/productos.rda",
+    "sourceType": "PRECIOSARGENTINA",
+    "sourceUpdatedAt": "legacy-dataset"
+  },
+  "https://vaad.ar/producto/choclo-marca-okey/": {
+    "code": "7798085997836",
+    "label": "Choclo Amarillo en Grano Okey 300 Gr · 300 0 gr",
+    "source": "https://github.com/pdelboca/preciosargentina/blob/master/data/productos.rda",
+    "sourceType": "PRECIOSARGENTINA",
+    "sourceUpdatedAt": "legacy-dataset"
+  },
+  "https://vaad.ar/producto/coctel-de-frutas-marca-la-campagnola/": {
+    "code": "7793360002106",
+    "label": "Coctel 4 Frutas en Almibar Bc La Campagnola 820 Gr · 820 0 gr",
+    "source": "https://github.com/pdelboca/preciosargentina/blob/master/data/productos.rda",
+    "sourceType": "PRECIOSARGENTINA",
+    "sourceUpdatedAt": "legacy-dataset"
+  },
+  "https://vaad.ar/producto/edulcorante-en-sobres-marca-dulkre/": {
+    "code": "7790863000073",
+    "label": "Edulcorante en Sobres Dulkre 50 Un · 50 0 un",
+    "source": "https://github.com/pdelboca/preciosargentina/blob/master/data/productos.rda",
+    "sourceType": "PRECIOSARGENTINA",
+    "sourceUpdatedAt": "legacy-dataset"
+  },
+  "https://vaad.ar/producto/ketchup-marca-cada-dia/": {
+    "code": "7791866003344",
+    "label": "Ketchup Cada Dia 250 Gr · 250 0 gr",
+    "source": "https://github.com/pdelboca/preciosargentina/blob/master/data/productos.rda",
+    "sourceType": "PRECIOSARGENTINA",
+    "sourceUpdatedAt": "legacy-dataset"
+  },
+  "https://vaad.ar/producto/298235/": {
+    "code": "7790645002561",
+    "label": "Palmito en Trozos Grandes Acapulco 800 Gr · 800 0 gr",
+    "source": "https://github.com/pdelboca/preciosargentina/blob/master/data/productos.rda",
+    "sourceType": "PRECIOSARGENTINA",
+    "sourceUpdatedAt": "legacy-dataset"
+  },
+  "https://vaad.ar/producto/papas-marca-carrefour-2/": {
+    "code": "7798159719456",
+    "label": "Papas Baston Tradicional Congeladas Carrefour 700 Gr · 700 0 gr",
+    "source": "https://github.com/pdelboca/preciosargentina/blob/master/data/productos.rda",
+    "sourceType": "PRECIOSARGENTINA",
+    "sourceUpdatedAt": "legacy-dataset"
+  },
+  "https://vaad.ar/producto/pure-de-tomate-marca-dulcor/": {
+    "code": "7793046015062",
+    "label": "Pure de Tomate en Tetrabrik Dulcor 520 Gr · 520 0 gr",
+    "source": "https://github.com/pdelboca/preciosargentina/blob/master/data/productos.rda",
+    "sourceType": "PRECIOSARGENTINA",
+    "sourceUpdatedAt": "legacy-dataset"
+  },
+  "https://vaad.ar/producto/aceitunas-marca-marvavic-9/": {
+    "code": "7793551001888",
+    "label": "Aceitunas Verdes Rellenas con Morron en Doypack Marvavic 300 Gr · 300 0 gr",
+    "source": "https://github.com/pdelboca/preciosargentina/blob/master/data/productos.rda",
+    "sourceType": "PRECIOSARGENTINA",
+    "sourceUpdatedAt": "legacy-dataset"
+  },
+  "https://vaad.ar/producto/aceitunas-marca-princeton-2/": {
+    "code": "7793551002984",
+    "label": "Aceitunas Verdes Rellenas con Morron Frasco Princeton 330 Gr · 330 0 gr",
+    "source": "https://github.com/pdelboca/preciosargentina/blob/master/data/productos.rda",
+    "sourceType": "PRECIOSARGENTINA",
+    "sourceUpdatedAt": "legacy-dataset"
+  },
+  "https://vaad.ar/producto/aceitunas-marca-marvavic-13/": {
+    "code": "7793551002519",
+    "label": "Aceitunas Verdes en Salmuera 300 Grs Marvavic",
+    "source": "https://www.disco.com.ar/aceitunas-verdes-marvavic-6/p",
+    "sourceType": "RETAIL_EAN_VISUAL",
+    "sourceUpdatedAt": "2026-09-06",
+    "secondarySource": "https://datos.produccion.gob.ar/dataset/sepa-precios"
+  },
+  "https://vaad.ar/producto/coctel-de-frutas-marca-arcor/": {
+    "code": "7790580403904",
+    "label": "Coctel de Frutas Arcor 820 Gr",
+    "source": "https://www.disco.com.ar/coctel-de-frutas-arcor-2349/p",
+    "sourceType": "RETAIL_EAN_VISUAL",
+    "sourceUpdatedAt": "2026-09-06"
+  },
+  "https://vaad.ar/producto/coctel-de-frutas-marca-marolio/": {
+    "code": "7797470001288",
+    "label": "Cóctel de Frutas Marolio 820 Gr",
+    "source": "https://www.disco.com.ar/coctel-de-frutas-marolio-820-gr/p",
+    "sourceType": "RETAIL_EAN_VISUAL",
+    "sourceUpdatedAt": "2026-09-06",
+    "secondarySource": "https://datos.produccion.gob.ar/dataset/sepa-precios"
+  },
+  "https://vaad.ar/producto/coctel-de-frutas-marca-vea/": {
+    "code": "7790147004674",
+    "label": "Cóctel de Frutas Vea 820 Gr",
+    "source": "https://www.disco.com.ar/coctel-de-frutas-vea-hma-820-gr/p",
+    "sourceType": "RETAIL_EAN_VISUAL",
+    "sourceUpdatedAt": "2026-09-06"
+  },
+  "https://vaad.ar/producto/durazno-marca-marolio/": {
+    "code": "7797470000854",
+    "label": "Duraznos en Mitades Marolio 820 Gr",
+    "source": "https://www.disco.com.ar/duraznos-en-mitades-marolio/p",
+    "sourceType": "RETAIL_EAN_VISUAL",
+    "sourceUpdatedAt": "2026-09-06"
+  },
+  "https://vaad.ar/producto/ketchup-marca-danica/": {
+    "code": "7791620187693",
+    "label": "Ketchup Dánica doypack 220 Gr",
+    "source": "https://www.carrefour.com.ar/ketchup-danica-dp-220-g-722818/p",
+    "sourceType": "RETAIL_EAN_VISUAL",
+    "sourceUpdatedAt": "2026-09-06",
+    "secondarySource": "https://www.disco.com.ar/ketchup-danica-220-gr/p"
+  },
+  "https://vaad.ar/producto/mayonesa-marca-cada-dia/": {
+    "code": "7791866000558",
+    "label": "Mayonesa Cada Día liviana 237 Gr",
+    "source": "https://www.carrefour.com.ar/mayonesa-cada-dia-liviana-237-g-554823/p",
+    "sourceType": "RETAIL_EAN_VISUAL",
+    "sourceUpdatedAt": "2026-09-06"
+  },
+  "https://vaad.ar/producto/pure-de-tomate-marca-la-joya/": {
+    "code": "7792504009490",
+    "label": "Puré de Tomate La Joya 520 Gr",
+    "source": "https://www.disco.com.ar/pure-de-tomate-la-joya-x-520-gr-277337/p",
+    "sourceType": "RETAIL_EAN_VISUAL",
+    "sourceUpdatedAt": "2026-09-06"
+  },
+  "https://vaad.ar/producto/bebida-de-avena-marca-amande/": {
+    "code": "7798411150010",
+    "label": "Bebida Vegetal de Avena Barista Amande 1 L",
+    "source": "https://www.disco.com.ar/bebida-vegetal-de-avena-barista-amande-1lt/p",
+    "sourceType": "RETAIL_EAN_VISUAL",
+    "sourceUpdatedAt": "2026-09-06"
+  },
+  "https://vaad.ar/producto/arroz-marca-lucchetti/": {
+    "code": "7790070431493",
+    "label": "Arroz grano largo fino Lucchetti 500 g",
+    "source": "https://www.carrefour.com.ar/arroz-largo-fino-00000-lucchetti-500-g-726298/p",
+    "sourceType": "RETAIL_EAN_VISUAL",
+    "sourceUpdatedAt": "2026-09-06",
+    "secondarySource": "https://www.disco.com.ar/arroz-luchetti-largo-fino-x500g/p"
+  },
+  "https://vaad.ar/producto/arroz-marca-molinos-ala/": {
+    "code": "7791120031564",
+    "label": "Arroz grano largo fino Molinos Ala 500 g",
+    "source": "https://www.carrefour.com.ar/arroz-molinos-ala-largo-fino-00000-bolsa-500-g/p",
+    "sourceType": "RETAIL_EAN_VISUAL",
+    "sourceUpdatedAt": "2026-09-06",
+    "secondarySource": "https://www.disco.com.ar/arroz-ala-grano-largo-fino-500-gr/p"
+  },
+  "https://vaad.ar/producto/arroz-marca-gallo/": {
+    "code": "7790070433114",
+    "label": "Arroz parboil Gallo Oro Selección 500 g",
+    "source": "https://www.carrefour.com.ar/arroz-parboil-gallo-oro-en-bolsa-500-g-733186/p",
+    "sourceType": "RETAIL_EAN_VISUAL",
+    "sourceUpdatedAt": "2026-09-06",
+    "secondarySource": "https://www.disco.com.ar/arroz-gallo-parboil-selec-x-500-gr-gallo/p"
+  },
+  "https://vaad.ar/producto/avena-marca-granix/": {
+    "code": "7790045823568",
+    "label": "Avena tradicional Granix 400 g",
+    "source": "https://www.disco.com.ar/avena-granix-400g/p",
+    "sourceType": "RETAIL_EAN_VISUAL",
+    "sourceUpdatedAt": "2026-09-06"
+  },
+  "https://vaad.ar/producto/avena-marca-quaker/": {
+    "code": "7792170555499",
+    "label": "Avena integral tradicional Quaker 280 g",
+    "source": "https://www.carrefour.com.ar/avena-tradicional-quaker-en-caja-280-grs-772746/p",
+    "sourceType": "RETAIL_EAN_VISUAL",
+    "sourceUpdatedAt": "2026-09-06",
+    "secondarySource": "https://www.disco.com.ar/avena-tradicional-280-grs-quaker/p"
+  },
+  "https://vaad.ar/producto/cacao-marca-toddy/": {
+    "code": "7790380023401",
+    "label": "Cacao en polvo Toddy Original 180 g",
+    "source": "https://www.carrefour.com.ar/cacao-en-polvo-toddy-original-bolsa-180-g-698978/p",
+    "sourceType": "RETAIL_EAN_VISUAL",
+    "sourceUpdatedAt": "2026-09-06",
+    "secondarySource": "https://www.disco.com.ar/cacao-original-toddy-180-gr/p"
+  },
+  "https://vaad.ar/producto/edulcorante-en-sobres-marca-hileret/": {
+    "code": "7794940000116",
+    "label": "Edulcorante en sobres Hileret Clásico 100 unidades",
+    "source": "https://www.carrefour.com.ar/edulcorante-en-sobres-hileret-clasico-100-u/p",
+    "sourceType": "RETAIL_EAN_VISUAL",
+    "sourceUpdatedAt": "2026-09-06"
+  },
+  "https://vaad.ar/producto/levadura-marca-calsa/": {
+    "code": "7790813444469",
+    "label": "Levadura fresca prensada Calsa 2 x 50 g",
+    "source": "https://www.carrefour.com.ar/levadura-fresca-prensada-calsa-2-x-50-g/p",
+    "sourceType": "RETAIL_EAN_VISUAL",
+    "sourceUpdatedAt": "2026-09-06"
+  },
+  "https://vaad.ar/producto/te-marca-green-hills/": {
+    "code": "7790480008285",
+    "label": "Té negro en saquitos Green Hills Classic 100 unidades",
+    "source": "https://www.carrefour.com.ar/te-negro-en-saquitos-green-hills-classic-100-uni-7572/p",
+    "sourceType": "RETAIL_EAN_VISUAL",
+    "sourceUpdatedAt": "2026-09-06"
+  },
+  "https://vaad.ar/producto/azucar-marca-ledesma/": {
+    "code": "7792540260138",
+    "label": "Azúcar Ledesma Clásica 1 kg",
+    "source": "https://www.disco.com.ar/azucar-ledesma-clasica-x-1kg/p",
+    "sourceType": "RETAIL_EAN_VISUAL",
+    "sourceUpdatedAt": "2026-09-06",
+    "secondarySource": "https://www.jumbo.com.ar/azucar-ledesma-clasica-x-1kg/p"
+  },
+  "https://vaad.ar/producto/te-marca-taragui/": {
+    "code": "7790387531817",
+    "label": "Té Taragüi en saquitos 100 unidades",
+    "source": "https://www.disco.com.ar/te-taragui-en-saquitos-5/p",
+    "sourceType": "RETAIL_EAN_VISUAL",
+    "sourceUpdatedAt": "2026-09-06",
+    "secondarySource": "https://www.jumbo.com.ar/te-taragui-en-saquitos-5/p"
+  },
+  "https://vaad.ar/producto/yerba-marca-rosamonte/": {
+    "code": "7790411000050",
+    "label": "Yerba mate Rosamonte con palo 500 g",
+    "source": "https://www.disco.com.ar/yerba-mate-rosamonte-con-palo-paquete-500-g/p",
+    "sourceType": "RETAIL_EAN_VISUAL",
+    "sourceUpdatedAt": "2026-09-06"
+  },
+  "https://vaad.ar/producto/arroz-marca-dos-hermanos/": {
+    "code": "7790503199105",
+    "label": "Arroz integral Dos Hermanos 1 kg",
+    "source": "https://www.disco.com.ar/arroz-integral-dos-hermanos-non-gmo-x1-kg/p",
+    "sourceType": "RETAIL_EAN_VISUAL",
+    "sourceUpdatedAt": "2026-09-06",
+    "secondarySource": "https://www.jumbo.com.ar/arroz-integral-dos-hermanos-non-gmo-x1-kg/p"
+  },
+  "https://vaad.ar/producto/yerba-marca-taragui/": {
+    "code": "7790387013634",
+    "label": "Yerba mate con palo 4flex Taragüi 250 g",
+    "source": "https://www.carrefour.com.ar/yerba-mate-con-palo-4flex-taragui-250-g/p",
+    "sourceType": "RETAIL_EAN_VISUAL",
+    "sourceUpdatedAt": "2026-09-06"
+  },
+  "https://vaad.ar/producto/aceite-de-oliva-marca-cocinero/": {
+    "code": "7790070231871",
+    "label": "Aceite de oliva extra virgen Cocinero suave 500 ml",
+    "source": "https://www.disco.com.ar/aceite-oliva-extra-virgen-suave-cocinero-500-ml/p",
+    "sourceType": "RETAIL_EAN_VISUAL",
+    "sourceUpdatedAt": "2026-09-06",
+    "secondarySource": "https://www.carrefour.com.ar/aceite-de-oliva-extra-virgen-cocinero-suave-500-cc/p"
+  },
+  "https://vaad.ar/producto/harina-de-maiz-marca-maizena/": {
+    "code": "7794000007451",
+    "label": "Almidón de maíz Maizena Clásica 220 g",
+    "source": "https://www.disco.com.ar/almidon-de-maiz-maizena-clasica-sin-tacc-220-gr/p",
+    "sourceType": "RETAIL_EAN_VISUAL",
+    "sourceUpdatedAt": "2026-09-06",
+    "secondarySource": "https://www.carrefour.com.ar/almidon-de-maiz-maizena-clasica-sin-tacc-220-g-719351/p"
+  },
+  "https://vaad.ar/producto/durazno-marca-la-campagnola/": {
+    "code": "7793360002007",
+    "label": "Duraznos en almíbar La Campagnola 820 g",
+    "source": "https://www.disco.com.ar/duraznos-al-natural-la-campagnola-485-gr/p",
+    "sourceType": "RETAIL_EAN_VISUAL",
+    "sourceUpdatedAt": "2026-09-06"
+  },
+  "https://vaad.ar/producto/durazno-marca-arcor/": {
+    "code": "7790580650100",
+    "label": "Duraznos en almíbar Arcor 820 g",
+    "source": "https://www.eldorado.com.uy/duraznos-en-almibar-arcor-natural-820gr/p",
+    "sourceType": "RETAIL_EAN_VISUAL",
+    "sourceUpdatedAt": "2026-09-06"
+  },
+  "https://vaad.ar/producto/tomates-marca-victoria/": {
+    "code": "8000483150553",
+    "label": "Tomate perita entero Victoria 400 g",
+    "source": "https://newgarden.com.ar/tomate-perita-entero-victoria-400-g.html",
+    "sourceType": "RETAIL_EAN_VISUAL",
+    "sourceUpdatedAt": "2026-09-06",
+    "secondarySource": "https://world.openfoodfacts.org/product/8000483150553"
+  },
+  "https://vaad.ar/producto/te-marca-la-virginia/": {
+    "code": "7790150211625",
+    "label": "Té común La Virginia 25 saquitos",
+    "source": "https://www.josimar.com.ar/te-comun-la-virginia-25u/p",
+    "sourceType": "RETAIL_EAN_VISUAL",
+    "sourceUpdatedAt": "2026-09-06",
+    "secondarySource": "https://www.eldorado.com.uy/te-la-virginia-25-sobres/p"
+  },
+  "https://vaad.ar/producto/aceitunas-marca-marvavic-18/": {
+    "code": "7793551001987",
+    "label": "ACEITUNAS NEGRAS DESCAROZADAS X 80 GRS",
+    "source": "https://datos.produccion.gob.ar/dataset/sepa-precios",
+    "sourceType": "SEPA",
+    "sourceUpdatedAt": "2026-09-05T16:19:24.107479"
+  },
+  "https://vaad.ar/producto/aceitunas-marca-marvavic-22/": {
+    "code": "7793551002090",
+    "label": "ACEITUNAS NEGRAS EN RODAJAS X 80 GRS",
+    "source": "https://datos.produccion.gob.ar/dataset/sepa-precios",
+    "sourceType": "SEPA",
+    "sourceUpdatedAt": "2026-09-05T16:19:24.107479"
+  },
+  "https://vaad.ar/producto/aceitunas-verdes-descarozadas-marca-nucete/": {
+    "code": "7792070071693",
+    "label": "ACEITUNAS VERDES DESCAROZADAS NUCETE DP X 220 GRS",
+    "source": "https://datos.produccion.gob.ar/dataset/sepa-precios",
+    "sourceType": "SEPA",
+    "sourceUpdatedAt": "2026-09-05T16:19:24.107479"
+  },
+  "https://vaad.ar/producto/pure-de-tomate-marca-arcor/": {
+    "code": "7790580138844",
+    "label": "ARCOR PURE DE TOMATE",
+    "source": "https://datos.produccion.gob.ar/dataset/sepa-precios",
+    "sourceType": "SEPA",
+    "sourceUpdatedAt": "2026-09-05T16:19:24.107479"
+  },
+  "https://vaad.ar/producto/pure-de-tomate-marca-la-campagnola/": {
+    "code": "7793360000485",
+    "label": "PURE DE TOMATE G LC",
+    "source": "https://datos.produccion.gob.ar/dataset/sepa-precios",
+    "sourceType": "SEPA",
+    "sourceUpdatedAt": "2026-09-05T16:19:24.107479"
+  },
+  "https://vaad.ar/producto/pure-de-tomate-marca-la-colina/": {
+    "code": "7790313001407",
+    "label": "PURE TOMATE LA COLINA X520GR.",
+    "source": "https://datos.produccion.gob.ar/dataset/sepa-precios",
+    "sourceType": "SEPA",
+    "sourceUpdatedAt": "2026-09-05T16:19:24.107479"
+  },
+  "https://vaad.ar/producto/levadura-marca-fleischmann/": {
+    "code": "7730917690577",
+    "label": "Levadura instantánea Fleischmann sobre 10 g",
+    "source": "https://www.disco.com.uy/product/levadura-instantanea-fleischmann-sobre-10-g/751876",
+    "sourceType": "RETAIL_EAN_VISUAL",
+    "sourceUpdatedAt": "2026-09-06"
+  },
+  "https://vaad.ar/producto/pimienta-negra-molinillo-dani/": {
+    "code": "8410721000753",
+    "label": "Pimienta negra en grano Dani 45 g",
+    "source": "https://www.dani.es/sites/default/files/catalogo/catalog.pdf",
+    "sourceType": "RETAIL_EAN_VISUAL",
+    "sourceUpdatedAt": "2026-09-06",
+    "secondarySource": "https://www.dani.es/es/catalog/especias/pimienta-negra/pimienta-negra-grano-45g"
+  },
+  "https://vaad.ar/producto/bamba-osem/": {
+    "code": "077544806009",
+    "label": "Bamba Osem Peanut Butter Puffs 100 g",
+    "source": "https://www.jumbo.com.ar/snack-bamba-osem-manteca-de-mani-100-gr/p",
+    "sourceType": "RETAIL_EAN_VISUAL",
+    "sourceUpdatedAt": "2026-09-06"
+  },
+  "https://vaad.ar/producto/pasta-untable-de-almendras-y-coco-marca-ancestral/": {
+    "code": "763571667194",
+    "label": "Crema untable de almendras y coco Ancestral 200 g",
+    "source": "https://www.jumbo.com.ar/crema-almendras-y-coco-240-gr-ancestral/p",
+    "sourceType": "RETAIL_EAN_VISUAL",
+    "sourceUpdatedAt": "2026-09-06"
+  },
+  "https://vaad.ar/producto/pasta-untable-de-avellanas-marca-ancestral/": {
+    "code": "763571667217",
+    "label": "Crema untable de avellanas Ancestral 200 g",
+    "source": "https://www.jumbo.com.ar/crema-untable-avellanas-200-gr-ancestral/p",
+    "sourceType": "RETAIL_EAN_VISUAL",
+    "sourceUpdatedAt": "2026-09-06"
+  },
+  "https://vaad.ar/producto/pasta-untable-de-nuez-pecan-marca-ancestral/": {
+    "code": "763571667231",
+    "label": "Crema untable de nuez pecan Ancestral 200 g",
+    "source": "https://www.jumbo.com.ar/crema-untable-nuez-pecan-200gr-ancestral/p",
+    "sourceType": "RETAIL_EAN_VISUAL",
+    "sourceUpdatedAt": "2026-09-06"
+  },
+  "https://vaad.ar/producto/salsa-de-soja-soya-marca-kikkoman/": {
+    "code": "041390000010",
+    "label": "Salsa de soja Kikkoman clásica 148 ml",
+    "source": "https://www.jumbo.com.ar/salsa-de-soja-kikkoman-clasica-148ml/p",
+    "sourceType": "RETAIL_EAN_VISUAL",
+    "sourceUpdatedAt": "2026-09-06"
+  },
+  "https://vaad.ar/producto/corn-flakes/": {
+    "code": "7896004000534",
+    "label": "Kellogg's Corn Flakes bolsa 200 g (presentación Brasil)",
+    "source": "https://www.kelloggs.com.br/pt_BR/products/corn-flakes-product.html",
+    "sourceType": "RETAIL_EAN_VISUAL",
+    "sourceUpdatedAt": "2026-09-06",
+    "secondarySource": "https://www.bravadistribuicao.com.br/cereal-matinal-kelloggs-corn-flakes-original-200g"
+  },
+  "https://vaad.ar/producto/miel-multifloral-marca-beepure-2/": {
+    "code": "7798165590230",
+    "label": "Miel multifloral Beepure 500 g",
+    "source": "https://www.jumbo.com.ar/miel-clasica-premium-500-gr-beepure/p",
+    "sourceType": "RETAIL_EAN_VISUAL",
+    "sourceUpdatedAt": "2026-09-06"
+  },
+  "https://vaad.ar/producto/granola-cereal-mix-marca-3-arroyos/": {
+    "code": "7791019000107",
+    "label": "Granola Cereal Mix 3 Arroyos 350 g",
+    "source": "https://www.jumbo.com.ar/mix-cereal-3-arroyos-350-gr/p",
+    "sourceType": "RETAIL_EAN_VISUAL",
+    "sourceUpdatedAt": "2026-09-06"
+  },
+  "https://vaad.ar/producto/salsa-golf-natura/": {
+    "code": "7791866000480",
+    "label": "Salsa Golf Natura 250 g",
+    "source": "https://www.jumbo.com.ar/salsa-golf-natura-250-gr/p",
+    "sourceType": "RETAIL_EAN_VISUAL",
+    "sourceUpdatedAt": "2026-09-06"
+  },
+  "https://vaad.ar/producto/salsa-teriyaki-marca-kikkoman/": {
+    "code": "0041390000058",
+    "label": "Salsa Teriyaki Kikkoman original 296 ml",
+    "source": "https://go-upc.com/search?q=041390000058",
+    "sourceType": "RETAIL_EAN_VISUAL",
+    "sourceUpdatedAt": "2026-09-06",
+    "secondarySource": "https://kikkomanusa.com/products/teriyaki-marinade-sauce/"
   }
 }
