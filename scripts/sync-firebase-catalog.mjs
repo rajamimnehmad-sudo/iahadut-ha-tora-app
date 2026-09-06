@@ -8,6 +8,7 @@ const catalogPath = resolve(projectRoot, 'web/data/catalog.json');
 const projectId = process.env.FIREBASE_PROJECT_ID || 'iahadut-hatora';
 const database = '(default)';
 const baseUrl = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/${database}/documents`;
+const documentBaseName = `projects/${projectId}/databases/${database}/documents`;
 const applyChanges = process.argv.includes('--apply');
 const seedMode = process.argv.includes('--seed');
 const forceSeed = process.argv.includes('--force-seed');
@@ -137,11 +138,11 @@ function sameProduct(a, b) {
 }
 
 function writeFor(path, fields) {
-  return {update: {name: `${baseUrl}/${path}`, fields: firestoreFields(fields)}};
+  return {update: {name: `${documentBaseName}/${path}`, fields: firestoreFields(fields)}};
 }
 
 function deleteFor(path) {
-  return {delete: `${baseUrl}/${path}`};
+  return {delete: `${documentBaseName}/${path}`};
 }
 
 async function commit(token, writes) {
