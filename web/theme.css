@@ -385,13 +385,14 @@ body::after { content: ''; position: fixed; right: 0; bottom: 0; left: 0; z-inde
 .card-sheet-copy h2 { margin: 7px 0 10px; color: #202722; font-size: 23px; line-height: 1.1; }
 .card-sheet-copy p { margin: 0; color: #556058; font-size: 13px; line-height: 1.5; }
 
-/* Vista de prueba: en escritorio Vite se presenta como un teléfono real. */
+/* En pantallas grandes se conserva la misma interfaz, sin convertirla en otra
+   experiencia ni encerrarla en un mockup de teléfono. */
 @media (min-width: 701px) {
   html, body { min-height: 100%; }
-  body { display: grid; place-items: center; padding: 28px; background: #e6e9e6; }
-  .app { width: 390px; max-width: 390px; height: min(844px, calc(100vh - 56px)); min-height: 0; max-height: none; overflow-y: auto; overflow-x: hidden; position: relative; border: 1px solid #cbd1cc; border-radius: 34px; background: #f7f8f6; box-shadow: 0 22px 60px #26352d30, 0 0 0 7px #ffffffaa; }
-  .topbar { border-radius: 34px 34px 0 0; }
-  .bottom-nav { width: 390px; max-width: 390px; left: 50%; bottom: max(0px, calc((100vh - 844px) / 2)); border-radius: 34px 34px 0 0; }
+  body { display: block; padding: 0; background: #f7f8f6; }
+  .app { width: 100%; max-width: 760px; min-height: 100vh; height: auto; max-height: none; overflow: visible; position: relative; margin: 0 auto; border: 0; border-radius: 0; background: #f7f8f6; box-shadow: none; }
+  .topbar { border-radius: 0; }
+  .bottom-nav { width: min(760px, 100%); max-width: 760px; left: 50%; bottom: 0; border-radius: 0; }
 }
 
 /* Sistema visual de producto: sobrio, legible y orientado a la búsqueda. */
@@ -740,7 +741,7 @@ body.modal-open { overflow: hidden; }
 .initial-load-progress { display: grid; gap: 7px; margin: 0 18px; padding: 10px 0 1px; color: #66766d; }
 .initial-load-progress[hidden] { display: none; }
 .initial-load-progress-meta { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 17px; }
-.initial-load-progress-meta span { overflow: hidden; color: #6e7f75; font-size: 10px; text-overflow: ellipsis; white-space: nowrap; }
+.initial-load-progress-meta span { overflow: hidden; color: #4f6659; font-size: 10px; text-overflow: ellipsis; white-space: nowrap; }
 .initial-load-progress-meta strong { color: #376d54; font-size: 10px; font-variant-numeric: tabular-nums; }
 .initial-load-progress-track { height: 4px; overflow: hidden; border-radius: 999px; background: #dce6df; }
 .initial-load-progress-track i { display: block; width: var(--initial-load-progress, 4%); height: 100%; border-radius: inherit; background: linear-gradient(90deg, #24694d, #5aaa7c); box-shadow: 0 1px 5px #2c7c5742; transition: width .24s ease; }
