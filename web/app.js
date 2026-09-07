@@ -1586,16 +1586,31 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     appendProductBatch();
   }
 
+  function renderSearchScope() {
+    const scope = $('#searchScope');
+    const label = $('#searchScopeLabel');
+    if (!scope || !label) return;
+    const category = selectedCategory !== 'all' ? categoryFor(selectedCategory) : null;
+    if (!category) {
+      scope.hidden = true;
+      label.textContent = '';
+      return;
+    }
+    label.textContent = category.name;
+    scope.hidden = false;
+  }
+
   function renderResults(query = '') {
     const result = filtered(query);
     const title = favoriteOnly ? 'Guardados' : query ? 'Resultados' : selectedCategory !== 'all' ? categoryFor(selectedCategory).name : selectedRegion === 'uruguay' ? 'Uruguay' : 'Argentina';
     $('#resultsTitle').textContent = title;
     $('#resultsMeta').textContent = `${result.length.toLocaleString('es-AR')} ${result.length === 1 ? 'producto' : 'productos'} en esta vista`;
+    renderSearchScope();
     $('#results').hidden = false;
     $('#searchCategories').hidden = true;
     $('#recentSearches').hidden = true;
     renderProductCollection($('#productList'), result, `<div class="empty-state"><svg class="empty-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 5 5M8 10.5h5"/></svg><strong>No encontramos productos</strong><span>Probá con otra marca, nombre o categoría.</span><button class="text-btn" id="emptyReset">Hacer nueva búsqueda</button></div>`);
-    $('#emptyReset')?.addEventListener('click', () => { $('#query').value = ''; $('#clear').hidden = true; selectedCategory = 'all'; favoriteOnly = false; renderSearchCategories(); $('#results').hidden = true; $('#searchCategories').hidden = false; $('#recentSearches').hidden = false; $('#query').focus(); });
+    $('#emptyReset')?.addEventListener('click', () => { $('#query').value = ''; $('#clear').hidden = true; selectedCategory = 'all'; favoriteOnly = false; renderSearchScope(); renderSearchCategories(); $('#results').hidden = true; $('#searchCategories').hidden = false; $('#recentSearches').hidden = false; $('#query').focus(); });
   }
 
   function renderSaved() {
@@ -1733,6 +1748,8 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
 
   function openSearchScreen() {
     selectedRegion = 'argentina';
+    selectedCategory = 'all';
+    favoriteOnly = false;
     window.clearTimeout(searchFocusTimer);
     const searchForm = $('#searchForm');
     searchForm.hidden = false;
@@ -2752,6 +2769,7 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
   $('#closeFilter').onclick = () => { $('#filterOverlay').hidden = true; updateModalLock(); };
   $('#filterOverlay').onclick = (event) => { if (event.target === $('#filterOverlay')) { $('#filterOverlay').hidden = true; updateModalLock(); return; } const filter = event.target.closest('[data-filter]'); if (filter) { selectedCategory = filter.dataset.filter; $('#filterOverlay').hidden = true; updateModalLock(); renderResults($('#query').value); } };
   $('#resetFilter').onclick = () => { selectedCategory = 'all'; $('#filterOverlay').hidden = true; updateModalLock(); renderResults($('#query').value); };
+  $('#clearSearchScope').onclick = () => { selectedCategory = 'all'; renderResults($('#query').value); };
   $('#syncStatus').onclick = () => syncAndPreload(true);
   $('#accessRetry').onclick = () => refreshRemoteControl(true);
   $('#accessUpdate').onclick = () => openExternal(remoteControl.update_url);
