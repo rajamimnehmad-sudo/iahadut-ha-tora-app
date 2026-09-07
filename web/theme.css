@@ -101,6 +101,7 @@ button:focus-visible, a:focus-visible, summary:focus-visible {
 @keyframes spin { to { transform: rotate(360deg); } }
 .sync.bad i { background: var(--red); }
 .search-box { position: relative; display: block; min-width: 0; }
+.search-box input { caret-color: #1f5d46; }
 .search-box input { width: 100%; padding-right: 48px; }
 .search-box input[type="search"]::-webkit-search-cancel-button,
 .search-box input[type="search"]::-webkit-search-decoration { -webkit-appearance: none; appearance: none; display: none; }
