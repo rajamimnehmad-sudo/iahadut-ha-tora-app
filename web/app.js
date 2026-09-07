@@ -831,11 +831,13 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
   }
 
   async function preloadProductContent(firstPreparation = false, onProgress = null) {
-    const candidates = [...(Array.isArray(recentProducts) ? recentProducts : []), ...products]
+    const warmProducts = [...(Array.isArray(recentProducts) ? recentProducts : []), ...products]
       .filter((product, index, all) => product?.url && all.findIndex((candidate) => candidate.url === product.url) === index)
-      .filter((product) => firstPreparation || !productCache[product.url]);
+      .filter((product) => !productCache[product.url])
+      .slice(0, firstPreparation ? 12 : 24);
+    const candidates = warmProducts;
     if (!candidates.length) return;
-    await runPool(candidates, fetchProductContent, firstPreparation ? 4 : 3, onProgress);
+    await runPool(candidates, fetchProductContent, 3, onProgress);
   }
 
   async function runPool(items, worker, concurrency = 3, onProgress = null) {
@@ -900,24 +902,22 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
       const freshAlerts = await fetchAlerts(true).catch(() => null);
       const latestAlerts = freshAlerts?.alta || [];
       const latestProductsMissing = latestAlerts.slice(0, 4).some((alert) => alert.url && !products.some((product) => product.url === alert.url));
-      if (firstPreparation || latestProductsMissing) {
-        onProgress?.(8, firstPreparation ? 'Descargando el catálogo oficial completo…' : 'Incorporando productos nuevos…');
-      await syncCatalog(true, onProgress).catch(() => null);
+      if (latestProductsMissing) {
+        onProgress?.(8, 'Incorporando productos nuevos…');
+        await syncCatalog(true, onProgress).catch(() => null);
         updateRecentFromAlerts(freshAlerts);
       }
-      const infoKeys = Object.keys(info);
-      await runPool(infoKeys, fetchInfoContent, 2, (done, total) => onProgress?.(30 + (done / Math.max(total, 1)) * 10, 'Cargando información oficial…'));
-      const cards = Object.values(infoCache).flatMap((content) => content?.cards || []).filter((card) => card.url).filter((card, index, all) => all.findIndex((candidate) => candidate.url === card.url) === index);
-      await runPool(cards, fetchCardContent, 3, (done, total) => onProgress?.(40 + (done / Math.max(total, 1)) * 10, 'Preparando fichas informativas…'));
-      await preloadProductContent(firstPreparation, (done, total) => onProgress?.(50 + (done / Math.max(total, 1)) * 25, firstPreparation ? 'Cargando fichas y códigos verificados…' : 'Incorporando fichas y códigos nuevos…'));
+      await preloadProductContent(firstPreparation, (done, total) => onProgress?.(45 + (done / Math.max(total, 1)) * 30, firstPreparation ? 'Preparando productos destacados…' : 'Incorporando contenido nuevo…'));
+      const warmProducts = [...(Array.isArray(recentProducts) ? recentProducts : []), ...products]
+        .filter((product, index, all) => product?.url && all.findIndex((candidate) => candidate.url === product.url) === index)
+        .slice(0, firstPreparation ? 18 : 30);
       const imageUrls = [
-        ...products.map((product) => product.image),
-        ...recentProducts.map((product) => product.image),
-        ...Object.values(productCache).flatMap((content) => content?.images || []).map((image) => image.src),
-        ...Object.values(infoCache).flatMap((content) => [...(content?.images || []).map((image) => image.src), ...(content?.cards || []).map((card) => card.image)]),
-        ...Object.values(cardCache).flatMap((content) => content?.images || []).map((image) => image.src)
+        ...warmProducts.map((product) => product.image),
+        ...warmProducts.flatMap((product) => productCache[product.url]?.images || []).map((image) => image.src),
+        ...Object.values(infoCache).slice(0, 2).flatMap((content) => [...(content?.images || []).map((image) => image.src), ...(content?.cards || []).map((card) => card.image)]),
+        ...Object.values(cardCache).slice(0, 6).flatMap((content) => content?.images || []).map((image) => image.src)
       ].filter(Boolean).filter((src, index, all) => all.indexOf(src) === index);
-      await preloadNewImages(imageUrls, firstPreparation ? 4 : 3, (done, total) => onProgress?.(75 + (done / Math.max(total, 1)) * 25, firstPreparation ? 'Descargando todas las imágenes…' : 'Descargando imágenes nuevas…'));
+      await preloadNewImages(imageUrls, 3, (done, total) => onProgress?.(75 + (done / Math.max(total, 1)) * 25, firstPreparation ? 'Cargando imágenes principales…' : 'Descargando imágenes nuevas…'));
       if (firstPreparation) {
         localStorage.setItem(INITIAL_PRELOAD_KEY, 'done');
       }
