@@ -1086,6 +1086,7 @@ html body [contenteditable="true"] {
   white-space: nowrap;
 }
 #scanOverlay .scanner-dev-badge { flex: 0 0 auto; white-space: nowrap; }
+#scanOverlay.scan-result .scanner-dev-badge { border-color: #b58b3c66; background: #b58b3c14; color: #8a641f; }
 .manual { grid-template-columns: minmax(0, 1fr) auto; }
 .manual input { min-width: 0; }
 .manual button { min-width: 76px; padding-inline: 12px; white-space: nowrap; }
@@ -1494,29 +1495,6 @@ html body [contenteditable="true"] {
   letter-spacing: .02em;
   white-space: nowrap;
 }
-.scanner-camera-badge {
-  position: absolute;
-  top: 16px;
-  left: 50%;
-  z-index: 3;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  transform: translateX(-50%);
-  padding: 6px 11px;
-  border: 1px solid #d5b66b99;
-  border-radius: 999px;
-  background: #17251ddd;
-  box-shadow: 0 4px 12px #0000002b, inset 0 1px 0 #ffffff1a;
-  color: #f3d899;
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: .02em;
-  line-height: 1;
-  white-space: nowrap;
-  pointer-events: none;
-}
-
 .nav[data-view="alertsView"].has-alerts {
   animation: none;
   color: #b58b3c;

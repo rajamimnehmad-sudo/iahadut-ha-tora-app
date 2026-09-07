@@ -56,4 +56,10 @@ public class MainActivity extends BridgeActivity {
         super.onResume();
         applySystemBars();
     }
+
+    @Override
+    public void onWindowFocusChanged(boolean hasFocus) {
+        super.onWindowFocusChanged(hasFocus);
+        if (hasFocus) getWindow().getDecorView().post(this::applySystemBars);
+    }
 }
