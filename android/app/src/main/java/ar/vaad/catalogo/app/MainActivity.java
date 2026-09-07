@@ -2,7 +2,9 @@ package ar.vaad.catalogo.app;
 
 import android.os.Bundle;
 import android.os.Build;
+import android.graphics.Color;
 import android.view.View;
+import android.view.WindowManager;
 
 import androidx.core.view.WindowCompat;
 import androidx.core.view.WindowInsetsCompat;
@@ -35,6 +37,11 @@ public class MainActivity extends BridgeActivity {
         registerPlugin(PlayStoreUpdatesPlugin.class);
         registerPlugin(CatalogBackgroundSyncPlugin.class);
         super.onCreate(savedInstanceState);
+        getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE);
+        // The WebView must be opaque. During an IME resize Android may expose
+        // a transient window pixel; it must be the app surface, never launch
+        // artwork left behind by the splash theme.
+        getBridge().getWebView().setBackgroundColor(Color.rgb(247, 248, 246));
         // Prevent Android's edge-glow/overscroll stretch from resizing the
         // WebView and the fixed navigation dock during pull-to-boundary.
         getBridge().getWebView().setOverScrollMode(View.OVER_SCROLL_NEVER);

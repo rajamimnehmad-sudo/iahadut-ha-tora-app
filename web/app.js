@@ -6,7 +6,6 @@ import catalogSnapshot from './data/catalog.json';
 import contentSnapshot from './data/content.json';
 import productDetailsSnapshot from './data/product-details.json';
 import '@phosphor-icons/web/regular';
-import '@phosphor-icons/web/duotone';
 
 const PlayStoreUpdates = registerPlugin('PlayStoreUpdates');
 const CatalogBackgroundSync = registerPlugin('CatalogBackgroundSync');
@@ -105,12 +104,23 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
   imageObserver.observe(document.documentElement, {childList:true, subtree:true});
   document.querySelectorAll('img').forEach(prepareImage);
   document.addEventListener('selectstart', (event) => {
-    const target = event.target instanceof Element ? event.target : null;
-    if (!target?.closest('input, textarea, [contenteditable="true"]')) event.preventDefault();
+    event.preventDefault();
   }, true);
   document.addEventListener('dragstart', (event) => {
-    const target = event.target instanceof Element ? event.target : null;
-    if (!target?.closest('input, textarea, [contenteditable="true"]')) event.preventDefault();
+    event.preventDefault();
+  }, true);
+  document.addEventListener('contextmenu', (event) => {
+    event.preventDefault();
+  }, true);
+  document.addEventListener('selectionchange', () => {
+    const active = document.activeElement;
+    if (active instanceof HTMLInputElement || active instanceof HTMLTextAreaElement) {
+      const start = active.selectionStart;
+      const end = active.selectionEnd;
+      if (start !== null && end !== null && start !== end) active.blur();
+    }
+    const selection = window.getSelection?.();
+    if (selection && !selection.isCollapsed) selection.removeAllRanges();
   }, true);
 
   let categories = [
@@ -597,8 +607,9 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     const bankName = bank?.[1] || data.bank;
     const alias = bank?.[2] || '';
     const cuit = bank?.[3] || '';
-    const copyData = [bankName, alias ? `Alias: ${alias}` : '', cuit ? `CUIT: ${cuit}` : ''].filter(Boolean).join('\n');
-    return `<section class="collaboration-card"><h3>Colaborá con nosotros</h3><p>${escapeHtml(data.text)}</p></section><section class="bank-card"><div class="bank-card-head"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 9h18M5 9v9M9 9v9M15 9v9M19 9v9M3 20h18M12 3l9 4H3z"/></svg><div><small>Datos para transferencia</small><strong>${escapeHtml(bankName)}</strong></div></div>${alias ? `<div class="bank-data-row"><span>Alias</span><strong>${escapeHtml(alias)}</strong></div>` : ''}${cuit ? `<div class="bank-data-row"><span>CUIT</span><strong>${escapeHtml(cuit)}</strong></div>` : ''}<button class="copy-bank-button" type="button" data-copy-bank="${escapeHtml(copyData)}"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="8" y="8" width="11" height="11" rx="2"/><path d="M16 8V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h3"/></svg><span>Copiar datos bancarios</span></button></section>`;
+    const copyIcon = '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="8" y="8" width="11" height="11" rx="2"/><path d="M16 8V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h3"/></svg>';
+    const copyButton = (value, label) => `<button class="copy-field-button" type="button" data-copy-value="${escapeHtml(value)}" aria-label="Copiar ${escapeHtml(label)}" title="Copiar ${escapeHtml(label)}">${copyIcon}</button>`;
+    return `<section class="collaboration-card"><h3>Colaborá con nosotros</h3><p>${escapeHtml(data.text)}</p></section><section class="bank-card"><div class="bank-card-head"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 9h18M5 9v9M9 9v9M15 9v9M19 9v9M3 20h18M12 3l9 4H3z"/></svg><div><small>Datos para transferencia</small><strong>${escapeHtml(bankName)}</strong></div></div>${alias ? `<div class="bank-data-row"><span>Alias</span><div class="bank-data-value"><strong>${escapeHtml(alias)}</strong>${copyButton(alias, 'el alias')}</div></div>` : ''}${cuit ? `<div class="bank-data-row"><span>CUIT</span><div class="bank-data-value"><strong>${escapeHtml(cuit)}</strong>${copyButton(cuit, 'el CUIT')}</div></div>` : ''}</section>`;
   }
 
   function infoContentMarkup(content) {
@@ -1205,6 +1216,11 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     showView('categoryDirectoryView');
   }
 
+  // Solo identifica chocolates/bombones cuando el título describe el
+  // producto principal. No clasifica cereales, barritas u otros artículos
+  // que únicamente mencionan chocolate como sabor o ingrediente.
+  const actualChocolateProductPattern = /^(?:chocolates?|bombones?|bombonera|tabletas?(?:\s+de)?\s+chocolate|barras?\s+de\s+chocolate|cajas?\s+de\s+chocolates?)\b/;
+
   const productCategoryRules = [
     [['Carnes y embutidos', 'Carnes y fiambres'], /bresaola|matambrito|pastron|pastrón|\bcarne\b/],
     [['Carnes y embutidos', 'Hamburguesas'], /hamburguesa/],
@@ -1216,16 +1232,17 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     [['Legumbres y derivados', 'Tofu y soja'], /tofu|tofú|proteina\s+de\s+soja|proteína\s+de\s+soja/],
     [['Legumbres y derivados', 'Arvejas'], /\barveja/],
     [['Legumbres y derivados', 'Porotos, lentejas y garbanzos'], /\bporoto|\blenteja|\bgarbanzo/],
-    [['Azúcares y endulzantes', 'Azúcares'], /azucar|azúcar/],
-    [['Azúcares y endulzantes', 'Edulcorantes'], /edulcorante/],
+    [['Azúcares'], /\bazucar(?:es)?\b/],
+    [['Edulcorantes'], /edulcorante|stevia|sucralosa/],
     [['Ingredientes para repostería', 'Levaduras y leudantes'], /levadura|polvo\s+para\s+hornear|bicarbonato/],
     [['Ingredientes para repostería', 'Almidones y féculas'], /fecula|fécula|almidon|almidón/],
     [['Ingredientes para repostería', 'Cacao'], /\bcacao\b/],
     [['Ingredientes para repostería', 'Esencias y decoración'], /\breposteria\b|\brepostería\b|esencia\s+de|\bgranas?\b/],
-    [['Frutos secos y deshidratados', 'Frutos secos'], /avellana|\bnueces?\b|pistacho|pecan|pecán|caju|cajú|almendra|castana|castaña/],
+    [['Frutos secos y deshidratados', 'Frutos secos'], /avellana|\bnueces?\b|pistacho|pecan|pecán|caju|cajú|almendra|\bmani\b|castana|castaña/],
     [['Frutos secos y deshidratados', 'Frutas deshidratadas'], /datil|dátil|damasco|damasaco|ciruela\s+seca|pasas?\s+de\s+uva|cascara\s+de|cáscara\s+de|polvo\s+de\s+(?:limon|limón|mandarina)/],
     [['Frutos secos y deshidratados', 'Coco'], /coco\s+rallado/],
     [['Condimentos'], /\balga|\balaga|wasabi/],
+    [['Condimentos', 'Condimentos para hamburguesas'], /(?:condimento|sazonador|especia).*\bhamburguesas?\b/],
     [['Cereales, granos y semillas', 'Cuscús y burgol'], /couscous|cuscus|cuscús|burgol|brugol|bulgur/],
     [['Sopas y caldos', 'Caldos y acompañamientos'], /consome|consomé|caldo|shkedei\s+marak/],
     [['Alimentos saludables', 'Productos de dietética'], /productos?\s+de\s+dietetica|mix\s+fibra/],
@@ -1234,17 +1251,18 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     [['Bebidas', 'Bebidas sin alcohol', 'Bebidas deportivas'], /gatorade|bebida\s+deportiva|isotonica|isotónica/],
     [['Bebidas', 'Bebidas sin alcohol', 'Kombucha'], /kombucha/],
     [['Bebidas', 'Bebidas sin alcohol', 'Bebidas saborizadas'], /bebida\s+saborizada/],
-    [['Cereales, granos y semillas', 'Maíz y polenta'], /polenta|pochoclo|choclo|corn\s+flakes|semola\s+de\s+trigo|sémola\s+de\s+trigo/],
+    [['Cereales, granos y semillas', 'Maíz y polenta'], /\bmaiz\b|polenta|pochoclo|corn\s+flakes|semola\s+de\s+trigo|sémola\s+de\s+trigo/],
     [['Cereales, granos y semillas', 'Granolas'], /granola/],
     [['Cereales, granos y semillas', 'Semillas'], /girasol\s+pelado/],
     [['Frutas y vegetales', 'Frutas en conserva'], /anana|ananá|durazno|ciruela|damasco|damasaco/],
     [['Frutas y vegetales', 'Pulpas de fruta'], /pulpa\s+de/],
     [['Frutas y vegetales', 'Hongos'], /champignon|champiñon|champiñón|hongo/],
-    [['Frutas y vegetales', 'Vegetales en conserva'], /arveja|choclo|hojas?\s+de\s+parra|alcaparra/],
+    [['Frutas y vegetales', 'Vegetales en conserva'], /arveja|hojas?\s+de\s+parra|alcaparra/],
     [['Frutas y vegetales', 'Vegetales deshidratados'], /espinaca|\bkale\b|vegetales?\s+deshidratados|morron|morrón/],
     [['Condimentos', 'Hierbas y especias'], /azafran|azarfan|azafrán|canela|clavo\s+de\s+olor|curry|jengibre|pimenton|pimentón|paprika|perejil|oregano|orégano|romero|salvia|tomillo|estragon|estragón|hibiscus|chimichurri|\bsales\b|\bhierbas?\b|mix\s+para\s+(?:carnes|ensaladas)/],
-    [['Snacks', 'Chips y bocaditos'], /\bchips?\b|\bthins?\b|\bthings\b|\bbamba\b/],
-    [['Dulces y golosinas', 'Obleas y pastillas'], /oblea|pastilla/],
+    [['Snacks'], /\bchips?\b|\bthins?\b|\bthings\b|\bbamba\b/],
+    [['Obleas'], /oblea/],
+    [['Caramelos y golosinas'], /pastilla/],
     [['Aceites', 'Aceite de oliva'], /aceite.+oliva|oliva.+aceite/],
     [['Aceites', 'Aceite de girasol'], /aceite.+girasol|girasol.+aceite/],
     [['Aceites', 'Otros aceites'], /\baceite\b/],
@@ -1261,46 +1279,54 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     [['Bebidas', 'Bebidas sin alcohol', 'Gaseosas y sodas'], /gaseosa|\bsoda\b|tonica/],
     [['Bebidas', 'Bebidas sin alcohol', 'Bebidas vegetales'], /bebida.+(avena|almendra|soja|coco|arroz)/],
     [['Bebidas', 'Bebidas sin alcohol', 'Energizantes'], /energizante/],
-    [['Infusiones', 'Café'], /\bcafe\b/],
-    [['Infusiones', 'Café'], /nescafe|nescafé/],
-    [['Infusiones', 'Té'], /\bte\b|infusion/],
-    [['Infusiones', 'Yerba mate'], /yerba|\bmate\b/],
-    [['Dulces y golosinas', 'Dulce de leche'], /dulce.+leche/],
+    [['Café'], /\bcafe\b/],
+    [['Café'], /nescafe|nescafé/],
+    [['Té'], /\bte\b|infusion/],
+    [['Yerba mate'], /yerba|\bmate\b/],
+    [['Dulce de leche'], /dulce.+leche/],
     [['Lácteos', 'Leches'], /\bleche\b/],
     [['Lácteos', 'Quesos'], /\bqueso/],
     [['Lácteos', 'Yogures'], /yogur/],
-    [['Lácteos', 'Mantecas y cremas'], /manteca|\bcrema\b/],
+    [['Manteca'], /\bmanteca\b/],
+    [['Lácteos', 'Cremas'], /\bcrema\b/],
     [['Panadería y repostería', 'Harinas'], /\bharina|premezcla/],
     [['Panadería y repostería', 'Panes'], /\bpan\b|panificad/],
     [['Panadería y repostería', 'Galletitas y tostadas'], /gallet|tostad|bizcoch/],
     [['Panadería y repostería', 'Masas'], /\bmasa\b|tapa.+empanada|tapa.+tarta/],
-    [['Dulces y golosinas', 'Chocolates y bombones'], /chocolate|bombon/],
-    [['Dulces y golosinas', 'Alfajores'], /alfajor/],
-    [['Dulces y golosinas', 'Caramelos y golosinas'], /caramelo|golosina|turron|chicle/],
-    [['Dulces y golosinas', 'Dulces y mermeladas'], /\bdulce|mermelada|jalea/],
-    [['Dulces y golosinas', 'Miel'], /\bmiel\b/],
+    [['Chocolates y bombones'], actualChocolateProductPattern],
+    [['Caramelos y golosinas'], actualChocolateProductPattern],
+    [['Alfajores'], /alfajor/],
+    [['Caramelos y golosinas'], /alfajor|oblea|\bbarritas?\b|\bturron(?:es)?\b/],
+    [['Turrones'], /\bturron(?:es)?\b/],
+    [['Caramelos y golosinas'], /caramelo|golosina|chicle/],
+    [['Mermeladas'], /mermelada|jalea/],
+    [['Dulces de fruta'], /dulce\s+de\s+(?:batata|membrillo|fruta)|\bbatata\b|\bmembrillo\b/],
+    [['Miel'], /\bmiel\b/],
     [['Cereales, granos y semillas', 'Arroz'], /\barroz\b/],
     [['Cereales, granos y semillas', 'Avena'], /\bavena\b/],
-    [['Cereales, granos y semillas', 'Maíz'], /\bmaiz\b/],
     [['Cereales, granos y semillas', 'Quinoa'], /quinoa/],
-    [['Cereales, granos y semillas', 'Semillas'], /semilla|chia|lino|sesamo/],
+    [['Cereales, granos y semillas', 'Semillas'], /^(?:semillas?|s[eé]samo|lino|chia|girasol\s+pelado|mix\s+de\s+semillas)\b/],
     [['Cereales, granos y semillas', 'Cereales'], /\bcereal/],
+    [['Pastas dulces'], /pastas?\s+dulces?/],
     [['Aderezos', 'Mayonesas'], /mayonesa/],
-    [['Aderezos', 'Ketchup y mostazas'], /ketchup|mostaza/],
+    [['Aderezos', 'Ketchup'], /ketchup/],
+    [['Aderezos', 'Mostaza'], /mostaza/],
     [['Aderezos'], /aderezo|dressing|mayonesa|ketchup|mostaza|salsa\s+(?:golf|cesar|césar|barbacoa|bbq)|alioli|tartara|tártara|ranch/],
     [['Salsas'], /\bsalsa/],
+    [['Conservas', 'Pepinos en conserva'], /pepinos?\s+(?:en\s+vinagre|encurtidos?)/],
     [['Vinagres'], /vinagre/],
     [['Condimentos'], /condimento|sazonador|condifran|condifrán/],
     [['Condimentos', 'Hierbas y especias'], /especia|pimienta|\bsal\b/],
     [['Conservas', 'Pescados en conserva'], /atun|sardina|caballa/],
+    [['Aceitunas'], /\baceitunas?\b/],
     [['Conservas', 'Vegetales en conserva'], /aceituna|pickle|palmito|conserva/],
     [['Pastas', 'Pastas secas'], /fideo|spaghetti|tallar|pasta seca/],
     [['Pastas', 'Pastas rellenas'], /raviol|sorrentino|capelet/],
-    [['Snacks', 'Papas fritas'], /papas fritas/],
-    [['Snacks', 'Frutos secos'], /mani|almendra|nuez|castana/],
-    [['Snacks', 'Otros snacks'], /\bsnack|nacho|palito|barrita/],
+    [['Snacks'], /papas fritas/],
+    [['Snacks'], /\bsnack|nacho|palito|barrita/],
     [['Frutas y vegetales', 'Frutas'], /\bfruta/],
-    [['Frutas y vegetales', 'Vegetales'], /vegetal|verdura|papa|tomate|cebolla|ajo/],
+    [['Papas'], /\bpapas?\b|\bpure\s+de\s+papa\b|\bfecula\s+de\s+papa\b/],
+    [['Frutas y vegetales', 'Vegetales'], /vegetal|verdura|tomate|cebolla|ajo/],
     [['Congelados', 'Productos congelados'], /congelad|freezado/]
   ];
 
@@ -1316,20 +1342,23 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     [['Bebidas', 'Bebidas alcohólicas', 'Arak y anisados'], /\b(?:elite arak|zachlawi)\b/],
     [['Bebidas', 'Bebidas alcohólicas', 'Licores'], /\b(?:cointreau|disaronno|heering|kahlua|luxardo)\b/],
     [['Bebidas', 'Bebidas alcohólicas', 'Vinos'], /\b(?:galilee winery|joseph gold)\b/],
-    [['Dulces y golosinas', 'Turrones'], /\bturron\b/],
+    [['Turrones'], /\bturron(?:es)?\b/],
+    // Las papas son una familia que el usuario busca como categoría propia
+    // (fritas, congeladas, pay, puré y fécula), no como un vegetal genérico.
+    [['Papas'], /\bpapas?\b|\bpure\s+de\s+papa\b|\bfecula\s+de\s+papa\b/],
     [['Congelados', 'Frutas congeladas'], /(?:^|\s)fruta\s+congelad|(?:frambuesa|frutilla|mango|arandanos?)\s+congelad/],
     [['Congelados', 'Vegetales congelados'], /congelad|freezado|cogelad/],
-    [['Snacks', 'Barritas'], /\bbarritas?\b/],
+    [['Snacks'], /\bbarritas?\b/],
     [['Panadería y repostería', 'Harinas'], /\bharina\b/],
     [['Panadería y repostería', 'Galletitas y tostadas'], /\bgallet(?:a|as|ita|itas)\b|\bbizcoch|\btostadas?\b/],
     [['Pastas', 'Pastas especiales'], /\b(?:fusilli|spaghetti|tallarines?|coditos|sedanini|ravioles?|sorrentinos?|capeletis?)\b/],
     [['Untables y pastas', 'Pastas de frutos secos'], /mantequilla\s+de\s+mani/],
-    [['Untables y pastas', 'Untables vegetales'], /manteca\s+parve|veganteca/],
+    [['Manteca'], /manteca\s+parve|veganteca/],
     [['Bebidas', 'Bebidas sin alcohol', 'Bebidas vegetales'], /^bebida\b.*\b(?:avena|almendra|soja|coco|arroz|parve)\b/],
     [['Frutos secos y deshidratados', 'Frutas deshidratadas'], /fruta\s+liofilizada|liofilizad[ao].*\b(?:anana|banana|frutilla|mango|fruta)\b/],
     [['Frutos secos y deshidratados', 'Frutos secos'], /mix\s+frutos\s+tostados|nuez\s+tostada/],
     [['Conservas', 'Frutas en conserva'], /coctel\s+de\s+frutas/],
-    [['Conservas', 'Vegetales en conserva'], /^choclo\b.*\bmarca\b/],
+    [['Conservas', 'Choclos en conserva'], /\bchoclos?\b(?!\s+congelad)(?=.*(?:marca|lata|conserva|enlatad))|crema\s+de\s+choclo\b/],
     [['Condimentos'], /^condimentos?\b|\bsazonador(?:es)?\b|condifran|condifrán/],
     [['Condimentos', 'Hierbas y especias'], /^especias?\b|\bnuez\s+moscada\b/],
     [['Condimentos', 'Pimientas'], /\bpimientas?\b/],
@@ -1338,6 +1367,11 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
 
   function productCategoryPaths(product) {
     const text = normalize(`${product.title} ${product.description || ''}`);
+    const titleText = normalize(product.title);
+    // La yerba mate y el mate cocido tienen su propia categoría, nunca
+    // Condimentos. Este atajo evita que reglas remotas o descripciones
+    // demasiado amplias agreguen una clasificación incorrecta.
+    if (/\byerba\b|\bmate\b/.test(text)) return [['Yerba mate']];
     const paths = [];
     const separateCondimentPath = (path) => {
       if (!Array.isArray(path)) return [];
@@ -1351,14 +1385,58 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
       return [];
     };
     const addPath = (path) => {
-      const canonicalPath = separateCondimentPath(path);
-      if (!canonicalPath.length || canonicalPath.some((part) => normalize(part) === 'cocina internacional')) return;
+      let canonicalPath = separateCondimentPath(path);
+      const originalRoot = normalize(canonicalPath[0] || '');
+      const originalChild = normalize(canonicalPath[1] || '');
+      // Los cereales no deben terminar bajo Azúcares solo porque el nombre
+      // mencione "azucarado". Esa categoría queda reservada para productos
+      // cuyo título realmente es azúcar o edulcorante.
+      if (['azucares y endulzantes', 'azucares'].includes(originalRoot)) {
+        const sugarPattern = originalChild === 'edulcorantes' ? /edulcorante|stevia|sucralosa/ : /\bazucar(?:es)?\b/;
+        if (!sugarPattern.test(titleText)) return;
+      }
+      if (originalRoot === 'edulcorantes' && !/edulcorante|stevia|sucralosa/.test(titleText)) return;
+      // Un condimento para hamburguesas no es una hamburguesa.
+      if (originalRoot === 'carnes y embutidos' && originalChild === 'hamburguesas' && /\b(?:condimento|sazonador|especia)\b/.test(text)) return;
+      // Un chocolate real con cereal en el título no debe contaminar la
+      // familia de cereales; el sabor a chocolate de un cereal sí conserva
+      // su clasificación de cereal.
+      if (originalRoot === 'cereales, granos y semillas' && actualChocolateProductPattern.test(text)) return;
+      // Semillas queda reservada para productos cuyo título es realmente una
+      // semilla. Evita que aceite de sésamo, arroz o barritas terminen allí
+      // solo porque la descripción menciona un ingrediente.
+      if (originalRoot === 'cereales, granos y semillas' && originalChild === 'semillas' && !/^(?:semillas?|s[eé]samo|lino|chia|girasol\s+pelado|mix\s+de\s+semillas)\b/.test(titleText)) return;
+      // Aceitunas se muestran como familia principal, no como vegetal en conserva.
+      if (originalRoot === 'conservas' && originalChild === 'vegetales en conserva' && /\baceitunas?\b/.test(text)) return;
+      // Un pepino en vinagre es una conserva, no un vinagre.
+      if (originalRoot === 'vinagres' && /\bpepinos?\b/.test(text)) return;
+      // Snacks es una familia principal: sus variantes no abren otra rama.
+      if (originalRoot === 'snacks') canonicalPath = ['Snacks'];
+      // Café y té son categorías principales, no subcategorías de Infusiones.
+      if (originalRoot === 'infusiones') {
+        if (/cafe|nescafe/.test(originalChild) || /\bcafe\b|nescafe/.test(text)) canonicalPath = ['Café'];
+        else if (/\bte\b|tea|infusion/.test(originalChild) || /\bte\b|tea|infusion/.test(text)) canonicalPath = ['Té'];
+        else return;
+      }
+      // La manteca tiene su propia categoría principal, incluso si una regla
+      // remota todavía la entrega dentro de Lácteos.
+      if (originalRoot === 'lacteos' && originalChild === 'mantecas y cremas' && /\bmanteca\b/.test(text)) return;
+      // Cada subfamilia de Cereales, granos y semillas pasa al listado
+      // principal: Arroz, Avena, Maíz, Quinoa, Semillas, etc.
+      if (originalRoot === 'cereales, granos y semillas') canonicalPath = [canonicalPath[1] || 'Cereales'];
+      // Maíz y polenta son una sola familia. Unificamos también los caminos
+      // que puedan llegar desde reglas remotas o datos antiguos como "Maíz".
+      if (['maiz', 'maiz y polenta'].includes(normalize(canonicalPath[0] || ''))) canonicalPath = ['Maíz y polenta'];
+      // Azúcar y edulcorantes son búsquedas distintas para el usuario.
+      if (originalRoot === 'azucares y endulzantes') canonicalPath = originalChild === 'edulcorantes' ? ['Edulcorantes'] : ['Azúcares'];
+      const root = normalize(canonicalPath[0] || '');
+      if (!canonicalPath.length || root === 'dulces y golosinas' || canonicalPath.some((part) => normalize(part) === 'cocina internacional')) return;
       if (!paths.some((candidate) => candidate.join('|') === canonicalPath.join('|'))) paths.push(canonicalPath);
     };
     const priorityMatch = priorityProductCategoryRules.find(([, pattern]) => pattern.test(text));
     if (priorityMatch) addPath(priorityMatch[0]);
-    // Keep cereal products together in the taxonomy, even when their title
-    // also contains a more generic term such as maíz.
+    // Los productos identificados como cereales se convierten a la categoría
+    // principal "Cereales" mediante la normalización de addPath().
     if (/\bcereales?\b|\bcopos de maiz\b/.test(text)) addPath(['Cereales, granos y semillas', 'Cereales']);
     const remoteMatch = remoteTaxonomyRules.find((rule) => !rule.path.some((part) => normalize(part) === 'cocina internacional') && rule.keywords.some((keyword) => text.includes(keyword)));
     if (remoteMatch) addPath(remoteMatch.path);
@@ -1401,7 +1479,10 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     const key = normalize(name);
     const icon = /salsa|condimento/.test(key) ? 'bowl-food' :
       /aderezo|mayonesa|ketchup|mostaza/.test(key) ? 'jar' :
-      /fruto seco|frutas secas|deshidratad|dietetica/.test(key) ? 'nut' :
+      /papa/.test(key) ? 'popcorn' :
+      /frutas?\s+secas?|deshidratad/.test(key) ? 'sun' :
+      /frutos?\s+secos?/.test(key) ? 'leaf' :
+      /dietetica/.test(key) ? 'heart' :
       /frutas y vegetales/.test(key) ? 'carrot' :
       /carnes|fiambres|hamburguesas|chorizos|salchichas/.test(key) ? 'hamburger' :
       /pescado|salmon/.test(key) ? 'fish-simple' : /vino/.test(key) ? 'wine' :
@@ -1410,13 +1491,13 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
       /jugo|fruta/.test(key) ? 'orange' : /energizante|deportiva/.test(key) ? 'lightning' :
       /kombucha|saborizada|gaseosa|soda|bebida/.test(key) ? 'beer-bottle' : /cafe/.test(key) ? 'coffee' :
       /yerba|mate/.test(key) ? 'coffee-bean' : /infusion|\bte\b/.test(key) ? 'tea-bag' :
-      /aceite|vinagre/.test(key) ? 'flask' : /queso/.test(key) ? 'cheese' :
-      /lacteo|leche/.test(key) ? 'cow' : /yogur|untable|pasta de frutos|tahini/.test(key) ? 'jar' :
+      /aceituna/.test(key) ? 'orange' : /aceite|vinagre/.test(key) ? 'flask' : /queso/.test(key) ? 'cheese' :
+      /manteca|lacteo|leche/.test(key) ? 'cow' : /yogur|untable|pasta de frutos|tahini/.test(key) ? 'jar' :
       /panes|panaderia/.test(key) ? 'bread' : /reposteria|harina|levadura|leudante|esencia|decoracion|cacao/.test(key) ? 'cake' :
       /gallet|tostada|oblea/.test(key) ? 'cookie' : /chocolate/.test(key) ? 'cookie' :
       /golosina|caramelo|pastilla/.test(key) ? 'sparkle' : /miel/.test(key) ? 'jar' :
-      /azucar|endulzante/.test(key) ? 'cube' : /cereal|grano|semilla|arroz|avena|maiz|quinoa|granola|polenta|cuscus|burgol/.test(key) ? 'plant' :
-      /legumbre|arveja|poroto|lenteja|tofu|soja/.test(key) ? 'nut' :
+      /azucar|endulzante/.test(key) ? 'cube' : /arroz/.test(key) ? 'bowl-food' : /cereal|grano|semilla|avena|maiz|quinoa|granola|polenta|cuscus|burgol/.test(key) ? 'plant' :
+      /legumbre|arveja|poroto|lenteja|tofu|soja/.test(key) ? 'plant' :
       /salsa|aderezo|condimento|mayonesa|ketchup|mostaza|especia|hierba|pimienta|sales?/.test(key) ? 'bowl-food' : /conserva|enlatado/.test(key) ? 'jar' :
       /pasta|fideo|raviol/.test(key) ? 'bowl-food' : /snack|barrita|papas fritas|chips|bocadito/.test(key) ? 'popcorn' :
       /vegetal|verdura|hongo/.test(key) ? 'carrot' : /congelado/.test(key) ? 'snowflake' : /sopa|caldo/.test(key) ? 'bowl-steam' :
@@ -1629,7 +1710,7 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
       searchFormHome.parent.insertBefore(searchForm, searchFormHome.before);
       searchForm.hidden = false;
     }
-    mobileSearchDock.classList.remove('search-mode', 'search-closing', 'has-query');
+    mobileSearchDock.classList.remove('search-mode', 'has-query');
   }
 
   function setSearchHomeHidden(hidden) {
@@ -1736,9 +1817,11 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
   function restoreSearchScreen() {
     const searchForm = $('#searchForm');
     const mobileSearchDock = window.matchMedia('(max-width: 700px)').matches ? $('.bottom-nav') : null;
-    // Aplicar el estado antes de mover el formulario evita que Android WebView
-    // pinte durante un frame la cabecera/logo del home al abrir el teclado.
-    if (mobileSearchDock) document.body.classList.add('search-open');
+    // Aplicar el estado antes de mover el formulario evita un frame intermedio
+    // del home mientras Android redimensiona el WebView por el teclado.
+    if (mobileSearchDock) {
+      document.body.classList.add('search-open');
+    }
     setSearchHomeHidden(true);
     searchForm.hidden = false;
     if (mobileSearchDock) {
@@ -1777,9 +1860,11 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     const searchForm = $('#searchForm');
     searchForm.hidden = false;
     const mobileSearchDock = window.matchMedia('(max-width: 700px)').matches ? $('.bottom-nav') : null;
-    // El estado visual cambia antes del reparenting para evitar el frame
-    // fugaz del encabezado/logo en WebView móvil.
-    if (mobileSearchDock) document.body.classList.add('search-open');
+    // El estado visual cambia antes del reparenting para evitar un frame
+    // intermedio del home en WebView móvil.
+    if (mobileSearchDock) {
+      document.body.classList.add('search-open');
+    }
     setSearchHomeHidden(true);
     if (mobileSearchDock) {
       if (!searchFormHome) searchFormHome = { parent: searchForm.parentElement, before: $('#recentSearches') };
@@ -1842,19 +1927,19 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
 
   function returnHome() {
     window.clearTimeout(searchFocusTimer);
+    // No vuelvas a animar ni a reconstruir el home si ya estamos ahí. Esto
+    // evita el destello al tocar Inicio varias veces seguidas.
+    if (document.querySelector('.view.active')?.id === 'homeView' && !document.body.classList.contains('search-open')) return;
+    // El botón/gesto de atrás debe cerrar el buscador completo. Al quitar el
+    // foco antes de reubicar el formulario, Android no deja la pantalla en
+    // un estado intermedio donde solo desaparece el teclado.
+    document.activeElement?.blur();
+    $('#query')?.blur();
+    $('#homeQuery')?.blur();
     const mobileSearchDock = searchFormHome ? $('.bottom-nav') : null;
     if (mobileSearchDock) {
-      mobileSearchDock.classList.add('search-closing');
-      const searchForm = $('#searchForm');
-      searchFormHome.parent.insertBefore(searchForm, searchFormHome.before);
-      searchForm.hidden = true;
-      mobileSearchDock.classList.remove('search-mode');
-      window.setTimeout(() => {
-        document.body.classList.remove('search-open');
-        mobileSearchDock.classList.remove('search-closing', 'has-query');
-        showView('homeView');
-        searchForm.hidden = false;
-      }, 180);
+      document.body.classList.remove('search-open');
+      showView('homeView');
     }
     selectedCategory = 'all';
     favoriteOnly = false;
@@ -2491,15 +2576,38 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     const text = normalize(`${identity?.name || ''} ${identity?.brand || ''} ${identity?.categories || ''}`);
     const rules = [
       [['Bebidas'], /bebida|beverage|drink|gaseosa|soda|cola|jugo|juice|agua|water|refresco|isoton|energy drink/],
-      [['Cereales, granos y semillas'], /cereal|corn flakes|maiz|maize|grain|grano|avena|oat|arroz|rice|granola/],
+      [['Café'], /cafe|coffee|nescafe/],
+      [['Té'], /\bte\b|tea|infusion/],
+      [['Arroz'], /arroz|rice/],
+      [['Avena'], /avena|oat/],
+      [['Maíz y polenta'], /maiz|maize|corn flakes|polenta|pochoclo/],
+      [['Granolas'], /granola/],
+      [['Quinoa'], /quinoa/],
+      [['Semillas'], /semilla|seed|chia|lino|sesamo|sesame/],
+      [['Cereales'], /cereal|grain|grano/],
       [['Azúcares y endulzantes'], /edulcorante|sweetener|azucar|sugar|stevia|sucralosa/],
       [['Aceites'], /aceite|oil|oliva|olive|girasol|sunflower/],
+      [['Aceitunas'], /aceituna|olive/],
+      [['Manteca'], /manteca|butter/],
       [['Lácteos'], /lacteo|dairy|leche|milk|queso|cheese|yogur|yogurt|manteca|butter/],
       [['Panadería y repostería'], /pan|bread|galleta|cookie|harina|flour|reposteria|bakery/],
-      [['Dulces y golosinas'], /chocolate|caramelo|candy|golosina|alfajor|mermelada|jam|miel|honey/],
-      [['Aderezos'], /aderezo|dressing|mayonesa|ketchup|mostaza|salsa\s+(?:golf|cesar|césar|barbacoa|bbq)/],
+      [['Dulce de leche'], /dulce\s+de\s+leche/],
+      [['Mermeladas'], /mermelada|jam|jalea/],
+      [['Miel'], /\bmiel\b|honey/],
+      [['Obleas'], /oblea|wafer/],
+      [['Caramelos y golosinas', 'Pastillas'], /pastilla/],
+      [['Alfajores'], /alfajor/],
+      [['Chocolates y bombones'], actualChocolateProductPattern],
+      [['Caramelos y golosinas'], /caramelo|candy|golosina/],
+      [['Aderezos', 'Ketchup'], /ketchup/],
+      [['Aderezos', 'Mostaza'], /mostaza/],
+      [['Aderezos', 'Mayonesas'], /mayonesa/],
+      [['Condimentos', 'Condimentos para hamburguesas'], /(?:condimento|sazonador|especia).*hamburguesas?/],
+      [['Aderezos'], /aderezo|dressing|mayonesa|salsa\s+(?:golf|cesar|césar|barbacoa|bbq)/],
       [['Condimentos'], /condimento|spice|especia|pimienta|sazonador|sal\b/],
       [['Salsas'], /salsa|sauce/],
+      [['Conservas', 'Pepinos en conserva'], /pepinos?\s+(?:en\s+vinagre|encurtidos?)/],
+      [['Pastas dulces'], /pastas?\s+dulces?/],
       [['Frutos secos y deshidratados'], /fruto seco|nuts?|almendra|almond|mani|peanut|nuez|walnut|pistacho|pistachio|pasas?|raisin/],
       [['Pastas'], /pasta|fideo|noodle|raviol/],
       [['Snacks'], /snack|chips?|papas fritas|popcorn/]
@@ -2703,11 +2811,20 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
       });
       return;
     }
-    const copyBankButton = event.target.closest('[data-copy-bank]');
-    if (copyBankButton) {
-      const text = copyBankButton.dataset.copyBank || '';
+    const copyValueButton = event.target.closest('[data-copy-value]');
+    if (copyValueButton) {
+      const text = copyValueButton.dataset.copyValue || '';
       const copy = navigator.clipboard?.writeText ? navigator.clipboard.writeText(text) : Promise.reject();
-      copy.then(() => { const label = copyBankButton.querySelector('span'); label.textContent = 'Datos copiados'; window.setTimeout(() => { label.textContent = 'Copiar datos bancarios'; }, 1800); }).catch(() => window.prompt('Copiá estos datos:', text));
+      copy.then(() => {
+        copyValueButton.classList.add('copied');
+        copyValueButton.setAttribute('aria-label', 'Dato copiado');
+        copyValueButton.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 4 4L19 6"/></svg>';
+        window.setTimeout(() => {
+          copyValueButton.classList.remove('copied');
+          copyValueButton.setAttribute('aria-label', 'Copiar dato');
+          copyValueButton.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="8" y="8" width="11" height="11" rx="2"/><path d="M16 8V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h3"/></svg>';
+        }, 1600);
+      }).catch(() => window.prompt('Copiá este dato:', text));
       return;
     }
     const cardButton = event.target.closest('[data-info-card]');

@@ -21,10 +21,13 @@ html, body, body * {
   user-select: none;
   -webkit-touch-callout: none;
 }
+/* El buscador sigue aceptando escritura, pero nunca selección/arrastre de texto. */
 input, textarea, [contenteditable="true"] {
-  -webkit-user-select: text;
-  user-select: text;
-  -webkit-touch-callout: default;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+  caret-color: transparent;
+  text-decoration: none;
 }
 img, svg {
   -webkit-user-drag: none;
@@ -294,14 +297,18 @@ body::after { content: ''; position: fixed; right: 0; bottom: 0; left: 0; z-inde
 .bank-card { margin-top: 14px; overflow: hidden; border: 1px solid #dce5df; border-radius: 17px; background: #fff; box-shadow: 0 4px 14px #26372d0b; }
 .bank-card-head { display: grid; grid-template-columns: 42px minmax(0, 1fr); align-items: center; gap: 12px; padding: 16px; background: #f5f8f6; }
 .bank-card-head svg { width: 26px; height: 26px; fill: none; stroke: #1f684b; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+.bank-card-head > div { min-width: 0; }
 .bank-card-head small, .bank-card-head strong { display: block; }
 .bank-card-head small { color: #78817a; font-size: 10px; }
-.bank-card-head strong { margin-top: 3px; color: #29322c; font-size: 14px; }
-.bank-data-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 15px 16px; border-top: 1px solid #e3e8e4; }
+.bank-card-head strong { margin-top: 3px; overflow-wrap: anywhere; color: #29322c; font-size: 14px; }
+.bank-data-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 16px; border-top: 1px solid #e3e8e4; }
 .bank-data-row span { color: #78817a; font-size: 11px; }
-.bank-data-row strong { color: #1f5d46; font-size: 13px; text-align: right; }
-.copy-bank-button { display: flex; align-items: center; justify-content: center; gap: 9px; width: calc(100% - 28px); min-height: 48px; margin: 14px; border: 0; border-radius: 13px; background: #1f684b; color: #fff; font-size: 13px; font-weight: 750; }
-.copy-bank-button svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+.bank-data-value { display: flex; align-items: center; justify-content: flex-end; gap: 10px; min-width: 0; }
+.bank-data-value strong { min-width: 0; overflow-wrap: anywhere; color: #1f5d46; font-size: 13px; text-align: right; }
+.copy-field-button { display: grid; width: 34px; height: 34px; flex: 0 0 34px; place-items: center; padding: 0; border: 1px solid #c7dbcc; border-radius: 10px; background: #edf5ef; color: #1f684b; }
+.copy-field-button svg { width: 17px; height: 17px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+.copy-field-button:active { transform: scale(.95); background: #dcefe3; }
+.copy-field-button.copied { border-color: #9dc8aa; background: #dcefe3; color: #17613f; }
 .info-copy h3 { margin: 22px 0 7px; color: #1f5d46; font-size: 16px; line-height: 1.2; font-weight: 750; }
 .info-copy h3:first-child { margin-top: 0; }
 .info-copy p { margin: 0 0 14px; color: #556058; font-size: 13px; line-height: 1.55; }
@@ -392,7 +399,38 @@ body::after { content: ''; position: fixed; right: 0; bottom: 0; left: 0; z-inde
   body { display: block; padding: 0; background: #f7f8f6; }
   .app { width: 100%; max-width: 760px; min-height: 100vh; height: auto; max-height: none; overflow: visible; position: relative; margin: 0 auto; border: 0; border-radius: 0; background: #f7f8f6; box-shadow: none; }
   .topbar { border-radius: 0; }
-  .bottom-nav { width: min(760px, 100%); max-width: 760px; left: 50%; bottom: 0; border-radius: 0; }
+  /* El nav conserva el mismo lenguaje visual que en el teléfono. Antes esta
+     regla lo convertía en una barra blanca rectangular al ampliar la ventana. */
+  .bottom-nav {
+    bottom: 14px;
+    width: min(calc(100% - 24px), 760px);
+    min-height: 70px;
+    padding: 5px;
+    border: 1px solid #6fa48880;
+    border-radius: 36px;
+    background: #174634dc;
+    -webkit-backdrop-filter: blur(16px) saturate(1.1);
+    backdrop-filter: blur(16px) saturate(1.1);
+    box-shadow: 0 10px 28px #17463435, inset 0 1px 0 #ffffff1c;
+  }
+  .bottom-nav .nav {
+    min-height: 58px;
+    border-radius: 30px;
+    color: #d8e9df;
+    font-size: 10px;
+    gap: 4px;
+  }
+  .bottom-nav .nav.active {
+    background: #2f7a59;
+    color: #fff;
+    box-shadow: inset 0 1px 0 #ffffff22, 0 3px 8px #0e302466;
+  }
+  .bottom-nav .nav.active:before { display: none; }
+  .bottom-nav i {
+    top: 7px;
+    left: calc(50% + 8px);
+    border: 2px solid #174634;
+  }
 }
 
 /* Sistema visual de producto: sobrio, legible y orientado a la búsqueda. */
@@ -484,7 +522,7 @@ body { color: #252925; }
 .recent-product { transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease; }
 .recent-product:hover { transform: translateY(-3px); border-color: #a9cbb8; box-shadow: 0 7px 16px #2f7a591c; }
 .recent-product:active { transform: scale(.97); }
-.explore-categories-action, .useful-grid .link-row, .saved-home-action, .scan, .nav { transition: transform .16s ease, background-color .16s ease, box-shadow .16s ease; }
+.explore-categories-action, .useful-grid .link-row, .saved-home-action, .scan { transition: transform .16s ease, background-color .16s ease, box-shadow .16s ease; }
 .explore-categories-action:active, .useful-grid .link-row:active, .saved-home-action:active, .scan:active { transform: scale(.985); }
 .nav:active { transform: translateY(1px); }
 .recent-product:nth-child(1) { animation-delay: 0s; }
@@ -903,6 +941,34 @@ body.modal-open { overflow: hidden; }
 .search-scope strong { color: #1f5d46; font-weight: 800; }
 .search-scope button { margin-left: auto; padding: 3px 0; border: 0; background: transparent; color: #1f5d46; font-size: 10px; font-weight: 800; text-decoration: underline; text-underline-offset: 2px; }
 .search-scope button:active { opacity: .7; }
+.results-head {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: start;
+  gap: 12px;
+  margin: 0;
+  padding: 18px 20px 16px;
+}
+.results-head > div { min-width: 0; }
+.results-head .filter-btn {
+  box-sizing: border-box;
+  min-width: 78px;
+  min-height: 44px;
+  height: 44px;
+  padding: 0 13px;
+  flex: 0 0 auto;
+  white-space: nowrap;
+  font-size: 14px;
+}
+.search-scope {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  flex-wrap: nowrap;
+  gap: 10px;
+}
+.search-scope > span { min-width: 0; }
+.search-scope button { margin-left: 0; white-space: nowrap; }
 #recentSearches.chips {
   position: relative;
   top: -1px;
@@ -971,6 +1037,24 @@ html body .app * {
 html body .app input,
 html body .app textarea,
 html body .app [contenteditable="true"] {
+  -webkit-user-select: text !important;
+  user-select: text !important;
+  -webkit-touch-callout: default !important;
+}
+
+/* Ningún texto visual de la aplicación debe activar selección o menú
+   contextual por pulsación prolongada. Los campos de entrada siguen siendo
+   editables para permitir búsquedas y carga manual del código. */
+html,
+html body,
+html body * {
+  -webkit-user-select: none !important;
+  user-select: none !important;
+  -webkit-touch-callout: none !important;
+}
+html body input,
+html body textarea,
+html body [contenteditable="true"] {
   -webkit-user-select: text !important;
   user-select: text !important;
   -webkit-touch-callout: default !important;
@@ -1116,7 +1200,7 @@ html body .app [contenteditable="true"] {
   .nav {
     min-height: 58px;
     border-radius: 30px;
-    color: #b5cec0;
+    color: #d8e9df;
     font-size: 10px;
     gap: 4px;
   }
@@ -1139,7 +1223,6 @@ html body .app [contenteditable="true"] {
   .search-open .bottom-nav {
     display: block;
     z-index: 50;
-    animation: search-nav-rise .18s cubic-bezier(.22,.8,.28,1) both;
     top: max(28px, env(safe-area-inset-top));
     right: 12px;
     bottom: auto;
@@ -1330,7 +1413,7 @@ html body .app [contenteditable="true"] {
     min-height: 46px;
     padding: 6px 8px;
     border-radius: 14px;
-    color: #b5cec0;
+    color: #d8e9df;
   }
   .search-open #searchView .quick-regions .quick-filter.active {
     background: #2f7a59;
@@ -1398,18 +1481,6 @@ html body .app [contenteditable="true"] {
   }
 }
 
-@keyframes search-nav-rise {
-  from { opacity: .01; }
-  to { opacity: 1; }
-}
-@keyframes search-nav-drop {
-  from { opacity: 1; }
-  to { opacity: .01; }
-}
-.search-open .bottom-nav.search-closing {
-  animation: search-nav-drop .18s cubic-bezier(.55,.05,.68,.19) both;
-}
-
 .scanner-dev-badge {
   justify-self: end;
   padding: 4px 7px;
@@ -1421,6 +1492,28 @@ html body .app [contenteditable="true"] {
   font-weight: 600;
   letter-spacing: .02em;
   white-space: nowrap;
+}
+.scanner-camera-badge {
+  position: absolute;
+  top: 16px;
+  left: 50%;
+  z-index: 3;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transform: translateX(-50%);
+  padding: 6px 11px;
+  border: 1px solid #d5b66b99;
+  border-radius: 999px;
+  background: #17251ddd;
+  box-shadow: 0 4px 12px #0000002b, inset 0 1px 0 #ffffff1a;
+  color: #f3d899;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .02em;
+  line-height: 1;
+  white-space: nowrap;
+  pointer-events: none;
 }
 
 .nav[data-view="alertsView"].has-alerts {
@@ -1794,4 +1887,23 @@ html, body { overscroll-behavior-y: none; }
   .bottom-nav .nav { color: #53675b; }
   .bottom-nav .nav.active { color: #245b45; }
   .bottom-nav .nav[data-view="alertsView"].has-alerts { color: #7a5d20; }
+}
+
+/* El nav no cambia de producto al ampliar la ventana del preview. */
+@media (min-width: 701px) {
+  .bottom-nav { background: #174634dc; }
+  .bottom-nav .nav { color: #d8e9df; }
+  .bottom-nav .nav.active { background: #2f7a59; color: #fff; }
+  .bottom-nav .nav.active:before { display: none; }
+}
+
+@media (max-width: 700px) {
+  /* Extend the empty area below “Más buscados” so the keyboard boundary
+     remains a clean white surface during Android's viewport resize. */
+  body.search-open #searchView #searchCategories {
+    min-height: 100vh;
+    margin-bottom: 0;
+    padding-bottom: 45vh;
+    background: #fff !important;
+  }
 }

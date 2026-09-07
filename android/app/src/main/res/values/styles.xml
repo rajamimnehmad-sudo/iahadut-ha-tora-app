@@ -12,7 +12,11 @@
     <style name="AppTheme.NoActionBar" parent="Theme.AppCompat.Light.NoActionBar">
         <item name="windowActionBar">false</item>
         <item name="windowNoTitle">true</item>
-        <item name="android:background">@null</item>
+        <!-- Keep the activity window opaque after the launch splash exits. If
+             the WebView is resized by the IME, no launch artwork can bleed
+             through an intermediate frame. -->
+        <item name="android:background">#F7F8F6</item>
+        <item name="android:windowBackground">#F7F8F6</item>
         <item name="android:statusBarColor">#F7F8F6</item>
         <item name="android:navigationBarColor">#FFFFFF</item>
         <item name="android:windowLightStatusBar">true</item>
@@ -20,7 +24,11 @@
 
 
     <style name="AppTheme.NoActionBarLaunch" parent="Theme.SplashScreen">
-        <item name="android:background">@drawable/splash</item>
+        <!-- The native splash must never remain as the activity window
+             background. Android can expose that background during an IME
+             resize, which used to show a cropped logo above the keyboard. -->
+        <item name="windowSplashScreenBackground">#F7F8F6</item>
+        <item name="android:windowBackground">#F7F8F6</item>
         <item name="postSplashScreenTheme">@style/AppTheme.NoActionBar</item>
     </style>
 </resources>
