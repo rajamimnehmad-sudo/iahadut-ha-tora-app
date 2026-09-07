@@ -1649,8 +1649,7 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     document.querySelectorAll('.nav').forEach((button) => button.classList.toggle('active', button.dataset.view === viewId));
     if (viewId === 'searchView' && !preserveSearch) { renderSearchCategories(); $('#results').hidden = true; $('#searchCategories').hidden = false; $('#recentSearches').hidden = false; }
     if (viewId === 'alertsView') {
-      localStorage.setItem('iht_alerts_seen_at', String(Date.now()));
-      setCatalogAlertBadge(false);
+      markAlertsSeen();
       renderAlerts();
     }
     if (viewId === 'notificationsView') { setPushNotificationBadge(false); renderPushNotifications(); }
@@ -1703,11 +1702,35 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     });
   }
 
+  function alertSignature(items) {
+    const groups = Array.isArray(items) ? alertGroups(items) : (items || {});
+    return ['alta', 'baja', 'general'].map((key) => (groups[key] || []).map((item) => {
+      const text = typeof item === 'string' ? item : item?.text || '';
+      const url = typeof item === 'string' ? '' : item?.url || '';
+      return `${normalize(text)}|${url}`;
+    }).join('||')).join('###');
+  }
+
+  function markAlertsSeen(items = alertCache?.items) {
+    const signature = alertSignature(items);
+    if (signature) localStorage.setItem('iht_alerts_seen_signature', signature);
+    localStorage.setItem('iht_alerts_seen_at', String(Date.now()));
+    setCatalogAlertBadge(false);
+  }
+
   function refreshAlertBadge() {
     if (document.querySelector('.view.active')?.id === 'alertsView') return;
     const seenAt = Number(localStorage.getItem('iht_alerts_seen_at') || 0);
     const fetchedAt = Number(alertCache?.fetchedAt || 0);
-    setCatalogAlertBadge(alertHasItems(alertCache?.items) && (!seenAt || fetchedAt > seenAt));
+    const signature = alertSignature(alertCache?.items);
+    let seenSignature = localStorage.getItem('iht_alerts_seen_signature') || '';
+    // Migrate the previous timestamp-based state so alerts already opened in
+    // an older version do not reappear just because the cache was refreshed.
+    if (!seenSignature && seenAt && fetchedAt && seenAt >= fetchedAt && signature) {
+      seenSignature = signature;
+      localStorage.setItem('iht_alerts_seen_signature', signature);
+    }
+    setCatalogAlertBadge(alertHasItems(alertCache?.items) && signature !== seenSignature);
   }
 
   function restoreSearchScreen() {
@@ -2053,11 +2076,13 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
       if (document.querySelector('.view.active')?.id === 'alertsView') {
         $('#alertList').innerHTML = alertMarkup(items);
         $('#alertsMeta').textContent = 'Altas de productos y bajas publicadas por la fuente oficial.';
+        markAlertsSeen(items);
       }
     } catch (_) {
       const items = alertCache?.items || {alta:[], baja:['No pudimos actualizar las alertas. Revisá tu conexión e intentá nuevamente.'], general:[]};
       $('#alertList').innerHTML = alertMarkup(items);
       $('#alertsMeta').textContent = 'Sin conexión · mostrando altas y bajas guardadas.';
+      if (document.querySelector('.view.active')?.id === 'alertsView') markAlertsSeen(items);
     }
   }
 
