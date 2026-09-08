@@ -133,7 +133,10 @@ function productDocument(product, generatedAt) {
 }
 
 function sameProduct(a, b) {
-  const fields = ['sourceUrl', 'title', 'brand', 'category', 'imageUrl', 'barcode', 'barcodeStatus', 'status', 'source', 'catalogGeneratedAt'];
+  // catalogGeneratedAt identifies the last snapshot in which this product
+  // changed. It must not make every unchanged product look modified when a
+  // new snapshot is generated.
+  const fields = ['sourceUrl', 'title', 'brand', 'category', 'imageUrl', 'barcode', 'barcodeStatus', 'status', 'source'];
   return fields.every((field) => String(a?.[field] ?? '') === String(b?.[field] ?? ''));
 }
 

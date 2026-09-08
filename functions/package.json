@@ -1,0 +1,11 @@
+{
+  "name": "iahadut-functions",
+  "private": true,
+  "engines": {
+    "node": "22"
+  },
+  "main": "index.js",
+  "dependencies": {
+    "firebase-functions": "^6.6.0"
+  }
+}

@@ -7,8 +7,8 @@ android {
         applicationId "ar.vaad.catalogo.app"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 32
-        versionName "0.11.17"
+        versionCode 33
+        versionName "0.11.18"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
              // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.
@@ -16,24 +16,48 @@ android {
             ignoreAssetsPattern = '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~'
         }
     }
+    def signingProperties = new Properties()
+    def signingPropertiesPath = project.findProperty('releaseSigningPropertiesPath') ?: System.getenv('RELEASE_SIGNING_PROPERTIES_PATH')
+    def signingPropertiesFile = signingPropertiesPath ? file(signingPropertiesPath) : rootProject.file('keystore.properties')
+    if (signingPropertiesFile.exists()) {
+        signingProperties.load(new FileInputStream(signingPropertiesFile))
+    }
+    def requiredSigningProperties = ['storeFile', 'storePassword', 'keyAlias', 'keyPassword']
+    def releaseSigningReady = signingPropertiesFile.exists() && requiredSigningProperties.every { key ->
+        signingProperties[key]?.toString()?.trim()
+    }
+
     signingConfigs {
-        release {
-            def signingProperties = new Properties()
-            def signingPropertiesFile = rootProject.file('keystore.properties')
-            if (signingPropertiesFile.exists()) {
-                signingProperties.load(new FileInputStream(signingPropertiesFile))
+        if (releaseSigningReady) {
+            release {
+                storeFile file(signingProperties['storeFile'])
+                storePassword signingProperties['storePassword']
+                keyAlias signingProperties['keyAlias']
+                keyPassword signingProperties['keyPassword']
             }
-            storeFile file(signingProperties['storeFile'])
-            storePassword signingProperties['storePassword']
-            keyAlias signingProperties['keyAlias']
-            keyPassword signingProperties['keyPassword']
         }
     }
     buildTypes {
         release {
-            signingConfig signingConfigs.release
+            if (releaseSigningReady) {
+                signingConfig signingConfigs.release
+            }
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+
+    // Tests and debug builds must remain runnable without access to release secrets.
+    // A release artifact, however, must never be produced accidentally unsigned.
+    gradle.taskGraph.whenReady { taskGraph ->
+        def requestsReleaseArtifact = taskGraph.allTasks.any { task ->
+            task.name in ['assembleRelease', 'bundleRelease']
+        }
+        if (requestsReleaseArtifact && !releaseSigningReady) {
+            throw new GradleException(
+                "Falta android/keystore.properties con una firma release completa. " +
+                "Configurala antes de generar el AAB de Play."
+            )
         }
     }
 }

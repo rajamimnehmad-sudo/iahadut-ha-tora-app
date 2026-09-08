@@ -80,21 +80,28 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
   function prepareImage(image) {
     if (!(image instanceof HTMLImageElement) || image.matches('.logo, .whatsapp-logo, .whatsapp-tile img')) return;
     if (image.complete) {
-      image.classList.add('asset-ready');
-      image.classList.remove('asset-loading');
+      if (image.naturalWidth > 0) {
+        image.classList.add('asset-ready');
+        image.classList.remove('asset-loading', 'asset-error');
+      } else {
+        image.classList.remove('asset-loading', 'asset-ready');
+        image.classList.add('asset-error');
+      }
       return;
     }
     image.classList.add('asset-loading');
+    image.classList.remove('asset-ready', 'asset-error');
   }
 
   document.addEventListener('load', (event) => {
     if (!(event.target instanceof HTMLImageElement)) return;
-    event.target.classList.remove('asset-loading');
+    event.target.classList.remove('asset-loading', 'asset-error');
     event.target.classList.add('asset-ready');
   }, true);
   document.addEventListener('error', (event) => {
     if (!(event.target instanceof HTMLImageElement)) return;
-    event.target.classList.remove('asset-loading');
+    event.target.classList.remove('asset-loading', 'asset-ready');
+    event.target.classList.add('asset-error');
   }, true);
   const imageObserver = new MutationObserver((mutations) => mutations.forEach((mutation) => mutation.addedNodes.forEach((node) => {
     if (!(node instanceof Element)) return;
@@ -185,17 +192,33 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
   let globalPopularity = {};
   let globalPopularityDb = null;
   let globalPopularityApi = null;
+  let firebaseCatalogDb = null;
+  let firebaseCatalogApi = null;
+  let firebaseReadyPromise = null;
   const popularityDocId = (key) => [...String(key)].reduce((hash, char) => ((hash * 31) + char.charCodeAt(0)) >>> 0, 7).toString(36);
+  async function getFirebaseCatalogApi() {
+    if (!firebaseConfig.apiKey || !firebaseConfig.projectId || !firebaseConfig.appId) return null;
+    if (firebaseCatalogDb && firebaseCatalogApi) return {db:firebaseCatalogDb, api:firebaseCatalogApi};
+    if (!firebaseReadyPromise) {
+      firebaseReadyPromise = (async () => {
+        const [{initializeApp, getApps}, authModule, firestoreModule] = await Promise.all([import('firebase/app'), import('firebase/auth'), import('firebase/firestore')]);
+        const app = getApps()[0] || initializeApp(firebaseConfig);
+        const auth = authModule.getAuth(app);
+        if (!auth.currentUser) await authModule.signInAnonymously(auth);
+        firebaseCatalogDb = firestoreModule.getFirestore(app);
+        firebaseCatalogApi = firestoreModule;
+        return {db:firebaseCatalogDb, api:firebaseCatalogApi};
+      })().catch(() => null);
+    }
+    return firebaseReadyPromise;
+  }
   async function loadGlobalPopularity() {
-    if (!firebaseConfig.apiKey || !firebaseConfig.projectId || !firebaseConfig.appId) return;
     try {
-      const [{initializeApp, getApps}, authModule, firestoreModule] = await Promise.all([import('firebase/app'), import('firebase/auth'), import('firebase/firestore')]);
-      const app = getApps()[0] || initializeApp(firebaseConfig);
-      const auth = authModule.getAuth(app);
-      if (!auth.currentUser) await authModule.signInAnonymously(auth);
-      globalPopularityDb = firestoreModule.getFirestore(app);
-      globalPopularityApi = firestoreModule;
-      const snapshot = await firestoreModule.getDocs(firestoreModule.query(firestoreModule.collection(globalPopularityDb, 'product_popularity'), firestoreModule.orderBy('score', 'desc'), firestoreModule.limit(12)));
+      const firebase = await getFirebaseCatalogApi();
+      if (!firebase) return;
+      globalPopularityDb = firebase.db;
+      globalPopularityApi = firebase.api;
+      const snapshot = await firebase.api.getDocs(firebase.api.query(firebase.api.collection(globalPopularityDb, 'product_popularity'), firebase.api.orderBy('score', 'desc'), firebase.api.limit(12)));
       globalPopularity = Object.fromEntries(snapshot.docs.map((doc) => [doc.data().productUrl, doc.data()]));
       renderSearchCategories();
     } catch (_) {}
@@ -261,6 +284,10 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     };
     return `<svg class="category-icon" viewBox="0 0 24 24" aria-hidden="true">${paths[key] || paths.all}</svg>`;
   };
+  const isUruguayProduct = (product) => product?.cat === 'uruguay' || product?.category === 'uruguay';
+  const uruguayBadge = (product, className = 'product-region-badge') => isUruguayProduct(product)
+    ? `<span class="${className}" role="img" aria-label="Producto de Uruguay">${categoryIcon('uruguay')}</span>`
+    : '';
   const infoIcon = (key) => {
     const paths = {
       shops: '<path d="M6 4v7M4 4v4a2 2 0 0 0 4 0V4M6 11v9M14 4v16M14 4c3 0 4 2 4 5h-4"/>',
@@ -279,7 +306,7 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
   const save = () => { localStorage.setItem('iht_products', JSON.stringify(products)); localStorage.setItem('iht_favorites', JSON.stringify([...favorites])); };
   const totalCount = () => products.length > seed.length ? products.length : categories.reduce((total, category) => total + category.count, 0);
   const bundledSyncTime = activeCatalogSnapshot?.generatedAt ? Date.parse(activeCatalogSnapshot.generatedAt) : 0;
-  const syncState = {running:false, last:localStorage.getItem('iht_last_sync') || (bundledProducts.length && bundledSyncTime ? String(bundledSyncTime) : ''), error:''};
+  const syncState = {running:false, last:localStorage.getItem('iht_last_sync') || '', error:''};
   const CACHE_TTL = 12 * 60 * 60 * 1000;
   const INFO_CACHE_VERSION = 36;
   const INITIAL_PRELOAD_KEY = `iht_initial_preload_${INFO_CACHE_VERSION}`;
@@ -351,7 +378,15 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
   function sourceUrl(url) {
     if (Capacitor.isNativePlatform()) return url;
     const local = location.port === '5173' && (location.hostname === 'localhost' || location.hostname === '127.0.0.1');
-    if (!local) return `https://syeycayasyufedwoprea.supabase.co/functions/v1/iahadut-demo/proxy?url=${encodeURIComponent(url)}`;
+    if (!local) {
+      const encoded = encodeURIComponent(url);
+      // Firebase is the primary public proxy. The Supabase URL remains a
+      // temporary fallback until the function is deployed everywhere.
+      return [
+        `https://us-central1-iahadut-hatora.cloudfunctions.net/vaadProxy?url=${encoded}`,
+        `https://syeycayasyufedwoprea.supabase.co/functions/v1/iahadut-demo/proxy?url=${encoded}`
+      ];
+    }
     const parsed = new URL(url);
     return `/vaad-api${parsed.pathname}${parsed.search}`;
   }
@@ -362,19 +397,22 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
 
   async function fetchText(url) {
     let lastError;
-    for (let attempt = 0; attempt < 3; attempt += 1) {
-      try {
-        if (Capacitor.isNativePlatform()) {
-          const response = await CapacitorHttp.get({url, responseType:'text', headers:{Accept:'text/html'}});
-          if (response.status < 200 || response.status >= 300) throw new Error(`HTTP ${response.status}`);
-          return String(response.data || '');
+    const candidates = Array.isArray(url) ? url : [url];
+    for (const candidate of candidates) {
+      for (let attempt = 0; attempt < 3; attempt += 1) {
+        try {
+          if (Capacitor.isNativePlatform()) {
+            const response = await CapacitorHttp.get({url:candidate, responseType:'text', headers:{Accept:'text/html'}});
+            if (response.status < 200 || response.status >= 300) throw new Error(`HTTP ${response.status}`);
+            return String(response.data || '');
+          }
+          const response = await fetch(candidate, {cache:'no-store', headers:{Accept:'text/html'}});
+          if (!response.ok) throw new Error(`HTTP ${response.status}`);
+          return response.text();
+        } catch (error) {
+          lastError = error;
+          if (attempt < 2) await new Promise((resolve) => setTimeout(resolve, 500 * (attempt + 1)));
         }
-        const response = await fetch(url, {cache:'no-store', headers:{Accept:'text/html'}});
-        if (!response.ok) throw new Error(`HTTP ${response.status}`);
-        return response.text();
-      } catch (error) {
-        lastError = error;
-        if (attempt < 2) await new Promise((resolve) => setTimeout(resolve, 500 * (attempt + 1)));
       }
     }
     throw lastError || new Error('No se pudo descargar el contenido');
@@ -552,7 +590,7 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     const output = [];
     for (let index = 0; index < elements.length; index += 1) {
       const element = elements[index];
-      if (element.type === 'image') { output.push(`<img class="info-photo info-flow-photo" src="${escapeHtml(element.src)}" alt="${escapeHtml(element.alt)}" loading="lazy" onerror="this.remove()">`); continue; }
+      if (element.type === 'image') { output.push(`<img class="info-photo info-flow-photo asset-loading" src="${escapeHtml(element.src)}" alt="${escapeHtml(element.alt)}" loading="lazy" onerror="this.remove()">`); continue; }
       const text = sanitizeOfficialText(element.text);
       if (!text || (hasContactActions && isStandaloneContact(text))) continue;
       if (element.type === 'heading' && (text.includes('?') || text.startsWith('¿'))) {
@@ -593,7 +631,7 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
       const separator = seal.text.indexOf(' - ');
       const title = separator > 0 ? seal.text.slice(0, separator) : '';
       const description = separator > 0 ? seal.text.slice(separator + 3) : seal.text;
-      return `<article class="seal-pair"><button class="seal-image-button" type="button" aria-label="Ampliar sello ${escapeHtml(title || seal.alt)}"><img class="info-photo" src="${escapeHtml(seal.src)}" alt="${escapeHtml(seal.alt || title || 'Sello kosher')}" loading="lazy" onerror="this.closest('.seal-pair').remove()"></button><div>${title ? `<h3>${escapeHtml(title)}</h3>` : ''}<p>${escapeHtml(description)}</p></div></article>`;
+      return `<article class="seal-pair"><button class="seal-image-button" type="button" aria-label="Ampliar sello ${escapeHtml(title || seal.alt)}"><img class="info-photo asset-loading" src="${escapeHtml(seal.src)}" alt="${escapeHtml(seal.alt || title || 'Sello kosher')}" loading="lazy" onerror="this.closest('.seal-pair').remove()"></button><div>${title ? `<h3>${escapeHtml(title)}</h3>` : ''}<p>${escapeHtml(description)}</p></div></article>`;
     }).join('')}</div>`;
   }
 
@@ -621,8 +659,8 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     const pageHeading = normalize(content.elements?.find((element) => element.type === 'heading')?.text || '');
     const hasContactActions = Boolean(content.contact || content.actions?.length);
     const blocks = content.blocks.map((block) => ({...block, text:sanitizeOfficialText(block.text)})).filter((block) => block.text).filter((block) => !(block.tag.startsWith('h') && (cardTitles.has(block.text.toLowerCase()) || normalize(block.text) === pageHeading))).filter((block) => !(hasContactActions && isStandaloneContact(block.text))).map((block) => block.tag.startsWith('h') ? `<h3>${escapeHtml(block.text)}</h3>` : `<p>${escapeHtml(block.text)}</p>`).join('');
-    const cards = (content.cards || []).map((card, index) => { const flag = countryFlag(card.title); return `<button class="info-card${flag ? ' country-card' : ''}" type="button" data-info-card="${index}"><span class="info-card-media"><img class="info-photo" src="${escapeHtml(card.image)}" alt="" aria-hidden="true" loading="lazy" onerror="this.remove()"></span><span class="info-card-copy"><strong>${escapeHtml(card.title)}</strong><span>${escapeHtml(content.cardActionLabel || 'Ver información')}</span></span><span class="info-card-arrow" aria-hidden="true">›</span></button>`; }).join('');
-    const images = content.images.map((image) => `<img class="info-photo" src="${escapeHtml(image.src)}" alt="${escapeHtml(image.alt)}" loading="lazy" onerror="this.remove()">`).join('');
+    const cards = (content.cards || []).map((card, index) => { const flag = countryFlag(card.title); const media = flag ? `<span class="info-card-media country-card-flag-media">${flag}</span>` : `<span class="info-card-media"><img class="info-photo asset-loading" src="${escapeHtml(card.image)}" alt="" aria-hidden="true" loading="lazy" onerror="this.remove()"></span>`; return `<button class="info-card${flag ? ' country-card' : ''}" type="button" data-info-card="${index}">${media}<span class="info-card-copy"><strong>${escapeHtml(card.title)}</strong><span>${escapeHtml(content.cardActionLabel || 'Ver información')}</span></span><span class="info-card-arrow" aria-hidden="true">›</span></button>`; }).join('');
+    const images = content.images.map((image) => `<img class="info-photo asset-loading" src="${escapeHtml(image.src)}" alt="${escapeHtml(image.alt)}" loading="lazy" onerror="this.remove()">`).join('');
     const actionIcon = (kind) => {
       if (kind === 'whatsapp') return '<svg class="info-action-icon whatsapp-logo" viewBox="0 0 24 24" aria-hidden="true"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/></svg>';
       const paths = {email:'<rect x="3" y="5" width="18" height="14" rx="2"/><path d="m4 7 8 6 8-6"/>', whatsapp:'<path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/>', map:'<path d="M20 10c0 4.5-8 10-8 10s-8-5.5-8-10a8 8 0 1 1 16 0Z"/><circle cx="12" cy="10" r="2.5"/>'};
@@ -631,7 +669,7 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     const actions = (content.actions || []).map((action) => `<a class="info-action ${escapeHtml(action.kind || '')}" href="${escapeHtml(action.href)}">${actionIcon(action.kind)}<span>${escapeHtml(action.label)}</span></a>`).join('');
     if (content.section === 'notes' && content.images?.length) {
       const titles = (content.cards || []).map((card) => card.title);
-      const flyers = content.images.map((image, index) => `<button class="note-flyer" type="button" data-expanded-image="${escapeHtml(image.src)}" data-expanded-caption="${escapeHtml(titles[index] || image.alt || 'Nota Kashrut')}"><img src="${escapeHtml(image.src)}" alt="${escapeHtml(titles[index] || image.alt || 'Nota Kashrut')}" loading="lazy" onerror="this.closest('.note-flyer').remove()"><span>${escapeHtml(titles[index] || image.alt || 'Nota Kashrut')}</span><small>Ver en pantalla completa</small></button>`).join('');
+      const flyers = content.images.map((image, index) => `<button class="note-flyer" type="button" data-expanded-image="${escapeHtml(image.src)}" data-expanded-caption="${escapeHtml(titles[index] || image.alt || 'Nota Kashrut')}"><img class="asset-loading" src="${escapeHtml(image.src)}" alt="${escapeHtml(titles[index] || image.alt || 'Nota Kashrut')}" loading="lazy" onerror="this.closest('.note-flyer').remove()"><span>${escapeHtml(titles[index] || image.alt || 'Nota Kashrut')}</span><small>Ver en pantalla completa</small></button>`).join('');
       return `<div class="note-flyer-list">${flyers}</div>`;
     }
     if (content.contact) {
@@ -643,7 +681,8 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     const ordered = hasOrderedElements ? infoFlowMarkup(orderedElements, hasContactActions) : blocks;
     const countryCards = (content.cards || []).some((card) => countryFlag(card.title));
     const sealPairs = content.seals?.length ? sealPairsMarkup(content.seals) : '';
-    const main = sealPairs || (cards ? `<div class="info-gallery info-cards${countryCards ? ' country-cards-list' : ''}">${cards}</div>${blocks ? `<div class="info-copy">${blocks}</div>` : ''}` : hasOrderedElements ? `<div class="info-copy info-flow">${ordered}</div>` : `${images ? `<div class="info-gallery seal-gallery">${images}</div>` : ''}${blocks ? `<div class="info-copy">${blocks}</div>` : ''}`);
+    const worldIntro = content.section === 'world' ? `<div class="world-certification-intro"><span class="world-certification-intro-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M4 12h16M12 4c2 2 3 5 3 8s-1 6-3 8c-2-2-3-5-3-8s1-6 3-8Z"/></svg></span><div><strong>Sellos reconocidos internacionalmente</strong><p>Elegí un país para consultar sus certificaciones autorizadas.</p></div></div>` : '';
+    const main = sealPairs || (cards ? `${worldIntro}<div class="info-gallery info-cards${countryCards ? ' country-cards-list' : ''}">${cards}</div>${blocks ? `<div class="info-copy">${blocks}</div>` : ''}` : hasOrderedElements ? `<div class="info-copy info-flow">${ordered}</div>` : `${images ? `<div class="info-gallery seal-gallery">${images}</div>` : ''}${blocks ? `<div class="info-copy">${blocks}</div>` : ''}`);
     return `${main}${actions ? `<div class="info-actions"><span class="info-actions-title">Contacto oficial</span>${actions}</div>` : ''}`;
   }
 
@@ -973,16 +1012,112 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     return Promise.resolve(syncCatalog(force)).then(() => preloadAppData());
   }
 
+  function localProductFromFirestore(data, previous = null) {
+    const url = clean(data?.sourceUrl);
+    const title = clean(data?.title);
+    if (!url || !title) return null;
+    return {
+      url,
+      title,
+      brand:clean(data?.brand),
+      cat:clean(data?.category || 'gondola'),
+      image:clean(data?.imageUrl),
+      barcode:canonicalBarcode(data?.barcode),
+      description:previous?.description || '',
+      catalogGeneratedAt:clean(data?.catalogGeneratedAt),
+      updatedAt:clean(data?.updatedAt)
+    };
+  }
+
+  async function syncCatalogFromFirestore(minimumCatalogTotal, onProgress = null) {
+    const firebase = await getFirebaseCatalogApi();
+    if (!firebase) return false;
+    const metadataRef = firebase.api.doc(firebase.db, 'catalog_metadata', 'current');
+    const metadataSnapshot = await firebase.api.getDoc(metadataRef);
+    if (!metadataSnapshot.exists()) return false;
+    const remoteVersion = clean(metadataSnapshot.data()?.version);
+    if (!remoteVersion) return false;
+
+    const localVersion = clean(localStorage.getItem('iht_catalog_version'));
+    const localDate = localVersion ? Date.parse(localVersion) : 0;
+    const remoteDate = Date.parse(remoteVersion);
+    const hasUsableLocalVersion = Boolean(localDate && remoteDate && remoteDate > localDate);
+    if (localVersion === remoteVersion && products.length >= minimumCatalogTotal) {
+      syncState.last = String(Date.now());
+      localStorage.setItem('iht_last_sync', syncState.last);
+      syncMessage(`Catálogo al día · ${products.length.toLocaleString('es-AR')} productos`, 'ok');
+      return true;
+    }
+
+    onProgress?.(8, hasUsableLocalVersion ? 'Consultando cambios nuevos…' : 'Descargando catálogo autorizado…');
+    const activeCollection = firebase.api.collection(firebase.db, 'catalog_products');
+    const archiveCollection = firebase.api.collection(firebase.db, 'catalog_archive');
+    const [activeSnapshot, archiveSnapshot] = hasUsableLocalVersion
+      ? await Promise.all([
+        firebase.api.getDocs(firebase.api.query(activeCollection, firebase.api.where('catalogGeneratedAt', '>', localVersion))),
+        firebase.api.getDocs(firebase.api.query(archiveCollection, firebase.api.where('retiredAt', '>', localVersion)))
+      ])
+      : [await firebase.api.getDocs(activeCollection), {docs:[]}];
+
+    const previousByUrl = new Map(products.map((product) => [product.url, product]));
+    const nextByUrl = hasUsableLocalVersion ? new Map(previousByUrl) : new Map();
+    const changedUrls = new Set();
+    const additions = [];
+    activeSnapshot.docs.forEach((document) => {
+      const product = localProductFromFirestore(document.data(), previousByUrl.get(document.data()?.sourceUrl));
+      if (!product) return;
+      if (!previousByUrl.has(product.url)) additions.push(product);
+      nextByUrl.set(product.url, product);
+      changedUrls.add(product.url);
+    });
+    if (hasUsableLocalVersion) {
+      archiveSnapshot.docs.forEach((document) => {
+        const data = document.data() || {};
+        const url = clean(data.sourceUrl);
+        if (!url) return;
+        const active = nextByUrl.get(url);
+        const activeDate = Date.parse(active?.catalogGeneratedAt || active?.updatedAt || '') || 0;
+        const retiredDate = Date.parse(data.retiredAt || '') || 0;
+        if (active && activeDate > retiredDate) return;
+        nextByUrl.delete(url);
+        changedUrls.add(url);
+      });
+    }
+
+    const nextProducts = [...nextByUrl.values()];
+    if (nextProducts.length < minimumCatalogTotal) throw new Error(`Catálogo Firebase incompleto (${nextProducts.length} productos)`);
+    changedUrls.forEach((url) => { delete productCache[url]; });
+    products = nextProducts;
+    recentProducts = additions.length ? additions.slice(0, 10) : nextProducts.slice(0, 10);
+    localStorage.setItem('iht_recent_products', JSON.stringify(recentProducts));
+    localStorage.setItem('iht_catalog_version', remoteVersion);
+    if (remoteDate) localStorage.setItem('iht_catalog_generated_at', String(remoteDate));
+    syncState.last = String(Date.now());
+    localStorage.setItem('iht_last_sync', syncState.last);
+    save();
+    localStorage.setItem('iht_product_cache', JSON.stringify({version:INFO_CACHE_VERSION, items:productCache}));
+    syncMessage(hasUsableLocalVersion
+      ? `Actualización rápida · ${changedUrls.size} cambios`
+      : `Catálogo actualizado · ${products.length.toLocaleString('es-AR')} productos`, 'ok');
+    renderHome();
+    if (document.querySelector('.view.active')?.id === 'searchView') renderSearchCategories();
+    return true;
+  }
+
   async function syncCatalog(force = false, onProgress = null) {
     if (syncState.running) return;
     const twelveHours = 12 * 60 * 60 * 1000;
     const expectedCatalogTotal = categories.reduce((total, category) => total + category.count, 0);
     const minimumCatalogTotal = Math.floor(expectedCatalogTotal * 0.97);
-    if (!force && syncState.last && Date.now() - Number(syncState.last) < twelveHours && products.length >= minimumCatalogTotal) return;
+    const hasCatalogVersion = Boolean(localStorage.getItem('iht_catalog_version'));
+    if (!force && hasCatalogVersion && syncState.last && Date.now() - Number(syncState.last) < twelveHours && products.length >= minimumCatalogTotal) return;
     syncState.running = true;
     syncState.error = '';
     syncMessage('Sincronizando catálogo oficial…', 'busy');
     try {
+      let firebaseUpdated = false;
+      try { firebaseUpdated = await syncCatalogFromFirestore(minimumCatalogTotal, onProgress); } catch (_) {}
+      if (firebaseUpdated) return;
       const synced = [];
       for (const [categoryIndex, category] of categories.entries()) {
         const firstPage = await fetchCatalogPage(category.url);
@@ -1027,6 +1162,8 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
       localStorage.setItem('iht_product_cache', JSON.stringify({version:INFO_CACHE_VERSION, items:productCache}));
       syncState.last = String(Date.now());
       localStorage.setItem('iht_last_sync', syncState.last);
+      const sourceVersion = clean(activeCatalogSnapshot?.generatedAt);
+      if (sourceVersion && Date.parse(sourceVersion)) localStorage.setItem('iht_catalog_version', sourceVersion);
       localStorage.setItem('iht_catalog_generated_at', syncState.last);
       try {
         const officialUpdate = await fetchOfficialUpdateDate();
@@ -1069,7 +1206,7 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     }
     recentCarouselOffset = 0;
     const recentTrack = $('#recentProducts');
-    recentTrack.innerHTML = items.map((product) => `<button class="recent-product" data-product="${escapeHtml(product.url)}" aria-label="Ver ${escapeHtml(product.title)}"><img class="asset-loading" src="${escapeHtml(product.image || productFallbackImage)}" alt="${escapeHtml(product.title)}" loading="eager" onload="this.classList.remove('asset-loading');this.classList.add('asset-ready')" onerror="this.onerror=null;this.src='${productFallbackImage}';this.classList.remove('asset-loading');this.classList.add('asset-ready')"></button>`).join('');
+    recentTrack.innerHTML = items.map((product) => `<button class="recent-product" data-product="${escapeHtml(product.url)}" aria-label="Ver ${escapeHtml(product.title)}"><span class="recent-product-media"><img class="asset-loading" src="${escapeHtml(product.image || productFallbackImage)}" alt="${escapeHtml(product.title)}" loading="eager" onload="this.classList.remove('asset-loading','asset-error');this.classList.add('asset-ready')" onerror="this.onerror=null;this.src='${productFallbackImage}';this.classList.add('asset-loading');this.classList.remove('asset-ready','asset-error')">${uruguayBadge(product, 'product-region-badge recent-region-badge')}</span></button>`).join('');
     if (items.length > 4) {
       [...recentTrack.children].slice(0, 4).forEach((card) => recentTrack.append(card.cloneNode(true)));
       recentTrack.dataset.carouselOriginalCount = String(items.length);
@@ -1548,18 +1685,16 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
   }
 
   function renderSearchCategories() {
-    const regions = selectedRegion === 'uruguay'
-      ? `<button class="region-shortcut active" data-region="argentina" aria-label="Volver a productos de Argentina"><span class="category-icon category-flag category-flag-arg"><img src="assets/flag-argentina.svg" alt="Bandera de Argentina"></span><span>Productos de Uruguay</span><b aria-hidden="true">×</b></button>`
-      : `<button class="region-shortcut" data-region="uruguay" aria-label="Buscar productos de Uruguay">${categoryIcon('uruguay')}<span>Buscar productos de Uruguay</span><b aria-hidden="true">›</b></button>`;
+    const regions = `<div class="region-switch" role="group" aria-label="País del catálogo"><button class="${selectedRegion === 'argentina' ? 'active' : ''}" type="button" data-region="argentina" aria-pressed="${selectedRegion === 'argentina'}"><span class="category-icon category-flag category-flag-arg"><img src="assets/flag-argentina.svg" alt=""></span><span>Argentina</span></button><button class="${selectedRegion === 'uruguay' ? 'active' : ''}" type="button" data-region="uruguay" aria-pressed="${selectedRegion === 'uruguay'}">${categoryIcon('uruguay')}<span>Uruguay</span></button></div>`;
     const popularitySource = Object.keys(globalPopularity).length ? globalPopularity : popularity;
     const popular = products.filter((product) => product.image).sort((a, b) => ((popularitySource[b.url]?.score || 0) || ((popularitySource[b.url]?.searches || 0) + (popularitySource[b.url]?.opens || 0))) - ((popularitySource[a.url]?.score || 0) || ((popularitySource[a.url]?.searches || 0) + (popularitySource[a.url]?.opens || 0)))).slice(0, 6);
-    const popularMarkup = popular.length ? `<div class="popular-searches"><strong>Más buscados</strong><div class="popular-searches-track">${popular.map((product) => `<button class="popular-search-card" type="button" data-product="${escapeHtml(product.url)}" aria-label="Ver ${escapeHtml(product.title)}"><img src="${escapeHtml(product.image)}" alt="" loading="eager"><span>${escapeHtml(product.title)}</span></button>`).join('')}</div></div>` : '';
+    const popularMarkup = popular.length ? `<div class="popular-searches"><strong>Más buscados</strong><div class="popular-searches-track">${popular.map((product) => `<button class="popular-search-card" type="button" data-product="${escapeHtml(product.url)}" aria-label="Ver ${escapeHtml(product.title)}"><img class="asset-loading" src="${escapeHtml(product.image)}" alt="" loading="eager"><span>${escapeHtml(compactProductTitle(product.title))}</span></button>`).join('')}</div></div>` : '';
     $('#searchCategories').innerHTML = `<div class="region-shortcut-wrap" aria-label="Filtro de país">${regions}</div>${popularMarkup}`;
     $('#recentSearches').innerHTML = '';
   }
 
   function productImage(product) {
-    return `<img class="asset-loading" src="${escapeHtml(product.image || productFallbackImage)}" alt="${escapeHtml(product.title)}" onload="this.classList.remove('asset-loading');this.classList.add('asset-ready')" onerror="this.onerror=null;this.src='${productFallbackImage}';this.classList.remove('asset-loading');this.classList.add('asset-ready')">`;
+    return `<img class="asset-loading" src="${escapeHtml(product.image || productFallbackImage)}" alt="${escapeHtml(product.title)}" onload="this.classList.remove('asset-loading','asset-error');this.classList.add('asset-ready')" onerror="this.onerror=null;this.src='${productFallbackImage}';this.classList.add('asset-loading');this.classList.remove('asset-ready','asset-error')">`;
   }
 
   function cleanDisplayText(value) {
@@ -1592,12 +1727,20 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     return `${escapeHtml(text.slice(0, start))}<span class="brand-separator" aria-hidden="true">—</span><span class="brand-name">${escapeHtml(cleanBrand(match[2]))}</span>${formatQuotedBrands(text.slice(end))}`;
   }
 
+  function compactProductTitle(value) {
+    const text = cleanDisplayText(value);
+    const match = text.match(/\bmarca\s+(«[^»]+»|“[^”]+”|"[^"]+")/i);
+    if (!match) return text.replace(/[«»“”"]/g, '').replace(/\s+/g, ' ').trim();
+    const brand = match[1].replace(/^[«»"“”]+|[«»"“”]+$/g, '').trim();
+    return `${text.slice(0, match.index).trim()} · ${brand}${text.slice(match.index + match[0].length)}`.replace(/\s+/g, ' ').trim();
+  }
+
   function filtered(query) {
     const term = normalize(query);
     const searchTokens = term.split(/\s+/).filter((token) => token.length > 1 && !['de', 'del', 'la', 'el', 'los', 'las', 'un', 'una', 'marca'].includes(token));
     return products.map((product) => {
       const isUruguay = product.cat === 'uruguay' || product.category === 'uruguay';
-      const matchesRegion = selectedRegion === 'uruguay' ? isUruguay : !isUruguay;
+      const matchesRegion = selectedRegion === 'all' || (selectedRegion === 'uruguay' ? isUruguay : !isUruguay);
       const matchesCategory = selectedCategory === 'all' || (selectedCategory === 'gondola' ? product.cat === 'gondola' && !isUruguay : product.cat === selectedCategory);
       const matchesFavorite = !favoriteOnly || favorites.has(product.url);
       const taxonomyPath = productCategoryPath(product);
@@ -1627,7 +1770,7 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
   function productMarkup(product) {
     const taxonomyPath = productCategoryPath(product).map(categoryDisplayName);
     const categoryLabel = taxonomyPath.length ? taxonomyPath.join(' · ') : 'Catálogo oficial';
-    return `<button class="product" data-product="${escapeHtml(product.url)}"><span>${productImage(product)}</span><span><small class="cat">${escapeHtml(categoryLabel)}</small><strong>${styledBrandText(product.title)}</strong></span><span class="save" data-favorite="${escapeHtml(product.url)}" aria-label="${favorites.has(product.url) ? 'Quitar de guardados' : 'Guardar producto'}">${bookmarkIcon(favorites.has(product.url))}</span></button>`;
+    return `<button class="product" data-product="${escapeHtml(product.url)}"><span class="product-media">${productImage(product)}${uruguayBadge(product)}</span><span><small class="cat">${escapeHtml(categoryLabel)}</small><strong>${styledBrandText(product.title)}</strong></span><span class="save" data-favorite="${escapeHtml(product.url)}" aria-label="${favorites.has(product.url) ? 'Quitar de guardados' : 'Guardar producto'}">${bookmarkIcon(favorites.has(product.url))}</span></button>`;
   }
 
   function observeLoadMore() {
@@ -1683,7 +1826,7 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
 
   function renderResults(query = '') {
     const result = filtered(query);
-    const title = favoriteOnly ? 'Guardados' : query ? 'Resultados' : selectedCategory !== 'all' ? categoryFor(selectedCategory).name : selectedRegion === 'uruguay' ? 'Uruguay' : 'Argentina';
+    const title = favoriteOnly ? 'Guardados' : query ? 'Resultados' : selectedCategory !== 'all' ? categoryFor(selectedCategory).name : selectedRegion === 'all' ? 'Todos los productos' : selectedRegion === 'uruguay' ? 'Uruguay' : 'Argentina';
     $('#resultsTitle').textContent = title;
     $('#resultsMeta').textContent = `${result.length.toLocaleString('es-AR')} ${result.length === 1 ? 'producto' : 'productos'} en esta vista`;
     renderSearchScope();
@@ -1729,6 +1872,7 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     document.querySelectorAll('.view').forEach((view) => view.classList.toggle('active', view.id === viewId));
     document.querySelectorAll('.nav').forEach((button) => button.classList.toggle('active', button.dataset.view === viewId));
     if (viewId === 'searchView' && !preserveSearch) { renderSearchCategories(); $('#results').hidden = true; $('#searchCategories').hidden = false; $('#recentSearches').hidden = false; }
+    if (viewId === 'timelineView') renderCatalogTimeline();
     if (viewId === 'alertsView') {
       markAlertsSeen();
       renderAlerts();
@@ -1748,7 +1892,11 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     if (!list) return;
     renderNotificationPermission();
     $('#notificationsMeta').textContent = pushNotifications.length ? `${pushNotifications.length} aviso${pushNotifications.length === 1 ? '' : 's'} recibido${pushNotifications.length === 1 ? '' : 's'}.` : 'Todavía no recibiste avisos push.';
-    list.innerHTML = pushNotifications.length ? pushNotifications.map((item) => `<article class="push-notification-item"><span class="push-notification-icon">✓</span><div><strong>${escapeHtml(item.title || 'Novedad del catálogo')}</strong><p>${escapeHtml(item.body || 'Hay una actualización disponible.')}</p><small>${escapeHtml(item.time || '')}</small></div></article>`).join('') : '<div class="empty-state"><strong>No hay notificaciones</strong><span>Cuando llegue un aviso nuevo, aparecerá acá.</span></div>';
+    list.innerHTML = pushNotifications.length ? pushNotifications.map((item) => {
+      const playUrl = trustedPlayStoreUrl(item.url);
+      const link = playUrl ? `<button class="push-notification-link" data-push-link="${escapeHtml(playUrl)}" type="button">Abrir en Google Play <span aria-hidden="true">›</span></button>` : '';
+      return `<article class="push-notification-item"><span class="push-notification-icon">✓</span><div><strong>${escapeHtml(item.title || 'Novedad del catálogo')}</strong><p>${escapeHtml(item.body || 'Hay una actualización disponible.')}</p><small>${escapeHtml(item.time || '')}</small>${link}</div></article>`;
+    }).join('') : '<div class="empty-state"><strong>No hay notificaciones</strong><span>Cuando llegue un aviso nuevo, aparecerá acá.</span></div>';
   }
 
   function renderNotificationPermission() {
@@ -1776,16 +1924,13 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
   }
 
   function alertHasItems(items) {
-    const values = Array.isArray(items) ? items : Object.values(items || {}).flat();
-    return values.some((item) => {
-      const text = normalize(typeof item === 'string' ? item : item?.text || '');
-      return text && !/no hay alertas publicadas|no pudimos actualizar las alertas/.test(text);
-    });
+    const groups = Array.isArray(items) ? alertGroups(items) : (items || {});
+    return realAlertItems(groups.alta).length > 0 || realAlertItems(groups.baja).length > 0;
   }
 
   function alertSignature(items) {
     const groups = Array.isArray(items) ? alertGroups(items) : (items || {});
-    return ['alta', 'baja', 'general'].map((key) => (groups[key] || []).map((item) => {
+    return ['alta', 'baja'].map((key) => realAlertItems(groups[key]).map((item) => {
       const text = typeof item === 'string' ? item : item?.text || '';
       const url = typeof item === 'string' ? '' : item?.url || '';
       return `${normalize(text)}|${url}`;
@@ -1991,19 +2136,21 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     const officialCategory = official?.category || (category ? category.name : 'Catálogo oficial');
     const detailCategoryClass = `detail-category-${category?.key || 'default'}`;
     const detailImage = officialImage && !/(^|\/)assets\/(?:logo(?:-[^/]+)?\.png|product-placeholder\.svg)$/i.test(officialImage) ? officialImage : '';
-    const detailImageMarkup = detailImage ? `<img class="asset-loading" loading="eager" src="${escapeHtml(detailImage)}" alt="${escapeHtml(product.title)}" onload="this.classList.remove('asset-loading');this.classList.add('asset-ready')" onerror="this.remove()">` : '';
+    const detailImageMarkup = detailImage ? `<img class="asset-loading" loading="eager" src="${escapeHtml(detailImage)}" alt="${escapeHtml(product.title)}" onload="this.classList.remove('asset-loading','asset-error');this.classList.add('asset-ready')" onerror="this.remove()">` : '';
     const taxonomyMarkup = taxonomyPath.length ? `<nav class="detail-taxonomy" aria-label="Categoría del catálogo"><small>Categoría en el catálogo</small><div>${taxonomyPath.map((part, index) => `${index ? '<span aria-hidden="true">→</span>' : ''}<button type="button" data-detail-taxonomy-path="${escapeHtml(encodeURIComponent(JSON.stringify(taxonomyPath.slice(0, index + 1))))}">${escapeHtml(categoryDisplayName(part))}</button>`).join('')}</div></nav>` : '';
     const berajaMarkup = official?.beraja ? `<div class="detail-facts single"><div><small>Berajá</small><strong>${escapeHtml(official.beraja)}</strong></div></div>` : '';
     const detailContent = $('#detailContent');
     const existing = detailContent.querySelector('.detail-content:not(.detail-content-loading)');
     if (!existing) {
-      detailContent.innerHTML = `<div class="detail-content">${detailImageMarkup}<div class="detail-body"><span class="label ${detailCategoryClass}">${escapeHtml(officialCategory)}</span><h1>${styledBrandText(product.title)}</h1><p class="detail-description">${escapeHtml(officialDescription)}</p>${berajaMarkup}${taxonomyMarkup}${official?.loadFailed ? '<button class="filter-btn detail-retry" id="detailRetry" type="button"><span>Reintentar carga</span></button>' : ''}</div></div>`;
+      detailContent.innerHTML = `<div class="detail-content">${detailImageMarkup}<div class="detail-body">${uruguayBadge(product, 'product-region-badge detail-region-badge')}<span class="label ${detailCategoryClass}">${escapeHtml(officialCategory)}</span><h1>${styledBrandText(product.title)}</h1><p class="detail-description">${escapeHtml(officialDescription)}</p>${berajaMarkup}${taxonomyMarkup}${official?.loadFailed ? '<button class="filter-btn detail-retry" id="detailRetry" type="button"><span>Reintentar carga</span></button>' : ''}</div></div>`;
     } else {
       const image = existing.querySelector(':scope > img');
       if (!detailImage) image?.remove();
       else if (image && image.src !== new URL(detailImage, location.href).href) image.src = detailImage;
       else if (!image) existing.insertAdjacentHTML('afterbegin', detailImageMarkup);
       const categoryLabel = existing.querySelector('.label');
+      existing.querySelector('.detail-region-badge')?.remove();
+      if (isUruguayProduct(product)) categoryLabel.insertAdjacentHTML('beforebegin', uruguayBadge(product, 'product-region-badge detail-region-badge'));
       categoryLabel.textContent = officialCategory;
       categoryLabel.className = `label ${detailCategoryClass}`;
       existing.querySelector('h1').innerHTML = styledBrandText(product.title);
@@ -2033,7 +2180,7 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     toast.className = 'kosher-toast';
     toast.setAttribute('role', 'status');
     toast.setAttribute('aria-live', 'polite');
-    toast.innerHTML = `<span class="kosher-toast-mark">✓</span><span><strong>¡Es kosher!</strong><small>${escapeHtml(product.title)}</small></span>`;
+    toast.innerHTML = `<span class="kosher-toast-mark">✓</span><span><strong>¡Es kosher!</strong><small>${styledBrandText(product.title)}</small></span>`;
     $('#detailView').appendChild(toast);
     window.requestAnimationFrame(() => toast.classList.add('visible'));
     kosherToastTimer = window.setTimeout(() => {
@@ -2107,16 +2254,128 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
       const linked = item?.url ? products.find((product) => product.url === item.url) : null;
       const normalizedText = normalize(text.replace(/\s*\([^)]*\)\s*$/, ''));
       const match = linked || products.find((product) => { const productTitle = normalize(product.title); return productTitle.length > 8 && (normalizedText.includes(productTitle) || productTitle.includes(normalizedText)); });
-      const visual = match?.image ? `<img class="alert-product-image" src="${escapeHtml(match.image)}" alt="" loading="lazy" onerror="this.replaceWith(document.createTextNode('•'))">` : '<span class="alert-mark" aria-hidden="true">•</span>';
+      const visual = match?.image ? `<img class="alert-product-image asset-loading" src="${escapeHtml(match.image)}" alt="" loading="lazy" onerror="this.replaceWith(document.createTextNode('•'))">` : '<span class="alert-mark" aria-hidden="true">•</span>';
       const tag = match ? 'button' : 'article';
       const productAttrs = match ? ` data-product="${escapeHtml(match.url)}" aria-label="Ver ${escapeHtml(match.title)}" type="button"` : '';
       return `<${tag} class="alert-item${match ? ' alert-item-clickable' : ''}"${productAttrs}>${visual}<p>${styledBrandText(text)}</p>${match ? '<span class="alert-item-arrow" aria-hidden="true">›</span>' : ''}</${tag}>`;
     }).join('')}</div></details>`;
   }
 
-  function alertMarkup(items) {
-    const groups = Array.isArray(items) ? alertGroups(items) : items;
-    return alertSection('Altas y modificaciones recientes', 'alta', groups.alta) + alertSection('Productos dados de baja', 'baja', groups.baja) + alertSection('Otras comunicaciones', 'general', groups.general);
+  function realAlertItems(items) {
+    return (items || []).filter((item) => {
+      const text = normalize(typeof item === 'string' ? item : item?.text || '');
+      return text && !/no hay alertas|no hay productos|no pudimos actualizar/.test(text);
+    });
+  }
+
+  function alertDate(text) {
+    const matches = [...String(text || '').matchAll(/(\d{1,2})\/(\d{1,2})\/(\d{4})/g)];
+    const match = matches.at(-1);
+    if (!match) return null;
+    const day = Number(match[1]);
+    const month = Number(match[2]);
+    const year = Number(match[3]);
+    const date = new Date(year, month - 1, day, 12);
+    if (date.getFullYear() !== year || date.getMonth() !== month - 1 || date.getDate() !== day) return null;
+    return {date, key:`${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`, label:date.toLocaleDateString('es-AR', {day:'numeric', month:'long', year:'numeric'})};
+  }
+
+  function alertTextWithoutDate(text) {
+    return clean(String(text || '')
+      .replace(/\s*\([^)]*\d{1,2}\/\d{1,2}\/\d{4}[^)]*\)\s*$/, '')
+      .replace(/\s+\d{1,2}\/\d{1,2}\/\d{4}\s*$/, ''));
+  }
+
+  function alertTimelineMarkup(items, state = '', kind = 'all') {
+    if (state === 'error') return `<div class="alert-empty-state alert-empty-error"><span class="alert-empty-icon" aria-hidden="true">!</span><strong>No pudimos actualizar las novedades</strong><span>Revisá tu conexión e intentá nuevamente.</span></div>`;
+    const groups = Array.isArray(items) ? alertGroups(items) : (items || {});
+    const isRemovalTimeline = kind === 'baja';
+    const entries = kind === 'all'
+      ? [...realAlertItems(groups.alta).map((item) => ({item, kind:'alta'})), ...realAlertItems(groups.baja).map((item) => ({item, kind:'baja'}))]
+      : realAlertItems(groups[kind]).map((item) => ({item, kind}));
+    if (!entries.length) return `<div class="alert-empty-state${isRemovalTimeline ? ' alert-empty-removals' : ''}"><span class="alert-empty-icon" aria-hidden="true">✓</span><strong>${isRemovalTimeline ? 'No hay bajas registradas' : kind === 'all' ? 'No hay novedades' : 'No hay productos nuevos'}</strong><span>${isRemovalTimeline ? 'Cuando se retire un producto del catálogo, va a aparecer acá.' : kind === 'all' ? 'Cuando haya cambios en el catálogo, van a aparecer acá.' : 'Cuando se agregue un producto al catálogo, va a aparecer acá.'}</span></div>`;
+    const days = new Map();
+    entries.forEach(({item, kind: entryKind}) => {
+      const rawText = typeof item === 'string' ? item : item?.text || '';
+      const parsedDate = alertDate(rawText);
+      const key = parsedDate?.key || 'undated';
+      if (!days.has(key)) days.set(key, {date:parsedDate, items:[]});
+      days.get(key).items.push({item, kind:entryKind, text:alertTextWithoutDate(rawText)});
+    });
+    const orderedDays = [...days.values()].sort((first, second) => {
+      if (!first.date) return 1;
+      if (!second.date) return -1;
+      return second.date.date - first.date.date;
+    });
+    const dayMarkup = orderedDays.map((day) => {
+      const dateLabel = day.date ? day.date.label : 'Fecha no informada';
+      const productMarkup = day.items.map(({item, kind: entryKind, text}) => {
+        const linked = item?.url ? products.find((product) => product.url === item.url) : null;
+        const normalizedText = normalize(text);
+        const match = linked || products.find((product) => {
+          const productTitle = normalize(product.title);
+          return productTitle.length > 8 && (normalizedText.includes(productTitle) || productTitle.includes(normalizedText));
+        });
+        const visual = match?.image
+          ? `<span class="alert-timeline-visual"><img class="alert-product-image asset-loading" src="${escapeHtml(match.image)}" alt="" loading="lazy" onerror="this.remove()"></span>`
+          : '<span class="alert-timeline-visual alert-timeline-placeholder" aria-hidden="true">＋</span>';
+        const title = match?.title || text;
+        const entryIsRemoval = entryKind === 'baja';
+        const statusText = entryIsRemoval ? 'Producto dado de baja' : 'Producto agregado';
+        const itemClass = `alert-timeline-item${entryIsRemoval ? ' alert-timeline-item-removal' : ''}`;
+        return match
+          ? `<button class="${itemClass}" type="button" data-product="${escapeHtml(match.url)}" aria-label="Ver ${escapeHtml(match.title)}">${visual}<span class="alert-timeline-copy"><strong>${styledBrandText(title)}</strong><small>${statusText} · Ver ficha</small></span><span class="alert-timeline-arrow" aria-hidden="true">›</span></button>`
+          : `<article class="${itemClass}">${visual}<span class="alert-timeline-copy"><strong>${styledBrandText(title)}</strong><small>${statusText}</small></span></article>`;
+      }).join('');
+      return `<section class="alert-timeline-day"><div class="alert-timeline-day-head"><time datetime="${day.date?.key || ''}">${escapeHtml(dateLabel)}</time><span>${day.items.length} ${day.items.length === 1 ? 'cambio' : 'cambios'}</span></div><div class="alert-timeline-items">${productMarkup}</div></section>`;
+    }).join('');
+    return `<div class="alert-timeline${isRemovalTimeline ? ' alert-timeline-removals' : ''}" data-alert-kind="${kind}">${dayMarkup}</div>`;
+  }
+
+  function alertMarkup(items, state = '') {
+    const groups = Array.isArray(items) ? alertGroups(items) : (items || {});
+    const bajaItems = realAlertItems(groups.baja);
+    const bajaAction = bajaItems.length
+      ? `<button class="alert-secondary-action" type="button" data-open-retired><span class="alert-secondary-icon" aria-hidden="true">!</span><span><strong>Ver productos dados de baja</strong><small>${bajaItems.length} ${bajaItems.length === 1 ? 'producto retirado' : 'productos retirados'}</small></span><span class="alert-secondary-arrow" aria-hidden="true">›</span></button>`
+      : '';
+    return `${bajaAction}${alertTimelineMarkup(groups, state, 'all')}`;
+  }
+
+  function alertMetaText() {
+    return 'Productos retirados, ordenados por fecha.';
+  }
+
+  function renderRetiredAlerts(items = alertCache?.items, state = '') {
+    if (!$('#alertList')) return;
+    $('#alertList').innerHTML = alertTimelineMarkup(items || {alta:[], baja:[], general:[]}, state, 'baja');
+    $('#alertsMeta').textContent = state === 'error' ? 'Sin conexión · no pudimos actualizar las bajas.' : 'Productos retirados, ordenados por fecha.';
+  }
+
+  async function renderCatalogTimeline(items = alertCache?.items, state = '') {
+    if (!$('#timelineList')) return;
+    if (items && !Array.isArray(items)) {
+      $('#timelineList').innerHTML = alertMarkup(items);
+      $('#timelineMeta').textContent = 'Información guardada · actualizando novedades…';
+    } else {
+      $('#timelineList').innerHTML = '<div class="content-skeleton alert-skeleton" aria-label="Preparando cronología"><i></i><i></i><i></i></div>';
+    }
+    if (state === 'error') {
+      $('#timelineList').innerHTML = alertMarkup(items || {}, state);
+      $('#timelineMeta').textContent = 'Sin conexión · no pudimos actualizar las novedades.';
+      return;
+    }
+    try {
+      const freshItems = await fetchAlerts();
+      if (document.querySelector('.view.active')?.id === 'timelineView') {
+        $('#timelineList').innerHTML = alertMarkup(freshItems);
+        $('#timelineMeta').textContent = 'Altas y bajas, ordenadas por fecha.';
+      }
+    } catch (_) {
+      if (document.querySelector('.view.active')?.id === 'timelineView') {
+        $('#timelineList').innerHTML = alertMarkup(alertCache?.items || {}, 'error');
+        $('#timelineMeta').textContent = 'Sin conexión · no pudimos actualizar las novedades.';
+      }
+    }
   }
 
   function cachePushCatalogAlert(notification) {
@@ -2140,34 +2399,33 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     };
     alertCache = {version:INFO_CACHE_VERSION, items:next, fetchedAt:Date.now()};
     localStorage.setItem('iht_alert_cache', JSON.stringify(alertCache));
-    setCatalogAlertBadge(true);
+    if (type === 'alta' || type === 'baja') setCatalogAlertBadge(true);
     if (document.querySelector('.view.active')?.id === 'alertsView') {
-      $('#alertList').innerHTML = alertMarkup(next);
-      $('#alertsMeta').textContent = 'Nueva novedad recibida · sincronizando la fuente oficial…';
+      renderRetiredAlerts(next);
     }
+    if (document.querySelector('.view.active')?.id === 'timelineView') renderCatalogTimeline(next);
     return true;
   }
 
   async function renderAlerts() {
-    $('#alertsMeta').textContent = 'Altas de productos y bajas publicadas por la fuente oficial.';
+    $('#alertsMeta').textContent = alertMetaText();
     if (alertCache?.items && !Array.isArray(alertCache.items)) {
-      $('#alertList').innerHTML = alertMarkup(alertCache.items);
-      $('#alertsMeta').textContent = 'Información guardada · actualizando altas y bajas…';
+      renderRetiredAlerts(alertCache.items);
+      $('#alertsMeta').textContent = 'Información guardada · actualizando bajas…';
     } else {
       $('#alertList').innerHTML = '<div class="content-skeleton alert-skeleton" aria-label="Preparando alertas"><i></i><i></i><i></i></div>';
     }
     try {
       const items = await fetchAlerts();
       if (document.querySelector('.view.active')?.id === 'alertsView') {
-        $('#alertList').innerHTML = alertMarkup(items);
-        $('#alertsMeta').textContent = 'Altas de productos y bajas publicadas por la fuente oficial.';
+        renderRetiredAlerts(items);
         markAlertsSeen(items);
       }
     } catch (_) {
       const items = alertCache?.items || {alta:[], baja:['No pudimos actualizar las alertas. Revisá tu conexión e intentá nuevamente.'], general:[]};
-      $('#alertList').innerHTML = alertMarkup(items);
-      $('#alertsMeta').textContent = 'Sin conexión · mostrando altas y bajas guardadas.';
       if (document.querySelector('.view.active')?.id === 'alertsView') markAlertsSeen(items);
+      if (document.querySelector('.view.active')?.id === 'alertsView') renderRetiredAlerts(alertCache?.items || {}, 'error');
+      if (document.querySelector('.view.active')?.id === 'timelineView') renderCatalogTimeline(alertCache?.items || {}, 'error');
     }
   }
 
@@ -2188,6 +2446,22 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     document.body.appendChild(link); link.click(); link.remove();
   }
 
+  function trustedPlayStoreUrl(value) {
+    try {
+      const url = new URL(String(value || ''));
+      if (url.protocol !== 'https:' || url.hostname !== 'play.google.com') return '';
+      const isAppPage = url.pathname === '/store/apps/details' && url.searchParams.get('id') === 'ar.vaad.catalogo.app';
+      const isTesterPage = url.pathname === '/apps/testing/ar.vaad.catalogo.app' || url.pathname.startsWith('/apps/testing/ar.vaad.catalogo.app/');
+      return isAppPage || isTesterPage ? url.href : '';
+    } catch (_) {
+      return '';
+    }
+  }
+
+  function notificationPlayStoreUrl(notification) {
+    return trustedPlayStoreUrl(notification?.data?.url || notification?.data?.link || notification?.data?.playStoreUrl);
+  }
+
   async function refreshPlayUpdate() {
     if (!Capacitor.isNativePlatform()) return playUpdateState;
     try {
@@ -2198,8 +2472,15 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
       // acceso a esta API; en esos casos queda activo el fallback remoto.
       playUpdateState = {...playUpdateState, checked:true};
     }
+    renderHomeAppUpdate();
     if (document.querySelector('.view.active')?.id === 'moreView') renderMore();
     return playUpdateState;
+  }
+
+  function renderHomeAppUpdate() {
+    const update = $('#homeAppUpdate');
+    if (!update) return;
+    update.hidden = !(playUpdateState.available || playUpdateState.downloaded);
   }
 
   function updateAccessOverlay(control) {
@@ -2242,7 +2523,7 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
         });
         await PushNotifications.addListener('registrationError', () => { localStorage.setItem('iht_push_status', 'error'); renderNotificationPermission(); });
         await PushNotifications.addListener('pushNotificationReceived', (notification) => {
-          const item = {title:notification.title || notification.data?.title || 'Novedad del catálogo', body:notification.body || notification.data?.body || 'Hay una actualización disponible.', time:new Date().toLocaleString('es-AR')};
+          const item = {title:notification.title || notification.data?.title || 'Novedad del catálogo', body:notification.body || notification.data?.body || 'Hay una actualización disponible.', time:new Date().toLocaleString('es-AR'), url:notificationPlayStoreUrl(notification)};
           cachePushCatalogAlert(notification);
           pushNotifications = [item, ...pushNotifications].slice(0, 30);
           localStorage.setItem('iht_push_notifications', JSON.stringify(pushNotifications));
@@ -2253,6 +2534,8 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
           cachePushCatalogAlert(notification);
           setPushNotificationBadge(false);
           if (notification.data?.action === 'sync') void syncAndPreload(true).catch(() => {});
+          const playUrl = notificationPlayStoreUrl(notification);
+          if (playUrl) { openExternal(playUrl); return; }
           showView('notificationsView');
         });
         await PushNotifications.createChannel({id:'catalog-updates', name:'Actualizaciones del catálogo', description:'Altas, bajas y cambios importantes', importance:4, visibility:1, vibration:true});
@@ -2463,8 +2746,16 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     $('#camera').srcObject = null;
   }
 
+  function showCameraFallback(message) {
+    stopCamera();
+    $('#scanOverlay').classList.add('manual-only');
+    $('#camera').hidden = false;
+    $('.frame').hidden = true;
+    $('#scanMessage').textContent = message;
+  }
+
   async function startCamera() {
-    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) { $('#scanMessage').textContent = 'La cámara no está disponible. Ingresá el código manualmente.'; return; }
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) { showCameraFallback('La cámara no está disponible. Ingresá el código manualmente.'); return; }
     try {
       stream = await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'}}, audio:false});
       $('#camera').srcObject = stream;
@@ -2475,10 +2766,10 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
       const detector = new BarcodeDetector(formats.length ? {formats} : undefined);
       const tick = async () => { if (!stream) return; try { const codes = await detector.detect($('#camera')); if (codes[0] && codes[0].rawValue) { stopCamera(); resolveBarcode(codes[0].rawValue); return; } } catch (_) {} scanFrame = requestAnimationFrame(tick); };
       scanFrame = requestAnimationFrame(tick);
-    } catch (_) { $('#scanMessage').textContent = 'No pudimos iniciar la cámara. Revisá el permiso o ingresá el código manualmente.'; }
+    } catch (_) { showCameraFallback('No pudimos iniciar la cámara. Revisá el permiso o ingresá el código manualmente.'); }
   }
   window.__ihtCameraReady = startCamera;
-  window.__ihtCameraDenied = () => { $('#scanMessage').textContent = 'Se necesita permiso de cámara para escanear.'; };
+  window.__ihtCameraDenied = () => showCameraFallback('Se necesita permiso de cámara para escanear. Podés ingresar el código manualmente.');
 
   function openWebScanner(message = 'Alineá el código dentro del recuadro.', useCamera = true) {
     pendingScanProduct = null;
@@ -2662,7 +2953,7 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     const externalName = clean(identity?.name);
     const externalBrand = clean(identity?.brand);
     if (product) {
-      $('#scanMessage').innerHTML = `<span class="scan-result-status found">¡Kosher! =)</span><strong class="scan-result-title">${escapeHtml(product.title)}</strong><small class="scan-result-code">Código escaneado: ${escapeHtml(code)}</small><button class="scan-result-action" type="button" data-scan-open>Ver ficha del producto</button>`;
+      $('#scanMessage').innerHTML = `<span class="scan-result-status found">¡Kosher! =)</span><strong class="scan-result-title">${styledBrandText(product.title)}</strong><small class="scan-result-code">Código escaneado: ${escapeHtml(code)}</small><button class="scan-result-action" type="button" data-scan-open>Ver ficha del producto</button>`;
     } else if (exactMatches.length > 1) {
       const matchesMarkup = exactMatches.map((item) => `<button class="scan-alternative" type="button" data-scan-alternative="${escapeHtml(item.url)}"><span>${escapeHtml(item.title)}</span></button>`).join('');
       $('#scanMessage').innerHTML = `<span class="scan-result-status found">Código reconocido</span><strong class="scan-result-title">Hay más de una ficha asociada</strong><small class="scan-result-code">Código escaneado: ${escapeHtml(code)}</small><span class="scan-result-note">Elegí la ficha correcta para continuar.</span><div class="scan-alternatives"><div class="scan-alternatives-grid">${matchesMarkup}</div></div><button class="scan-result-action secondary" type="button" data-scan-again>Escanear otro producto</button>`;
@@ -2735,7 +3026,7 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     if (activeView === 'detailView') { returnFromDetail(); return; }
     if (activeView === 'readerView') { goBackReader(); return; }
     if (activeView === 'subcategoryDirectoryView' || activeView === 'categoryProductsView') { goBackTaxonomy(); return; }
-    if (activeView === 'categoryDirectoryView' || activeView === 'alertsView' || activeView === 'moreView' || activeView === 'savedView') { returnHome(); return; }
+    if (activeView === 'timelineView' || activeView === 'alertsView' || activeView === 'categoryDirectoryView' || activeView === 'moreView' || activeView === 'savedView') { returnHome(); return; }
     if (Capacitor.isNativePlatform()) await App.exitApp();
   }
 
@@ -2744,6 +3035,7 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
   if (Capacitor.isNativePlatform()) {
     PlayStoreUpdates.addListener('updateDownloaded', () => {
       playUpdateState = {...playUpdateState, downloaded:true};
+      renderHomeAppUpdate();
       renderMore();
     }).catch(() => {});
     App.addListener('appStateChange', ({isActive}) => {
@@ -2754,6 +3046,10 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
   }
 
   document.querySelectorAll('.nav').forEach((button) => button.onclick = () => button.dataset.view === 'homeView' ? returnHome() : button.dataset.view === 'searchView' ? openSearchScreen() : showView(button.dataset.view));
+  document.addEventListener('pointerdown', (event) => {
+    const regionButton = event.target.closest('#searchView .region-switch [data-region]');
+    if (regionButton && document.activeElement === $('#query')) event.preventDefault();
+  });
   document.addEventListener('click', (event) => {
     const scanOpenButton = event.target.closest('[data-scan-open]');
     if (scanOpenButton) {
@@ -2781,7 +3077,30 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     const taxonomyButton = event.target.closest('[data-taxonomy-path]');
     if (taxonomyButton) { openTaxonomyPath(JSON.parse(decodeURIComponent(taxonomyButton.dataset.taxonomyPath))); return; }
     const regionButton = event.target.closest('[data-region]');
-    if (regionButton) { selectedRegion = regionButton.dataset.region; favoriteOnly = false; showView('searchView'); renderResults($('#query').value); renderSearchCategories(); return; }
+    if (regionButton) {
+      const keepSearchFocus = document.activeElement === $('#query');
+      selectedRegion = regionButton.dataset.region;
+      if (regionButton.closest('.region-switch')) {
+        favoriteOnly = false;
+        selectedCategory = selectedRegion === 'uruguay' ? 'uruguay' : 'all';
+        $('#results').hidden = true;
+        $('#searchCategories').hidden = false;
+        $('#recentSearches').hidden = false;
+        renderSearchCategories();
+        if (keepSearchFocus) window.requestAnimationFrame(() => {
+          const queryInput = $('#query');
+          if (!queryInput || !document.body.classList.contains('search-open')) return;
+          queryInput.focus({preventScroll:true});
+          queryInput.setSelectionRange(queryInput.value.length, queryInput.value.length);
+        });
+        return;
+      }
+      favoriteOnly = false; showView('searchView'); renderResults($('#query').value); renderSearchCategories(); return;
+    }
+    const retiredButton = event.target.closest('[data-open-retired]');
+    if (retiredButton) { showView('alertsView'); return; }
+    const timelineButton = event.target.closest('[data-open-timeline]');
+    if (timelineButton) { showView('timelineView'); return; }
     const categoryButton = event.target.closest('[data-category]'); if (categoryButton) { selectedCategory = categoryButton.dataset.category; favoriteOnly = false; showView('searchView'); renderResults(''); }
     const productButton = event.target.closest('[data-product]'); if (productButton && !event.target.closest('[data-favorite]')) openDetail(productButton.dataset.product);
     const favoriteButton = event.target.closest('[data-favorite]'); if (favoriteButton) { event.stopPropagation(); toggleFavorite(favoriteButton.dataset.favorite); }
@@ -2795,6 +3114,8 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     if (disableNotificationButton) { disablePushNotifications(); return; }
     const openAlertsButton = event.target.closest('[data-open-alerts]');
     if (openAlertsButton) { showView('notificationsView'); return; }
+    const openPlayStoreButton = event.target.closest('[data-open-play-store]');
+    if (openPlayStoreButton) { openExternal(remoteControl.update_url || defaultRemoteControl.update_url); return; }
     const updateButton = event.target.closest('[data-app-update]');
     if (updateButton) {
       if (playUpdateState.downloaded) {
@@ -2859,11 +3180,9 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
       $('#recentSearches').hidden = true;
     }
     window.clearTimeout(searchTimer);
-    searchTimer = window.setTimeout(() => {
-      const value = clean($('#query').value);
-      if (value) renderResults(value);
-      else { $('#results').hidden = true; $('#searchCategories').hidden = false; $('#recentSearches').hidden = false; }
-    }, 0);
+    const value = clean($('#query').value);
+    if (value) renderResults(value);
+    else { $('#results').hidden = true; $('#searchCategories').hidden = false; $('#recentSearches').hidden = false; }
   });
   $('#homeQuery').addEventListener('focus', openSearchScreen);
   startHomePlaceholders();
@@ -2873,6 +3192,8 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
   $('#categoryProductsBack').onclick = goBackTaxonomy;
   $('#catalogInfo').onclick = openCatalogInfo;
   $('#seeAlerts').onclick = () => showView('alertsView');
+  $('#alertsBack').onclick = returnHome;
+  $('#timelineBack').onclick = returnHome;
   $('#savedBack').onclick = returnHome;
   $('#detailBack').onclick = returnFromDetail;
   $('#readerBack').onclick = goBackReader;
@@ -2909,9 +3230,10 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
   }
   $('#filterBtn').addEventListener('click', (event) => { event.preventDefault(); event.stopPropagation(); openFilters(); });
   $('#closeFilter').onclick = () => { $('#filterOverlay').hidden = true; updateModalLock(); };
-  $('#filterOverlay').onclick = (event) => { if (event.target === $('#filterOverlay')) { $('#filterOverlay').hidden = true; updateModalLock(); return; } const filter = event.target.closest('[data-filter]'); if (filter) { selectedCategory = filter.dataset.filter; $('#filterOverlay').hidden = true; updateModalLock(); renderResults($('#query').value); } };
-  $('#resetFilter').onclick = () => { selectedCategory = 'all'; $('#filterOverlay').hidden = true; updateModalLock(); renderResults($('#query').value); };
-  $('#clearSearchScope').onclick = () => { selectedCategory = 'all'; renderResults($('#query').value); };
+  $('#filterOverlay').onclick = (event) => { if (event.target === $('#filterOverlay')) { $('#filterOverlay').hidden = true; updateModalLock(); return; } const filter = event.target.closest('[data-filter]'); if (filter) { selectedCategory = filter.dataset.filter; if (selectedCategory === 'uruguay') selectedRegion = 'uruguay'; $('#filterOverlay').hidden = true; updateModalLock(); renderResults($('#query').value); } };
+  const clearActiveFilter = () => { selectedCategory = 'all'; selectedRegion = 'all'; renderResults($('#query').value); };
+  $('#resetFilter').onclick = () => { clearActiveFilter(); $('#filterOverlay').hidden = true; updateModalLock(); };
+  $('#clearSearchScope').onclick = clearActiveFilter;
   $('#syncStatus').onclick = () => syncAndPreload(true);
   $('#accessRetry').onclick = () => refreshRemoteControl(true);
   $('#accessUpdate').onclick = () => openExternal(remoteControl.update_url);
