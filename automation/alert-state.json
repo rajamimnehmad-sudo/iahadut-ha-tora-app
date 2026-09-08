@@ -1,4 +1,14 @@
 {
+  "alta:Aceite de oregano marca «RR» (08/09/2026)": {
+    "type": "alta",
+    "text": "Aceite de oregano marca «RR» (08/09/2026)",
+    "url": "https://vaad.ar/producto/aceite-de-oregano-marca-rr/"
+  },
+  "alta:Acelga congelada marca «Greens» (08/09/2026)": {
+    "type": "alta",
+    "text": "Acelga congelada marca «Greens» (08/09/2026)",
+    "url": "https://vaad.ar/producto/acelga-congelada-marca-greens/"
+  },
   "alta:Cereales marca »3 arroyos» sabor chocolate (02/09/2026)": {
     "type": "alta",
     "text": "Cereales marca »3 arroyos» sabor chocolate (02/09/2026)",
@@ -78,16 +88,6 @@
     "type": "alta",
     "text": "Pasta de cajú, pecan y coco marca »Monda» (27/08/2026)",
     "url": "https://vaad.ar/producto/pasta-de-caju-pecan-y-coco-marca-monda/"
-  },
-  "alta:Pasta de pecán marca »Monda» (27/08/2026)": {
-    "type": "alta",
-    "text": "Pasta de pecán marca »Monda» (27/08/2026)",
-    "url": "https://vaad.ar/producto/pasta-de-pecan-marca-monda/"
-  },
-  "alta:Pasta de almendra marca »Monda» (27/08/2026)": {
-    "type": "alta",
-    "text": "Pasta de almendra marca »Monda» (27/08/2026)",
-    "url": "https://vaad.ar/producto/pasta-de-almendra-marca-monda/"
   },
   "baja:Galletas de arroz marca »Arrozen» (Dado de baja el 24/08/2026)": {
     "type": "baja",
