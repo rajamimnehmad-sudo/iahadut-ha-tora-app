@@ -262,7 +262,6 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
   let resultObserver = null;
   let recentCarouselTimer = null;
   let recentCarouselOffset = 0;
-  let recentCarouselDirection = 1;
   let renderedHomeItemsKey = '';
   let remoteControl = {...defaultRemoteControl, configured:false, checkedAt:0};
   let playUpdateState = {available:false, downloaded:false, flexibleAllowed:false, checked:false};
@@ -1029,7 +1028,7 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     };
   }
 
-  async function syncCatalogFromFirestore(minimumCatalogTotal, onProgress = null) {
+  async function syncCatalogFromFirestore(fallbackMinimumCatalogTotal, onProgress = null) {
     const firebase = await getFirebaseCatalogApi();
     if (!firebase) return false;
     const metadataRef = firebase.api.doc(firebase.db, 'catalog_metadata', 'current');
@@ -1037,12 +1036,15 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     if (!metadataSnapshot.exists()) return false;
     const remoteVersion = clean(metadataSnapshot.data()?.version);
     if (!remoteVersion) return false;
+    const remoteProductCount = Number(metadataSnapshot.data()?.activeProductCount) || 0;
 
     const localVersion = clean(localStorage.getItem('iht_catalog_version'));
     const localDate = localVersion ? Date.parse(localVersion) : 0;
     const remoteDate = Date.parse(remoteVersion);
     const hasUsableLocalVersion = Boolean(localDate && remoteDate && remoteDate > localDate);
-    if (localVersion === remoteVersion && products.length >= minimumCatalogTotal) {
+    // A versioned local catalog is already a valid snapshot. Do not force a
+    // full download just because the old category counters drifted.
+    if (localVersion === remoteVersion && products.length > 0) {
       syncState.last = String(Date.now());
       localStorage.setItem('iht_last_sync', syncState.last);
       syncMessage(`Catálogo al día · ${products.length.toLocaleString('es-AR')} productos`, 'ok');
@@ -1085,7 +1087,8 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     }
 
     const nextProducts = [...nextByUrl.values()];
-    if (nextProducts.length < minimumCatalogTotal) throw new Error(`Catálogo Firebase incompleto (${nextProducts.length} productos)`);
+    const minimumCatalogTotal = remoteProductCount || fallbackMinimumCatalogTotal;
+    if (nextProducts.length < minimumCatalogTotal) throw new Error(`Catálogo Firebase incompleto (${nextProducts.length} de ${minimumCatalogTotal} productos)`);
     changedUrls.forEach((url) => { delete productCache[url]; });
     products = nextProducts;
     recentProducts = additions.length ? additions.slice(0, 10) : nextProducts.slice(0, 10);
@@ -1108,9 +1111,11 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     if (syncState.running) return;
     const twelveHours = 12 * 60 * 60 * 1000;
     const expectedCatalogTotal = categories.reduce((total, category) => total + category.count, 0);
+    // This fallback protects a full scrape only. Incremental Firebase syncs
+    // validate against catalog_metadata.activeProductCount instead.
     const minimumCatalogTotal = Math.floor(expectedCatalogTotal * 0.97);
     const hasCatalogVersion = Boolean(localStorage.getItem('iht_catalog_version'));
-    if (!force && hasCatalogVersion && syncState.last && Date.now() - Number(syncState.last) < twelveHours && products.length >= minimumCatalogTotal) return;
+    if (!force && hasCatalogVersion && syncState.last && Date.now() - Number(syncState.last) < twelveHours) return;
     syncState.running = true;
     syncState.error = '';
     syncMessage('Sincronizando catálogo oficial…', 'busy');
@@ -1206,6 +1211,8 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     }
     recentCarouselOffset = 0;
     const recentTrack = $('#recentProducts');
+    recentTrack.style.removeProperty('transform');
+    recentTrack.parentElement?.scrollTo({left: 0, behavior: 'auto'});
     recentTrack.innerHTML = items.map((product) => `<button class="recent-product" data-product="${escapeHtml(product.url)}" aria-label="Ver ${escapeHtml(product.title)}"><span class="recent-product-media"><img class="asset-loading" src="${escapeHtml(product.image || productFallbackImage)}" alt="${escapeHtml(product.title)}" loading="eager" onload="this.classList.remove('asset-loading','asset-error');this.classList.add('asset-ready')" onerror="this.onerror=null;this.src='${productFallbackImage}';this.classList.add('asset-loading');this.classList.remove('asset-ready','asset-error')">${uruguayBadge(product, 'product-region-badge recent-region-badge')}</span></button>`).join('');
     if (items.length > 4) {
       [...recentTrack.children].slice(0, 4).forEach((card) => recentTrack.append(card.cloneNode(true)));
@@ -1231,89 +1238,73 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     const viewport = track.parentElement;
     if (!viewport) return;
     enableRecentCarouselTouch(viewport);
-    recentCarouselOffset = 0;
-    track.style.transition = 'none';
-    track.style.transform = 'translateX(0)';
+    fitRecentCarouselCards(viewport);
+    recentCarouselOffset = viewport.scrollLeft;
     const advance = () => {
-      if (!track.isConnected || !track.children.length) return;
+      if (!track.isConnected || !track.children.length || document.hidden) return;
       const firstCard = track.children[0];
       const styles = window.getComputedStyle(track);
       const gap = parseFloat(styles.columnGap || styles.gap) || 0;
       const step = firstCard.getBoundingClientRect().width + gap;
-      const maxTranslate = Math.max(0, track.scrollWidth - viewport.clientWidth);
-      if (!step || !maxTranslate) return;
+      if (!step || !viewport.scrollWidth) return;
       const originalCount = Number(track.dataset.carouselOriginalCount) || track.children.length;
       const cycleDistance = step * originalCount;
 
-      recentCarouselOffset = Math.min(recentCarouselOffset + step, cycleDistance);
-      track.style.transition = 'transform 650ms cubic-bezier(.22,.61,.36,1)';
-      track.style.transform = `translate3d(-${recentCarouselOffset}px, 0, 0)`;
-
-      if (recentCarouselOffset >= cycleDistance - 0.5) {
-        window.setTimeout(() => {
-          if (!track.isConnected) return;
-          recentCarouselOffset = 0;
-          track.style.transition = 'none';
-          track.style.transform = 'translate3d(0, 0, 0)';
-        }, 700);
+      const currentOffset = viewport.scrollLeft;
+      if (currentOffset >= cycleDistance - 2) {
+        viewport.scrollTo({left: 0, behavior: 'auto'});
+        recentCarouselOffset = 0;
+        return;
       }
+      recentCarouselOffset = Math.min(currentOffset + step, cycleDistance);
+      viewport.scrollTo({left: recentCarouselOffset, behavior: 'smooth'});
     };
-    recentCarouselTimer = window.setInterval(advance, 2400);
+    recentCarouselTimer = window.setInterval(advance, 2800);
+  }
+
+  function fitRecentCarouselCards(viewport) {
+    const track = $('#recentProducts');
+    if (!track || !viewport) return;
+    const styles = window.getComputedStyle(track);
+    const gap = parseFloat(styles.columnGap || styles.gap) || 0;
+    const padding = (parseFloat(styles.paddingLeft) || 0) + (parseFloat(styles.paddingRight) || 0);
+    const cardWidth = Math.max(92, Math.min(128, (viewport.clientWidth - padding - (gap * 2)) / 3));
+    track.style.setProperty('--recent-card-width', `${cardWidth}px`);
   }
 
   function enableRecentCarouselTouch(viewport) {
     if (viewport.dataset.touchReady === 'true') return;
     viewport.dataset.touchReady = 'true';
-    let startX = 0;
-    let startOffset = 0;
-    let dragging = false;
-    let moved = false;
-
-    viewport.addEventListener('pointerdown', (event) => {
-      if (event.pointerType === 'mouse' && event.button !== 0) return;
-      const track = $('#recentProducts');
-      if (!track) return;
-      startX = event.clientX;
-      startOffset = recentCarouselOffset;
-      dragging = true;
-      moved = false;
-      track.style.transition = 'none';
-    });
-
-    viewport.addEventListener('pointermove', (event) => {
-      if (!dragging) return;
-      const track = $('#recentProducts');
-      if (!track) return;
-      const delta = event.clientX - startX;
-      if (Math.abs(delta) > 5) {
-        moved = true;
-        viewport.setPointerCapture?.(event.pointerId);
+    let resumeTimer = null;
+    const pause = () => {
+      if (recentCarouselTimer) {
+        window.clearInterval(recentCarouselTimer);
+        recentCarouselTimer = null;
       }
-      const maxTranslate = Math.max(0, track.scrollWidth - viewport.clientWidth);
-      recentCarouselOffset = Math.max(0, Math.min(maxTranslate, startOffset - delta));
-      track.style.transform = `translate3d(-${recentCarouselOffset}px, 0, 0)`;
-      if (moved) event.preventDefault();
-    }, {passive: false});
-
-    const finishDrag = (event) => {
-      if (!dragging) return;
-      dragging = false;
-      viewport.releasePointerCapture?.(event.pointerId);
-      const track = $('#recentProducts');
-      if (track) track.style.transition = 'transform 650ms cubic-bezier(.22,.61,.36,1)';
-      if (moved) {
-        viewport.dataset.suppressClick = 'true';
-        window.setTimeout(() => { viewport.dataset.suppressClick = 'false'; }, 80);
-      }
+      if (resumeTimer) window.clearTimeout(resumeTimer);
+      viewport.classList.add('is-interacting');
     };
-    viewport.addEventListener('pointerup', finishDrag);
-    viewport.addEventListener('pointercancel', finishDrag);
-    viewport.addEventListener('click', (event) => {
-      if (viewport.dataset.suppressClick === 'true') {
-        event.preventDefault();
-        event.stopPropagation();
-      }
-    }, true);
+    const resume = () => {
+      if (resumeTimer) window.clearTimeout(resumeTimer);
+      viewport.classList.remove('is-interacting');
+      resumeTimer = window.setTimeout(() => {
+        if (!document.hidden) startRecentCarousel();
+      }, 5000);
+    };
+    viewport.addEventListener('pointerdown', pause, {passive: true});
+    viewport.addEventListener('touchstart', pause, {passive: true});
+    viewport.addEventListener('wheel', () => { pause(); resume(); }, {passive: true});
+    viewport.addEventListener('pointerup', resume, {passive: true});
+    viewport.addEventListener('touchend', resume, {passive: true});
+    viewport.addEventListener('pointercancel', resume, {passive: true});
+    viewport.addEventListener('scroll', () => { recentCarouselOffset = viewport.scrollLeft; }, {passive: true});
+    viewport.addEventListener('focusin', pause);
+    viewport.addEventListener('focusout', resume);
+    let resizeTimer = null;
+    window.addEventListener('resize', () => {
+      if (resizeTimer) window.clearTimeout(resizeTimer);
+      resizeTimer = window.setTimeout(() => fitRecentCarouselCards(viewport), 120);
+    }, {passive: true});
   }
 
   async function updateRecentFromAlerts(groups) {
@@ -2318,7 +2309,7 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
         });
         const visual = match?.image
           ? `<span class="alert-timeline-visual"><img class="alert-product-image asset-loading" src="${escapeHtml(match.image)}" alt="" loading="lazy" onerror="this.remove()"></span>`
-          : '<span class="alert-timeline-visual alert-timeline-placeholder" aria-hidden="true">＋</span>';
+          : '<span class="alert-timeline-visual alert-timeline-placeholder" aria-hidden="true">!</span>';
         const title = match?.title || text;
         const entryIsRemoval = entryKind === 'baja';
         const statusText = entryIsRemoval ? 'Producto dado de baja' : 'Producto agregado';
