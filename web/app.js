@@ -330,6 +330,8 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
   const alertUrl = 'https://vaad.ar/alertas-de-productos/';
   const storedAlertCache = readJson('iht_alert_cache');
   let alertCache = storedAlertCache?.version === INFO_CACHE_VERSION ? storedAlertCache : (activeContentSnapshot?.alerts ? {version:INFO_CACHE_VERSION, items:activeContentSnapshot.alerts, fetchedAt:Number(activeContentSnapshot.generatedAt) || 0} : null);
+  const storedBarcodeAssociations = readJson('iht_barcode_associations', {});
+  const barcodeAssociations = storedBarcodeAssociations && typeof storedBarcodeAssociations === 'object' && !Array.isArray(storedBarcodeAssociations) ? storedBarcodeAssociations : {};
   const pushNotificationKey = (item) => {
     const eventKey = clean(item?.eventKey || item?.data?.eventKey);
     if (eventKey) return `event:${eventKey}`;
@@ -3465,16 +3467,19 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
   function findProductsByBarcode(value) {
     const candidates = barcodeCandidates(value);
     if (!candidates.length) return [];
-    return products.filter((product) => {
+    const directMatches = products.filter((product) => {
       const barcode = canonicalBarcode(product.barcode);
       return barcode && barcodeCandidates(barcode).some((candidate) => candidates.includes(candidate));
     });
+    if (directMatches.length) return directMatches;
+    const associatedUrls = new Set(candidates.map((candidate) => barcodeAssociations[candidate]?.url).filter(Boolean));
+    return products.filter((product) => associatedUrls.has(product.url));
   }
 
-  function findProductByIdentity(identity) {
+  function findProductsByIdentity(identity) {
     const nameTokens = normalize(identity?.name).split(/\s+/).filter((token) => token.length > 2 && !['con', 'para', 'del', 'una'].includes(token));
     const brand = normalize(identity?.brand);
-    if (nameTokens.length < 2) return null;
+    if (nameTokens.length < 2) return [];
     return products
       .map((product) => {
         const title = normalize(product.title);
@@ -3484,7 +3489,30 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
         return {product, score, brandMatch};
       })
       .filter(({score, brandMatch}) => score >= Math.max(2, Math.ceil(nameTokens.length * .45)) && (brandMatch || nameTokens.length <= 3))
-      .sort((a, b) => b.score - a.score)[0]?.product || null;
+      .sort((a, b) => b.score - a.score || Number(b.brandMatch) - Number(a.brandMatch));
+  }
+
+  function findProductByIdentity(identity) {
+    const matches = findProductsByIdentity(identity);
+    const best = matches[0];
+    if (!best) return null;
+    const sameScore = matches.filter(({score, brandMatch}) => score === best.score && Boolean(brandMatch) === Boolean(best.brandMatch));
+    return sameScore.length === 1 ? best.product : null;
+  }
+
+  function rememberBarcodeAssociation(code, product, identity) {
+    const normalizedCode = canonicalBarcode(code);
+    if (!normalizedCode || !product?.url) return;
+    barcodeCandidates(normalizedCode).forEach((candidate) => {
+      barcodeAssociations[candidate] = {
+        url: product.url,
+        label: product.title,
+        source: 'Open Food Facts · coincidencia inequívoca',
+        savedAt: Date.now(),
+        identity: clean(`${identity?.name || ''} ${identity?.brand || ''}`)
+      };
+    });
+    localStorage.setItem('iht_barcode_associations', JSON.stringify(barcodeAssociations));
   }
 
   function scanCategoryPath(identity) {
@@ -3567,7 +3595,7 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     } catch (_) { return null; }
   }
 
-  function showScanResult(code, product = null, identity = null, exactMatches = []) {
+  function showScanResult(code, product = null, identity = null, exactMatches = [], identityMatches = []) {
     pendingScanProduct = product;
     stopCamera();
     $('#scanOverlay').hidden = false;
@@ -3581,6 +3609,9 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     } else if (exactMatches.length > 1) {
       const matchesMarkup = exactMatches.map((item) => `<button class="scan-alternative" type="button" data-scan-alternative="${escapeHtml(item.url)}"><span>${escapeHtml(item.title)}</span></button>`).join('');
       $('#scanMessage').innerHTML = `<span class="scan-result-status found">Código reconocido</span><strong class="scan-result-title">Hay más de una ficha asociada</strong><small class="scan-result-code">Código escaneado: ${escapeHtml(code)}</small><span class="scan-result-note">Elegí la ficha correcta para continuar.</span><div class="scan-alternatives"><div class="scan-alternatives-grid">${matchesMarkup}</div></div><button class="scan-result-action secondary" type="button" data-scan-again>Escanear otro producto</button>`;
+    } else if (identityMatches.length > 1) {
+      const matchesMarkup = identityMatches.map(({product}) => `<button class="scan-alternative" type="button" data-scan-alternative="${escapeHtml(product.url)}"><span>${escapeHtml(product.title)}</span></button>`).join('');
+      $('#scanMessage').innerHTML = `<span class="scan-result-status found">Producto identificado</span><strong class="scan-result-title">Elegí la presentación correcta</strong><small class="scan-result-code">Código escaneado: ${escapeHtml(code)}</small><span class="scan-result-note">Encontramos varias fichas compatibles con la información del código.</span><div class="scan-alternatives"><div class="scan-alternatives-grid">${matchesMarkup}</div></div><button class="scan-result-action secondary" type="button" data-scan-again>Escanear otro producto</button>`;
     } else {
       const identified = externalName ? `<strong class="scan-result-title">${escapeHtml(externalName)}${externalBrand ? ` · ${escapeHtml(externalBrand)}` : ''}</strong>` : '';
       const alternatives = findScanAlternatives(identity, code);
@@ -3622,9 +3653,18 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     }
     showScanLoading(code);
     const identity = await barcodeIdentity(code);
-    // A name/brand match is only a hint. It must never replace an exact
-    // barcode association, otherwise a scan can open a different product.
-    showScanResult(code, null, identity);
+    const identityMatches = findProductsByIdentity(identity);
+    // Open Food Facts is only a fallback when the local catalog has no code.
+    // We auto-open only a unique, high-confidence identity match; ambiguous
+    // variants remain explicit so a scan can never open the wrong product.
+    const matchedProduct = identityMatches.length === 1 ? identityMatches[0].product : findProductByIdentity(identity);
+    if (matchedProduct) {
+      rememberBarcodeAssociation(code, matchedProduct, identity);
+      closeScanner();
+      openDetail(matchedProduct.url, {fromScan:true});
+      return;
+    }
+    showScanResult(code, null, identity, [], identityMatches);
   }
 
   function goBackTaxonomy() {
