@@ -3461,6 +3461,8 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     // UPC-A is commonly returned as 12 digits while catalog data stores it as EAN-13.
     if (code.length === 12) candidates.push(`0${code}`);
     if (code.length === 13 && code.startsWith('0')) candidates.push(code.slice(1));
+    // Some readers return the same retail code as a zero-padded GTIN-14.
+    if (code.length === 14 && code.startsWith('0')) candidates.push(code.slice(1));
     return [...new Set(candidates)];
   }
 
@@ -3476,20 +3478,47 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     return products.filter((product) => associatedUrls.has(product.url));
   }
 
+  const scanIdentityStopWords = new Set(['con', 'para', 'del', 'una', 'uno', 'de', 'el', 'la', 'los', 'las', 'and', 'the', 'with', 'sabor', 'flavor', 'flavour', 'bebida', 'drink', 'beverage', 'producto', 'product', 'marca', 'brand']);
+  const scanIdentityAliases = new Map([
+    ['grape', 'uva'], ['grapes', 'uva'], ['uva', 'uva'],
+    ['orange', 'naranja'], ['naranja', 'naranja'], ['laranja', 'naranja'],
+    ['apple', 'manzana'], ['apples', 'manzana'], ['manzana', 'manzana'],
+    ['lemon', 'limon'], ['limon', 'limon'], ['lime', 'lima'], ['lima', 'lima'],
+    ['peach', 'durazno'], ['durazno', 'durazno'], ['zero', 'zero'],
+    ['berry', 'berry'], ['berries', 'berry'], ['frutilla', 'frutilla'], ['strawberry', 'frutilla']
+  ]);
+  const scanIdentityTokens = (value) => normalize(value)
+    .replace(/[^a-z0-9]+/g, ' ')
+    .split(/\s+/)
+    .map((token) => scanIdentityAliases.get(token) || token)
+    .filter((token) => token.length > 2 && !scanIdentityStopWords.has(token));
+
   function findProductsByIdentity(identity) {
-    const nameTokens = normalize(identity?.name).split(/\s+/).filter((token) => token.length > 2 && !['con', 'para', 'del', 'una'].includes(token));
-    const brand = normalize(identity?.brand);
-    if (nameTokens.length < 2) return [];
+    const nameTokens = [...new Set(scanIdentityTokens(identity?.name))];
+    const brandTokens = [...new Set(scanIdentityTokens(identity?.brand))];
+    if (nameTokens.length < 1 || (nameTokens.length === 1 && !brandTokens.length)) return [];
+    const identityTokens = [...new Set([...nameTokens, ...brandTokens])];
+    const variantTokens = nameTokens.filter((token) => !brandTokens.includes(token));
     return products
       .map((product) => {
-        const title = normalize(product.title);
-        const titleTokens = nameTokens.filter((token) => title.includes(token));
-        const brandMatch = brand && normalize(`${product.title} ${product.brand || ''}`).includes(brand);
-        const score = titleTokens.length + (brandMatch ? 3 : 0);
-        return {product, score, brandMatch};
+        const productText = `${product.title || ''} ${product.brand || ''}`;
+        const productTokens = new Set(scanIdentityTokens(productText));
+        const matchedNameTokens = nameTokens.filter((token) => productTokens.has(token));
+        const matchedBrandTokens = brandTokens.filter((token) => productTokens.has(token));
+        const matchedVariantTokens = variantTokens.filter((token) => productTokens.has(token));
+        const allIdentityTokensMatch = identityTokens.length > 1 && identityTokens.every((token) => productTokens.has(token));
+        const brandMatch = brandTokens.length > 0 && brandTokens.every((token) => productTokens.has(token));
+        const exactNameMatch = nameTokens.length > 1 && nameTokens.every((token) => productTokens.has(token));
+        const score = matchedNameTokens.length * 2 + matchedBrandTokens.length * 2 + matchedVariantTokens.length * 2
+          + (brandMatch ? 3 : 0) + (exactNameMatch ? 2 : 0) + (allIdentityTokensMatch ? 2 : 0);
+        return {product, score, brandMatch, exactNameMatch, matchedVariantTokens};
       })
-      .filter(({score, brandMatch}) => score >= Math.max(2, Math.ceil(nameTokens.length * .45)) && (brandMatch || nameTokens.length <= 3))
-      .sort((a, b) => b.score - a.score || Number(b.brandMatch) - Number(a.brandMatch));
+      .filter(({score, brandMatch, matchedVariantTokens, exactNameMatch}) => {
+        const hasDiscriminatingVariant = matchedVariantTokens.length > 0 || exactNameMatch;
+        const minimumScore = brandTokens.length ? 7 : Math.max(4, nameTokens.length * 2);
+        return hasDiscriminatingVariant && score >= minimumScore && (brandMatch || exactNameMatch);
+      })
+      .sort((a, b) => b.score - a.score || Number(b.exactNameMatch) - Number(a.exactNameMatch));
   }
 
   function findProductByIdentity(identity) {
@@ -3501,7 +3530,7 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
   }
 
   function rememberBarcodeAssociation(code, product, identity) {
-    const normalizedCode = canonicalBarcode(code);
+    const normalizedCode = String(code || '').replace(/\D/g, '');
     if (!normalizedCode || !product?.url) return;
     barcodeCandidates(normalizedCode).forEach((candidate) => {
       barcodeAssociations[candidate] = {
