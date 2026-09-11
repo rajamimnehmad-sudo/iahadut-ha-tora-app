@@ -330,8 +330,25 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
   const alertUrl = 'https://vaad.ar/alertas-de-productos/';
   const storedAlertCache = readJson('iht_alert_cache');
   let alertCache = storedAlertCache?.version === INFO_CACHE_VERSION ? storedAlertCache : (activeContentSnapshot?.alerts ? {version:INFO_CACHE_VERSION, items:activeContentSnapshot.alerts, fetchedAt:Number(activeContentSnapshot.generatedAt) || 0} : null);
+  const pushNotificationKey = (item) => {
+    const eventKey = clean(item?.eventKey || item?.data?.eventKey);
+    if (eventKey) return `event:${eventKey}`;
+    const id = clean(item?.id || item?.data?.messageId);
+    if (id) return `id:${id}`;
+    return `legacy:${clean(item?.title)}|${clean(item?.body)}|${clean(item?.url)}|${clean(item?.time)}`;
+  };
+  const dedupePushNotifications = (items) => {
+    const seen = new Set();
+    return items.filter((item) => {
+      const key = pushNotificationKey(item);
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+  };
   let pushNotifications = readJson('iht_push_notifications', []);
   if (!Array.isArray(pushNotifications)) pushNotifications = [];
+  pushNotifications = dedupePushNotifications(pushNotifications).slice(0, 30);
   const assetCacheKey = `iht_asset_cache_${INFO_CACHE_VERSION}`;
   const storedAssetCache = readJson(assetCacheKey, []);
   const assetCache = new Set(Array.isArray(storedAssetCache) ? storedAssetCache : []);
@@ -3126,7 +3143,8 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
         });
         await PushNotifications.addListener('registrationError', () => { localStorage.setItem('iht_push_status', 'error'); renderNotificationPermission(); });
         await PushNotifications.addListener('pushNotificationReceived', (notification) => {
-          const item = {title:notification.title || notification.data?.title || 'Novedad del catálogo', body:notification.body || notification.data?.body || 'Hay una actualización disponible.', time:new Date().toLocaleString('es-AR'), url:notificationPlayStoreUrl(notification)};
+          const item = {id:clean(notification.id || notification.data?.messageId), eventKey:clean(notification.data?.eventKey), title:notification.title || notification.data?.title || 'Novedad del catálogo', body:notification.body || notification.data?.body || 'Hay una actualización disponible.', time:new Date().toLocaleString('es-AR'), url:notificationPlayStoreUrl(notification)};
+          if (pushNotifications.some((stored) => pushNotificationKey(stored) === pushNotificationKey(item))) return;
           cachePushCatalogAlert(notification);
           pushNotifications = [item, ...pushNotifications].slice(0, 30);
           localStorage.setItem('iht_push_notifications', JSON.stringify(pushNotifications));

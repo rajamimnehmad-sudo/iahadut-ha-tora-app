@@ -1,11 +1,12 @@
 import {createHash, createSign} from 'node:crypto';
-import {mkdir, readFile, writeFile} from 'node:fs/promises';
+import {mkdir, readFile, rename, writeFile} from 'node:fs/promises';
 import {dirname, resolve} from 'node:path';
 import {DOMParser} from 'linkedom';
 
 const sourceUrl = 'https://vaad.ar/alertas-de-productos/';
 const statePath = resolve(process.env.ALERT_STATE_PATH || 'automation/alert-state.json');
 const topic = process.env.FCM_TOPIC || 'catalog-updates';
+const productTypes = new Set(['alta', 'baja']);
 const clean = (value) => String(value || '').replace(/\s+/g, ' ').trim();
 const absolute = (value) => value ? new URL(value, sourceUrl).href : '';
 
@@ -32,16 +33,33 @@ for (const section of trackedSections) {
 }
 const currentMap = Object.fromEntries(current.map((item) => [`${item.type}:${item.text}`, item]));
 let previous = {};
-try { previous = JSON.parse(await readFile(statePath, 'utf8')); } catch (_) {}
-const hasSectionBaseline = trackedSections.some((section) => Object.values(previous).some((item) => item?.type === section.type));
-const changes = current.filter((item) => !previous[`${item.type}:${item.text}`] && (hasSectionBaseline || !trackedSections.some((section) => section.type === item.type)));
-const persistState = async () => {
+try {
+  const parsed = JSON.parse(await readFile(statePath, 'utf8'));
+  if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) previous = parsed;
+} catch (_) {}
+const previousEntries = Object.fromEntries(Object.entries(previous).filter(([key, item]) => key && item && typeof item === 'object' && typeof item.type === 'string'));
+const previousProductCount = Object.values(previousEntries).filter((item) => productTypes.has(item.type)).length;
+const currentProductCount = current.filter((item) => productTypes.has(item.type)).length;
+const hasProductBaseline = previousProductCount > 0;
+const hasSectionBaseline = trackedSections.some((section) => Object.values(previousEntries).some((item) => item?.type === section.type));
+const needsProductBaseline = currentProductCount > 0 && !hasProductBaseline;
+const changes = current.filter((item) => {
+  const key = `${item.type}:${item.text}`;
+  if (previousEntries[key]) return false;
+  if (productTypes.has(item.type)) return hasProductBaseline;
+  return hasSectionBaseline || !trackedSections.some((section) => section.type === item.type);
+});
+const mergedState = () => ({...previousEntries, ...currentMap});
+const persistState = async (state = mergedState()) => {
   await mkdir(dirname(statePath), {recursive: true});
-  await writeFile(statePath, `${JSON.stringify(currentMap, null, 2)}\n`, 'utf8');
+  const temporaryPath = `${statePath}.tmp-${process.pid}`;
+  await writeFile(temporaryPath, `${JSON.stringify(state, null, 2)}\n`, 'utf8');
+  await rename(temporaryPath, statePath);
 };
 
 if (!changes.length) {
   await persistState();
+  if (needsProductBaseline) console.log(`Se incorporó una línea de base segura para ${currentProductCount} productos sin enviar históricos.`);
   console.log('Sin cambios nuevos en altas, bajas o secciones informativas.');
   process.exit(0);
 }
@@ -68,12 +86,18 @@ const assertion = `${unsigned}.${signer.sign(serviceAccount.private_key, 'base64
 const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {method: 'POST', headers: {'content-type': 'application/x-www-form-urlencoded'}, body: new URLSearchParams({grant_type: 'urn:ietf:params:oauth:grant-type:jwt-bearer', assertion})});
 if (!tokenResponse.ok) throw new Error(`No se pudo obtener autorización FCM: HTTP ${tokenResponse.status}`);
 const {access_token: accessToken} = await tokenResponse.json();
+const stateAfterSuccessfulSends = needsProductBaseline
+  ? {...previousEntries, ...Object.fromEntries(current.filter((item) => productTypes.has(item.type)).map((item) => [`${item.type}:${item.text}`, item]))}
+  : {...previousEntries};
 for (const item of changes) {
   const notificationTitle = item.type === 'alta' ? 'Nueva alta en el catálogo' : item.type === 'baja' ? 'Producto dado de baja' : item.type === 'notes' ? 'Nueva nota de Kashrut' : item.type === 'catering' ? 'Nuevo catering certificado' : 'Nueva tienda certificada';
-  const message = {message: {topic, notification: {title: notificationTitle, body: item.type === 'notes' || item.type === 'catering' || item.type === 'shops' ? 'Hay una novedad disponible para consultar.' : item.text}, android: {priority: 'HIGH', notification: {channel_id: 'catalog-updates', sound: 'default'}}, data: {action: 'sync', alertType: item.type, text: item.text, url: item.url || ''}}};
+  const eventKey = `${item.type}:${item.text}`;
+  const message = {message: {topic, notification: {title: notificationTitle, body: item.type === 'notes' || item.type === 'catering' || item.type === 'shops' ? 'Hay una novedad disponible para consultar.' : item.text}, android: {priority: 'HIGH', ttl: '3600s', collapse_key: 'catalog-updates', notification: {channel_id: 'catalog-updates', sound: 'default'}}, data: {action: 'sync', alertType: item.type, eventKey, sentAt: new Date(now * 1000).toISOString(), text: item.text, url: item.url || ''}}};
   const sendResponse = await fetch(`https://fcm.googleapis.com/v1/projects/${serviceAccount.project_id}/messages:send`, {method: 'POST', headers: {'content-type': 'application/json', Authorization: `Bearer ${accessToken}`}, body: JSON.stringify(message)});
   if (!sendResponse.ok) throw new Error(`FCM rechazó la notificación: HTTP ${sendResponse.status}`);
+  stateAfterSuccessfulSends[eventKey] = item;
+  await persistState(stateAfterSuccessfulSends);
   console.log(`Notificación enviada: ${item.type} · ${item.text}`);
 }
 
-await persistState();
+await persistState(mergedState());
