@@ -571,7 +571,7 @@ body { color: #252925; }
 .region-icon { display: grid; width: 30px; height: 30px; place-items: center; border-radius: 50%; font-size: 10px; font-weight: 850; letter-spacing: -.04em; }
 .region-arg { background: #e3eef6; color: #39739b; }
 .quick-regions .quick-filter:not(.active) .region-icon { opacity: .72; }
-.region-shortcut-wrap { margin: 6px 20px 0; }
+.region-shortcut-wrap { margin: 6px clamp(12px, 4vw, 20px) 0; }
 .region-shortcut { display: flex; align-items: center; width: 100%; min-height: 48px; gap: 10px; padding: 7px 12px; border: 1px solid #c9dcd0; border-radius: 16px; background: #edf5ef; color: #245b45; font: inherit; font-size: 13px; font-weight: 700; text-align: left; }
 .region-shortcut.active { background: #e3f1e8; }
 .region-shortcut .category-icon { flex: 0 0 32px; width: 32px; height: 32px; }
@@ -582,9 +582,10 @@ body { color: #252925; }
 .saved-page-head h1 { margin-bottom: 5px; }
 .saved-view .product-list { padding-top: 0; }
 .saved-empty-state .bookmark-icon { width: 42px; height: 42px; color: #6f8c7b; }
-.recent-products-viewport { position: relative; width: 100%; overflow-x: auto; overflow-y: hidden; overscroll-behavior-x: contain; scrollbar-width: none; -webkit-overflow-scrolling: touch; scroll-behavior: smooth; }
+.recent-products-viewport { position: relative; width: 100%; overflow-x: auto; overflow-y: hidden; overscroll-behavior-x: contain; scrollbar-width: none; -webkit-overflow-scrolling: touch; scroll-behavior: smooth; scroll-snap-type: x mandatory; touch-action: pan-x; }
 .recent-products-viewport::-webkit-scrollbar { display: none; }
 .recent-products-viewport.is-interacting { scroll-behavior: auto; scroll-snap-type: none; }
+.recent-products-viewport.is-autoplaying { scroll-behavior: auto; scroll-snap-type: none; }
 .recent-products { display: flex; width: max-content; gap: 10px; padding-block: 2px; }
 .recent-product { display: block; width: 100%; aspect-ratio: 1; padding: 5px; border: 1px solid #e0e6e1; border-radius: 12px; background: #fff; }
 .recent-product { flex: 0 0 var(--recent-card-width, clamp(92px, 28vw, 128px)); scroll-snap-align: start; scroll-snap-stop: normal; }
@@ -790,6 +791,13 @@ body { color: #252925; }
 .status-dot { background: #2f7a59; }
 .save { color: #1f5d46; }
 .detail-head { min-height: 60px; background: #fff; }
+.detail-head { grid-template-columns: 44px minmax(0, 1fr) auto; }
+.detail-head-actions { display: flex; align-items: center; justify-content: flex-end; gap: 0; }
+.detail-head-actions .icon-btn { width: 44px; min-width: 44px; }
+.detail-head-actions .icon-btn:disabled { opacity: .55; }
+.detail-head-actions svg { width: 21px; height: 21px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+.detail-head-actions .icon-btn.is-loading { display: grid; place-items: center; }
+.share-button-spinner { display: block; width: 19px; height: 19px; border: 2px solid #b9d7c5; border-top-color: var(--green); border-radius: 50%; animation: spin .72s linear infinite; }
 .detail-content img { height: 224px; padding: 14px 18px 8px; background: #fff; }
 .detail-content { padding-bottom: 92px; }
 .detail-region-badge { position: static; width: 30px; height: 30px; margin: 0 0 8px; padding: 2px; }
@@ -820,6 +828,7 @@ body { color: #252925; }
 .detail-body > .detail-category-planta { --detail-category-bg: #fbf5e8; --detail-category-border: #e5d1a3; --detail-category-ink: #86611e; }
 .detail-body > .detail-category-especial { --detail-category-bg: #faeef0; --detail-category-border: #e5bbc1; --detail-category-ink: #993844; }
 .detail-body > .detail-category-uruguay { --detail-category-bg: #edf3f8; --detail-category-border: #bed0df; --detail-category-ink: #3f6e91; }
+.detail-body > .label .detail-special-seal { display: block; width: 36px; height: 29px; flex: 0 0 36px; padding: 0; border-radius: 5px; background: #fff; object-fit: contain; mix-blend-mode: multiply; }
 .detail-body h1, .reader h2 { color: #202722; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; font-size: 24px; font-weight: 750; line-height: 1.08; letter-spacing: -.04em; }
 .detail-body h1 { margin: 0 0 14px; }
 .detail-body p, .reader p { color: #556058; font-size: 13px; }
@@ -830,6 +839,14 @@ body { color: #252925; }
 .kosher-toast span:last-child { display: grid; gap: 2px; min-width: 0; }
 .kosher-toast strong { font-size: 24px; line-height: 1; letter-spacing: -.03em; }
 .kosher-toast small { overflow: hidden; color: #39785b; font-size: 11px; line-height: 1.25; text-overflow: ellipsis; white-space: nowrap; }
+.share-toast { position: fixed; right: 17px; bottom: calc(env(safe-area-inset-bottom, 0px) + 86px); left: 17px; z-index: 120; display: flex; align-items: center; gap: 10px; width: min(calc(100% - 34px), 390px); margin: auto; padding: 12px 14px; border: 1px solid #b6dec3; border-radius: 15px; background: #eff9f2; color: #1b6845; box-shadow: 0 10px 28px #1d4d3326; opacity: 0; transform: translateY(10px); transition: opacity .24s ease, transform .24s ease; }
+.share-toast.visible { opacity: 1; transform: translateY(0); }
+.share-toast.bad { border-color: #e0b8b8; background: #fff3f2; color: #a53d3d; }
+.share-toast-mark { display: grid; width: 25px; height: 25px; flex: 0 0 25px; place-items: center; border-radius: 50%; background: #2f8b61; color: #fff; font-size: 14px; font-weight: 800; }
+.share-toast.bad .share-toast-mark { background: #b94b4b; }
+.share-toast.is-loading .share-toast-mark { background: #dceee3; color: #2f8b61; }
+.share-toast-spinner { display: block; width: 14px; height: 14px; border: 2px solid #afd0bc; border-top-color: #2f8b61; border-radius: 50%; animation: spin .72s linear infinite; }
+.share-toast > span:last-child { font-size: 12px; font-weight: 650; line-height: 1.3; }
 .detail-facts { gap: 7px; }
 .detail-facts.single { grid-template-columns: 1fr; }
 .detail-facts div { border-color: #dfe5e0; border-radius: 11px; }
@@ -937,8 +954,12 @@ body.modal-open { overflow: hidden; }
 .update-more-row, .official-site-row { margin-top: 0; border-top: 0; border-bottom: 1px solid #ddd5ca; color: #1f5d46; }
 .update-more-row.has-update-new { position: relative; }
 .update-more-row.has-update-new::after { content: 'Nueva'; position: absolute; top: 10px; right: 38px; z-index: 2; padding: 3px 7px; border: 1px solid #b9d8c5; border-radius: 999px; background: #e7f4eb; color: #24704e; box-shadow: 0 2px 6px #1f5d461c; font-size: 9px; font-weight: 750; line-height: 1.1; pointer-events: none; }
-.developer-credit { display: grid; grid-template-columns: auto 18px; align-items: center; justify-content: center; column-gap: 7px; row-gap: 3px; margin: 28px 20px 6px; color: #89938c; font-size: 10px; letter-spacing: .01em; }
-.developer-credit > span:first-child { grid-column: 1 / -1; }
+.developer-credit { display: grid; grid-template-columns: auto 18px; align-items: center; justify-content: center; column-gap: 7px; row-gap: 8px; margin: 16px 0 30px; padding-top: 14px; border-top: 0; color: #89938c; font-size: 10px; letter-spacing: .01em; text-align: center; }
+.developer-credit .app-version, .developer-credit .developer-name { grid-column: 1 / -1; }
+.developer-credit .app-version, .developer-credit .developer-name { justify-self: center; }
+.developer-credit .app-version { color: #68756d; font-size: 9px; font-weight: 650; letter-spacing: .03em; }
+.developer-credit .developer-name { margin-top: 78px; }
+.developer-credit .developer-cta, .developer-credit .developer-whatsapp { margin-top: -5px; }
 .developer-cta { color: #2f7a59; font-size: 10px; font-weight: 700; text-decoration: none; }
 .developer-cta:hover { text-decoration: underline; }
 
@@ -1154,6 +1175,41 @@ html body [contenteditable="true"] {
   }
 }
 
+/* Android puede pintar un frame intermedio mientras el teclado baja y el
+   formulario vuelve desde el nav al Home. Ocultamos el dock durante ese
+   frame: el usuario llega directo a Home, sin ver el nav desplazarse por el
+   centro de la pantalla. */
+body.search-closing .bottom-nav {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+  transition: none !important;
+}
+
+/* El cierre de la flecha del buscador debe ser una transición directa a Home:
+   mientras Android termina de ocultar el teclado, no dejamos un frame vacío
+   entre la vista de búsqueda y el encabezado principal. */
+@media (max-width: 700px) {
+  body.search-open.search-closing .topbar {
+    display: flex !important;
+  }
+  body.search-open.search-closing .topbar,
+  body.search-open.search-closing .topbar img,
+  body.search-open.search-closing #homeView,
+  body.search-open.search-closing #homeView img {
+    visibility: visible !important;
+    opacity: 1 !important;
+  }
+  body.search-open.search-closing #searchView {
+    display: none !important;
+  }
+  body.search-open.search-closing #homeView {
+    display: block !important;
+    animation: none !important;
+  }
+}
+
 /* El escáner también debe conservar una acción manual legible en teléfonos
    muy angostos, sin permitir que el botón "Buscar" se parta verticalmente. */
 #scanOverlay .detail-head.dark {
@@ -1317,7 +1373,7 @@ html body [contenteditable="true"] {
     padding: 5px 8px;
     transform: none;
     border-radius: 36px;
-    background: #2f7a59c4;
+    background: #2f7a59e6;
     border-color: #9ac3aa99;
   }
   .search-open .bottom-nav > .nav { display: none; }
@@ -1383,9 +1439,18 @@ html body [contenteditable="true"] {
   .search-open #searchView {
     /* El listado empieza debajo del dock, pero dentro del velo: así la
        transición se percibe como vidrio esmerilado y no como un corte. */
-    padding-top: max(70px, calc(50px + var(--app-safe-top, 0px)));
+    /* En Android el dock puede cambiar de altura al entrar el teclado. La
+       variable la mide JS contra su rect real para que el switch nunca quede
+       debajo de la barra, incluso durante los resize intermedios. */
+    padding-top: max(var(--search-dock-space, 0px), 70px, calc(50px + var(--app-safe-top, 0px)));
     padding-bottom: 24px;
     overflow-anchor: none;
+  }
+  /* Con una búsqueda activa, el encabezado de resultados puede acercarse al
+     dock: el propio encabezado conserva su margen y el contenido no queda
+     debajo del campo. El selector de país vacío mantiene su separación actual. */
+  body.search-open:has(#query:not(:placeholder-shown)) #searchView {
+    padding-top: max(calc(var(--search-dock-space, 0px) - 24px), 70px, calc(50px + var(--app-safe-top, 0px)));
   }
   .search-open #searchView::before {
     content: '';
@@ -1433,7 +1498,7 @@ html body [contenteditable="true"] {
     backdrop-filter: none;
   }
   body.search-open:has(#query:placeholder-shown) #searchCategories {
-    padding-top: 34px;
+    padding-top: 0;
   }
   body.search-open #searchView #results,
   body.search-open #searchView #searchCategories,
@@ -1443,7 +1508,7 @@ html body [contenteditable="true"] {
   /* Los resultados empiezan después del vidrio para que el encabezado
      permanezca siempre visible y no quede oculto detrás del dock. */
   body.search-open #searchView #results {
-    padding-top: var(--search-results-padding);
+    padding-top: max(16px, calc(var(--search-results-padding) - 36px));
   }
   .search-open #searchView .product-list {
     border-top-color: transparent;
@@ -1513,7 +1578,7 @@ html body [contenteditable="true"] {
     height: 34px;
   }
   .search-open #searchView .region-shortcut-wrap {
-    margin: 14px 20px 0;
+    margin: 4px clamp(12px, 4vw, 20px) 0;
   }
   .search-open #searchView .region-shortcut {
     position: relative;
@@ -2146,4 +2211,22 @@ html, body { overscroll-behavior-y: none; }
 }
 @media (max-width: 700px) {
   .region-switch button { font-size: clamp(12px, 3.5vw, 14px); }
+}
+
+/* El carrusel ocupa todo el ancho y deja ver tarjetas vecinas en los bordes. */
+#homeView .recent-products-viewport {
+  width: calc(100% + 40px);
+  margin-inline: -20px;
+}
+#homeView .recent-products {
+  padding-inline: 0;
+}
+#homeView .recent-product {
+  overflow: hidden;
+}
+@media (max-width: 360px) {
+  #homeView .recent-products-viewport {
+    width: calc(100% + 24px);
+    margin-inline: -12px;
+  }
 }

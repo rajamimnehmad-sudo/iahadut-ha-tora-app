@@ -1,0 +1,58 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Se conserva el registro de popularidad ya usado por la app. Los
+    // documentos solo pueden incrementarse de a uno y nunca eliminarse.
+    match /product_popularity/{productId} {
+      allow read: if true;
+      allow create: if request.auth != null
+        && request.resource.data.keys().hasOnly(['productUrl', 'title', 'image', 'searches', 'opens', 'score', 'updatedAt'])
+        && request.resource.data.productUrl is string
+        && request.resource.data.title is string
+        && request.resource.data.image is string
+        && request.resource.data.searches is int
+        && request.resource.data.opens is int
+        && request.resource.data.score is int
+        && request.resource.data.searches >= 0
+        && request.resource.data.opens >= 0
+        && request.resource.data.score == 1
+        && ((request.resource.data.searches == 1 && request.resource.data.opens == 0) || (request.resource.data.searches == 0 && request.resource.data.opens == 1));
+      allow update: if request.auth != null
+        && request.resource.data.keys().hasOnly(['productUrl', 'title', 'image', 'searches', 'opens', 'score', 'updatedAt'])
+        && request.resource.data.productUrl == resource.data.productUrl
+        && request.resource.data.title == resource.data.title
+        && request.resource.data.image == resource.data.image
+        && request.resource.data.score == resource.data.score + 1
+        && ((request.resource.data.searches == resource.data.searches + 1 && request.resource.data.opens == resource.data.opens) || (request.resource.data.searches == resource.data.searches && request.resource.data.opens == resource.data.opens + 1));
+      allow delete: if false;
+    }
+
+    function isAnonymousAppUser() {
+      return request.auth != null
+        && request.auth.token.firebase.sign_in_provider == 'anonymous';
+    }
+
+    // El catálogo es contenido público de solo lectura. La escritura queda
+    // reservada al proceso de sincronización del servidor, que usa Admin SDK
+    // y no depende de estas reglas.
+    match /catalog_metadata/{documentId} {
+      allow read: if isAnonymousAppUser();
+      allow write: if false;
+    }
+
+    match /catalog_products/{documentId} {
+      allow read: if isAnonymousAppUser();
+      allow write: if false;
+    }
+
+    match /catalog_archive/{documentId} {
+      allow read: if isAnonymousAppUser();
+      allow write: if false;
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

@@ -57,11 +57,19 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
   let searchPlaceholderSwapTimer;
   let homePlaceholderSwapTimer;
   let searchFocusTimer;
+  let searchCloseTimer;
+  let searchCloseViewport;
+  let searchCloseViewportHandler;
+  let searchViewportBaseline = 0;
   const searchPlaceholders = ['Buscá un producto', 'Probá con una marca', 'Encontrá una categoría', 'Escaneá un código'];
   const clean = (value) => String(value || '').replace(/\s+/g, ' ').trim();
   const normalize = (value) => clean(value).normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
   const escapeHtml = (value) => String(value || '').replace(/[&<>"']/g, (char) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[char]));
   const productFallbackImage = 'assets/product-placeholder.svg';
+  // Resolver el sello desde el módulo evita que una ruta relativa cambie
+  // cuando la app corre dentro del WebView de Capacitor o con otra base URL.
+  const shareLogoAssetUrl = new URL('./assets/logo.png', import.meta.url).href;
+  const appInstallUrl = 'https://play.google.com/store/apps/details?id=ar.vaad.catalogo.app';
   const phoneNumbers = (value) => [...new Set((String(value || '').match(/(?:\+?54[\s.-]*9[\s.-]*)?11[\s.-]*(?:\d[\s.-]*){8}/g) || []).map((phone) => phone.replace(/\D/g, '')).map((digits) => digits.startsWith('549') ? digits : digits.startsWith('54') ? `549${digits.slice(2)}` : `549${digits}`))];
 
   function validGtin(value) {
@@ -140,7 +148,7 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     shops:['Tiendas certificadas','Establecimientos que ofrecen productos certificados','Consultá los establecimientos que trabajan con productos bajo supervisión y certificación.','https://vaad.ar/tiendas-kosher-certificadas/'],
     catering:['Servicios de catering','Catering certificado y supervisado','Información para eventos y servicios de alimentación que requieren supervisión kosher.','https://vaad.ar/servicios-de-catering/'],
     notes:['Notas Kashrut','Información y contenidos sobre Kashrut','Material de consulta para conocer criterios, procesos y recomendaciones de Kashrut.','https://vaad.ar/notas-kashrut/'],
-    world:['Certificaciones mundiales','Certificaciones kosher reconocidas','Información sobre organismos y certificaciones kosher reconocidas internacionalmente.','https://vaad.ar/certificaciones-kosher-mundiales/'],
+    world:['Certificaciones internacionales','Certificaciones kosher reconocidas','Información sobre organismos y certificaciones kosher reconocidas internacionalmente.','https://vaad.ar/certificaciones-kosher-mundiales/'],
     certify:['Certificá tu planta','El primer paso para expandir tu mercado','Información oficial sobre el proceso de certificación kosher.','https://vaad.ar/certifica-tu-planta/'],
     about:['Quiénes somos','Equipo Kosher Iahadut HaTora · Mehadrin Argentina','Un equipo dedicado a ofrecer información confiable y acompañar los procesos de certificación.','https://vaad.ar/quienes-somos/'],
     contact:['Contacto','Canales oficiales de atención','Para consultas generales, podés comunicarte con el equipo de Iahadut HaTora.','https://vaad.ar/contacto/'],
@@ -248,6 +256,9 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
   let previousView = 'homeView';
   let previousScrollTop = 0;
   let currentInfoKey = '';
+  let shareBusy = false;
+  const shareImageCache = new Map();
+  let shareLogoPromise = null;
   let readerHistory = [];
   let stream = null;
   let scanFrame = 0;
@@ -261,6 +272,7 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
   let visibleProductTarget = null;
   let resultObserver = null;
   let recentCarouselTimer = null;
+  let recentCarouselRebaseTimer = null;
   let recentCarouselOffset = 0;
   let renderedHomeItemsKey = '';
   let remoteControl = {...defaultRemoteControl, configured:false, checkedAt:0};
@@ -327,6 +339,12 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
   const activeCatalogTimestamp = activeCatalogSnapshot?.generatedAt ? Date.parse(activeCatalogSnapshot.generatedAt) : 0;
   const storedCatalogTimestamp = Number(localStorage.getItem('iht_catalog_generated_at') || 0);
   if (activeCatalogTimestamp > storedCatalogTimestamp) localStorage.setItem('iht_catalog_generated_at', String(activeCatalogTimestamp));
+  // Una instalación nueva puede usar la instantánea incluida como baseline.
+  // Si ya existe un catálogo local, primero se reconcilia con Firebase para
+  // no confundir una copia anterior con la versión empaquetada.
+  if (!localStorage.getItem('iht_catalog_version') && !(Array.isArray(storedProducts) && storedProducts.length) && activeCatalogSnapshot?.generatedAt) {
+    localStorage.setItem('iht_catalog_version', String(activeCatalogSnapshot.generatedAt));
+  }
   const infoNoticeVersion = 'v3';
   const infoNoticeKeys = ['shops', 'catering', 'notes'];
   const infoNewState = Object.fromEntries(infoNoticeKeys.map((key) => [
@@ -1038,13 +1056,17 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     if (!remoteVersion) return false;
     const remoteProductCount = Number(metadataSnapshot.data()?.activeProductCount) || 0;
 
+    // Never infer the cursor from the bundled snapshot when a previous
+    // installation already has its own cached catalog. That cache may be
+    // older than the bundled assets and must be reconciled from Firestore.
     const localVersion = clean(localStorage.getItem('iht_catalog_version'));
     const localDate = localVersion ? Date.parse(localVersion) : 0;
     const remoteDate = Date.parse(remoteVersion);
+    const localIsAtLeastAsNew = Boolean(localDate && remoteDate && remoteDate <= localDate);
     const hasUsableLocalVersion = Boolean(localDate && remoteDate && remoteDate > localDate);
     // A versioned local catalog is already a valid snapshot. Do not force a
     // full download just because the old category counters drifted.
-    if (localVersion === remoteVersion && products.length > 0) {
+    if (localIsAtLeastAsNew && products.length > seed.length) {
       syncState.last = String(Date.now());
       localStorage.setItem('iht_last_sync', syncState.last);
       syncMessage(`Catálogo al día · ${products.length.toLocaleString('es-AR')} productos`, 'ok');
@@ -1121,8 +1143,17 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     syncMessage('Sincronizando catálogo oficial…', 'busy');
     try {
       let firebaseUpdated = false;
-      try { firebaseUpdated = await syncCatalogFromFirestore(minimumCatalogTotal, onProgress); } catch (_) {}
+      let firebaseError = null;
+      try { firebaseUpdated = await syncCatalogFromFirestore(minimumCatalogTotal, onProgress); } catch (error) { firebaseError = error; }
       if (firebaseUpdated) return;
+      // A valid bundled or cached catalog is safer than falling back to a
+      // full scrape on every manual sync. Full pagination is reserved for a
+      // genuinely empty catalog/recovery state.
+      if (products.length > seed.length) {
+        syncState.error = firebaseError?.message || 'No se pudo consultar la sincronización incremental';
+        syncMessage('No se pudieron verificar cambios · se conserva el catálogo guardado', 'bad');
+        return;
+      }
       const synced = [];
       for (const [categoryIndex, category] of categories.entries()) {
         const firstPage = await fetchCatalogPage(category.url);
@@ -1209,13 +1240,23 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
       window.clearInterval(recentCarouselTimer);
       recentCarouselTimer = null;
     }
+    if (recentCarouselRebaseTimer) {
+      window.clearTimeout(recentCarouselRebaseTimer);
+      recentCarouselRebaseTimer = null;
+    }
     recentCarouselOffset = 0;
     const recentTrack = $('#recentProducts');
+    delete recentTrack.dataset.carouselPositioned;
     recentTrack.style.removeProperty('transform');
     recentTrack.parentElement?.scrollTo({left: 0, behavior: 'auto'});
     recentTrack.innerHTML = items.map((product) => `<button class="recent-product" data-product="${escapeHtml(product.url)}" aria-label="Ver ${escapeHtml(product.title)}"><span class="recent-product-media"><img class="asset-loading" src="${escapeHtml(product.image || productFallbackImage)}" alt="${escapeHtml(product.title)}" loading="eager" onload="this.classList.remove('asset-loading','asset-error');this.classList.add('asset-ready')" onerror="this.onerror=null;this.src='${productFallbackImage}';this.classList.add('asset-loading');this.classList.remove('asset-ready','asset-error')">${uruguayBadge(product, 'product-region-badge recent-region-badge')}</span></button>`).join('');
-    if (items.length > 4) {
-      [...recentTrack.children].slice(0, 4).forEach((card) => recentTrack.append(card.cloneNode(true)));
+    if (items.length > 1) {
+      // Tres copias permiten iniciar en el centro y desplazarse en ambas
+      // direcciones. El scroll se recentra en silencio cuando cruza una
+      // copia, por lo que el usuario nunca alcanza un extremo visible.
+      const originalMarkup = recentTrack.innerHTML;
+      recentTrack.insertAdjacentHTML('afterbegin', originalMarkup);
+      recentTrack.insertAdjacentHTML('beforeend', originalMarkup);
       recentTrack.dataset.carouselOriginalCount = String(items.length);
     } else delete recentTrack.dataset.carouselOriginalCount;
     recentTrack.querySelectorAll('[data-product]').forEach((card) => card.addEventListener('click', (event) => {
@@ -1234,32 +1275,106 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
   function startRecentCarousel() {
     if (recentCarouselTimer) return;
     const track = $('#recentProducts');
-    if (!track || !track.children.length || track.children.length <= 4) return;
+    if (!track || !track.children.length || !track.dataset.carouselOriginalCount) return;
     const viewport = track.parentElement;
     if (!viewport) return;
     enableRecentCarouselTouch(viewport);
     fitRecentCarouselCards(viewport);
-    recentCarouselOffset = viewport.scrollLeft;
-    const advance = () => {
-      if (!track.isConnected || !track.children.length || document.hidden) return;
-      const firstCard = track.children[0];
-      const styles = window.getComputedStyle(track);
-      const gap = parseFloat(styles.columnGap || styles.gap) || 0;
-      const step = firstCard.getBoundingClientRect().width + gap;
-      if (!step || !viewport.scrollWidth) return;
-      const originalCount = Number(track.dataset.carouselOriginalCount) || track.children.length;
-      const cycleDistance = step * originalCount;
-
-      const currentOffset = viewport.scrollLeft;
-      if (currentOffset >= cycleDistance - 2) {
-        viewport.scrollTo({left: 0, behavior: 'auto'});
-        recentCarouselOffset = 0;
+    const metrics = recentCarouselMetrics(viewport);
+    if (!metrics) return;
+    if (track.dataset.carouselPositioned !== 'true') {
+      viewport.scrollTo({left: metrics.carouselStart, behavior: 'auto'});
+      track.dataset.carouselPositioned = 'true';
+      recentCarouselOffset = metrics.carouselStart;
+    } else {
+      recentCarouselOffset = viewport.scrollLeft;
+    }
+    track.dataset.carouselAutoplay = 'true';
+    viewport.classList.add('is-autoplaying');
+    const stop = () => {
+      if (recentCarouselTimer) {
+        window.clearInterval(recentCarouselTimer);
+        recentCarouselTimer = null;
+      }
+      if (recentCarouselRebaseTimer) {
+        window.clearTimeout(recentCarouselRebaseTimer);
+        recentCarouselRebaseTimer = null;
+      }
+      track.dataset.carouselAutoplay = 'false';
+      viewport.classList.remove('is-autoplaying');
+    };
+    const move = () => {
+      if (!track.isConnected || !track.children.length || document.hidden) {
+        stop();
         return;
       }
-      recentCarouselOffset = Math.min(currentOffset + step, cycleDistance);
-      viewport.scrollTo({left: recentCarouselOffset, behavior: 'smooth'});
+      const current = recentCarouselMetrics(viewport);
+      if (!current || !viewport.scrollWidth) return;
+      const nextOffset = viewport.scrollLeft + current.step;
+      viewport.scrollTo({left: nextOffset, behavior: 'smooth'});
+      recentCarouselOffset = nextOffset;
+      scheduleRecentCarouselNormalize(viewport, 720);
     };
-    recentCarouselTimer = window.setInterval(advance, 2800);
+    // Avanza una tarjeta por vez, con una pausa cómoda para leer cada foto.
+    recentCarouselTimer = window.setInterval(move, 2800);
+  }
+
+  function recentCarouselMetrics(viewport) {
+    const track = $('#recentProducts');
+    const originalCount = Number(track?.dataset.carouselOriginalCount) || 0;
+    const firstCard = track?.children[0];
+    if (!viewport || !track || !originalCount || !firstCard) return null;
+    const styles = window.getComputedStyle(track);
+    const gap = parseFloat(styles.columnGap || styles.gap) || 0;
+    const step = firstCard.getBoundingClientRect().width + gap;
+    const cycleDistance = step * originalCount;
+    const edgeOffset = Number(track.dataset.carouselEdgeOffset) || 0;
+    if (!step || !cycleDistance) return null;
+    return {
+      track,
+      step,
+      cycleDistance,
+      carouselStart: Math.max(0, cycleDistance - edgeOffset),
+    };
+  }
+
+  function normalizeRecentCarouselPosition(viewport) {
+    const metrics = recentCarouselMetrics(viewport);
+    if (!metrics) return;
+    const {cycleDistance, carouselStart} = metrics;
+    let normalized = viewport.scrollLeft;
+    while (normalized < carouselStart) normalized += cycleDistance;
+    while (normalized >= carouselStart + cycleDistance) normalized -= cycleDistance;
+    if (Math.abs(normalized - viewport.scrollLeft) > 0.5) {
+      viewport.scrollTo({left: normalized, behavior: 'auto'});
+    }
+    recentCarouselOffset = normalized;
+  }
+
+  function settleRecentCarouselPosition(viewport) {
+    const metrics = recentCarouselMetrics(viewport);
+    if (!metrics) return;
+    const {step, cycleDistance, carouselStart} = metrics;
+    let snapped = carouselStart + Math.round((viewport.scrollLeft - carouselStart) / step) * step;
+    while (snapped < carouselStart) snapped += cycleDistance;
+    while (snapped >= carouselStart + cycleDistance) snapped -= cycleDistance;
+    const distance = Math.abs(snapped - viewport.scrollLeft);
+    if (distance > 0.5) {
+      // Para un gesto normal usamos el desplazamiento nativo suave. Si el
+      // usuario atravesó una copia completa, rebasamos en silencio para no
+      // animar un recorrido largo que mostraría el bucle interno.
+      const behavior = distance <= step * 1.25 ? 'smooth' : 'auto';
+      viewport.scrollTo({left: snapped, behavior});
+    }
+    recentCarouselOffset = snapped;
+  }
+
+  function scheduleRecentCarouselNormalize(viewport, delay = 120) {
+    if (recentCarouselRebaseTimer) window.clearTimeout(recentCarouselRebaseTimer);
+    recentCarouselRebaseTimer = window.setTimeout(() => {
+      recentCarouselRebaseTimer = null;
+      normalizeRecentCarouselPosition(viewport);
+    }, delay);
   }
 
   function fitRecentCarouselCards(viewport) {
@@ -1267,44 +1382,150 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     if (!track || !viewport) return;
     const styles = window.getComputedStyle(track);
     const gap = parseFloat(styles.columnGap || styles.gap) || 0;
-    const padding = (parseFloat(styles.paddingLeft) || 0) + (parseFloat(styles.paddingRight) || 0);
-    const cardWidth = Math.max(92, Math.min(128, (viewport.clientWidth - padding - (gap * 2)) / 3));
+    const available = Math.max(0, viewport.clientWidth);
+    // Dejamos una previsualización lateral de la tarjeta anterior y siguiente.
+    // El grupo central queda formado por tarjetas completas y centradas.
+    const visibleCount = Math.max(3, Math.min(5, Math.floor((available + gap) / (128 + gap))));
+    const peekRatio = 0.18;
+    // En teléfonos angostos dejamos que la tarjeta reduzca su ancho para
+    // conservar las dos previsualizaciones laterales sin desbordar.
+    const cardWidth = Math.max(72, Math.min(136, (available - (gap * (visibleCount + 1))) / (visibleCount + (peekRatio * 2))));
+    const peekWidth = cardWidth * peekRatio;
+    track.dataset.carouselVisibleCount = String(visibleCount);
+    track.dataset.carouselEdgeOffset = String(peekWidth + gap);
+    track.dataset.carouselViewportWidth = String(available);
+    track.style.paddingInline = '0px';
     track.style.setProperty('--recent-card-width', `${cardWidth}px`);
   }
 
   function enableRecentCarouselTouch(viewport) {
     if (viewport.dataset.touchReady === 'true') return;
     viewport.dataset.touchReady = 'true';
+    const track = $('#recentProducts');
     let resumeTimer = null;
+    let settleTimer = null;
+    let pointerStart = null;
+    let dragged = false;
+    let pointerActive = false;
     const pause = () => {
       if (recentCarouselTimer) {
         window.clearInterval(recentCarouselTimer);
         recentCarouselTimer = null;
       }
+      if (recentCarouselRebaseTimer) {
+        window.clearTimeout(recentCarouselRebaseTimer);
+        recentCarouselRebaseTimer = null;
+      }
       if (resumeTimer) window.clearTimeout(resumeTimer);
+      if (settleTimer) window.clearTimeout(settleTimer);
+      if (track) track.dataset.carouselAutoplay = 'false';
+      viewport.classList.remove('is-autoplaying');
       viewport.classList.add('is-interacting');
+    };
+    const scheduleSettle = (delay = 90) => {
+      if (settleTimer) window.clearTimeout(settleTimer);
+      settleTimer = window.setTimeout(() => {
+        settleTimer = null;
+        if (!pointerActive) settleRecentCarouselPosition(viewport);
+      }, delay);
     };
     const resume = () => {
       if (resumeTimer) window.clearTimeout(resumeTimer);
-      viewport.classList.remove('is-interacting');
+      // Una pausa breve permite terminar el gesto sin que el carrusel se
+      // sienta detenido; después vuelve a avanzar sin exigir otro toque.
       resumeTimer = window.setTimeout(() => {
+        viewport.classList.remove('is-interacting');
         if (!document.hidden) startRecentCarousel();
-      }, 5000);
+      }, 2000);
     };
-    viewport.addEventListener('pointerdown', pause, {passive: true});
-    viewport.addEventListener('touchstart', pause, {passive: true});
-    viewport.addEventListener('wheel', () => { pause(); resume(); }, {passive: true});
-    viewport.addEventListener('pointerup', resume, {passive: true});
-    viewport.addEventListener('touchend', resume, {passive: true});
-    viewport.addEventListener('pointercancel', resume, {passive: true});
-    viewport.addEventListener('scroll', () => { recentCarouselOffset = viewport.scrollLeft; }, {passive: true});
+    viewport.addEventListener('pointerdown', (event) => {
+      if (event.pointerType === 'mouse' && event.button !== 0) return;
+      pointerStart = {x: event.clientX, y: event.clientY};
+      dragged = false;
+      pointerActive = true;
+      pause();
+    }, {passive: true});
+    viewport.addEventListener('pointermove', (event) => {
+      if (!pointerStart || dragged) return;
+      dragged = Math.hypot(event.clientX - pointerStart.x, event.clientY - pointerStart.y) > 8;
+    }, {passive: true});
+    viewport.addEventListener('wheel', () => { pause(); scheduleSettle(180); resume(); }, {passive: true});
+    const endPointer = () => {
+      if (dragged) {
+        if (track) track.dataset.suppressClick = 'true';
+        window.setTimeout(() => { if (track) delete track.dataset.suppressClick; }, 350);
+        scheduleSettle(90);
+      }
+      pointerStart = null;
+      dragged = false;
+      pointerActive = false;
+      resume();
+    };
+    viewport.addEventListener('pointerup', endPointer, {passive: true});
+    viewport.addEventListener('pointercancel', endPointer, {passive: true});
+    let normalizing = false;
+    viewport.addEventListener('scroll', () => {
+      const originalCount = Number(track.dataset.carouselOriginalCount) || 0;
+      if (!originalCount || normalizing || track.dataset.carouselAutoplay === 'true') {
+        recentCarouselOffset = viewport.scrollLeft;
+        return;
+      }
+      if (!pointerActive) scheduleSettle(90);
+      recentCarouselOffset = viewport.scrollLeft;
+    }, {passive: true});
+    viewport.addEventListener('scrollend', () => {
+      if (!pointerActive) settleRecentCarouselPosition(viewport);
+    }, {passive: true});
     viewport.addEventListener('focusin', pause);
     viewport.addEventListener('focusout', resume);
-    let resizeTimer = null;
-    window.addEventListener('resize', () => {
-      if (resizeTimer) window.clearTimeout(resizeTimer);
-      resizeTimer = window.setTimeout(() => fitRecentCarouselCards(viewport), 120);
+    document.addEventListener('visibilitychange', () => {
+      if (!document.hidden) startRecentCarousel();
     }, {passive: true});
+    let resizeFrame = null;
+    const refreshCarouselLayout = () => {
+      if (pointerActive) return;
+      const currentWidth = viewport.clientWidth;
+      const previousWidth = Number(track?.dataset.carouselViewportWidth) || 0;
+      if (previousWidth && Math.abs(currentWidth - previousWidth) < 1) return;
+      const wasPositioned = track?.dataset.carouselPositioned === 'true';
+      const oldFirstCard = track?.children[0];
+      const oldStyles = track ? window.getComputedStyle(track) : null;
+      const oldGap = parseFloat(oldStyles?.columnGap || oldStyles?.gap) || 0;
+      const oldCycleDistance = (oldFirstCard?.getBoundingClientRect().width + oldGap) * (Number(track?.dataset.carouselOriginalCount) || 0);
+      const oldEdgeOffset = Number(track?.dataset.carouselEdgeOffset) || 0;
+      const oldStart = Math.max(0, oldCycleDistance - oldEdgeOffset);
+      const progress = wasPositioned && oldCycleDistance
+        ? (viewport.scrollLeft - oldStart) / oldCycleDistance
+        : 0;
+
+      fitRecentCarouselCards(viewport);
+      if (!wasPositioned) return;
+      const originalCount = Number(track.dataset.carouselOriginalCount) || 0;
+      const firstCard = track.children[0];
+      const styles = window.getComputedStyle(track);
+      const gap = parseFloat(styles.columnGap || styles.gap) || 0;
+      const cycleDistance = (firstCard?.getBoundingClientRect().width + gap) * originalCount;
+      if (!cycleDistance) return;
+      const edgeOffset = Number(track.dataset.carouselEdgeOffset) || 0;
+      const carouselStart = Math.max(0, cycleDistance - edgeOffset);
+      let normalized = carouselStart + (progress * cycleDistance);
+      while (normalized < carouselStart) normalized += cycleDistance;
+      while (normalized >= carouselStart + cycleDistance) normalized -= cycleDistance;
+      viewport.scrollTo({left: normalized, behavior: 'auto'});
+      recentCarouselOffset = normalized;
+    };
+    const scheduleCarouselLayout = () => {
+      if (resizeFrame) window.cancelAnimationFrame(resizeFrame);
+      resizeFrame = window.requestAnimationFrame(() => {
+        resizeFrame = null;
+        refreshCarouselLayout();
+      });
+    };
+    window.addEventListener('resize', scheduleCarouselLayout, {passive: true});
+    if ('ResizeObserver' in window) {
+      const resizeObserver = new ResizeObserver(scheduleCarouselLayout);
+      resizeObserver.observe(viewport);
+    }
   }
 
   async function updateRecentFromAlerts(groups) {
@@ -1845,6 +2066,7 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
       searchForm.hidden = false;
     }
     mobileSearchDock.classList.remove('search-mode', 'has-query');
+    $('#searchView')?.style.removeProperty('--search-dock-space');
   }
 
   function setSearchHomeHidden(hidden) {
@@ -1853,6 +2075,29 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     if (hidden) topbar.setAttribute('hidden', '');
     else topbar.removeAttribute('hidden');
   }
+
+  function rememberSearchViewportBaseline() {
+    const visualHeight = Number(window.visualViewport?.height) || 0;
+    const layoutHeight = Number(window.innerHeight) || 0;
+    const height = Math.max(visualHeight, layoutHeight);
+    if (height > 0) searchViewportBaseline = height;
+  }
+
+  function updateSearchDockSpace() {
+    if (!window.matchMedia('(max-width: 700px)').matches || !document.body.classList.contains('search-open')) return;
+    const searchView = $('#searchView');
+    const dock = $('.bottom-nav.search-mode');
+    if (!searchView || !dock) return;
+    const viewTop = searchView.getBoundingClientRect().top;
+    const dockBottom = dock.getBoundingClientRect().bottom;
+    const safeSpace = 12;
+    const requiredSpace = Math.max(0, Math.ceil(dockBottom - viewTop + safeSpace));
+    searchView.style.setProperty('--search-dock-space', `${requiredSpace}px`);
+  }
+
+  const scheduleSearchDockSpace = () => window.requestAnimationFrame(updateSearchDockSpace);
+  window.addEventListener('resize', scheduleSearchDockSpace, {passive:true});
+  window.visualViewport?.addEventListener('resize', scheduleSearchDockSpace, {passive:true});
 
   function showView(viewId, {preserveSearch = false} = {}) {
     if (viewId !== 'searchView') {
@@ -1953,6 +2198,7 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
   function restoreSearchScreen() {
     const searchForm = $('#searchForm');
     const mobileSearchDock = window.matchMedia('(max-width: 700px)').matches ? $('.bottom-nav') : null;
+    if (mobileSearchDock && !document.body.classList.contains('search-open')) rememberSearchViewportBaseline();
     // Aplicar el estado antes de mover el formulario evita un frame intermedio
     // del home mientras Android redimensiona el WebView por el teclado.
     if (mobileSearchDock) {
@@ -1965,6 +2211,7 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
       if (searchForm.parentElement !== mobileSearchDock) mobileSearchDock.append(searchForm);
       mobileSearchDock.classList.add('search-mode');
       mobileSearchDock.classList.toggle('has-query', Boolean($('#query').value.trim()));
+      updateSearchDockSpace();
     }
     showView('searchView', {preserveSearch:true});
     updateSearchScanAction(Boolean($('#query').value.trim()));
@@ -1977,6 +2224,7 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     searchFocusTimer = window.setTimeout(() => {
       if (!document.body.classList.contains('search-open')) return;
       $('#query')?.focus({preventScroll:true});
+      updateSearchDockSpace();
     }, 220);
   }
 
@@ -1996,6 +2244,7 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     const searchForm = $('#searchForm');
     searchForm.hidden = false;
     const mobileSearchDock = window.matchMedia('(max-width: 700px)').matches ? $('.bottom-nav') : null;
+    if (mobileSearchDock && !document.body.classList.contains('search-open')) rememberSearchViewportBaseline();
     // El estado visual cambia antes del reparenting para evitar un frame
     // intermedio del home en WebView móvil.
     if (mobileSearchDock) {
@@ -2006,6 +2255,7 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
       if (!searchFormHome) searchFormHome = { parent: searchForm.parentElement, before: $('#recentSearches') };
       if (searchForm.parentElement !== mobileSearchDock) mobileSearchDock.append(searchForm);
       mobileSearchDock.classList.add('search-mode');
+      updateSearchDockSpace();
     }
     showView('searchView');
     $('#query').value = $('#homeQuery').value;
@@ -2066,24 +2316,82 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     // No vuelvas a animar ni a reconstruir el home si ya estamos ahí. Esto
     // evita el destello al tocar Inicio varias veces seguidas.
     if (document.querySelector('.view.active')?.id === 'homeView' && !document.body.classList.contains('search-open')) return;
-    // El botón/gesto de atrás debe cerrar el buscador completo. Al quitar el
-    // foco antes de reubicar el formulario, Android no deja la pantalla en
-    // un estado intermedio donde solo desaparece el teclado.
+    // El botón/gesto de atrás debe cerrar el buscador completo. En Android el
+    // teclado no desaparece en el mismo frame que blur(); si mostramos Home
+    // inmediatamente, aparece un frame de Home con el teclado todavía arriba.
+    // Conservamos search-open hasta que la ventana visual se estabilice.
+    if (searchCloseTimer) return;
+    const mobileSearchDock = searchFormHome ? $('.bottom-nav') : null;
+    const viewport = window.visualViewport;
+    const activeInput = document.activeElement?.matches?.('input, textarea, [contenteditable="true"]');
+    const screenHeight = Number(window.screen?.height) || window.innerHeight;
+    const currentViewportHeight = Math.max(Number(viewport?.height) || 0, Number(window.innerHeight) || 0);
+    const baselineHeight = searchViewportBaseline || screenHeight;
+    const viewportLooksShrunk = currentViewportHeight > 0 && currentViewportHeight < baselineHeight - 80;
+    // En Android el botón/gesto de volver puede entregar el evento después de
+    // que el input perdió el foco. El formulario sigue dentro del dock, por
+    // lo que el cierre debe tratarse como un cierre con IME potencialmente
+    // abierto aunque activeElement ya no sea el input.
+    const keyboardWasOpen = Boolean(mobileSearchDock && (activeInput || viewportLooksShrunk || $('#searchForm')?.parentElement === mobileSearchDock));
+    // Durante el cierre Android redimensiona el WebView varias veces. Home se
+    // muestra de inmediato y el nav queda oculto hasta que el IME termina.
+    const closingSearchView = document.querySelector('.view.active')?.id === 'searchView';
+    if (closingSearchView) document.body.classList.add('search-closing');
     document.activeElement?.blur();
     $('#query')?.blur();
     $('#homeQuery')?.blur();
-    const mobileSearchDock = searchFormHome ? $('.bottom-nav') : null;
-    if (mobileSearchDock) {
-      document.body.classList.remove('search-open');
+
+    const finish = () => {
+      window.clearTimeout(searchCloseTimer);
+      searchCloseTimer = null;
+      if (searchCloseViewport && searchCloseViewportHandler) {
+        searchCloseViewport.removeEventListener('resize', searchCloseViewportHandler);
+      }
+      searchCloseViewport = null;
+      searchCloseViewportHandler = null;
+
+      // Reparentar antes de quitar search-open mantiene todos los cambios en
+      // una sola tarea de layout: Android nunca llega a pintar el Home con el
+      // formulario todavía dentro del nav superior del buscador.
+      if (mobileSearchDock) restoreSearchForm();
       showView('homeView');
-    }
-    selectedCategory = 'all';
-    favoriteOnly = false;
-    $('#homeQuery').value = '';
-    $('#query').value = '';
-    $('#homeClear').hidden = true;
-    $('#clear').hidden = true;
-    if (!mobileSearchDock) showView('homeView');
+      selectedCategory = 'all';
+      favoriteOnly = false;
+      $('#homeQuery').value = '';
+      $('#query').value = '';
+      $('#homeClear').hidden = true;
+      $('#clear').hidden = true;
+
+      // No revelamos el nav hasta que el viewport recupera la altura previa
+      // al teclado. En Android pueden quedar uno o dos resize pendientes aun
+      // después de que Home ya fue activado.
+      if (mobileSearchDock && keyboardWasOpen) {
+        const revealStartedAt = performance.now();
+        const revealNav = () => {
+          const currentHeight = Math.max(Number(viewport?.height) || 0, Number(window.innerHeight) || 0);
+          const viewportRestored = !viewport || currentHeight >= baselineHeight - 40 || currentHeight >= screenHeight - 120;
+          const revealDeadlineReached = performance.now() - revealStartedAt >= (viewport ? 1400 : 0);
+          if (!viewportRestored && !revealDeadlineReached) {
+            searchCloseTimer = window.setTimeout(revealNav, 70);
+            return;
+          }
+          window.requestAnimationFrame(() => window.requestAnimationFrame(() => {
+            searchCloseTimer = null;
+            document.body.classList.remove('search-closing');
+            searchViewportBaseline = 0;
+          }));
+        };
+        revealNav();
+      } else {
+        document.body.classList.remove('search-closing');
+        searchViewportBaseline = 0;
+      }
+    };
+
+    // Home se activa en el mismo evento de la flecha. El teclado puede seguir
+    // animándose en Android, pero esa animación ya no debe bloquear la vista
+    // ni dejar una pantalla blanca entre el buscador y Home.
+    finish();
   }
 
   function doSearch(input, fromHome = false) {
@@ -2112,6 +2420,307 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     if (activeView === 'savedView' || (activeView === 'detailView' && previousView === 'savedView')) renderSaved();
   }
 
+  function showShareNotice(message, tone = '', duration = 3200, state = 'done') {
+    document.querySelector('.share-toast')?.remove();
+    const notice = document.createElement('div');
+    notice.className = `share-toast${tone ? ` ${tone}` : ''}${state === 'loading' ? ' is-loading' : ''}`;
+    notice.setAttribute('role', 'status');
+    notice.setAttribute('aria-live', 'polite');
+    const mark = state === 'loading'
+      ? '<span class="share-toast-spinner"></span>'
+      : tone === 'bad' ? '!' : '✓';
+    notice.innerHTML = `<span class="share-toast-mark" aria-hidden="true">${mark}</span><span>${escapeHtml(message)}</span>`;
+    $('#detailView')?.appendChild(notice);
+    window.requestAnimationFrame(() => notice.classList.add('visible'));
+    if (duration > 0) window.setTimeout(() => {
+      notice.classList.remove('visible');
+      window.setTimeout(() => notice.remove(), 240);
+    }, duration);
+    return notice;
+  }
+
+  function drawShareWrappedText(context, text, x, y, maxWidth, lineHeight, maxLines = 3) {
+    const words = clean(text).split(' ').filter(Boolean);
+    const lines = [];
+    let line = '';
+    words.forEach((word) => {
+      const candidate = line ? `${line} ${word}` : word;
+      if (line && context.measureText(candidate).width > maxWidth) {
+        lines.push(line);
+        line = word;
+      } else line = candidate;
+    });
+    if (line) lines.push(line);
+    const visibleLines = lines.slice(0, maxLines);
+    if (lines.length > maxLines) {
+      let last = visibleLines.at(-1) || '';
+      while (last && context.measureText(`${last}…`).width > maxWidth) last = last.slice(0, -1);
+      visibleLines[visibleLines.length - 1] = `${last.trimEnd()}…`;
+    }
+    visibleLines.forEach((visibleLine, index) => context.fillText(visibleLine, x, y + (index * lineHeight)));
+    return y + (visibleLines.length * lineHeight);
+  }
+
+  function drawShareImageContain(context, image, x, y, width, height) {
+    if (!image?.naturalWidth && !image?.width) return false;
+    const imageWidth = image.naturalWidth || image.width;
+    const imageHeight = image.naturalHeight || image.height;
+    const scale = Math.min(width / imageWidth, height / imageHeight);
+    const drawnWidth = imageWidth * scale;
+    const drawnHeight = imageHeight * scale;
+    context.drawImage(image, x + ((width - drawnWidth) / 2), y + ((height - drawnHeight) / 2), drawnWidth, drawnHeight);
+    return true;
+  }
+
+  function shareRoundedRect(context, x, y, width, height, radius) {
+    if (typeof context.roundRect === 'function') {
+      context.roundRect(x, y, width, height, radius);
+      return;
+    }
+    const r = Math.min(radius, width / 2, height / 2);
+    context.moveTo(x + r, y);
+    context.lineTo(x + width - r, y);
+    context.arcTo(x + width, y, x + width, y + r, r);
+    context.lineTo(x + width, y + height - r);
+    context.arcTo(x + width, y + height, x + width - r, y + height, r);
+    context.lineTo(x + r, y + height);
+    context.arcTo(x, y + height, x, y + height - r, r);
+    context.lineTo(x, y + r);
+    context.arcTo(x, y, x + r, y, r);
+    context.closePath();
+  }
+
+  function drawShareSeal(context, image, x, y, width, height) {
+    if (!image) return;
+    context.save();
+    context.shadowColor = '#173c2a33';
+    context.shadowBlur = 18;
+    context.shadowOffsetY = 5;
+    context.fillStyle = '#ffffff';
+    context.beginPath();
+    shareRoundedRect(context, x, y, width, height, 18);
+    context.fill();
+    context.shadowColor = 'transparent';
+    context.strokeStyle = '#b88a2d';
+    context.lineWidth = 3;
+    context.beginPath();
+    shareRoundedRect(context, x, y, width, height, 18);
+    context.stroke();
+    drawShareImageContain(context, image, x + 10, y + 8, width - 20, height - 16);
+    context.restore();
+  }
+
+  async function loadShareImageAttempt(src) {
+    if (!src || src === productFallbackImage) return null;
+    let objectUrl = '';
+    try {
+      let imageSource = src;
+      if (Capacitor.isNativePlatform()) {
+        // En Android/iOS usamos la capa HTTP nativa para evitar que CORS del
+        // servidor de imágenes impida generar la tarjeta compartible.
+        const response = await CapacitorHttp.get({url:src, responseType:'blob', connectTimeout:6000, readTimeout:6000});
+        if (response.status < 200 || response.status >= 300 || !response.data) throw new Error(`HTTP ${response.status}`);
+        const contentType = Object.entries(response.headers || {}).find(([key]) => key.toLowerCase() === 'content-type')?.[1] || 'image/jpeg';
+        imageSource = String(response.data).startsWith('data:') ? String(response.data) : `data:${contentType};base64,${response.data}`;
+      } else {
+        const controller = new AbortController();
+        const timeout = window.setTimeout(() => controller.abort(), 6000);
+        try {
+          const response = await fetch(src, {mode:'cors', credentials:'omit', cache:'force-cache', signal:controller.signal});
+          if (!response.ok) throw new Error(`HTTP ${response.status}`);
+          objectUrl = URL.createObjectURL(await response.blob());
+          imageSource = objectUrl;
+        } finally {
+          window.clearTimeout(timeout);
+        }
+      }
+      const image = await new Promise((resolve, reject) => {
+        const element = new Image();
+        element.onload = () => resolve(element);
+        element.onerror = reject;
+        element.src = imageSource;
+      });
+      return {image, revoke:() => URL.revokeObjectURL(objectUrl)};
+    } catch (_) {
+      if (objectUrl) URL.revokeObjectURL(objectUrl);
+      return null;
+    }
+  }
+
+  async function loadShareImage(src) {
+    // Algunos servidores mantienen abierta la respuesta de una imagen sin
+    // cerrarla correctamente. El timeout total evita que Compartir quede
+    // bloqueado aunque el navegador no respete la cancelación de fetch.
+    const timeout = new Promise((resolve) => window.setTimeout(() => resolve(null), 5200));
+    return Promise.race([loadShareImageAttempt(src), timeout]);
+  }
+
+  function loadLocalShareImage(src) {
+    if (shareLogoPromise) return shareLogoPromise;
+    shareLogoPromise = new Promise((resolve) => {
+      if (!src) { resolve(null); return; }
+      const image = new Image();
+      image.onload = () => resolve({image, revoke:() => {}});
+      image.onerror = () => resolve(null);
+      image.src = src;
+    });
+    return shareLogoPromise;
+  }
+
+  function blobToBase64(blob) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        const dataUrl = String(reader.result || '');
+        const separator = dataUrl.indexOf(',');
+        if (separator < 0) { reject(new Error('Imagen inválida')); return; }
+        resolve(dataUrl.slice(separator + 1));
+      };
+      reader.onerror = () => reject(reader.error || new Error('No se pudo leer la imagen'));
+      reader.readAsDataURL(blob);
+    });
+  }
+
+  async function shareImageWithAndroid(blob, filename, title, text) {
+    const [{Filesystem, Directory}, {Share}] = await Promise.all([
+      import('@capacitor/filesystem'),
+      import('@capacitor/share')
+    ]);
+    const support = await Share.canShare();
+    if (!support.value) throw new Error('Compartir no disponible');
+
+    // El archivo vive únicamente en la caché privada de la app. Share lo
+    // expone mediante FileProvider al panel nativo y luego lo eliminamos;
+    // nunca aparece en Descargas ni en la galería del usuario.
+    const cachePath = `share/${Date.now()}-${filename}`;
+    let sharedUri = '';
+    try {
+      await Filesystem.writeFile({
+        path: cachePath,
+        data: await blobToBase64(blob),
+        directory: Directory.Cache,
+        recursive: true
+      });
+      sharedUri = (await Filesystem.getUri({path: cachePath, directory: Directory.Cache})).uri;
+      await Share.share({
+        title,
+        text,
+        files: [sharedUri],
+        dialogTitle: 'Compartir ficha del producto'
+      });
+    } finally {
+      // La aplicación receptora puede leer el URI después de cerrar el panel.
+      window.setTimeout(() => Filesystem.deleteFile({path: cachePath, directory: Directory.Cache}).catch(() => {}), 60000);
+    }
+  }
+
+  async function createProductShareImage(product) {
+    const cacheKey = clean(product?.url || product?.title);
+    const cachedImage = shareImageCache.get(cacheKey);
+    if (cachedImage) return cachedImage;
+    const canvas = document.createElement('canvas');
+    canvas.width = 1080;
+    canvas.height = 1080;
+    const context = canvas.getContext('2d');
+    if (!context) throw new Error('Canvas no disponible');
+    const photoSource = productCache[product.url]?.images?.[0]?.src || product.image;
+    const [photo, logo] = await Promise.all([
+      loadShareImage(photoSource),
+      loadLocalShareImage(shareLogoAssetUrl)
+    ]);
+    context.fillStyle = '#f5f8f5';
+    context.fillRect(0, 0, canvas.width, canvas.height);
+    // La imagen compartida es deliberadamente cuadrada y limpia: conserva
+    // toda la foto, sin textos ni tarjetas que compitan con el producto.
+    context.fillStyle = '#ffffff';
+    context.fillRect(28, 28, 1024, 1024);
+    if (photo) {
+      context.save();
+      context.beginPath();
+      shareRoundedRect(context, 28, 28, 1024, 1024, 24);
+      context.clip();
+      drawShareImageContain(context, photo.image, 28, 28, 1024, 1024);
+      context.restore();
+    } else {
+      context.fillStyle = '#6d8376';
+      context.font = '500 26px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+      context.textAlign = 'center';
+      context.fillText('Imagen disponible en la ficha oficial', 540, 540);
+      context.textAlign = 'left';
+    }
+    // El sello siempre se compone al final, por encima de la foto. Así no
+    // desaparece si la imagen tarda, cambia su proporción o el WebView la
+    // dibuja con un recorte distinto.
+    drawShareSeal(context, logo?.image, 808, 816, 220, 176);
+    photo?.revoke();
+    logo?.revoke();
+    const blob = await new Promise((resolve, reject) => canvas.toBlob((value) => value ? resolve(value) : reject(new Error('No se pudo crear la imagen')), 'image/jpeg', .88));
+    shareImageCache.set(cacheKey, blob);
+    return blob;
+  }
+
+  function productShareText(product) {
+    const category = categoryFor(product.cat)?.name;
+    const productUrl = clean(product.url);
+    return [
+      '🛒 Este producto está en el listado oficial de Iahadut HaTora.',
+      `📦 ${clean(product.title)}`,
+      category ? `✅ ${category}` : '',
+      '',
+      productUrl ? `🔎 Mirá la ficha completa: ${productUrl}` : '',
+      '',
+      '✨ Compartido desde la app Iahadut HaTora.',
+      '📲 Instalá la app y descubrí más productos kosher:',
+      `👉 ${appInstallUrl}`
+    ].filter(Boolean).join('\n');
+  }
+
+  async function shareCurrentProduct() {
+    if (!currentProduct || shareBusy) return;
+    shareBusy = true;
+    const button = $('#detailShare');
+    if (button) {
+      button.disabled = true;
+      button.setAttribute('aria-busy', 'true');
+      button.setAttribute('aria-label', 'Preparando imagen para compartir');
+      button.classList.add('is-loading');
+      button.innerHTML = '<span class="share-button-spinner" aria-hidden="true"></span>';
+    }
+    const preparingNotice = showShareNotice('Preparando imagen para compartir…', '', 0, 'loading');
+    try {
+      const blob = await createProductShareImage(currentProduct);
+      const filename = `iahadut-${normalize(currentProduct.title).replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 48) || 'producto'}.jpg`;
+      const file = new File([blob], filename, {type:'image/jpeg'});
+      const text = productShareText(currentProduct);
+      const installedShareContext = Capacitor.isNativePlatform()
+        || window.matchMedia?.('(display-mode: standalone)').matches
+        || window.navigator.standalone === true;
+      if (Capacitor.isNativePlatform()) {
+        await shareImageWithAndroid(blob, filename, `${currentProduct.title} · Iahadut HaTora`, text);
+        showShareNotice('Ficha lista para compartir');
+      } else if (installedShareContext && navigator.share && navigator.canShare?.({files:[file]})) {
+        // Solo para una vista instalada que implemente Web Share. Nunca
+        // descargamos automáticamente la imagen como sustituto.
+        await navigator.share({title:`${currentProduct.title} · Iahadut HaTora`, text, files:[file]});
+        showShareNotice('Ficha lista para compartir');
+      } else {
+        showShareNotice('Abrí la app Android para compartir la ficha', 'bad');
+      }
+    } catch (error) {
+      if (error?.name !== 'AbortError') showShareNotice('No pudimos preparar la imagen para compartir', 'bad');
+      else preparingNotice.remove();
+    } finally {
+      shareBusy = false;
+      if (button) {
+        button.disabled = false;
+        button.removeAttribute('aria-busy');
+        button.classList.remove('is-loading');
+        button.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="18" cy="5" r="2"/><circle cx="6" cy="12" r="2"/><circle cx="18" cy="19" r="2"/><path d="m7.8 11 8.4-5M7.8 13l8.4 5"/></svg>';
+        button.setAttribute('aria-label', 'Compartir ficha del producto');
+      }
+    }
+  }
+
   function renderDetail(product, official = null) {
     currentProduct = product;
     const category = categoryFor(product.cat);
@@ -2126,6 +2735,9 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     const taxonomyPath = productCategoryPath(product);
     const officialCategory = official?.category || (category ? category.name : 'Catálogo oficial');
     const detailCategoryClass = `detail-category-${category?.key || 'default'}`;
+    const specialSealMarkup = category?.key === 'especial'
+      ? `<img class="detail-special-seal" src="${escapeHtml(shareLogoAssetUrl)}" alt="Sello de Iahadut HaTora">`
+      : '';
     const detailImage = officialImage && !/(^|\/)assets\/(?:logo(?:-[^/]+)?\.png|product-placeholder\.svg)$/i.test(officialImage) ? officialImage : '';
     const detailImageMarkup = detailImage ? `<img class="asset-loading" loading="eager" src="${escapeHtml(detailImage)}" alt="${escapeHtml(product.title)}" onload="this.classList.remove('asset-loading','asset-error');this.classList.add('asset-ready')" onerror="this.remove()">` : '';
     const taxonomyMarkup = taxonomyPath.length ? `<nav class="detail-taxonomy" aria-label="Categoría del catálogo"><small>Categoría en el catálogo</small><div>${taxonomyPath.map((part, index) => `${index ? '<span aria-hidden="true">→</span>' : ''}<button type="button" data-detail-taxonomy-path="${escapeHtml(encodeURIComponent(JSON.stringify(taxonomyPath.slice(0, index + 1))))}">${escapeHtml(categoryDisplayName(part))}</button>`).join('')}</div></nav>` : '';
@@ -2133,7 +2745,7 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     const detailContent = $('#detailContent');
     const existing = detailContent.querySelector('.detail-content:not(.detail-content-loading)');
     if (!existing) {
-      detailContent.innerHTML = `<div class="detail-content">${detailImageMarkup}<div class="detail-body">${uruguayBadge(product, 'product-region-badge detail-region-badge')}<span class="label ${detailCategoryClass}">${escapeHtml(officialCategory)}</span><h1>${styledBrandText(product.title)}</h1><p class="detail-description">${escapeHtml(officialDescription)}</p>${berajaMarkup}${taxonomyMarkup}${official?.loadFailed ? '<button class="filter-btn detail-retry" id="detailRetry" type="button"><span>Reintentar carga</span></button>' : ''}</div></div>`;
+      detailContent.innerHTML = `<div class="detail-content">${detailImageMarkup}<div class="detail-body">${uruguayBadge(product, 'product-region-badge detail-region-badge')}<span class="label ${detailCategoryClass}">${escapeHtml(officialCategory)}${specialSealMarkup}</span><h1>${styledBrandText(product.title)}</h1><p class="detail-description">${escapeHtml(officialDescription)}</p>${berajaMarkup}${taxonomyMarkup}${official?.loadFailed ? '<button class="filter-btn detail-retry" id="detailRetry" type="button"><span>Reintentar carga</span></button>' : ''}</div></div>`;
     } else {
       const image = existing.querySelector(':scope > img');
       if (!detailImage) image?.remove();
@@ -2142,7 +2754,7 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
       const categoryLabel = existing.querySelector('.label');
       existing.querySelector('.detail-region-badge')?.remove();
       if (isUruguayProduct(product)) categoryLabel.insertAdjacentHTML('beforebegin', uruguayBadge(product, 'product-region-badge detail-region-badge'));
-      categoryLabel.textContent = officialCategory;
+      categoryLabel.innerHTML = `${escapeHtml(officialCategory)}${specialSealMarkup}`;
       categoryLabel.className = `label ${detailCategoryClass}`;
       existing.querySelector('h1').innerHTML = styledBrandText(product.title);
       const descriptionNode = existing.querySelector('.detail-description') || existing.querySelector('.detail-body p');
@@ -2537,6 +3149,14 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
         await PushNotifications.register();
         try {
           const {FirebaseMessaging} = await import('@capacitor-firebase/messaging');
+          const tokenResult = await FirebaseMessaging.getToken();
+          const token = tokenResult?.token;
+          if (token) {
+            localStorage.setItem('iht_push_token', token);
+            if (remoteControl.device_registration_url) {
+              try { await CapacitorHttp.post({url:remoteControl.device_registration_url, headers:{'Content-Type':'application/json'}, data:{token, platform:Capacitor.getPlatform(), topic:'catalog-updates', appVersion:APP_VERSION}}); } catch (_) {}
+            }
+          }
           await FirebaseMessaging.subscribeToTopic({topic: 'catalog-updates'});
           localStorage.setItem('iht_push_status', 'active');
           renderNotificationPermission();
@@ -2593,8 +3213,8 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
       ? `<button class="more-row managed-more-row update-more-row${updateAvailable ? ' has-update-new' : ''}" data-app-update><span class="managed-icon" aria-hidden="true">↻</span><span><strong>Actualizar aplicación</strong><small>${updateMessage}</small></span><span class="row-arrow" aria-hidden="true">›</span></button>`
       : '';
     const developerWhatsApp = `https://wa.me/5491135195674?text=${encodeURIComponent('¡Me gustó la app de Iahadut HaTora! ¿Podemos hacer un proyecto juntos?')}`;
-    const developerCredit = '<div class="developer-credit"><span>Y.R.N Soluciones Software</span><a class="developer-cta" href="https://wa.me/5491135195674" target="_blank" rel="noopener">¿Necesitás una app?</a><a class="developer-whatsapp" href="https://wa.me/5491135195674" target="_blank" rel="noopener" aria-label="Contactar por WhatsApp"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c0 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/></svg></a></div>';
-    const moreInfo = Object.entries(info).filter(([key]) => !['shops', 'catering', 'notes'].includes(key));
+    const developerCredit = `<div class="developer-credit"><span class="app-version">Versión ${escapeHtml(APP_VERSION)}</span><span class="developer-name">Y.R.N Soluciones Software</span><a class="developer-cta" href="https://wa.me/5491135195674" target="_blank" rel="noopener">¿Necesitás una app?</a><a class="developer-whatsapp" href="https://wa.me/5491135195674" target="_blank" rel="noopener" aria-label="Contactar por WhatsApp"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c0 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/></svg></a></div>`;
+    const moreInfo = Object.entries(info).filter(([key]) => !['shops', 'catering', 'notes', 'world'].includes(key));
     $('#moreList').innerHTML = saved + moreInfo.map(([key, value]) => `<button class="more-row" data-info="${key}">${infoIcon(key)}<span><strong>${escapeHtml(value[0])}</strong><small>${escapeHtml(value[1])}</small></span><span class="row-arrow" aria-hidden="true">›</span></button>`).join('') + update + officialWebsite + developerCredit;
     document.querySelectorAll('.developer-cta, .developer-whatsapp').forEach((link) => { link.href = developerWhatsApp; });
     infoNoticeKeys.forEach((key) => updateInfoNotice(key));
@@ -2737,16 +3357,8 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     $('#camera').srcObject = null;
   }
 
-  function showCameraFallback(message) {
-    stopCamera();
-    $('#scanOverlay').classList.add('manual-only');
-    $('#camera').hidden = false;
-    $('.frame').hidden = true;
-    $('#scanMessage').textContent = message;
-  }
-
   async function startCamera() {
-    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) { showCameraFallback('La cámara no está disponible. Ingresá el código manualmente.'); return; }
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) { closeScanner(); return; }
     try {
       stream = await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'}}, audio:false});
       $('#camera').srcObject = stream;
@@ -2757,10 +3369,10 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
       const detector = new BarcodeDetector(formats.length ? {formats} : undefined);
       const tick = async () => { if (!stream) return; try { const codes = await detector.detect($('#camera')); if (codes[0] && codes[0].rawValue) { stopCamera(); resolveBarcode(codes[0].rawValue); return; } } catch (_) {} scanFrame = requestAnimationFrame(tick); };
       scanFrame = requestAnimationFrame(tick);
-    } catch (_) { showCameraFallback('No pudimos iniciar la cámara. Revisá el permiso o ingresá el código manualmente.'); }
+    } catch (_) { closeScanner(); }
   }
   window.__ihtCameraReady = startCamera;
-  window.__ihtCameraDenied = () => showCameraFallback('Se necesita permiso de cámara para escanear. Podés ingresar el código manualmente.');
+  window.__ihtCameraDenied = () => closeScanner();
 
   function openWebScanner(message = 'Alineá el código dentro del recuadro.', useCamera = true) {
     pendingScanProduct = null;
@@ -2804,7 +3416,10 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     } catch (error) {
       const cancellation = `${error?.code || ''} ${error?.message || error || ''}`;
       if (/0006|cancel(?:led|ado|aci[oó]n)?/i.test(cancellation)) return;
-      openWebScanner('No pudimos abrir el lector nativo. Ingresá el código manualmente.', false);
+      // Si Android rechaza el permiso o el lector nativo no puede iniciarse,
+      // no mostramos una segunda pantalla de error: volvemos a la vista que
+      // estaba usando la persona y dejamos el ingreso manual en Catálogo.
+      closeScanner();
     }
   }
 
@@ -3152,6 +3767,7 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
   $('#homeClear').onclick = () => { $('#homeQuery').value = ''; $('#homeClear').hidden = true; };
   $('#clear').onclick = () => { $('#query').value = ''; updateSearchScanAction(false); $('.bottom-nav').classList.remove('has-query'); $('#clear').hidden = true; $('#results').hidden = true; $('#searchCategories').hidden = false; $('#recentSearches').hidden = false; $('#query').focus(); startSearchPlaceholders(); };
   $('#detailSave').onclick = () => { if (currentProduct) toggleFavorite(currentProduct.url); };
+  $('#detailShare').onclick = shareCurrentProduct;
   $('#homeQuery').addEventListener('input', () => {
     const hasText = Boolean($('#homeQuery').value.trim());
     $('#homeClear').hidden = !$('#homeQuery').value;
