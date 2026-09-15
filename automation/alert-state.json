@@ -111,5 +111,23 @@
     "text": "Nueva tienda certificada (f6cb3741ac27)",
     "url": "https://vaad.ar/tiendas-kosher-certificadas/",
     "digest": "f6cb3741ac270105ab9d3a6c9e3d6587867972c7d8a447ab586b9cb3b89648bd"
+  },
+  "notes:Nueva nota de Kashrut (e3b0c44298fc)": {
+    "type": "notes",
+    "text": "Nueva nota de Kashrut (e3b0c44298fc)",
+    "url": "https://vaad.ar/notas-kashrut/",
+    "digest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "catering:Nuevo catering certificado (e3b0c44298fc)": {
+    "type": "catering",
+    "text": "Nuevo catering certificado (e3b0c44298fc)",
+    "url": "https://vaad.ar/servicios-de-catering/",
+    "digest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "shops:Nueva tienda certificada (e3b0c44298fc)": {
+    "type": "shops",
+    "text": "Nueva tienda certificada (e3b0c44298fc)",
+    "url": "https://vaad.ar/tiendas-kosher-certificadas/",
+    "digest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
   }
 }
