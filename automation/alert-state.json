@@ -154,5 +154,30 @@
     "type": "alta",
     "text": "Fiambre Mortadela & Pistacho (18/09/2026)",
     "url": "https://vaad.ar/producto/fiambre-mortadela-pistacho/"
+  },
+  "alta:Aceite de oliva marca «Mesquida» (18/09/2026)": {
+    "type": "alta",
+    "text": "Aceite de oliva marca «Mesquida» (18/09/2026)",
+    "url": "https://vaad.ar/producto/aceite-de-oliva-marca-mesquida-4/"
+  },
+  "alta:Pan Revanado clasico y salvado marca »La salteña» (18/09/2026)": {
+    "type": "alta",
+    "text": "Pan Revanado clasico y salvado marca »La salteña» (18/09/2026)",
+    "url": "https://vaad.ar/producto/pan-marca-la-saltena/"
+  },
+  "alta:Pan Revanado clasico y salvado marca «DELI» (18/09/2026)": {
+    "type": "alta",
+    "text": "Pan Revanado clasico y salvado marca «DELI» (18/09/2026)",
+    "url": "https://vaad.ar/producto/pan-revanado-clasico-y-salvado-marca-deli/"
+  },
+  "alta:Queso Ricota marca «La Piana» (18/09/2026)": {
+    "type": "alta",
+    "text": "Queso Ricota marca «La Piana» (18/09/2026)",
+    "url": "https://vaad.ar/producto/queso-ricota-marca-la-piana/"
+  },
+  "alta:Queso Cremoso marca «La Piana» (18/09/2026)": {
+    "type": "alta",
+    "text": "Queso Cremoso marca «La Piana» (18/09/2026)",
+    "url": "https://vaad.ar/producto/queso-cremoso-marca-la-piana/"
   }
 }
