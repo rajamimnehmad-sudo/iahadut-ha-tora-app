@@ -129,5 +129,30 @@
     "text": "Nueva tienda certificada (e3b0c44298fc)",
     "url": "https://vaad.ar/tiendas-kosher-certificadas/",
     "digest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "alta:Queso Sardo marca «La Piana» (18/09/2026)": {
+    "type": "alta",
+    "text": "Queso Sardo marca «La Piana» (18/09/2026)",
+    "url": "https://vaad.ar/producto/queso-sardo-marca-la-piana/"
+  },
+  "alta:Chorizo Aleman (18/09/2026)": {
+    "type": "alta",
+    "text": "Chorizo Aleman (18/09/2026)",
+    "url": "https://vaad.ar/producto/chorizo-aleman/"
+  },
+  "alta:Fiambre Mortadelita Alemana (18/09/2026)": {
+    "type": "alta",
+    "text": "Fiambre Mortadelita Alemana (18/09/2026)",
+    "url": "https://vaad.ar/producto/fiambre-mortadelita-alemana/"
+  },
+  "alta:Fiambre Salchichon primavera (18/09/2026)": {
+    "type": "alta",
+    "text": "Fiambre Salchichon primavera (18/09/2026)",
+    "url": "https://vaad.ar/producto/fiambre-salchichon-primavera/"
+  },
+  "alta:Fiambre Mortadela & Pistacho (18/09/2026)": {
+    "type": "alta",
+    "text": "Fiambre Mortadela & Pistacho (18/09/2026)",
+    "url": "https://vaad.ar/producto/fiambre-mortadela-pistacho/"
   }
 }
