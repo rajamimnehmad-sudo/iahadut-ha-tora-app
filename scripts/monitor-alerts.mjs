@@ -19,8 +19,7 @@ const extract = (selector, type) => [...(document.querySelector(selector)?.query
 const current = [...extract('.card-altas', 'alta'), ...extract('.card-bajas', 'baja')];
 const trackedSections = [
   {type: 'notes', title: 'Nueva nota de Kashrut', url: 'https://vaad.ar/notas-kashrut/'},
-  {type: 'catering', title: 'Nuevo catering certificado', url: 'https://vaad.ar/servicios-de-catering/'},
-  {type: 'shops', title: 'Nueva tienda certificada', url: 'https://vaad.ar/tiendas-kosher-certificadas/'}
+  {type: 'catering', title: 'Nuevo catering certificado', url: 'https://vaad.ar/servicios-de-catering/'}
 ];
 for (const section of trackedSections) {
   const sectionResponse = await fetch(section.url, {headers: {Accept: 'text/html'}});
@@ -74,7 +73,7 @@ if (!process.env.FCM_SERVICE_ACCOUNT_JSON) {
   throw new Error(`${changes.length} cambio(s) detectado(s), pero falta FCM_SERVICE_ACCOUNT_JSON. No se actualizó el estado para no perder las notificaciones.`);
 }
 
-console.log(`${changes.length} cambio(s) detectado(s); preparando notificaciones push.`);
+console.log(`${changes.length} cambio(s) detectado(s); preparando notificaciones push agrupadas.`);
 
 const serviceAccount = JSON.parse(process.env.FCM_SERVICE_ACCOUNT_JSON);
 const now = Math.floor(Date.now() / 1000);
@@ -89,15 +88,29 @@ const {access_token: accessToken} = await tokenResponse.json();
 const stateAfterSuccessfulSends = needsProductBaseline
   ? {...previousEntries, ...Object.fromEntries(current.filter((item) => productTypes.has(item.type)).map((item) => [`${item.type}:${item.text}`, item]))}
   : {...previousEntries};
-for (const item of changes) {
-  const notificationTitle = item.type === 'alta' ? 'Nueva alta en el catálogo' : item.type === 'baja' ? 'Producto dado de baja' : item.type === 'notes' ? 'Nueva nota de Kashrut' : item.type === 'catering' ? 'Nuevo catering certificado' : 'Nueva tienda certificada';
-  const eventKey = `${item.type}:${item.text}`;
-  const message = {message: {topic, notification: {title: notificationTitle, body: item.type === 'notes' || item.type === 'catering' || item.type === 'shops' ? 'Hay una novedad disponible para consultar.' : item.text}, android: {priority: 'HIGH', ttl: '3600s', collapse_key: 'catalog-updates', notification: {channel_id: 'catalog-updates', sound: 'default'}}, data: {action: 'sync', alertType: item.type, eventKey, sentAt: new Date(now * 1000).toISOString(), text: item.text, url: item.url || ''}}};
+// A single run can discover several products at once. Sending one FCM message
+// per product creates a notification storm on Android and also makes the
+// in-app alert history race with itself. Keep one message per change type and
+// include the individual entries in `data.items` so the app can render every
+// product without losing detail.
+const batches = [...new Set(changes.map((item) => item.type))].map((type) => ({
+  type,
+  items: changes.filter((item) => item.type === type)
+}));
+for (const batch of batches) {
+  const {type, items} = batch;
+  const notificationTitle = type === 'alta' ? 'Nuevas altas en el catálogo' : type === 'baja' ? 'Productos dados de baja' : type === 'notes' ? 'Nueva nota de Kashrut' : 'Nuevo catering certificado';
+  const productNames = items.map((item) => item.text.replace(/\s*\([^)]*\)\s*$/, '')).filter(Boolean);
+  const body = type === 'alta' || type === 'baja'
+    ? `${items.length} ${type === 'alta' ? 'productos nuevos' : 'productos retirados'}${productNames.length ? `: ${productNames.slice(0, 3).join(', ')}${productNames.length > 3 ? ` y ${productNames.length - 3} más` : ''}` : ''}`
+    : 'Hay una novedad disponible para consultar.';
+  const eventKey = `batch:${type}:${createHash('sha256').update(items.map((item) => `${item.type}:${item.text}`).join('|')).digest('hex').slice(0, 16)}`;
+  const message = {message: {topic, notification: {title: notificationTitle, body}, android: {priority: 'HIGH', ttl: '3600s', collapse_key: 'catalog-updates', notification: {channel_id: 'catalog-updates', sound: 'default', tag: 'catalog-updates'}}, data: {action: 'sync', alertType: type, eventKey, sentAt: new Date(now * 1000).toISOString(), title: notificationTitle, body, text: body, items: JSON.stringify(items.map((item) => ({text:item.text, url:item.url || ''}))), url: items.length === 1 ? items[0].url || '' : ''}}};
   const sendResponse = await fetch(`https://fcm.googleapis.com/v1/projects/${serviceAccount.project_id}/messages:send`, {method: 'POST', headers: {'content-type': 'application/json', Authorization: `Bearer ${accessToken}`}, body: JSON.stringify(message)});
   if (!sendResponse.ok) throw new Error(`FCM rechazó la notificación: HTTP ${sendResponse.status}`);
-  stateAfterSuccessfulSends[eventKey] = item;
+  items.forEach((item) => { stateAfterSuccessfulSends[`${item.type}:${item.text}`] = item; });
   await persistState(stateAfterSuccessfulSends);
-  console.log(`Notificación enviada: ${item.type} · ${item.text}`);
+  console.log(`Notificación agrupada enviada: ${type} · ${items.length} elemento(s)`);
 }
 
 await persistState(mergedState());

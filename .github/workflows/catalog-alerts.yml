@@ -25,7 +25,7 @@ jobs:
           cache: npm
       - name: Install dependencies
         run: npm ci
-      - name: Consultar altas y bajas y enviar FCM
+      - name: Consultar altas, bajas, catering y notas; enviar FCM agrupado
         env:
           FCM_SERVICE_ACCOUNT_JSON: ${{ secrets.FCM_SERVICE_ACCOUNT_JSON }}
           FCM_TOPIC: catalog-updates
