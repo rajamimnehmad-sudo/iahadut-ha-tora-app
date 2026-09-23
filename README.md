@@ -58,8 +58,8 @@ La APK de salida queda en `android/app/build/outputs/apk/debug/app-debug.apk`.
 La aplicación ya existe en Google Play. Cada actualización debe conservar exactamente estos datos:
 
 - `applicationId`: `ar.vaad.catalogo.app`
-- Versión actual en el código fuente: `1.0.21`
-- `versionCode` local: `73` (la `1.0.21`/73 está disponible en prueba interna; la cerrada “Prueba personal S22” sigue en 63; aumentar en cada actualización)
+- Versión actual en el código fuente: `1.0.22`
+- `versionCode` local: `74` (la `1.0.21`/73 está disponible en prueba interna; la cerrada “Prueba personal S22” sigue en 63; aumentar en cada actualización)
 - `minSdkVersion`: `26`
 - `targetSdkVersion` y `compileSdkVersion`: `36`
 
