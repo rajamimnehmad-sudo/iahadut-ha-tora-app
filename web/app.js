@@ -1872,7 +1872,8 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     [['Lácteos', 'Leches'], /\bleche\b/],
     [['Lácteos', 'Quesos'], /\bqueso/],
     [['Lácteos', 'Yogures'], /yogur/],
-    [['Manteca'], /\bmanteca\b/],
+    // "Porotos de manteca" es una variedad de legumbre, no manteca.
+    [['Manteca'], /(?:^manteca\b|\bmanteca\s+parve\b|\bveganteca\b)/],
     [['Lácteos', 'Cremas'], /\bcrema\b/],
     [['Panadería y repostería', 'Harinas'], /\bharina|premezcla/],
     [['Panadería y repostería', 'Panes'], /\bpan\b|panificad/],
@@ -1881,7 +1882,7 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     [['Chocolates y bombones'], actualChocolateProductPattern],
     [['Caramelos y golosinas'], actualChocolateProductPattern],
     [['Alfajores'], /alfajor/],
-    [['Caramelos y golosinas'], /alfajor|oblea|\bbarritas?\b|\bturron(?:es)?\b/],
+    [['Caramelos y golosinas'], /alfajor|oblea/],
     [['Turrones'], /\bturron(?:es)?\b/],
     [['Caramelos y golosinas'], /caramelo|golosina|chicle/],
     [['Mermeladas'], /mermelada|jalea/],
@@ -1919,6 +1920,20 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
   // para que una palabra secundaria (sabor, uso o ingrediente) no mande un
   // producto a una categoría equivocada.
   const priorityProductCategoryRules = [
+    // La categoría principal se decide por el tipo de producto, no por un
+    // ingrediente o sabor mencionado después en el nombre/descripción.
+    [['Legumbres y derivados', 'Porotos, lentejas y garbanzos'], /^porotos?\s+de\s+manteca\b/],
+    [['Carnes y embutidos', 'Carnes y fiambres'], /\b(?:fiambre|mortadela|mortadelita|salchich[oó]n|pastr[oó]n|bresaola|matambrito)\b/],
+    [['Bebidas', 'Bebidas sin alcohol', 'Bebidas vegetales'], /^(?:bebida|leche)\b.*\b(?:avena|almendras?|soja|coco|arroz|parve)\b/],
+    [['Aceites', 'Aceite de oliva'], /^aceite\b.*\boliva\b/],
+    [['Aceites', 'Aceite de girasol'], /^aceite\b.*\bgirasol\b/],
+    [['Aceites', 'Otros aceites'], /^aceite\b/],
+    [['Mermeladas'], /^mermelada\b/],
+    [['Frutos secos y deshidratados', 'Frutas deshidratadas'], /^frutas?\s+(?:desecadas?|deshidratadas?|liofilizadas?)\b/],
+    [['Untables y pastas', 'Pastas de frutos secos'], /^(?:mantequilla|pasta(?:\s+untable)?)\s+de\s+(?:avellanas?|caj[uú]|casta[nñ]as?\s+de\s+caj[uú]|nuez\s+pec[aá]n|nueces?|pistachos?|man[ií]|almendras?)\b/],
+    [['Pastas', 'Pastas especiales'], /^(?:fideos?|pasta)\s+de\s+arroz\b/],
+    [['Panadería y repostería', 'Harinas'], /^s[eé]mola\s+de\s+trigo\b/],
+    [['Frutos secos y deshidratados', 'Frutos secos'], /^(?:nuez|mix\s+frutos)\b.*\btostad/],
     [['Bebidas', 'Bebidas alcohólicas', 'Gins'], /\b(?:beefeater|bombay saphire|bombay sapphire|gordon.?s|plymouth gin|tanqueray|broker.?s)\b/],
     [['Bebidas', 'Bebidas alcohólicas', 'Vodkas'], /\b(?:beluga|grey goose|smirnoff|stolichnaya|van gogh blue|skyy)\b/],
     [['Bebidas', 'Bebidas alcohólicas', 'Whiskies'], /\b(?:deanston|glen moray|jack daniel.?s|johnnie walker|speyburn|chivas regal)\b/],
@@ -1939,7 +1954,6 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     [['Pastas', 'Pastas especiales'], /\b(?:fusilli|spaghetti|tallarines?|coditos|sedanini|ravioles?|sorrentinos?|capeletis?)\b/],
     [['Untables y pastas', 'Pastas de frutos secos'], /mantequilla\s+de\s+mani/],
     [['Manteca'], /manteca\s+parve|veganteca/],
-    [['Bebidas', 'Bebidas sin alcohol', 'Bebidas vegetales'], /^bebida\b.*\b(?:avena|almendra|soja|coco|arroz|parve)\b/],
     [['Frutos secos y deshidratados', 'Frutas deshidratadas'], /fruta\s+liofilizada|liofilizad[ao].*\b(?:anana|banana|frutilla|mango|fruta)\b/],
     [['Frutos secos y deshidratados', 'Frutos secos'], /mix\s+frutos\s+tostados|nuez\s+tostada/],
     [['Conservas', 'Frutas en conserva'], /coctel\s+de\s+frutas/],
@@ -2025,10 +2039,12 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     if (/\bcereales?\b|\bcopos de maiz\b/.test(text)) addPath(['Cereales, granos y semillas', 'Cereales']);
     const remoteMatch = remoteTaxonomyRules.find((rule) => !rule.path.some((part) => normalize(part) === 'cocina internacional') && rule.keywords.some((keyword) => text.includes(keyword)));
     if (remoteMatch) addPath(remoteMatch.path);
-    // A product may belong to multiple useful branches. This improves
-    // discovery without changing the primary path used in product cards.
+    // Se reúnen las coincidencias para conservar la compatibilidad con las
+    // reglas remotas, pero el catálogo expone una sola categoría principal.
+    // Así una palabra secundaria (por ejemplo "manteca" en "porotos de
+    // manteca") no duplica ni contamina otros listados.
     productCategoryRules.forEach(([path, pattern]) => { if (pattern.test(text)) addPath(path); });
-    if (paths.length) return paths;
+    if (paths.length) return [paths[0]];
     const fallback = {gondola:'Productos de góndola', planta:'Productos de plantas certificadas', especial:'Producción especial', uruguay:'Productos de Uruguay'};
     return [['Otros productos', fallback[product.cat] || 'Sin clasificar']];
   }

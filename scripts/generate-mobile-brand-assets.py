@@ -8,6 +8,7 @@ RES = ROOT / "android" / "app" / "src" / "main" / "res"
 LOGO = Image.open(ROOT / "web" / "assets" / "logo-gold-white.png").convert("RGBA")
 APP_ICON = Image.open(ROOT / "web" / "assets" / "app-icon-master.png").convert("RGBA")
 WHITE = (255, 255, 255, 255)
+APP_GREEN = (31, 93, 70, 255)
 IOS_ICON = ROOT / "ios" / "App" / "App" / "Assets.xcassets" / "AppIcon.appiconset" / "AppIcon-512@2x.png"
 
 
@@ -46,16 +47,17 @@ def sharpened_app_icon(size):
 
 
 def adaptive_mark():
-    """Extract the white seal from the exact green master for adaptive icons."""
+    """Extract the green seal from the exact white master for adaptive icons."""
     rgb = APP_ICON.convert("RGB")
-    luminance = rgb.convert("L")
-    # The source is white artwork over #0D7156. Keep antialiased edges while
-    # removing the green field, then render the mark as clean neutral white.
-    mask = luminance.point(lambda value: max(0, min(255, round((value - 84) * 255 / 158))))
+    white = Image.new("RGB", rgb.size, WHITE[:3])
+    difference = ImageChops.difference(rgb, white)
+    # Preserve the antialiased edge while removing the white field. Rendering
+    # from one solid brand color keeps every launcher density consistent.
+    mask = difference.convert("L").point(lambda value: min(255, value * 3))
     bounds = mask.getbbox()
     if not bounds:
         raise RuntimeError("No se pudo extraer el isotipo del ícono maestro")
-    mark = Image.new("RGBA", rgb.size, WHITE)
+    mark = Image.new("RGBA", rgb.size, APP_GREEN)
     mark.putalpha(mask)
     return mark.crop(bounds)
 
