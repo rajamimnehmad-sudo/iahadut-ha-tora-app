@@ -4974,19 +4974,28 @@ body:has(#homeView.view.active)::after {
   background: #fff !important;
 }
 
-/* En el Home, la base fija del dock continúa la superficie blanca inferior.
-   Vive detrás del contenido, por lo que nunca recorta botones ni tarjetas. */
-#homeView.view.active::after {
+/* Base del Home anclada a la ventana, fuera del contenedor animado de la vista.
+   La app se pinta encima: el blanco rellena el fondo sin tapar contenido. */
+.app::before {
   content: '';
   position: fixed;
   inset: auto 0 0;
   z-index: 0;
   height: 152px;
-  background: #fff;
+  background: transparent;
   pointer-events: none;
 }
 
-#homeView.view.active > * {
+body:has(#homeView.view.active) .app::before {
+  background: #fff;
+}
+
+.app {
+  position: relative;
+  z-index: 1;
+}
+
+.app > :not(.bottom-nav) {
   position: relative;
   z-index: 1;
 }
@@ -4994,8 +5003,8 @@ body:has(#homeView.view.active)::after {
 /* Profundidad contenida del dock: lo separa del contenido sin agregar un velo. */
 .bottom-nav {
   box-shadow:
-    0 12px 28px rgb(15 45 34 / 16%),
-    0 -7px 20px rgb(15 45 34 / 10%),
+    0 8px 18px rgb(15 23 42 / 12%),
+    0 -3px 10px rgb(15 23 42 / 6%),
     inset 0 1px 0 rgb(255 255 255 / 14%) !important;
 }
 
