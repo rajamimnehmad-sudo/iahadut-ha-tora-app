@@ -4972,3 +4972,20 @@ body.app-scrolled #appHero {
     padding-right: 4px !important;
   }
 }
+
+/* En el final del Home, el dock descansa sobre una base blanca continua. El
+   pequeño fundido superior evita un corte, y el bloque opaco cubre también el
+   área segura sin alargar el documento ni revelar nuevamente el menta. */
+body[data-active-view="homeView"]::after {
+  height: calc(var(--dock-height) + var(--dock-gap) + 32px + env(safe-area-inset-bottom, 0px)) !important;
+  background: linear-gradient(
+    to bottom,
+    rgb(255 255 255 / 0%) 0,
+    #fff 24px,
+    #fff 100%
+  ) !important;
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+  -webkit-mask-image: none !important;
+  mask-image: none !important;
+}
