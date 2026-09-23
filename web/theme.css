@@ -4954,3 +4954,21 @@ body.app-scrolled #appHero {
     0 8px 18px -12px rgb(27 73 52 / 28%),
     0 16px 28px -24px rgb(27 73 52 / 18%) !important;
 }
+
+/* El círculo del escáner sigue la curva derecha de la cápsula. Su separación
+   horizontal coincide con el aire vertical del control, evitando que parezca
+   corrido hacia el centro tanto en Home como en el buscador expandido. */
+@media (max-width: 700px) {
+  #homeView #homeForm {
+    padding-right: 4px !important;
+  }
+
+  #homeView #homeForm .scan,
+  .search-open .bottom-nav.search-mode #searchForm .scan {
+    justify-self: end !important;
+  }
+
+  .search-open .bottom-nav.search-mode {
+    padding-right: 5px !important;
+  }
+}
