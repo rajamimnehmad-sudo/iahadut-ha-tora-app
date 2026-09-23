@@ -10,6 +10,9 @@ APP_ICON = Image.open(ROOT / "web" / "assets" / "app-icon-master.png").convert("
 WHITE = (255, 255, 255, 255)
 APP_GREEN = (31, 93, 70, 255)
 IOS_ICON = ROOT / "ios" / "App" / "App" / "Assets.xcassets" / "AppIcon.appiconset" / "AppIcon-512@2x.png"
+PLAY_ICON = ROOT / "play-assets" / "icono-app-alta-resolucion-1024.png"
+PLAY_ICON_PREVIEW = ROOT / "play-assets" / "icono-app-blanco-verde-preview-1024.png"
+ICON_ART_SCALE = 0.90
 
 
 def fit(image, width, height):
@@ -39,8 +42,11 @@ def logo_art(transparent=False):
 
 
 def sharpened_app_icon(size):
-    """Resize once from the 1024 px master and retain fine lettering."""
-    icon = APP_ICON.resize((size, size), Image.Resampling.LANCZOS)
+    """Center the master with a restrained white margin and retain lettering."""
+    icon = Image.new("RGBA", (size, size), WHITE)
+    art_size = round(size * ICON_ART_SCALE)
+    art = APP_ICON.resize((art_size, art_size), Image.Resampling.LANCZOS)
+    icon.alpha_composite(art, ((size - art.width) // 2, (size - art.height) // 2))
     if size <= 512:
         icon = icon.filter(ImageFilter.UnsharpMask(radius=max(0.35, size / 640), percent=72, threshold=3))
     return icon
@@ -75,8 +81,9 @@ def launcher(size, round_icon=False):
 def adaptive_foreground(size):
     image = Image.new("RGBA", (size, size), (0, 0, 0, 0))
     # Android's adaptive canvas is 108 dp; the central 66 dp is the guaranteed
-    # safe zone. 64% keeps the complete seal intact under every OEM mask.
-    mark = fit(adaptive_mark(), round(size * 0.64), round(size * 0.64))
+    # safe zone. 58% gives the seal a little more air and keeps it centered
+    # under Samsung and other OEM masks without making the lettering soft.
+    mark = fit(adaptive_mark(), round(size * 0.58), round(size * 0.58))
     image.alpha_composite(mark, ((size - mark.width) // 2, (size - mark.height) // 2))
     return image
 
@@ -115,3 +122,6 @@ for path in RES.glob("drawable*/splash.png"):
 
 IOS_ICON.parent.mkdir(parents=True, exist_ok=True)
 ios_icon().save(IOS_ICON)
+PLAY_ICON.parent.mkdir(parents=True, exist_ok=True)
+ios_icon().save(PLAY_ICON)
+ios_icon().save(PLAY_ICON_PREVIEW)

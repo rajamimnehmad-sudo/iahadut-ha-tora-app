@@ -4724,12 +4724,11 @@ body,
   background: #fff !important;
 }
 
-/* La superficie blanca de Información útil continúa hasta el borde inferior
-   de Inicio, incluido el espacio seguro reservado para el dock. */
+/* La superficie blanca acompaña el último acceso sin agrandar artificialmente
+   el área desplazable. El valor alcanza el borde superior del dock y deja un
+   cierre corto, en vez de una cola blanca vacía al final de Inicio. */
 #homeView .useful-section::before {
-  bottom: calc(
-    -184px - var(--dock-height) - var(--dock-gap) - 44px - env(safe-area-inset-bottom, 0px)
-  ) !important;
+  bottom: -184px !important;
 }
 
 /* El resize cruzaba el breakpoint de 700px y encogía el encabezado/nav de
@@ -4851,10 +4850,28 @@ body.search-open::after {
   opacity: 0;
 }
 
+/* En Inicio, el cierre detrás y debajo del dock termina en blanco, pero entra
+   con un degradado corto para que el contenido no parezca cortado por una
+   línea horizontal. Es una capa fija: no alarga el área desplazable. */
+body[data-active-view="homeView"]:not(.search-open)::after {
+  height: calc(
+    var(--dock-height) + var(--dock-gap) + 44px + env(safe-area-inset-bottom, 0px)
+  );
+  background: linear-gradient(
+    to bottom,
+    rgb(255 255 255 / 0%) 0%,
+    rgb(255 255 255 / 82%) 30%,
+    #fff 52%,
+    #fff 100%
+  );
+  -webkit-mask-image: none;
+  mask-image: none;
+}
+
 body:not(.search-open) .bottom-nav {
   min-height: var(--dock-height) !important;
   bottom: max(var(--dock-gap), env(safe-area-inset-bottom, 0px)) !important;
-  width: calc(100% - 20px) !important;
+  width: min(calc(100% - 20px), 760px) !important;
   padding: 6px 5px !important;
   background: #174634 !important;
   background-clip: padding-box !important;
