@@ -4964,9 +4964,12 @@ body::after {
   display: none !important;
 }
 
-/* Elimina el halo verdoso que proyectaba el dock sobre el fondo blanco. */
+/* Profundidad contenida del dock: lo separa del contenido sin agregar un velo. */
 .bottom-nav {
-  box-shadow: 0 8px 22px rgb(15 23 42 / 8%), inset 0 1px 0 rgb(255 255 255 / 11%) !important;
+  box-shadow:
+    0 12px 28px rgb(15 45 34 / 16%),
+    0 -7px 20px rgb(15 45 34 / 10%),
+    inset 0 1px 0 rgb(255 255 255 / 14%) !important;
 }
 
 /* El vidrio del hero gana una separación breve al pasar sobre el contenido. */
