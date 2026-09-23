@@ -4928,21 +4928,45 @@ body:not(.search-open) .bottom-nav {
   top: 0;
   z-index: 80;
   isolation: isolate;
-  background: rgb(220 239 226 / 82%) !important;
-  background-image: none !important;
+  background: linear-gradient(
+    180deg,
+    rgb(232 247 237 / 86%) 0%,
+    rgb(220 239 226 / 76%) 100%
+  ) !important;
+  background-image: linear-gradient(
+    180deg,
+    rgb(232 247 237 / 86%) 0%,
+    rgb(220 239 226 / 76%) 100%
+  ) !important;
   border: 0 !important;
-  box-shadow: inset 0 1px 0 rgb(255 255 255 / 32%) !important;
-  -webkit-backdrop-filter: blur(10px) saturate(110%) !important;
-  backdrop-filter: blur(10px) saturate(110%) !important;
-  transition: background .2s ease, box-shadow .2s ease, -webkit-backdrop-filter .2s ease, backdrop-filter .2s ease !important;
+  border-bottom: 1px solid rgb(255 255 255 / 22%) !important;
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 52%),
+    0 5px 16px -15px rgb(27 73 52 / 24%) !important;
+  -webkit-backdrop-filter: blur(12px) saturate(118%) !important;
+  backdrop-filter: blur(12px) saturate(118%) !important;
+  transition:
+    background .24s cubic-bezier(.22, .61, .36, 1),
+    box-shadow .24s cubic-bezier(.22, .61, .36, 1),
+    -webkit-backdrop-filter .24s cubic-bezier(.22, .61, .36, 1),
+    backdrop-filter .24s cubic-bezier(.22, .61, .36, 1) !important;
 }
 
 body.app-scrolled #appHero {
-  background: rgb(220 239 226 / 88%) !important;
-  background-image: none !important;
-  -webkit-backdrop-filter: blur(12px) saturate(112%) !important;
-  backdrop-filter: blur(12px) saturate(112%) !important;
+  background: linear-gradient(
+    180deg,
+    rgb(235 248 239 / 92%) 0%,
+    rgb(216 237 223 / 84%) 100%
+  ) !important;
+  background-image: linear-gradient(
+    180deg,
+    rgb(235 248 239 / 92%) 0%,
+    rgb(216 237 223 / 84%) 100%
+  ) !important;
+  -webkit-backdrop-filter: blur(14px) saturate(122%) !important;
+  backdrop-filter: blur(14px) saturate(122%) !important;
   box-shadow:
-    inset 0 1px 0 rgb(255 255 255 / 36%),
-    0 8px 18px -12px rgb(27 73 52 / 24%) !important;
+    inset 0 1px 0 rgb(255 255 255 / 58%),
+    0 8px 20px -11px rgb(27 73 52 / 30%),
+    0 16px 30px -24px rgb(27 73 52 / 22%) !important;
 }
