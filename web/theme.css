@@ -4957,14 +4957,11 @@ body.app-scrolled .app-hero {
   }
 }
 
-/* Fondo blanco continuo detrás y debajo del dock. */
+/* El dock no agrega una capa propia: deja visible el fondo real de cada vista.
+   Así el Home continúa blanco y las listas verdes no quedan cortadas. */
 body::after {
-  height: 116px !important;
-  background: #fff !important;
-  -webkit-backdrop-filter: none !important;
-  backdrop-filter: none !important;
-  -webkit-mask-image: none !important;
-  mask-image: none !important;
+  content: none !important;
+  display: none !important;
 }
 
 /* Elimina el halo verdoso que proyectaba el dock sobre el fondo blanco. */
