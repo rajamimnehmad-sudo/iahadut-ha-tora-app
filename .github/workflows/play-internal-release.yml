@@ -61,13 +61,13 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           ASSET_URL: ${{ inputs.release_asset_url }}
         run: |
-          gh api "$ASSET_URL" -H 'Accept: application/octet-stream' > "$RUNNER_TEMP/iahadut-1.0.15-67.aab"
+          gh api "$ASSET_URL" -H 'Accept: application/octet-stream' > "$RUNNER_TEMP/iahadut-1.0.16-68.aab"
 
-      - name: Publicar versión 67 en prueba interna
+      - name: Publicar versión 68 en prueba interna
         if: inputs.publish
         env:
           PACKAGE_NAME: ar.vaad.catalogo.app
-          AAB_PATH: ${{ runner.temp }}/iahadut-1.0.15-67.aab
+          AAB_PATH: ${{ runner.temp }}/iahadut-1.0.16-68.aab
         run: |
           set -euo pipefail
           ACCESS_TOKEN=$(gcloud auth application-default print-access-token --scopes=https://www.googleapis.com/auth/androidpublisher)
@@ -83,8 +83,8 @@ jobs:
             --data-binary "@$AAB_PATH" \
             "https://androidpublisher.googleapis.com/upload/androidpublisher/v3/applications/$PACKAGE_NAME/edits/$edit_id/bundles?uploadType=media")
           version_code=$(jq -r '.versionCode' <<<"$upload")
-          test "$version_code" = '67'
-          jq -n --arg version "$version_code" '{track:"internal",releases:[{name:"1.0.15 · Escáner y códigos",versionCodes:[$version],status:"completed",releaseNotes:[{language:"es-419",text:"Mejoras generales del escáner, coincidencias de productos y corrección visual del encabezado."}]}]}' > "$RUNNER_TEMP/track.json"
+          test "$version_code" = '68'
+          jq -n --arg version "$version_code" '{track:"internal",releases:[{name:"1.0.16 · Interfaz refinada",versionCodes:[$version],status:"completed",releaseNotes:[{language:"es-419",text:"Mejoras visuales del encabezado y la navegación inferior, con un acoplado más suave y consistente en toda la app."}]}]}' > "$RUNNER_TEMP/track.json"
           curl --fail-with-body --silent --show-error -X PUT \
             -H "Authorization: Bearer $ACCESS_TOKEN" \
             -H 'Content-Type: application/json' \
@@ -93,4 +93,4 @@ jobs:
           curl --fail-with-body --silent --show-error -X POST \
             -H "Authorization: Bearer $ACCESS_TOKEN" \
             "https://androidpublisher.googleapis.com/androidpublisher/v3/applications/$PACKAGE_NAME/edits/$edit_id:commit" >/dev/null
-          echo 'Versión 67 publicada en la pista internal.'
+          echo 'Versión 68 publicada en la pista internal.'
