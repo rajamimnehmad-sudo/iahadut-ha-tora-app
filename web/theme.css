@@ -4957,11 +4957,21 @@ body.app-scrolled .app-hero {
   }
 }
 
-/* El dock no agrega una capa propia: deja visible el fondo real de cada vista.
-   Así el Home continúa blanco y las listas verdes no quedan cortadas. */
+/* Extensión de fondo limitada al área segura que queda debajo del dock.
+   Evita que asome contenido cortado sin cubrir la zona desplazable. */
 body::after {
-  content: none !important;
-  display: none !important;
+  content: '' !important;
+  display: block !important;
+  height: calc(16px + env(safe-area-inset-bottom, 0px)) !important;
+  background: var(--unified-hero-surface) !important;
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+  -webkit-mask-image: none !important;
+  mask-image: none !important;
+}
+
+body:has(#homeView.view.active)::after {
+  background: #fff !important;
 }
 
 /* En el Home, la base fija del dock continúa la superficie blanca inferior.
