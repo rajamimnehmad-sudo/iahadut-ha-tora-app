@@ -4968,7 +4968,7 @@ body.app-scrolled #appHero {
     justify-self: end !important;
   }
 
-  .search-open .bottom-nav.search-mode {
-    padding-right: 5px !important;
+  body.search-open .bottom-nav.search-mode {
+    padding-right: 4px !important;
   }
 }
