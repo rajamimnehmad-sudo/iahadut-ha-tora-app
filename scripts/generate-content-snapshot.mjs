@@ -1,10 +1,11 @@
-import { mkdir, writeFile } from 'node:fs/promises';
+import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { DOMParser } from 'linkedom';
 
 const projectRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const outputPath = resolve(projectRoot, 'web/data/content.json');
+const alertStatePath = resolve(projectRoot, 'automation/alert-state.json');
 const generatedAt = Date.now();
 const sections = {
   shops: ['Tiendas certificadas', 'https://vaad.ar/tiendas-kosher-certificadas/'],
@@ -183,6 +184,35 @@ function parseAlerts(html) {
   return { alta: extract('.card-altas'), baja: extract('.card-bajas'), general: [] };
 }
 
+async function mergeAlertHistory(currentAlerts) {
+  let savedEntries = [];
+  try {
+    const savedState = JSON.parse(await readFile(alertStatePath, 'utf8'));
+    savedEntries = Object.values(savedState || {});
+  } catch (error) {
+    if (error?.code !== 'ENOENT') console.warn(`No se pudo leer el historial de alertas: ${error.message}`);
+  }
+
+  const mergeType = (type) => {
+    const seen = new Set();
+    return [...(currentAlerts[type] || []), ...savedEntries.filter((entry) => entry?.type === type)]
+      .map((entry) => ({ text: clean(entry?.text), url: clean(entry?.url) }))
+      .filter((entry) => entry.text.length > 8)
+      .filter((entry) => {
+        const identity = entry.url ? `url:${normalize(entry.url)}` : `text:${normalize(entry.text)}`;
+        if (seen.has(identity)) return false;
+        seen.add(identity);
+        return true;
+      });
+  };
+
+  return {
+    alta: mergeType('alta'),
+    baja: mergeType('baja'),
+    general: currentAlerts.general || []
+  };
+}
+
 const info = {};
 for (const [key, [, url]] of Object.entries(sections)) info[key] = parseInfo(key, await fetchHtml(url));
 
@@ -196,7 +226,7 @@ const workers = Array.from({ length: 4 }, async () => {
   }
 });
 await Promise.all(workers);
-const alerts = parseAlerts(await fetchHtml('https://vaad.ar/alertas-de-productos/'));
+const alerts = await mergeAlertHistory(parseAlerts(await fetchHtml('https://vaad.ar/alertas-de-productos/')));
 
 await mkdir(dirname(outputPath), { recursive: true });
 await writeFile(outputPath, `${JSON.stringify({ generatedAt, info, cards: cardDetails, alerts })}\n`, 'utf8');

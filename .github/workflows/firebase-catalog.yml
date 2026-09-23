@@ -35,7 +35,7 @@ jobs:
         run: npm run snapshot
       - name: Generar plan sin escribir en Firebase
         run: npm run sync:firebase:catalog
-      - name: Guardar paquete para aprobación
+      - name: Guardar catálogo preparado
         run: |
           mkdir -p firebase-catalog-artifact/web/data
           cp web/data/catalog.json firebase-catalog-artifact/web/data/catalog.json
@@ -47,8 +47,39 @@ jobs:
           name: firebase-catalog-prepared
           path: firebase-catalog-artifact
 
-  publish:
-    name: Aplicar catálogo aprobado en Firebase
+  publish_scheduled:
+    name: Aplicar actualización automática en Firebase
+    if: github.event_name == 'schedule'
+    needs: prepare
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Descargar catálogo preparado
+        uses: actions/download-artifact@v4
+        with:
+          name: firebase-catalog-prepared
+          path: prepared
+      - name: Instalar dependencias mínimas
+        run: npm ci --ignore-scripts
+      - name: Aplicar actualización incremental programada
+        env:
+          CATALOG_FIREBASE_APPROVED: '1'
+          FIREBASE_PROJECT_ID: iahadut-hatora
+          FIREBASE_SERVICE_ACCOUNT_JSON: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_JSON }}
+        run: |
+          cp prepared/web/data/catalog.json web/data/catalog.json
+          cp prepared/web/data/product-details.json web/data/product-details.json
+          cp prepared/web/data/content.json web/data/content.json
+          npm run sync:firebase:catalog -- --apply
+
+  publish_manual:
+    name: Aplicar catálogo aprobado manualmente en Firebase
+    if: github.event_name == 'workflow_dispatch'
     needs: prepare
     runs-on: ubuntu-latest
     environment:
@@ -76,7 +107,7 @@ jobs:
           cp prepared/web/data/catalog.json web/data/catalog.json
           cp prepared/web/data/product-details.json web/data/product-details.json
           cp prepared/web/data/content.json web/data/content.json
-          if [ "${{ inputs.mode || 'incremental' }}" = "seed" ]; then
+          if [ "${{ inputs.mode }}" = "seed" ]; then
             npm run sync:firebase:catalog -- --apply --seed
           else
             npm run sync:firebase:catalog -- --apply

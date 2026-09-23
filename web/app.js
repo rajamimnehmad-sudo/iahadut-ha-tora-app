@@ -5,6 +5,7 @@ import { firebaseConfig } from './firebase-config.js';
 import catalogSnapshot from './data/catalog.json';
 import contentSnapshot from './data/content.json';
 import productDetailsSnapshot from './data/product-details.json';
+import '@fontsource-variable/manrope';
 import '@phosphor-icons/web/regular';
 
 const PlayStoreUpdates = registerPlugin('PlayStoreUpdates');
@@ -51,6 +52,23 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
   'use strict';
 
   const $ = (selector) => document.querySelector(selector);
+  const viewTitleSlot = $('#viewTitleSlot');
+  const viewHeaderOrigins = new Map();
+  document.querySelectorAll('.view > .detail-head').forEach((header) => {
+    const marker = document.createComment('view-title-origin');
+    header.parentNode.insertBefore(marker, header);
+    viewHeaderOrigins.set(header, marker);
+  });
+  const mountViewTitle = (viewId) => {
+    const mounted = viewTitleSlot?.querySelector(':scope > .detail-head');
+    if (mounted) {
+      const marker = viewHeaderOrigins.get(mounted);
+      marker?.parentNode?.insertBefore(mounted, marker.nextSibling);
+    }
+    const nextHeader = document.querySelector(`#${viewId} > .detail-head`);
+    if (nextHeader && viewTitleSlot) viewTitleSlot.appendChild(nextHeader);
+    document.body.classList.toggle('has-view-title', Boolean(nextHeader));
+  };
   let searchFormHome;
   let searchPlaceholderTimer;
   let homePlaceholderTimer;
@@ -66,6 +84,7 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
   const normalize = (value) => clean(value).normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
   const escapeHtml = (value) => String(value || '').replace(/[&<>"']/g, (char) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[char]));
   const productFallbackImage = 'assets/product-placeholder.svg';
+  const developerLogoAssetUrl = new URL('./assets/waien-studio-logo.png', import.meta.url).href;
   // Resolver el sello desde el módulo evita que una ruta relativa cambie
   // cuando la app corre dentro del WebView de Capacitor o con otra base URL.
   const shareLogoAssetUrl = new URL('./assets/logo.png', import.meta.url).href;
@@ -118,6 +137,26 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
   })));
   imageObserver.observe(document.documentElement, {childList:true, subtree:true});
   document.querySelectorAll('img').forEach(prepareImage);
+
+  // El header se integra con el fondo en reposo y solo gana una separación
+  // sutil cuando el usuario empieza a desplazarse por el contenido.
+  let headerScrollFrame = 0;
+  const updateHeaderScrollState = () => {
+    if (headerScrollFrame) return;
+    headerScrollFrame = window.requestAnimationFrame(() => {
+      headerScrollFrame = 0;
+      const topbar = $('.topbar');
+      if (!topbar) return;
+      const appShell = $('.app');
+      const scrollTop = Math.max(Number(window.scrollY) || 0, Number(appShell?.scrollTop) || 0);
+      topbar.classList.toggle('is-scrolled', scrollTop > 10);
+      document.body.classList.toggle('app-scrolled', scrollTop > 10);
+    });
+  };
+  window.addEventListener('scroll', updateHeaderScrollState, {passive:true});
+  document.querySelector('.app')?.addEventListener('scroll', updateHeaderScrollState, {passive:true});
+  updateHeaderScrollState();
+
   document.addEventListener('selectstart', (event) => {
     event.preventDefault();
   }, true);
@@ -179,14 +218,34 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     }
   }
   const nativeCatalogCache = await readNativeCatalogCache();
-  const activeCatalogSnapshot = nativeCatalogCache?.catalog || catalogSnapshot;
-  const activeContentSnapshot = nativeCatalogCache?.content || contentSnapshot;
-  const activeProductDetailsSnapshot = nativeCatalogCache?.productDetails || productDetailsSnapshot;
+  // The native cache can legitimately be older than the bundle shipped with
+  // this build (for example after a user has opened the app while offline).
+  // Never let that stale cache hide products and images that are already in
+  // the current bundle.
+  const bundledCatalogTimestamp = Date.parse(catalogSnapshot?.generatedAt || '') || 0;
+  const nativeCatalogTimestamp = Date.parse(nativeCatalogCache?.catalog?.generatedAt || '') || 0;
+  const useNativeCatalog = Boolean(nativeCatalogCache?.catalog)
+    && (!bundledCatalogTimestamp || nativeCatalogTimestamp >= bundledCatalogTimestamp);
+  const activeCatalogSnapshot = useNativeCatalog ? nativeCatalogCache.catalog : catalogSnapshot;
+  const activeContentSnapshot = (useNativeCatalog ? nativeCatalogCache.content : null) || contentSnapshot;
+  const activeProductDetailsSnapshot = (useNativeCatalog ? nativeCatalogCache.productDetails : null) || productDetailsSnapshot;
   const storedProducts = readJson('iht_products');
   const bundledProducts = Array.isArray(activeCatalogSnapshot?.products) ? activeCatalogSnapshot.products : [];
   const bundledProductByUrl = new Map(bundledProducts.map((product) => [product.url, product]));
   const bundledProductDetails = activeProductDetailsSnapshot?.products || {};
-  const productSource = Array.isArray(storedProducts) && storedProducts.length ? storedProducts : bundledProducts.length ? bundledProducts : seed;
+  const storedCatalogTimestampAtBoot = Number(localStorage.getItem('iht_catalog_generated_at') || 0);
+  const activeCatalogTimestampAtBoot = Date.parse(activeCatalogSnapshot?.generatedAt || '') || 0;
+  // A WorkManager download can refresh the native cache while an older
+  // WebView copy remains in localStorage. Prefer the newer snapshot at boot
+  // so Android does not keep showing the old 1.048-product list.
+  const storedCatalogIsCurrent = (!activeCatalogTimestampAtBoot || storedCatalogTimestampAtBoot >= activeCatalogTimestampAtBoot)
+    // A previous sync can stamp an old/partial cache with a newer local time.
+    // If the shipped snapshot contains more products, keep those products
+    // (and their images) instead of regressing to that cache.
+    && (!bundledProducts.length || !Array.isArray(storedProducts) || storedProducts.length >= bundledProducts.length);
+  const productSource = Array.isArray(storedProducts) && storedProducts.length && storedCatalogIsCurrent
+    ? storedProducts
+    : bundledProducts.length ? bundledProducts : Array.isArray(storedProducts) && storedProducts.length ? storedProducts : seed;
   // Older cached catalogs could contain the site's internal data-product-id.
   // Keep only real GTIN/EAN/UPC values so those IDs can never be scanned as barcodes.
   let products = productSource.map((product) => ({...product, barcode:canonicalBarcode(product.barcode || bundledProductByUrl.get(product.url)?.barcode || bundledProductDetails[product.url]?.barcode)}));
@@ -245,7 +304,7 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
       globalPopularityApi.runTransaction(globalPopularityDb, async (transaction) => {
         const snapshot = await transaction.get(ref);
         const current = snapshot.exists() ? snapshot.data() : {};
-        transaction.set(ref, {productUrl:key, title:product?.title || key, image:product?.image || '', searches:Number(current.searches || 0) + (type === 'searches' ? 1 : 0), opens:Number(current.opens || 0) + (type === 'opens' ? 1 : 0), score:Number(current.score || 0) + 1, updatedAt:globalPopularityApi.serverTimestamp()}, {merge:true});
+        transaction.set(ref, {productUrl:snapshot.exists() ? current.productUrl : key, title:snapshot.exists() ? current.title : product?.title || key, image:snapshot.exists() ? current.image : product?.image || '', searches:Number(current.searches || 0) + (type === 'searches' ? 1 : 0), opens:Number(current.opens || 0) + (type === 'opens' ? 1 : 0), score:Number(current.score || 0) + 1, updatedAt:globalPopularityApi.serverTimestamp()}, {merge:true});
       }).catch(() => {});
     }
   };
@@ -258,10 +317,13 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
   let currentInfoKey = '';
   let shareBusy = false;
   const shareImageCache = new Map();
+  const shareImageTasks = new Map();
   let shareLogoPromise = null;
   let readerHistory = [];
   let stream = null;
   let scanFrame = 0;
+  let cameraStartToken = 0;
+  let cameraFallbackTimer = 0;
   let pendingScanProduct = null;
   let kosherToastTimer = 0;
   let searchTimer = 0;
@@ -279,7 +341,20 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
   let playUpdateState = {available:false, downloaded:false, flexibleAllowed:false, checked:false};
   let remoteTaxonomyRules = [];
   let pushListenersReady = false;
-  const imageGesture = {scale:1, x:0, y:0, pointers:new Map(), startDistance:0, startScale:1};
+  const imageGesture = {
+    scale: 1,
+    x: 0,
+    y: 0,
+    pointers: new Map(),
+    startDistance: 0,
+    startScale: 1,
+    startCenter: null,
+    pinchPoint: null,
+    moved: false,
+    hadMultiTouch: false,
+    tapStart: null,
+    lastTap: null
+  };
 
   const categoryFor = (key) => categories.find((category) => category.key === key);
   const categoryCount = (category) => products.length > seed.length ? products.filter((product) => product.cat === category.key).length : category.count;
@@ -318,6 +393,10 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
   const totalCount = () => products.length > seed.length ? products.length : categories.reduce((total, category) => total + category.count, 0);
   const bundledSyncTime = activeCatalogSnapshot?.generatedAt ? Date.parse(activeCatalogSnapshot.generatedAt) : 0;
   const syncState = {running:false, last:localStorage.getItem('iht_last_sync') || '', error:''};
+  // Todas las entradas de sincronización comparten esta promesa. Así, una
+  // segunda pulsación mientras la primera sigue en curso no dispara otra
+  // consulta ni otra precarga en paralelo.
+  let syncRequest = null;
   const CACHE_TTL = 12 * 60 * 60 * 1000;
   const INFO_CACHE_VERSION = 36;
   const INITIAL_PRELOAD_KEY = `iht_initial_preload_${INFO_CACHE_VERSION}`;
@@ -330,6 +409,7 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
   const alertUrl = 'https://vaad.ar/alertas-de-productos/';
   const storedAlertCache = readJson('iht_alert_cache');
   let alertCache = storedAlertCache?.version === INFO_CACHE_VERSION ? storedAlertCache : (activeContentSnapshot?.alerts ? {version:INFO_CACHE_VERSION, items:activeContentSnapshot.alerts, fetchedAt:Number(activeContentSnapshot.generatedAt) || 0} : null);
+  const alertProductOverrides = new Map();
   const storedBarcodeAssociations = readJson('iht_barcode_associations', {});
   const barcodeAssociations = storedBarcodeAssociations && typeof storedBarcodeAssociations === 'object' && !Array.isArray(storedBarcodeAssociations) ? storedBarcodeAssociations : {};
   const pushNotificationKey = (item) => {
@@ -399,12 +479,29 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     const status = $('#syncStatus');
     status.className = `sync update-row ${tone}`;
     $('#syncMessage').textContent = message;
+    const infoStatus = document.querySelector('[data-info-sync]');
+    if (infoStatus) {
+      infoStatus.className = `sync update-row catalog-info-sync-row ${tone}`;
+      const infoMessage = infoStatus.querySelector('[data-info-sync-message]');
+      if (infoMessage) infoMessage.textContent = tone === 'ok' ? lastSyncMessage() : message;
+    }
+  }
+
+  function relativeSyncMessage(timestamp = syncState.last) {
+    const syncedAt = Number(timestamp);
+    if (!Number.isFinite(syncedAt) || syncedAt <= 0) return 'Todavía no sincronizada';
+    const elapsed = Math.max(0, Date.now() - syncedAt);
+    if (elapsed < 60 * 1000) return 'Ahora';
+    const minutes = Math.floor(elapsed / (60 * 1000));
+    if (minutes < 60) return `Hace ${minutes} min`;
+    const hours = Math.floor(minutes / 60);
+    if (hours < 24) return `Hace ${hours} h`;
+    const days = Math.floor(hours / 24);
+    return `Hace ${days} día${days === 1 ? '' : 's'}`;
   }
 
   function lastSyncMessage() {
-    if (!syncState.last) return 'Todavía no sincronizada';
-    const date = new Date(Number(syncState.last));
-    return `${date.toLocaleDateString('es-AR')} · ${date.toLocaleTimeString('es-AR', {hour:'2-digit', minute:'2-digit'})}`;
+    return relativeSyncMessage();
   }
 
   function officialUpdateMessage() {
@@ -501,6 +598,15 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     const html = await fetchCatalogPage('https://vaad.ar/');
     const match = html.match(/Última actualización del catálogo:\s*<strong[^>]*>\s*([^<]+?)\s*<\/strong>/i) || html.match(/Última actualización del catálogo:\s*([^<\s][^<]*)/i);
     return clean(match?.[1] || '');
+  }
+
+  async function refreshOfficialUpdateDate() {
+    const officialDate = await fetchOfficialUpdateDate();
+    if (!officialDate) return '';
+    localStorage.setItem('iht_official_update', officialDate);
+    const updateNode = $('#officialUpdateDate');
+    if (updateNode) updateNode.textContent = officialDate;
+    return officialDate;
   }
 
   async function fetchInfoContent(key) {
@@ -696,7 +802,7 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     const hasContactActions = Boolean(content.contact || content.actions?.length);
     const blocks = content.blocks.map((block) => ({...block, text:sanitizeOfficialText(block.text)})).filter((block) => block.text).filter((block) => !(block.tag.startsWith('h') && (cardTitles.has(block.text.toLowerCase()) || normalize(block.text) === pageHeading))).filter((block) => !(hasContactActions && isStandaloneContact(block.text))).map((block) => block.tag.startsWith('h') ? `<h3>${escapeHtml(block.text)}</h3>` : `<p>${escapeHtml(block.text)}</p>`).join('');
     const cards = (content.cards || []).map((card, index) => { const flag = countryFlag(card.title); const media = flag ? `<span class="info-card-media country-card-flag-media">${flag}</span>` : `<span class="info-card-media"><img class="info-photo asset-loading" src="${escapeHtml(card.image)}" alt="" aria-hidden="true" loading="lazy" onerror="this.remove()"></span>`; return `<button class="info-card${flag ? ' country-card' : ''}" type="button" data-info-card="${index}">${media}<span class="info-card-copy"><strong>${escapeHtml(card.title)}</strong><span>${escapeHtml(content.cardActionLabel || 'Ver información')}</span></span><span class="info-card-arrow" aria-hidden="true">›</span></button>`; }).join('');
-    const images = content.images.map((image) => `<img class="info-photo asset-loading" src="${escapeHtml(image.src)}" alt="${escapeHtml(image.alt)}" loading="lazy" onerror="this.remove()">`).join('');
+    const images = content.images.map((image) => `<span class="info-photo-frame"><img class="info-photo asset-loading" src="${escapeHtml(image.src)}" alt="${escapeHtml(image.alt)}" loading="lazy" onerror="this.closest('.info-photo-frame')?.remove()"></span>`).join('');
     const actionIcon = (kind) => {
       if (kind === 'whatsapp') return '<svg class="info-action-icon whatsapp-logo" viewBox="0 0 24 24" aria-hidden="true"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/></svg>';
       const paths = {email:'<rect x="3" y="5" width="18" height="14" rx="2"/><path d="m4 7 8 6 8-6"/>', whatsapp:'<path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/>', map:'<path d="M20 10c0 4.5-8 10-8 10s-8-5.5-8-10a8 8 0 1 1 16 0Z"/><circle cx="12" cy="10" r="2.5"/>'};
@@ -846,14 +952,40 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     document.querySelectorAll('script,style,noscript,nav,header,footer,form').forEach((node) => node.remove());
     const nodes = [...document.querySelectorAll('main h1, main h2, main h3, main p, main li, article h1, article h2, article h3, article p, article li, .entry-content h1, .entry-content h2, .entry-content h3, .entry-content p, .entry-content li')];
     const items = [...new Set(nodes.map((node) => clean(node.textContent)).filter((text) => text.length > 8 && !/menu|buscar|leer más|abrir chat|todos los derechos/i.test(text)))].slice(0, 40);
-    const extractGroup = (root) => [...(root?.querySelectorAll('li') || [])].map((node) => ({text:clean(node.textContent), url:node.querySelector('a[href]') ? new URL(node.querySelector('a[href]').getAttribute('href'), alertUrl).href : ''})).filter((item, index, all) => item.text.length > 8 && all.findIndex((candidate) => candidate.text === item.text) === index);
+    // Algunas altas comparten el mismo nombre visible pero son fichas
+    // distintas (por ejemplo, las variantes de una misma marca). Duplicar
+    // por texto descartaba esas fichas y dejaba el catálogo incompleto.
+    const extractGroup = (root) => [...(root?.querySelectorAll('li') || [])]
+      .map((node) => ({text:clean(node.textContent), url:node.querySelector('a[href]') ? new URL(node.querySelector('a[href]').getAttribute('href'), alertUrl).href : ''}))
+      .filter((item, index, all) => item.text.length > 8 && all.findIndex((candidate) => item.url ? candidate.url === item.url : candidate.text === item.text) === index);
     const officialGroups = {alta:extractGroup(document.querySelector('.card-altas')), baja:extractGroup(document.querySelector('.card-bajas')), general:[]};
     const result = officialGroups.alta.length || officialGroups.baja.length ? officialGroups : {alta:[], baja:[], general:items.length ? items : ['No hay alertas publicadas en este momento.']};
-    alertCache = {version:INFO_CACHE_VERSION, items:result, fetchedAt:Date.now()};
+    // La fuente oficial puede mostrar solo la tanda más reciente. Conservamos
+    // también las tandas ya guardadas para que la cronología no pierda cargas
+    // anteriores al actualizar.
+    const previousGroups = alertCache?.items && !Array.isArray(alertCache.items) ? alertCache.items : {};
+    const baselineGroups = activeContentSnapshot?.alerts && !Array.isArray(activeContentSnapshot.alerts) ? activeContentSnapshot.alerts : {};
+    const mergeAlertGroup = (key) => {
+      const seen = new Set();
+      return [...(result[key] || []), ...(previousGroups[key] || []), ...(baselineGroups[key] || [])].filter((item) => {
+        const text = typeof item === 'string' ? item : item?.text || '';
+        if (!text || /no hay alertas|no hay productos|no pudimos actualizar/i.test(text)) return false;
+        const signature = normalize((typeof item === 'object' && item?.url) || text);
+        if (!signature || seen.has(signature)) return false;
+        seen.add(signature);
+        return true;
+      }).slice(0, 40);
+    };
+    const mergedResult = {
+      alta: mergeAlertGroup('alta'),
+      baja: mergeAlertGroup('baja'),
+      general: result.general?.length ? result.general : (previousGroups.general || [])
+    };
+    alertCache = {version:INFO_CACHE_VERSION, items:mergedResult, fetchedAt:Date.now()};
     localStorage.setItem('iht_alert_cache', JSON.stringify(alertCache));
-    updateRecentFromAlerts(result);
+    updateRecentFromAlerts(mergedResult);
     refreshAlertBadge();
-    return result;
+    return mergedResult;
   }
 
   function preloadImage(src) {
@@ -979,16 +1111,19 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     }
   }
 
-  async function preloadAppData(onProgress = null) {
+  async function preloadAppData(onProgress = null, allowCatalogSync = true) {
     if (preloadStarted || !navigator.onLine) return;
     preloadStarted = true;
     const firstPreparation = initialPreparationPreview || localStorage.getItem(INITIAL_PRELOAD_KEY) !== 'done';
     try {
       onProgress?.(5, 'Consultando las novedades del catálogo…');
+      // Keep the date shown in “Información del catálogo” tied to the live
+      // official page instead of the date frozen in an older bundled snapshot.
+      refreshOfficialUpdateDate().catch(() => {});
       const freshAlerts = await fetchAlerts(true).catch(() => null);
       const latestAlerts = freshAlerts?.alta || [];
       const latestProductsMissing = latestAlerts.slice(0, 4).some((alert) => alert.url && !products.some((product) => product.url === alert.url));
-      if (latestProductsMissing) {
+      if (latestProductsMissing && allowCatalogSync) {
         onProgress?.(8, 'Incorporando productos nuevos…');
         await syncCatalog(true, onProgress).catch(() => null);
         updateRecentFromAlerts(freshAlerts);
@@ -1034,7 +1169,7 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     renderHome();
     renderSearchCategories();
     if (document.querySelector('.view.active')?.id === 'searchView') renderResults($('#query').value);
-    syncMessage(`Catálogo actualizado · ${products.length.toLocaleString('es-AR')} productos`, 'ok');
+    syncMessage(`${products.length.toLocaleString('es-AR')} productos · actualizado`, 'ok');
     return true;
   }
 
@@ -1045,7 +1180,23 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
   }
 
   function syncAndPreload(force = false) {
-    return Promise.resolve(syncCatalog(force)).then(() => preloadAppData());
+    if (syncRequest) return syncRequest;
+    document.querySelectorAll('#syncStatus, [data-info-sync]').forEach((button) => {
+      button.disabled = true;
+      button.setAttribute('aria-busy', 'true');
+    });
+    syncRequest = Promise.resolve(syncCatalog(force))
+      // La sincronización ya se ejecutó arriba; la precarga solo completa
+      // imágenes y contenidos para evitar una segunda sincronización.
+      .then(() => preloadAppData(null, false))
+      .finally(() => {
+        document.querySelectorAll('#syncStatus, [data-info-sync]').forEach((button) => {
+          button.disabled = false;
+          button.removeAttribute('aria-busy');
+        });
+        syncRequest = null;
+      });
+    return syncRequest;
   }
 
   function localProductFromFirestore(data, previous = null) {
@@ -1083,27 +1234,32 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     const remoteDate = Date.parse(remoteVersion);
     const localIsAtLeastAsNew = Boolean(localDate && remoteDate && remoteDate <= localDate);
     const hasUsableLocalVersion = Boolean(localDate && remoteDate && remoteDate > localDate);
+    // The metadata version and the product count are published separately.
+    // If the count grew without a version bump, a timestamp-only check would
+    // incorrectly keep the old local catalog forever (the 1.048-products bug).
+    const catalogNeedsReconcile = Boolean(remoteProductCount && products.length > seed.length && products.length < remoteProductCount);
+    const needsFullSnapshot = !hasUsableLocalVersion || catalogNeedsReconcile;
     // A versioned local catalog is already a valid snapshot. Do not force a
     // full download just because the old category counters drifted.
-    if (localIsAtLeastAsNew && products.length > seed.length) {
+    if (localIsAtLeastAsNew && products.length > seed.length && !catalogNeedsReconcile) {
       syncState.last = String(Date.now());
       localStorage.setItem('iht_last_sync', syncState.last);
-      syncMessage(`Catálogo al día · ${products.length.toLocaleString('es-AR')} productos`, 'ok');
+      syncMessage(`${products.length.toLocaleString('es-AR')} productos · actualizado`, 'ok');
       return true;
     }
 
     onProgress?.(8, hasUsableLocalVersion ? 'Consultando cambios nuevos…' : 'Descargando catálogo autorizado…');
     const activeCollection = firebase.api.collection(firebase.db, 'catalog_products');
     const archiveCollection = firebase.api.collection(firebase.db, 'catalog_archive');
-    const [activeSnapshot, archiveSnapshot] = hasUsableLocalVersion
-      ? await Promise.all([
+    const [activeSnapshot, archiveSnapshot] = needsFullSnapshot
+      ? [await firebase.api.getDocs(activeCollection), {docs:[]}]
+      : await Promise.all([
         firebase.api.getDocs(firebase.api.query(activeCollection, firebase.api.where('catalogGeneratedAt', '>', localVersion))),
         firebase.api.getDocs(firebase.api.query(archiveCollection, firebase.api.where('retiredAt', '>', localVersion)))
-      ])
-      : [await firebase.api.getDocs(activeCollection), {docs:[]}];
+      ]);
 
     const previousByUrl = new Map(products.map((product) => [product.url, product]));
-    const nextByUrl = hasUsableLocalVersion ? new Map(previousByUrl) : new Map();
+    const nextByUrl = needsFullSnapshot ? new Map() : new Map(previousByUrl);
     const changedUrls = new Set();
     const additions = [];
     activeSnapshot.docs.forEach((document) => {
@@ -1141,11 +1297,64 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     save();
     localStorage.setItem('iht_product_cache', JSON.stringify({version:INFO_CACHE_VERSION, items:productCache}));
     syncMessage(hasUsableLocalVersion
-      ? `Actualización rápida · ${changedUrls.size} cambios`
-      : `Catálogo actualizado · ${products.length.toLocaleString('es-AR')} productos`, 'ok');
+      ? `${changedUrls.size} cambios nuevos`
+      : `${products.length.toLocaleString('es-AR')} productos · actualizado`, 'ok');
     renderHome();
     if (document.querySelector('.view.active')?.id === 'searchView') renderSearchCategories();
     return true;
+  }
+
+  function catalogCategoryKey(label) {
+    const value = normalize(label);
+    if (value.includes('uruguay')) return 'uruguay';
+    if (value.includes('planta')) return 'planta';
+    if (value.includes('produccion especial') || value.includes('producción especial')) return 'especial';
+    return 'gondola';
+  }
+
+  // La página oficial puede publicar una alta unas horas antes de que el
+  // snapshot de Firebase esté disponible para la web. En ese caso la alerta
+  // ya conoce la URL de la ficha: la usamos para incorporar el producto
+  // completo y mantener el contador alineado con la app nativa.
+  async function syncMissingAlertProducts() {
+    if (!navigator.onLine) return 0;
+    const groups = isFresh(alertCache) ? alertCache.items : await fetchAlerts(true).catch(() => null);
+    const alta = realAlertItems(groups?.alta);
+    if (!alta.length) return 0;
+    const dated = alta.map((item) => ({item, parsed:alertDate(typeof item === 'string' ? item : item?.text || '')})).filter((entry) => entry.parsed?.key);
+    const newestKey = dated.reduce((latest, entry) => !latest || entry.parsed.key > latest ? entry.parsed.key : latest, '');
+    const candidates = (newestKey ? dated.filter((entry) => entry.parsed.key === newestKey).map((entry) => entry.item) : alta).slice(0, 12);
+    const knownUrls = new Set(products.map((product) => product.url));
+    const missing = candidates.filter((item) => item && typeof item === 'object' && item.url && !knownUrls.has(item.url));
+    if (!missing.length) return 0;
+
+    const additions = await Promise.all(missing.map(async (item) => {
+      const title = alertTextWithoutDate(item.text || '') || 'Producto nuevo';
+      const brandMatch = title.match(/marca\s+(.+)$/i);
+      const candidate = {url:item.url, title, brand:brandMatch ? clean(brandMatch[1]) : '', barcode:'', cat:'gondola', image:'', description:''};
+      try {
+        const official = await fetchProductContent(candidate, true);
+        return {
+          ...candidate,
+          cat:catalogCategoryKey(official?.category),
+          image:official?.images?.[0]?.src || '',
+          barcode:official?.barcode || '',
+          description:official?.description || ''
+        };
+      } catch (_) {
+        return null;
+      }
+    }));
+    const validAdditions = additions.filter(Boolean).filter((product, index, all) => all.findIndex((candidate) => candidate.url === product.url) === index);
+    if (!validAdditions.length) return 0;
+    products = [...products, ...validAdditions];
+    recentProducts = [...validAdditions, ...(Array.isArray(recentProducts) ? recentProducts : [])]
+      .filter((product, index, all) => all.findIndex((candidate) => candidate.url === product.url) === index)
+      .slice(0, 10);
+    localStorage.setItem('iht_recent_products', JSON.stringify(recentProducts));
+    save();
+    localStorage.setItem('iht_product_cache', JSON.stringify({version:INFO_CACHE_VERSION, items:productCache}));
+    return validAdditions.length;
   }
 
   async function syncCatalog(force = false, onProgress = null) {
@@ -1159,18 +1368,27 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     if (!force && hasCatalogVersion && syncState.last && Date.now() - Number(syncState.last) < twelveHours) return;
     syncState.running = true;
     syncState.error = '';
-    syncMessage('Sincronizando catálogo oficial…', 'busy');
+    syncMessage('Actualizando…', 'busy');
     try {
       let firebaseUpdated = false;
       let firebaseError = null;
       try { firebaseUpdated = await syncCatalogFromFirestore(minimumCatalogTotal, onProgress); } catch (error) { firebaseError = error; }
-      if (firebaseUpdated) return;
+      let alertProductsAdded = 0;
+      try { alertProductsAdded = await syncMissingAlertProducts(); } catch (_) {}
+      if (alertProductsAdded) {
+        syncState.last = String(Date.now());
+        localStorage.setItem('iht_last_sync', syncState.last);
+        syncMessage(`${products.length.toLocaleString('es-AR')} productos · actualizado`, 'ok');
+        renderHome();
+        if (document.querySelector('.view.active')?.id === 'searchView') renderSearchCategories();
+      }
+      if (firebaseUpdated || alertProductsAdded) return;
       // A valid bundled or cached catalog is safer than falling back to a
       // full scrape on every manual sync. Full pagination is reserved for a
       // genuinely empty catalog/recovery state.
       if (products.length > seed.length) {
         syncState.error = firebaseError?.message || 'No se pudo consultar la sincronización incremental';
-        syncMessage('No se pudieron verificar cambios · se conserva el catálogo guardado', 'bad');
+        syncMessage('Sin cambios verificados · se conserva la copia guardada', 'bad');
         return;
       }
       const synced = [];
@@ -1228,7 +1446,7 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
           if (updateNode) updateNode.textContent = officialUpdate;
         }
       } catch (_) {}
-      syncMessage(`Sincronizado · ${products.length.toLocaleString('es-AR')} productos`, 'ok');
+      syncMessage(`${products.length.toLocaleString('es-AR')} productos · actualizado`, 'ok');
       renderHome();
       if (document.querySelector('.view.active')?.id === 'searchView') renderSearchCategories();
     } catch (error) {
@@ -1247,6 +1465,8 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     $('#homeTotal').textContent = `${totalCount().toLocaleString('es-AR')} productos en el catálogo`;
     const updateNode = $('#officialUpdateDate');
     if (updateNode) updateNode.textContent = officialUpdateMessage();
+    const sourceNote = document.querySelector('#homeView .official-source-note');
+    if (sourceNote) sourceNote.innerHTML = '<span aria-hidden="true">✓</span> Fuente oficial';
     const recentCandidates = [...(Array.isArray(recentProducts) ? recentProducts : []), ...products, ...bundledProducts];
     const items = [...new Map(recentCandidates.map((product) => [product.url, product])).values()].slice(0, 10);
     const itemsKey = items.map((product) => `${product.url}|${product.image || ''}`).join('\n');
@@ -1373,19 +1593,21 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
   function settleRecentCarouselPosition(viewport) {
     const metrics = recentCarouselMetrics(viewport);
     if (!metrics) return;
-    const {step, cycleDistance, carouselStart} = metrics;
+    const {step, carouselStart} = metrics;
     let snapped = carouselStart + Math.round((viewport.scrollLeft - carouselStart) / step) * step;
-    while (snapped < carouselStart) snapped += cycleDistance;
-    while (snapped >= carouselStart + cycleDistance) snapped -= cycleDistance;
+    // Primero asentamos la tarjeta más cercana dentro de la copia visible.
+    // Reubicar aquí mismo al bloque central produce un salto perceptible tras
+    // un gesto rápido, aunque ambas copias tengan el mismo contenido.
+    snapped = Math.max(0, Math.min(snapped, viewport.scrollWidth - viewport.clientWidth));
     const distance = Math.abs(snapped - viewport.scrollLeft);
     if (distance > 0.5) {
-      // Para un gesto normal usamos el desplazamiento nativo suave. Si el
-      // usuario atravesó una copia completa, rebasamos en silencio para no
-      // animar un recorrido largo que mostraría el bucle interno.
-      const behavior = distance <= step * 1.25 ? 'smooth' : 'auto';
-      viewport.scrollTo({left: snapped, behavior});
+      viewport.dataset.carouselSettling = 'true';
+      viewport.scrollTo({left: snapped, behavior: 'smooth'});
     }
     recentCarouselOffset = snapped;
+    // Una vez terminada la animación corta, llevamos la copia equivalente al
+    // bloque central. Al diferirlo, el usuario solo ve el asentamiento suave.
+    scheduleRecentCarouselNormalize(viewport, distance > 0.5 ? 420 : 80);
   }
 
   function scheduleRecentCarouselNormalize(viewport, delay = 120) {
@@ -1393,6 +1615,9 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     recentCarouselRebaseTimer = window.setTimeout(() => {
       recentCarouselRebaseTimer = null;
       normalizeRecentCarouselPosition(viewport);
+      window.requestAnimationFrame(() => {
+        delete viewport.dataset.carouselSettling;
+      });
     }, delay);
   }
 
@@ -1403,14 +1628,11 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     const gap = parseFloat(styles.columnGap || styles.gap) || 0;
     const available = Math.max(0, viewport.clientWidth);
     // Dejamos una previsualización lateral de la tarjeta anterior y siguiente.
-    // El grupo central queda formado por tarjetas completas y centradas.
-    const visibleCount = Math.max(3, Math.min(5, Math.floor((available + gap) / (128 + gap))));
+    // El ancho acompaña el viewport de forma continua: no cambia de golpe al
+    // cruzar un umbral que altere la cantidad estimada de tarjetas visibles.
     const peekRatio = 0.18;
-    // En teléfonos angostos dejamos que la tarjeta reduzca su ancho para
-    // conservar las dos previsualizaciones laterales sin desbordar.
-    const cardWidth = Math.max(72, Math.min(136, (available - (gap * (visibleCount + 1))) / (visibleCount + (peekRatio * 2))));
+    const cardWidth = Math.max(92, Math.min(128, available * 0.28));
     const peekWidth = cardWidth * peekRatio;
-    track.dataset.carouselVisibleCount = String(visibleCount);
     track.dataset.carouselEdgeOffset = String(peekWidth + gap);
     track.dataset.carouselViewportWidth = String(available);
     track.style.paddingInline = '0px';
@@ -1489,11 +1711,11 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
         recentCarouselOffset = viewport.scrollLeft;
         return;
       }
-      if (!pointerActive) scheduleSettle(90);
+      if (!pointerActive && viewport.dataset.carouselSettling !== 'true') scheduleSettle(90);
       recentCarouselOffset = viewport.scrollLeft;
     }, {passive: true});
     viewport.addEventListener('scrollend', () => {
-      if (!pointerActive) settleRecentCarouselPosition(viewport);
+      if (!pointerActive && viewport.dataset.carouselSettling !== 'true') settleRecentCarouselPosition(viewport);
     }, {passive: true});
     viewport.addEventListener('focusin', pause);
     viewport.addEventListener('focusout', resume);
@@ -1554,13 +1776,8 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     for (const alert of alerts) {
       const alertText = typeof alert === 'string' ? alert : alert?.text || '';
       const displayTitle = cleanDisplayText(alertText.replace(/\s*\([^)]*\)\s*$/, ''));
-      const alertTitle = normalize(displayTitle);
-      const linkedProduct = alert?.url ? products.find((product) => product.url === alert.url) : null;
-      const match = products.find((product) => {
-        const productTitle = normalize(cleanDisplayText(product.title));
-        return productTitle.length > 8 && (alertTitle.includes(productTitle) || productTitle.includes(alertTitle));
-      });
-      const candidate = linkedProduct || (match && (!alert?.url || match.url === alert.url) ? match : null) || (alert?.url ? {url:alert.url, title:displayTitle, brand:'', barcode:'', cat:'gondola', image:productFallbackImage, description:''} : null);
+      const match = findProductForAlert(alert, displayTitle);
+      const candidate = match || (alert?.url ? {url:alert.url, title:displayTitle, brand:'', barcode:'', cat:'gondola', image:productFallbackImage, description:''} : null);
       if (candidate && !matches.some((product) => product.url === candidate.url)) matches.push(candidate);
       if (matches.length === 10) break;
     }
@@ -2064,6 +2281,14 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     $('#results').hidden = false;
     $('#searchCategories').hidden = true;
     $('#recentSearches').hidden = true;
+    // Cada consulta representa una nueva colección: nunca reutilizamos la
+    // posición anterior del scroll, que podía dejar el encabezado sticky
+    // sobre la primera tarjeta.
+    const resultsView = $('#results');
+    if (resultsView) {
+      resultsView.scrollTop = 0;
+      resultsView.scrollLeft = 0;
+    }
     renderProductCollection($('#productList'), result, `<div class="empty-state"><svg class="empty-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 5 5M8 10.5h5"/></svg><strong>No encontramos productos</strong><span>Probá con otra marca, nombre o categoría.</span><button class="text-btn" id="emptyReset">Hacer nueva búsqueda</button></div>`);
     $('#emptyReset')?.addEventListener('click', () => { $('#query').value = ''; $('#clear').hidden = true; selectedCategory = 'all'; favoriteOnly = false; renderSearchScope(); renderSearchCategories(); $('#results').hidden = true; $('#searchCategories').hidden = false; $('#recentSearches').hidden = false; $('#query').focus(); });
   }
@@ -2125,14 +2350,18 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
       restoreSearchForm();
     }
     document.querySelectorAll('.view').forEach((view) => view.classList.toggle('active', view.id === viewId));
+    mountViewTitle(viewId);
     document.querySelectorAll('.nav').forEach((button) => button.classList.toggle('active', button.dataset.view === viewId));
     if (viewId === 'searchView' && !preserveSearch) { renderSearchCategories(); $('#results').hidden = true; $('#searchCategories').hidden = false; $('#recentSearches').hidden = false; }
     if (viewId === 'timelineView') renderCatalogTimeline();
     if (viewId === 'alertsView') {
-      markAlertsSeen();
+      setPushNotificationBadge(false);
+      renderPushNotifications();
+      // Alertas reúne los avisos push y, debajo, la cronología del catálogo.
+      // Así las altas/bajas siguen visibles dentro de la campana sin mezclar
+      // su acción secundaria con la lista de notificaciones del dispositivo.
       renderAlerts();
     }
-    if (viewId === 'notificationsView') { setPushNotificationBadge(false); renderPushNotifications(); }
     if (viewId === 'moreView') renderMore();
     if (viewId === 'savedView') renderSaved();
     // En el teléfono desplaza la ventana; en la vista de escritorio de Vite,
@@ -2140,18 +2369,37 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     window.scrollTo(0,0);
     const appShell = document.querySelector('.app');
     if (appShell) appShell.scrollTop = 0;
+    window.requestAnimationFrame(updateHeaderScrollState);
   }
 
   function renderPushNotifications() {
     const list = $('#pushNotificationList');
     if (!list) return;
     renderNotificationPermission();
-    $('#notificationsMeta').textContent = pushNotifications.length ? `${pushNotifications.length} aviso${pushNotifications.length === 1 ? '' : 's'} recibido${pushNotifications.length === 1 ? '' : 's'}.` : 'Todavía no recibiste avisos push.';
     list.innerHTML = pushNotifications.length ? pushNotifications.map((item) => {
       const playUrl = trustedPlayStoreUrl(item.url);
       const link = playUrl ? `<button class="push-notification-link" data-push-link="${escapeHtml(playUrl)}" type="button">Abrir en Google Play <span aria-hidden="true">›</span></button>` : '';
-      return `<article class="push-notification-item"><span class="push-notification-icon">✓</span><div><strong>${escapeHtml(item.title || 'Novedad del catálogo')}</strong><p>${escapeHtml(item.body || 'Hay una actualización disponible.')}</p><small>${escapeHtml(item.time || '')}</small>${link}</div></article>`;
+      return `<article class="push-notification-item"><div><strong>${escapeHtml(item.title || 'Novedad del catálogo')}</strong><p>${escapeHtml(item.body || 'Hay una actualización disponible.')}</p><small>${escapeHtml(item.time || '')}</small>${link}</div></article>`;
     }).join('') : '<div class="empty-state"><strong>No hay notificaciones</strong><span>Cuando llegue un aviso nuevo, aparecerá acá.</span></div>';
+    const clearButton = $('#clearPushNotifications');
+    if (clearButton) clearButton.hidden = pushNotifications.length === 0;
+  }
+
+  function clearPushNotifications() {
+    pushNotifications = [];
+    localStorage.removeItem('iht_push_notifications');
+    setPushNotificationBadge(false);
+    renderPushNotifications();
+  }
+
+  function renderRetiredShortcut(items = alertCache?.items) {
+    const panel = $('#catalogAlertShortcut');
+    if (!panel) return;
+    const groups = Array.isArray(items) ? alertGroups(items) : (items || {});
+    const count = realAlertItems(groups.baja).length;
+    panel.hidden = count === 0;
+    const meta = $('#retiredProductsMeta');
+    if (meta && count) meta.textContent = `${count} ${count === 1 ? 'producto retirado' : 'productos retirados'}`;
   }
 
   function renderNotificationPermission() {
@@ -2170,12 +2418,15 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     const value = Boolean(hasNew);
     $('#headerNotificationDot').hidden = !value;
     $('#headerNotifications')?.classList.toggle('has-alerts', value);
-  }
-
-  function setCatalogAlertBadge(hasNew) {
-    const value = Boolean(hasNew);
     $('#navDot').hidden = !value;
     $('.nav[data-view="alertsView"]')?.classList.toggle('has-alerts', value);
+  }
+
+  // La campana y la pestaña Alertas representan avisos push. Las novedades
+  // editoriales del catálogo siguen viviendo únicamente en Cronología.
+  function setCatalogAlertBadge() {
+    $('#navDot').hidden = true;
+    $('.nav[data-view="alertsView"]')?.classList.remove('has-alerts');
   }
 
   function alertHasItems(items) {
@@ -2633,20 +2884,21 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     }
   }
 
-  async function createProductShareImage(product) {
-    const cacheKey = clean(product?.url || product?.title);
-    const cachedImage = shareImageCache.get(cacheKey);
-    if (cachedImage) return cachedImage;
+  async function buildProductShareImage(product, cacheKey) {
     const canvas = document.createElement('canvas');
     canvas.width = 1080;
     canvas.height = 1080;
     const context = canvas.getContext('2d');
     if (!context) throw new Error('Canvas no disponible');
     const photoSource = productCache[product.url]?.images?.[0]?.src || product.image;
-    const [photo, logo] = await Promise.all([
-      loadShareImage(photoSource),
-      loadLocalShareImage(shareLogoAssetUrl)
-    ]);
+    const loadedDetailImage = document.querySelector('#detailContent .detail-content > img');
+    const canReuseDetailImage = loadedDetailImage?.complete
+      && loadedDetailImage.naturalWidth > 0
+      && (() => { try { return new URL(loadedDetailImage.currentSrc || loadedDetailImage.src, window.location.href).origin === window.location.origin; } catch (_) { return false; } })();
+    const photoPromise = canReuseDetailImage
+      ? Promise.resolve({image: loadedDetailImage, revoke: () => {}})
+      : loadShareImage(photoSource);
+    const [photo, logo] = await Promise.all([photoPromise, loadLocalShareImage(shareLogoAssetUrl)]);
     context.fillStyle = '#f5f8f5';
     context.fillRect(0, 0, canvas.width, canvas.height);
     // La imagen compartida es deliberadamente cuadrada y limpia: conserva
@@ -2675,7 +2927,35 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     logo?.revoke();
     const blob = await new Promise((resolve, reject) => canvas.toBlob((value) => value ? resolve(value) : reject(new Error('No se pudo crear la imagen')), 'image/jpeg', .88));
     shareImageCache.set(cacheKey, blob);
+    while (shareImageCache.size > 4) shareImageCache.delete(shareImageCache.keys().next().value);
     return blob;
+  }
+
+  function createProductShareImage(product) {
+    const cacheKey = clean(product?.url || product?.title);
+    const cachedImage = shareImageCache.get(cacheKey);
+    if (cachedImage) {
+      // Mantener primero en la caché los productos usados más recientemente.
+      shareImageCache.delete(cacheKey);
+      shareImageCache.set(cacheKey, cachedImage);
+      return Promise.resolve(cachedImage);
+    }
+    const existingTask = shareImageTasks.get(cacheKey);
+    if (existingTask) return existingTask;
+    const task = buildProductShareImage(product, cacheKey).finally(() => {
+      if (shareImageTasks.get(cacheKey) === task) shareImageTasks.delete(cacheKey);
+    });
+    shareImageTasks.set(cacheKey, task);
+    return task;
+  }
+
+  function warmProductShareImage(product) {
+    if (!product?.image || product.image === productFallbackImage) return;
+    const prepare = () => {
+      if (document.visibilityState === 'visible') createProductShareImage(product).catch(() => {});
+    };
+    if (window.requestIdleCallback) window.requestIdleCallback(prepare, {timeout: 1200});
+    else window.setTimeout(prepare, 400);
   }
 
   function productShareText(product) {
@@ -2705,25 +2985,44 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
       button.classList.add('is-loading');
       button.innerHTML = '<span class="share-button-spinner" aria-hidden="true"></span>';
     }
-    const preparingNotice = showShareNotice('Preparando imagen para compartir…', '', 0, 'loading');
+    const preparingNotice = showShareNotice('Abriendo compartir…', '', 0, 'loading');
     try {
-      const blob = await createProductShareImage(currentProduct);
-      const filename = `iahadut-${normalize(currentProduct.title).replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 48) || 'producto'}.jpg`;
-      const file = new File([blob], filename, {type:'image/jpeg'});
       const text = productShareText(currentProduct);
-      const installedShareContext = Capacitor.isNativePlatform()
-        || window.matchMedia?.('(display-mode: standalone)').matches
-        || window.navigator.standalone === true;
+      const url = clean(currentProduct.url) || window.location.href;
+      const title = `${currentProduct.title} · Iahadut HaTora`;
       if (Capacitor.isNativePlatform()) {
-        await shareImageWithAndroid(blob, filename, `${currentProduct.title} · Iahadut HaTora`, text);
-        showShareNotice('Ficha lista para compartir');
-      } else if (installedShareContext && navigator.share && navigator.canShare?.({files:[file]})) {
-        // Solo para una vista instalada que implemente Web Share. Nunca
-        // descargamos automáticamente la imagen como sustituto.
-        await navigator.share({title:`${currentProduct.title} · Iahadut HaTora`, text, files:[file]});
-        showShareNotice('Ficha lista para compartir');
+        // En Android/iOS compartimos la ficha visual como archivo real. Antes
+        // este camino enviaba únicamente texto y URL aunque el botón indicara
+        // que estaba preparando la foto.
+        const imageBlob = await createProductShareImage(currentProduct);
+        const safeName = clean(currentProduct.title || 'producto')
+          .toLowerCase()
+          .replace(/[^a-z0-9]+/gi, '-')
+          .replace(/^-+|-+$/g, '')
+          .slice(0, 56) || 'producto';
+        await shareImageWithAndroid(imageBlob, `iahadut-${safeName}.jpg`, title, text);
+        showShareNotice('Foto y ficha listas para compartir');
+      } else if (navigator.share) {
+        // Los navegadores que admiten archivos reciben la misma tarjeta visual;
+        // si no, conservamos el compartir tradicional del enlace.
+        const imageBlob = await createProductShareImage(currentProduct);
+        const safeName = clean(currentProduct.title || 'producto')
+          .toLowerCase()
+          .replace(/[^a-z0-9]+/gi, '-')
+          .replace(/^-+|-+$/g, '')
+          .slice(0, 56) || 'producto';
+        const imageFile = new File([imageBlob], `iahadut-${safeName}.jpg`, {type: imageBlob.type || 'image/jpeg'});
+        const shareData = {title, text, url};
+        if (navigator.canShare?.({files: [imageFile]})) shareData.files = [imageFile];
+        await navigator.share(shareData);
+        showShareNotice(shareData.files ? 'Foto y ficha listas para compartir' : 'Ficha lista para compartir');
       } else {
-        showShareNotice('Abrí la app Android para compartir la ficha', 'bad');
+        try {
+          await navigator.clipboard.writeText(`${title}\n${url}`);
+          showShareNotice('Enlace copiado');
+        } catch (_) {
+          showShareNotice('Copiá el enlace de la ficha para compartirla', 'bad');
+        }
       }
     } catch (error) {
       if (error?.name !== 'AbortError') showShareNotice('No pudimos preparar la imagen para compartir', 'bad');
@@ -2758,7 +3057,7 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
       ? `<img class="detail-special-seal" src="${escapeHtml(shareLogoAssetUrl)}" alt="Sello de Iahadut HaTora">`
       : '';
     const detailImage = officialImage && !/(^|\/)assets\/(?:logo(?:-[^/]+)?\.png|product-placeholder\.svg)$/i.test(officialImage) ? officialImage : '';
-    const detailImageMarkup = detailImage ? `<img class="asset-loading" loading="eager" src="${escapeHtml(detailImage)}" alt="${escapeHtml(product.title)}" onload="this.classList.remove('asset-loading','asset-error');this.classList.add('asset-ready')" onerror="this.remove()">` : '';
+    const detailImageMarkup = detailImage ? `<img class="asset-loading" loading="eager" src="${escapeHtml(detailImage)}" alt="${escapeHtml(product.title)}" data-expanded-image="${escapeHtml(detailImage)}" data-expanded-caption="${escapeHtml(product.title)}" role="button" tabindex="0" aria-label="Ampliar imagen de ${escapeHtml(product.title)}" onload="this.classList.remove('asset-loading','asset-error');this.classList.add('asset-ready')" onerror="this.remove()">` : '';
     const taxonomyMarkup = taxonomyPath.length ? `<nav class="detail-taxonomy" aria-label="Categoría del catálogo"><small>Categoría en el catálogo</small><div>${taxonomyPath.map((part, index) => `${index ? '<span aria-hidden="true">→</span>' : ''}<button type="button" data-detail-taxonomy-path="${escapeHtml(encodeURIComponent(JSON.stringify(taxonomyPath.slice(0, index + 1))))}">${escapeHtml(categoryDisplayName(part))}</button>`).join('')}</div></nav>` : '';
     const berajaMarkup = official?.beraja ? `<div class="detail-facts single"><div><small>Berajá</small><strong>${escapeHtml(official.beraja)}</strong></div></div>` : '';
     const detailContent = $('#detailContent');
@@ -2766,10 +3065,16 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     if (!existing) {
       detailContent.innerHTML = `<div class="detail-content">${detailImageMarkup}<div class="detail-body">${uruguayBadge(product, 'product-region-badge detail-region-badge')}<span class="label ${detailCategoryClass}">${escapeHtml(officialCategory)}${specialSealMarkup}</span><h1>${styledBrandText(product.title)}</h1><p class="detail-description">${escapeHtml(officialDescription)}</p>${berajaMarkup}${taxonomyMarkup}${official?.loadFailed ? '<button class="filter-btn detail-retry" id="detailRetry" type="button"><span>Reintentar carga</span></button>' : ''}</div></div>`;
     } else {
-      const image = existing.querySelector(':scope > img');
+      let image = existing.querySelector(':scope > img');
       if (!detailImage) image?.remove();
       else if (image && image.src !== new URL(detailImage, location.href).href) image.src = detailImage;
-      else if (!image) existing.insertAdjacentHTML('afterbegin', detailImageMarkup);
+      else if (!image) { existing.insertAdjacentHTML('afterbegin', detailImageMarkup); image = existing.querySelector(':scope > img'); }
+      if (image && detailImage) {
+        image.dataset.expandedImage = detailImage;
+        image.dataset.expandedCaption = product.title;
+        image.alt = product.title;
+        image.setAttribute('aria-label', `Ampliar imagen de ${product.title}`);
+      }
       const categoryLabel = existing.querySelector('.label');
       existing.querySelector('.detail-region-badge')?.remove();
       if (isUruguayProduct(product)) categoryLabel.insertAdjacentHTML('beforebegin', uruguayBadge(product, 'product-region-badge detail-region-badge'));
@@ -2793,6 +3098,7 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     });
     $('#detailSave').innerHTML = bookmarkIcon(favorites.has(product.url));
     $('#detailSave').setAttribute('aria-label', favorites.has(product.url) ? 'Quitar de guardados' : 'Guardar producto');
+    if (!official?.loading) warmProductShareImage(product);
   }
 
   function showKosherToast(product) {
@@ -2812,7 +3118,7 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
   }
 
   function openDetail(url, options = {}) {
-    const product = [...(Array.isArray(recentProducts) ? recentProducts : []), ...products].find((item) => item.url === url); if (!product) return;
+    const product = [...(Array.isArray(recentProducts) ? recentProducts : []), ...products, ...bundledProducts, ...alertProductOverrides.values()].find((item) => item.url === url); if (!product) return;
     countPopularity(product.url, 'opens');
     logAnalyticsEvent('product_open', {product_url: product.url, product_name: product.title?.slice(0, 80) || ''});
     if (!options.retry) {
@@ -2867,16 +3173,59 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     return groups;
   }
 
+  // Alerts can arrive before the user's local catalog cache has caught up.
+  // Resolve them against both sources so a fresh alert still has its product
+  // photo and remains tappable on an older installed build.
+  function findProductForAlert(item, text = '') {
+    const pools = [products, bundledProducts];
+    const url = typeof item === 'object' ? item?.url : '';
+    if (url) {
+      for (const pool of pools) {
+        const linked = pool.find((product) => product.url === url);
+        if (linked) return linked;
+      }
+      if (alertProductOverrides.has(url)) return alertProductOverrides.get(url);
+    }
+    const normalizedText = normalize(String(text || '').replace(/\s*\([^)]*\)\s*$/, ''));
+    if (!normalizedText) return null;
+    for (const pool of pools) {
+      const match = pool.find((product) => {
+        const productTitle = normalize(product.title);
+        return productTitle.length > 8 && (normalizedText.includes(productTitle) || productTitle.includes(normalizedText));
+      });
+      if (match) return match;
+    }
+    return null;
+  }
+
+  async function hydrateAlertProducts(groups) {
+    const entries = [...realAlertItems(groups?.alta), ...realAlertItems(groups?.baja)];
+    const missing = entries
+      .filter((item) => item && typeof item === 'object' && item.url && !findProductForAlert(item, item.text)?.image)
+      .slice(0, 12);
+    if (!missing.length) return false;
+    const hydrated = await Promise.all(missing.map(async (item) => {
+      const candidate = {url:item.url, title:cleanDisplayText(item.text || ''), brand:'', barcode:'', cat:'gondola', image:'', description:''};
+      try {
+        const official = await fetchProductContent(candidate, true);
+        const image = official?.images?.[0]?.src;
+        if (!image) return false;
+        candidate.image = image;
+        alertProductOverrides.set(item.url, candidate);
+        return true;
+      } catch (_) { return false; }
+    }));
+    return hydrated.some(Boolean);
+  }
+
   function alertSection(title, key, items) {
     if (!items.length && key === 'general') return '';
     const visibleItems = items.length ? items : [`No hay productos ${key === 'alta' ? 'dados de alta' : 'dados de baja'} publicados en este momento.`];
     const icon = key === 'alta' ? '✓' : key === 'baja' ? '!' : '•';
     return `<details class="alert-group alert-${key}"><summary class="alert-group-head"><span class="alert-group-icon">${icon}</span><div><h2>${title}</h2><small>${items.length} ${items.length === 1 ? 'actualización' : 'actualizaciones'}</small></div><svg class="alert-chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 5 7 7-7 7"/></svg></summary><div class="alert-group-items">${visibleItems.map((item) => {
       const text = typeof item === 'string' ? item : item?.text || '';
-      const linked = item?.url ? products.find((product) => product.url === item.url) : null;
-      const normalizedText = normalize(text.replace(/\s*\([^)]*\)\s*$/, ''));
-      const match = linked || products.find((product) => { const productTitle = normalize(product.title); return productTitle.length > 8 && (normalizedText.includes(productTitle) || productTitle.includes(normalizedText)); });
-      const visual = match?.image ? `<img class="alert-product-image asset-loading" src="${escapeHtml(match.image)}" alt="" loading="lazy" onerror="this.replaceWith(document.createTextNode('•'))">` : '<span class="alert-mark" aria-hidden="true">•</span>';
+      const match = findProductForAlert(item, text);
+      const visual = match?.image ? `<img class="alert-product-image asset-loading" src="${escapeHtml(match.image)}" alt="" loading="lazy" onload="this.classList.remove('asset-loading','asset-error')" onerror="this.onerror=null;this.src='assets/product-placeholder.svg';this.classList.add('asset-error')">` : '<span class="alert-mark" aria-hidden="true">•</span>';
       const tag = match ? 'button' : 'article';
       const productAttrs = match ? ` data-product="${escapeHtml(match.url)}" aria-label="Ver ${escapeHtml(match.title)}" type="button"` : '';
       return `<${tag} class="alert-item${match ? ' alert-item-clickable' : ''}"${productAttrs}>${visual}<p>${styledBrandText(text)}</p>${match ? '<span class="alert-item-arrow" aria-hidden="true">›</span>' : ''}</${tag}>`;
@@ -2932,14 +3281,9 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     const dayMarkup = orderedDays.map((day) => {
       const dateLabel = day.date ? day.date.label : 'Fecha no informada';
       const productMarkup = day.items.map(({item, kind: entryKind, text}) => {
-        const linked = item?.url ? products.find((product) => product.url === item.url) : null;
-        const normalizedText = normalize(text);
-        const match = linked || products.find((product) => {
-          const productTitle = normalize(product.title);
-          return productTitle.length > 8 && (normalizedText.includes(productTitle) || productTitle.includes(normalizedText));
-        });
+        const match = findProductForAlert(item, text);
         const visual = match?.image
-          ? `<span class="alert-timeline-visual"><img class="alert-product-image asset-loading" src="${escapeHtml(match.image)}" alt="" loading="lazy" onerror="this.remove()"></span>`
+          ? `<span class="alert-timeline-visual"><img class="alert-product-image asset-loading" src="${escapeHtml(match.image)}" alt="" loading="lazy" onload="this.classList.remove('asset-loading','asset-error')" onerror="this.onerror=null;this.src='assets/product-placeholder.svg';this.classList.add('asset-error')"></span>`
           : '<span class="alert-timeline-visual alert-timeline-placeholder" aria-hidden="true">!</span>';
         const title = match?.title || text;
         const entryIsRemoval = entryKind === 'baja';
@@ -2960,17 +3304,21 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     const bajaAction = bajaItems.length
       ? `<button class="alert-secondary-action" type="button" data-open-retired><span class="alert-secondary-icon" aria-hidden="true">!</span><span><strong>Ver productos dados de baja</strong><small>${bajaItems.length} ${bajaItems.length === 1 ? 'producto retirado' : 'productos retirados'}</small></span><span class="alert-secondary-arrow" aria-hidden="true">›</span></button>`
       : '';
+    // La tarjeta de bajas queda arriba para que sea visible antes de la
+    // cronología de altas y cambios.
     return `${bajaAction}${alertTimelineMarkup(groups, state, 'all')}`;
   }
 
   function alertMetaText() {
-    return 'Productos retirados, ordenados por fecha.';
+    return 'Altas y bajas, ordenadas por fecha.';
   }
 
   function renderRetiredAlerts(items = alertCache?.items, state = '') {
     if (!$('#alertList')) return;
-    $('#alertList').innerHTML = alertTimelineMarkup(items || {alta:[], baja:[], general:[]}, state, 'baja');
-    $('#alertsMeta').textContent = state === 'error' ? 'Sin conexión · no pudimos actualizar las bajas.' : 'Productos retirados, ordenados por fecha.';
+    // La campana muestra todas las novedades del catálogo. Las bajas siguen
+    // disponibles dentro del mismo timeline, sin ocultar las altas nuevas.
+    $('#alertList').innerHTML = alertMarkup(items || {alta:[], baja:[], general:[]}, state);
+    $('#alertsMeta').textContent = state === 'error' ? 'Sin conexión · no pudimos actualizar las novedades.' : 'Altas y bajas, ordenadas por fecha.';
   }
 
   async function renderCatalogTimeline(items = alertCache?.items, state = '') {
@@ -2992,6 +3340,14 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
         $('#timelineList').innerHTML = alertMarkup(freshItems);
         $('#timelineMeta').textContent = 'Altas y bajas, ordenadas por fecha.';
       }
+      // Some very recent alerts can be published before their product is
+      // present in the catalog snapshot. Fetch that product's official image
+      // in the background and replace the temporary marker when it arrives.
+      hydrateAlertProducts(freshItems).then((changed) => {
+        if (changed && document.querySelector('.view.active')?.id === 'timelineView') {
+          $('#timelineList').innerHTML = alertMarkup(freshItems);
+        }
+      }).catch(() => {});
     } catch (_) {
       if (document.querySelector('.view.active')?.id === 'timelineView') {
         $('#timelineList').innerHTML = alertMarkup(alertCache?.items || {}, 'error');
@@ -3000,32 +3356,42 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     }
   }
 
+  function pushAlertEntries(notification) {
+    const type = notification?.data?.alertType;
+    if (type !== 'alta' && type !== 'baja') return [];
+    let entries = [];
+    try {
+      const parsed = JSON.parse(notification?.data?.items || '[]');
+      if (Array.isArray(parsed)) entries = parsed;
+    } catch (_) {}
+    if (!entries.length) entries = [{text:notification?.data?.text || notification?.body || (type === 'alta' ? 'Nueva alta en el catálogo' : 'Producto dado de baja'), url:notification?.data?.url || ''}];
+    return entries.map((entry) => ({text:clean(entry?.text || entry), url:clean(entry?.url || '')})).filter((entry) => entry.text);
+  }
+
   function cachePushCatalogAlert(notification) {
     const type = notification?.data?.alertType;
-    if (type !== 'alta' && type !== 'baja') return false;
-    const text = clean(notification?.data?.text || notification?.body || (type === 'alta' ? 'Nueva alta en el catálogo' : 'Producto dado de baja'));
-    const url = clean(notification?.data?.url || '');
+    const entries = pushAlertEntries(notification);
+    if (!entries.length) return false;
     const current = alertCache?.items && !Array.isArray(alertCache.items)
       ? alertCache.items
       : {alta:[], baja:[], general:[]};
     const list = Array.isArray(current[type]) ? current[type] : [];
-    const duplicate = list.some((item) => {
+    const additions = entries.filter((entry) => !list.some((item) => {
       const itemText = typeof item === 'string' ? item : item?.text || '';
-      return (url && item?.url === url) || normalize(itemText) === normalize(text);
-    });
-    if (duplicate) return false;
+      return (entry.url && item?.url === entry.url) || normalize(itemText) === normalize(entry.text);
+    }));
+    if (!additions.length) return false;
     const next = {
-      alta: type === 'alta' ? [{text, url}, ...list].slice(0, 40) : (current.alta || []),
-      baja: type === 'baja' ? [{text, url}, ...list].slice(0, 40) : (current.baja || []),
+      alta: type === 'alta' ? [...additions, ...list].slice(0, 40) : (current.alta || []),
+      baja: type === 'baja' ? [...additions, ...list].slice(0, 40) : (current.baja || []),
       general: current.general || []
     };
     alertCache = {version:INFO_CACHE_VERSION, items:next, fetchedAt:Date.now()};
     localStorage.setItem('iht_alert_cache', JSON.stringify(alertCache));
-    if (type === 'alta' || type === 'baja') setCatalogAlertBadge(true);
-    if (document.querySelector('.view.active')?.id === 'alertsView') {
-      renderRetiredAlerts(next);
-    }
+    setCatalogAlertBadge(true);
+    renderRetiredShortcut(next);
     if (document.querySelector('.view.active')?.id === 'timelineView') renderCatalogTimeline(next);
+    if (document.querySelector('.view.active')?.id === 'alertsView') renderAlerts();
     return true;
   }
 
@@ -3033,7 +3399,7 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     $('#alertsMeta').textContent = alertMetaText();
     if (alertCache?.items && !Array.isArray(alertCache.items)) {
       renderRetiredAlerts(alertCache.items);
-      $('#alertsMeta').textContent = 'Información guardada · actualizando bajas…';
+      $('#alertsMeta').textContent = 'Información guardada · actualizando novedades…';
     } else {
       $('#alertList').innerHTML = '<div class="content-skeleton alert-skeleton" aria-label="Preparando alertas"><i></i><i></i><i></i></div>';
     }
@@ -3084,6 +3450,49 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     return trustedPlayStoreUrl(notification?.data?.url || notification?.data?.link || notification?.data?.playStoreUrl);
   }
 
+  function persistPushNotification(notification, unread = true) {
+    const data = notification?.data && typeof notification.data === 'object' ? notification.data : {};
+    const alertType = clean(data.alertType);
+    const fallbackTitle = alertType === 'alta' ? 'Nuevos productos' : alertType === 'baja' ? 'Productos dados de baja' : 'Novedad del catálogo';
+    const item = {
+      id: clean(notification?.id || data.messageId || data['google.message_id']),
+      eventKey: clean(data.eventKey),
+      title: clean(notification?.title || data.title || data['gcm.n.title'] || fallbackTitle),
+      body: clean(notification?.body || data.body || data.text || data['gcm.n.body'] || 'Hay una actualización disponible.'),
+      time: new Date().toLocaleString('es-AR'),
+      url: notificationPlayStoreUrl(notification)
+    };
+    cachePushCatalogAlert(notification);
+    if (!pushNotifications.some((stored) => pushNotificationKey(stored) === pushNotificationKey(item))) {
+      pushNotifications = [item, ...pushNotifications].slice(0, 30);
+      localStorage.setItem('iht_push_notifications', JSON.stringify(pushNotifications));
+    }
+    setPushNotificationBadge(unread);
+    if (document.querySelector('.view.active')?.id === 'alertsView') renderPushNotifications();
+    return item;
+  }
+
+  async function pushTestTopicForToken(token) {
+    const bytes = new TextEncoder().encode(String(token || ''));
+    const digest = await crypto.subtle.digest('SHA-256', bytes);
+    const suffix = [...new Uint8Array(digest)].slice(0, 10).map((value) => value.toString(16).padStart(2, '0')).join('');
+    return `iahadut-test-${suffix}`;
+  }
+
+  async function registerPushToken(token, FirebaseMessaging) {
+    if (!token) return '';
+    localStorage.setItem('iht_push_token', token);
+    const testTopic = await pushTestTopicForToken(token);
+    await FirebaseMessaging.subscribeToTopic({topic:'catalog-updates'});
+    await FirebaseMessaging.subscribeToTopic({topic:testTopic});
+    localStorage.setItem('iht_push_test_topic', testTopic);
+    console.info(`[IHT] Canal de prueba individual: ${testTopic}`);
+    if (remoteControl.device_registration_url) {
+      try { await CapacitorHttp.post({url:remoteControl.device_registration_url, headers:{'Content-Type':'application/json'}, data:{token, platform:Capacitor.getPlatform(), topic:'catalog-updates', testTopic, appVersion:APP_VERSION}}); } catch (_) {}
+    }
+    return testTopic;
+  }
+
   async function refreshPlayUpdate() {
     if (!Capacitor.isNativePlatform()) return playUpdateState;
     try {
@@ -3132,52 +3541,34 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
       return 'pending-config';
     }
     try {
-      const {PushNotifications} = await import('@capacitor/push-notifications');
+      const {FirebaseMessaging} = await import('@capacitor-firebase/messaging');
       if (!pushListenersReady) {
         pushListenersReady = true;
-        await PushNotifications.addListener('registration', async ({value}) => {
-          localStorage.setItem('iht_push_token', value);
+        await FirebaseMessaging.addListener('tokenReceived', async ({token}) => {
+          try { await registerPushToken(token, FirebaseMessaging); } catch (_) { localStorage.setItem('iht_push_token', token); }
           if (localStorage.getItem('iht_push_status') !== 'active') localStorage.setItem('iht_push_status', 'registered');
-          if (remoteControl.device_registration_url) {
-            try { await CapacitorHttp.post({url:remoteControl.device_registration_url, headers:{'Content-Type':'application/json'}, data:{token:value, platform:Capacitor.getPlatform(), topic:'catalog-updates', appVersion:APP_VERSION}}); } catch (_) {}
-          }
           if (document.querySelector('.view.active')?.id === 'moreView') renderMore();
         });
-        await PushNotifications.addListener('registrationError', () => { localStorage.setItem('iht_push_status', 'error'); renderNotificationPermission(); });
-        await PushNotifications.addListener('pushNotificationReceived', (notification) => {
-          const item = {id:clean(notification.id || notification.data?.messageId), eventKey:clean(notification.data?.eventKey), title:notification.title || notification.data?.title || 'Novedad del catálogo', body:notification.body || notification.data?.body || 'Hay una actualización disponible.', time:new Date().toLocaleString('es-AR'), url:notificationPlayStoreUrl(notification)};
-          if (pushNotifications.some((stored) => pushNotificationKey(stored) === pushNotificationKey(item))) return;
-          cachePushCatalogAlert(notification);
-          pushNotifications = [item, ...pushNotifications].slice(0, 30);
-          localStorage.setItem('iht_push_notifications', JSON.stringify(pushNotifications));
-          setPushNotificationBadge(true);
+        await FirebaseMessaging.addListener('notificationReceived', ({notification}) => {
+          persistPushNotification(notification, true);
           if (notification.data?.action === 'sync') void syncAndPreload(true).catch(() => {});
         });
-        await PushNotifications.addListener('pushNotificationActionPerformed', ({notification}) => {
-          cachePushCatalogAlert(notification);
-          setPushNotificationBadge(false);
+        await FirebaseMessaging.addListener('notificationActionPerformed', ({notification}) => {
+          persistPushNotification(notification, false);
           if (notification.data?.action === 'sync') void syncAndPreload(true).catch(() => {});
           const playUrl = notificationPlayStoreUrl(notification);
           if (playUrl) { openExternal(playUrl); return; }
-          showView('notificationsView');
+          showView('alertsView');
         });
-        await PushNotifications.createChannel({id:'catalog-updates', name:'Actualizaciones del catálogo', description:'Altas, bajas y cambios importantes', importance:4, visibility:1, vibration:true});
+        await FirebaseMessaging.createChannel({id:'catalog-updates', name:'Actualizaciones del catálogo', description:'Altas, bajas y cambios importantes', importance:4, vibration:true});
       }
-      let permission = await PushNotifications.checkPermissions();
-      if (requestPermission && permission.receive === 'prompt') permission = await PushNotifications.requestPermissions();
+      let permission = await FirebaseMessaging.checkPermissions();
+      if (requestPermission && permission.receive === 'prompt') permission = await FirebaseMessaging.requestPermissions();
       if (permission.receive === 'granted') {
-        await PushNotifications.register();
         try {
-          const {FirebaseMessaging} = await import('@capacitor-firebase/messaging');
           const tokenResult = await FirebaseMessaging.getToken();
           const token = tokenResult?.token;
-          if (token) {
-            localStorage.setItem('iht_push_token', token);
-            if (remoteControl.device_registration_url) {
-              try { await CapacitorHttp.post({url:remoteControl.device_registration_url, headers:{'Content-Type':'application/json'}, data:{token, platform:Capacitor.getPlatform(), topic:'catalog-updates', appVersion:APP_VERSION}}); } catch (_) {}
-            }
-          }
-          await FirebaseMessaging.subscribeToTopic({topic: 'catalog-updates'});
+          if (token) await registerPushToken(token, FirebaseMessaging);
           localStorage.setItem('iht_push_status', 'active');
           renderNotificationPermission();
         } catch (_) {
@@ -3194,25 +3585,24 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
 
   async function disablePushNotifications() {
     localStorage.setItem('iht_push_status', 'disabled');
+    const testTopic = localStorage.getItem('iht_push_test_topic');
     localStorage.removeItem('iht_push_token');
+    localStorage.removeItem('iht_push_test_topic');
     setPushNotificationBadge(false);
     try {
-      const {PushNotifications} = await import('@capacitor/push-notifications');
-      try {
-        const {FirebaseMessaging} = await import('@capacitor-firebase/messaging');
-        await FirebaseMessaging.unsubscribeFromTopic({topic:'catalog-updates'});
-      } catch (_) {}
-      await PushNotifications.unregister();
+      const {FirebaseMessaging} = await import('@capacitor-firebase/messaging');
+      await FirebaseMessaging.unsubscribeFromTopic({topic:'catalog-updates'});
+      if (testTopic) await FirebaseMessaging.unsubscribeFromTopic({topic:testTopic});
+      await FirebaseMessaging.deleteToken();
     } catch (_) {}
     renderNotificationPermission();
-    renderAlerts();
     renderPushNotifications();
     renderMore();
   }
 
   function renderMore() {
-    const saved = `<button class="more-row saved-more-row" data-saved="true">${bookmarkIcon(false)}<span><strong>Productos guardados</strong><small>${favorites.size ? `${favorites.size} productos guardados` : 'Todavía no guardaste productos'}</small></span><span class="row-arrow" aria-hidden="true">›</span></button>`;
     const officialWebsite = `<a class="more-row official-site-row" href="https://vaad.ar/" target="_blank" rel="noopener"><span class="more-row-leading-icon" aria-hidden="true">↗</span><span><strong>Sitio web oficial</strong></span><span class="row-arrow" aria-hidden="true">›</span></a>`;
+    const rateApp = `<a class="more-row rate-app-row" href="${appInstallUrl}" data-rate-app target="_blank" rel="noopener"><span class="rate-app-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="m12 3 2.8 5.7 6.2.9-4.5 4.4 1.1 6.2-5.6-3-5.6 3 1.1-6.2L3 9.6l6.2-.9L12 3Z"/></svg></span><span><strong>Calificá la app</strong><small>Dejanos tu opinión en Google Play</small></span><span class="row-arrow" aria-hidden="true">›</span></a>`;
     const decision = accessDecision(remoteControl);
     const pushStatus = localStorage.getItem('iht_push_status');
     const notificationButton = $('#notificationButton');
@@ -3235,8 +3625,29 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     const developerWhatsApp = `https://wa.me/5491135195674?text=${encodeURIComponent('¡Me gustó la app de Iahadut HaTora! ¿Podemos hacer un proyecto juntos?')}`;
     const developerCredit = `<div class="developer-credit"><span class="app-version">Versión ${escapeHtml(APP_VERSION)}</span><span class="developer-name">Y.R.N Soluciones Software</span><a class="developer-cta" href="https://wa.me/5491135195674" target="_blank" rel="noopener">¿Necesitás una app?</a><a class="developer-whatsapp" href="https://wa.me/5491135195674" target="_blank" rel="noopener" aria-label="Contactar por WhatsApp"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c0 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/></svg></a></div>`;
     const moreInfo = Object.entries(info).filter(([key]) => !['shops', 'catering', 'notes', 'world'].includes(key));
-    $('#moreList').innerHTML = saved + moreInfo.map(([key, value]) => `<button class="more-row" data-info="${key}">${infoIcon(key)}<span><strong>${escapeHtml(value[0])}</strong><small>${escapeHtml(value[1])}</small></span><span class="row-arrow" aria-hidden="true">›</span></button>`).join('') + update + officialWebsite + developerCredit;
+    $('#moreList').innerHTML = moreInfo.map(([key, value]) => `<button class="more-row" data-info="${key}">${infoIcon(key)}<span><strong>${escapeHtml(value[0])}</strong><small>${escapeHtml(value[1])}</small></span><span class="row-arrow" aria-hidden="true">›</span></button>`).join('') + update + rateApp + officialWebsite + developerCredit;
+    document.querySelectorAll('.developer-name').forEach((node) => {
+      node.innerHTML = `<img src="${developerLogoAssetUrl}" alt="waien studio" width="520" height="290" loading="lazy" decoding="async"><span class="developer-label"><strong>Waien</strong> Studio</span>`;
+    });
     document.querySelectorAll('.developer-cta, .developer-whatsapp').forEach((link) => { link.href = developerWhatsApp; });
+    // Toda la firma de Waien Studio funciona como un único acceso a WhatsApp;
+    // el ícono conserva su enlace propio, pero logo y texto también responden.
+    document.querySelectorAll('.developer-credit').forEach((credit) => {
+      credit.setAttribute('role', 'link');
+      credit.setAttribute('tabindex', '0');
+      const openDeveloperWhatsApp = (event) => {
+        if (event.target.closest('a')) return;
+        event.preventDefault();
+        window.open(developerWhatsApp, '_blank', 'noopener,noreferrer');
+      };
+      credit.addEventListener('click', openDeveloperWhatsApp);
+      credit.addEventListener('keydown', (event) => {
+        if (event.key !== 'Enter' && event.key !== ' ') return;
+        if (event.target.closest('a')) return;
+        event.preventDefault();
+        window.open(developerWhatsApp, '_blank', 'noopener,noreferrer');
+      });
+    });
     infoNoticeKeys.forEach((key) => updateInfoNotice(key));
   }
 
@@ -3281,12 +3692,20 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     showView('readerView');
     $('#readerTop').textContent = 'Catálogo';
     const renderDate = (date, note = 'Fecha publicada por Iahadut HaTora.') => {
-      $('#readerContent').innerHTML = `<span class="label">Información del catálogo</span><h2>Última actualización del catálogo</h2><div class="catalog-update-card"><strong>${escapeHtml(date)}</strong><span>${escapeHtml(note)}</span></div><p class="catalog-app-sync">Última sincronización de esta app: ${escapeHtml(lastSyncMessage())}</p>`;
+      const totalLabel = totalCount().toLocaleString('es-AR');
+      const currentMessage = syncState.running
+        ? 'Actualizando…'
+        : syncState.error
+          ? ($('#syncMessage')?.textContent || 'Sin cambios verificados')
+          : lastSyncMessage();
+      const currentTone = syncState.error ? 'bad' : syncState.running ? 'busy' : syncState.last ? 'ok' : '';
+      const syncDisabled = syncRequest ? ' disabled aria-busy="true"' : '';
+      $('#readerContent').innerHTML = `<div class="catalog-info-sync"><button class="sync update-row catalog-info-sync-row ${currentTone}" data-info-sync type="button" aria-live="polite" aria-label="Actualizar catálogo"${syncDisabled}><i></i><span><strong>Última sincronización</strong><small data-info-sync-message>${escapeHtml(currentMessage)}</small></span><b aria-hidden="true"><svg class="refresh-icon" viewBox="0 0 24 24"><path d="M20 11a8 8 0 0 0-14.9-4L3 9m0 0V4m0 5h5M4 13a8 8 0 0 0 14.9 4L21 15m0 0v5m0-5h-5"/></svg></b></button></div><div class="catalog-total-info"><span>Productos en el catálogo</span><strong>${escapeHtml(totalLabel)}</strong></div><div class="catalog-update-card"><span class="catalog-update-label">Última actualización</span><strong>${escapeHtml(date)}</strong><small>${escapeHtml(note)}</small></div>`;
     };
     renderDate(officialUpdateMessage());
     try {
-      const officialDate = await fetchOfficialUpdateDate();
-      if (officialDate) localStorage.setItem('iht_official_update', officialDate);
+      const officialDate = await refreshOfficialUpdateDate();
+      if (officialDate) renderDate(officialDate);
     } catch (_) {
       // La fecha empaquetada sigue siendo válida aunque la actualización en
       // segundo plano no tenga conexión.
@@ -3307,13 +3726,54 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     updateModalLock();
   }
 
-  function applyImageZoom() {
-    $('#expandedImage').style.transform = `translate3d(${imageGesture.x}px, ${imageGesture.y}px, 0) scale(${imageGesture.scale})`;
+  function clampImagePosition() {
+    const image = $('#expandedImage');
+    const frame = image?.parentElement;
+    if (!image || !frame) return;
+    const maxX = Math.max(0, (image.offsetWidth * imageGesture.scale - frame.clientWidth) / 2);
+    const maxY = Math.max(0, (image.offsetHeight * imageGesture.scale - frame.clientHeight) / 2);
+    imageGesture.x = Math.max(-maxX, Math.min(maxX, imageGesture.x));
+    imageGesture.y = Math.max(-maxY, Math.min(maxY, imageGesture.y));
   }
 
-  function resetImageZoom() {
-    imageGesture.scale = 1; imageGesture.x = 0; imageGesture.y = 0; imageGesture.pointers.clear(); imageGesture.startDistance = 0;
-    if ($('#expandedImage')) applyImageZoom();
+  function applyImageZoom(animate = false) {
+    const image = $('#expandedImage');
+    if (!image) return;
+    clampImagePosition();
+    image.classList.toggle('zoom-animate', animate);
+    $('#imageOverlay')?.classList.toggle('is-zoomed', imageGesture.scale > 1.02);
+    image.style.transform = `translate3d(${imageGesture.x}px, ${imageGesture.y}px, 0) scale(${imageGesture.scale})`;
+    if (animate) window.setTimeout(() => image.classList.remove('zoom-animate'), 260);
+  }
+
+  function zoomImageAt(scale, clientX, clientY, animate = true) {
+    const image = $('#expandedImage');
+    const frame = image?.parentElement?.getBoundingClientRect();
+    if (!image || !frame) return;
+    const nextScale = Math.min(4, Math.max(1, scale));
+    const centerX = frame.left + frame.width / 2;
+    const centerY = frame.top + frame.height / 2;
+    const ratio = nextScale / imageGesture.scale;
+    imageGesture.x = clientX - centerX - (clientX - centerX - imageGesture.x) * ratio;
+    imageGesture.y = clientY - centerY - (clientY - centerY - imageGesture.y) * ratio;
+    imageGesture.scale = nextScale;
+    if (nextScale === 1) { imageGesture.x = 0; imageGesture.y = 0; }
+    applyImageZoom(animate);
+  }
+
+  function resetImageZoom(animate = false) {
+    imageGesture.scale = 1;
+    imageGesture.x = 0;
+    imageGesture.y = 0;
+    imageGesture.pointers.clear();
+    imageGesture.startDistance = 0;
+    imageGesture.startCenter = null;
+    imageGesture.pinchPoint = null;
+    imageGesture.moved = false;
+    imageGesture.hadMultiTouch = false;
+    imageGesture.tapStart = null;
+    imageGesture.lastTap = null;
+    if ($('#expandedImage')) applyImageZoom(animate);
   }
 
   function closeImage() { $('#imageOverlay').hidden = true; $('#expandedImage').src = ''; resetImageZoom(); updateModalLock(); }
@@ -3345,8 +3805,11 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
         images: (content.images || []).filter((image) => imageKey(image.src) !== heroImageKey).filter((image, index, all) => all.findIndex((candidate) => imageKey(candidate.src) === imageKey(image.src)) === index)
       };
     };
-    $('#cardImage').src = card.image;
-    $('#cardImage').alt = card.alt || card.title;
+    const heroImage = $('#cardImage');
+    heroImage.classList.add('asset-loading');
+    heroImage.classList.remove('asset-ready', 'asset-error');
+    heroImage.src = card.image;
+    heroImage.alt = card.alt || card.title;
     $('#cardTitle').textContent = card.title;
     const cachedCard = cardCache[card.url];
     $('#cardDetails').innerHTML = cachedCard ? infoContentMarkup(withoutTitle(cachedCard)) : '<div class="content-skeleton" aria-hidden="true"><i></i><i></i><i></i></div>';
@@ -3367,9 +3830,12 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     }
   }
 
-  function closeInfoCard() { $('#cardOverlay').hidden = true; $('#cardImage').src = ''; updateModalLock(); }
+  function closeInfoCard() { $('#cardOverlay').hidden = true; $('#cardImage').src = ''; $('#cardImage').classList.remove('asset-loading', 'asset-ready', 'asset-error'); updateModalLock(); }
 
   function stopCamera() {
+    cameraStartToken += 1;
+    if (cameraFallbackTimer) window.clearTimeout(cameraFallbackTimer);
+    cameraFallbackTimer = 0;
     if (scanFrame) cancelAnimationFrame(scanFrame);
     scanFrame = 0;
     if (stream) stream.getTracks().forEach((track) => track.stop());
@@ -3378,33 +3844,92 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
   }
 
   async function startCamera() {
-    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) { closeScanner(); return; }
+    const token = ++cameraStartToken;
+    const video = $('#camera');
+    const showManualFallback = (message = 'No pudimos abrir la cámara. Ingresá el EAN o UPC.') => {
+      if (token !== cameraStartToken || $('#scanOverlay').hidden) return;
+      stopCamera();
+      openWebScanner(message, false);
+      window.setTimeout(() => { if (!$('#scanOverlay').hidden && $('#scanOverlay').classList.contains('manual-only')) $('#barcode').focus(); }, 40);
+    };
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      showManualFallback('Este dispositivo no permite usar la cámara. Ingresá el EAN o UPC.');
+      return;
+    }
+    cameraFallbackTimer = window.setTimeout(() => showManualFallback('La cámara tardó demasiado en iniciar. Ingresá el EAN o UPC.'), 7000);
     try {
-      stream = await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'}}, audio:false});
-      $('#camera').srcObject = stream;
-      if (!('BarcodeDetector' in window)) { $('#scanMessage').textContent = 'Este dispositivo no ofrece lectura automática. Ingresá el EAN o UPC.'; return; }
+      const nextStream = await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'}}, audio:false});
+      if (token !== cameraStartToken || $('#scanOverlay').hidden) {
+        nextStream.getTracks().forEach((track) => track.stop());
+        return;
+      }
+      stream = nextStream;
+      video.srcObject = stream;
+      await video.play().catch(() => {});
+      if (!video.videoWidth || !video.videoHeight) {
+        await new Promise((resolve) => {
+          let settled = false;
+          const finish = () => { if (settled) return; settled = true; video.removeEventListener('loadedmetadata', finish); resolve(); };
+          video.addEventListener('loadedmetadata', finish, {once:true});
+          window.setTimeout(finish, 2200);
+        });
+      }
+      if (token !== cameraStartToken || $('#scanOverlay').hidden) return;
+      if (!video.videoWidth || !video.videoHeight) throw new Error('camera-preview-unavailable');
+      const frameAvailable = await new Promise((resolve) => {
+        let settled = false;
+        const finish = (value) => { if (settled) return; settled = true; resolve(value); };
+        if (typeof video.requestVideoFrameCallback === 'function') video.requestVideoFrameCallback(() => finish(true));
+        const startedAt = performance.now();
+        const poll = () => {
+          if (video.currentTime > 0) { finish(true); return; }
+          if (performance.now() - startedAt >= 1800) { finish(false); return; }
+          window.setTimeout(poll, 120);
+        };
+        poll();
+      });
+      if (!frameAvailable) throw new Error('camera-frame-unavailable');
+      if (cameraFallbackTimer) window.clearTimeout(cameraFallbackTimer);
+      cameraFallbackTimer = 0;
+      $('#scanOverlay').classList.remove('manual-only');
+      $('#scanMessage').textContent = 'Alineá el código dentro del recuadro.';
+      if (!('BarcodeDetector' in window)) {
+        showManualFallback('Este dispositivo no ofrece lectura automática. Ingresá el EAN o UPC.');
+        return;
+      }
       const requestedFormats = ['ean_13','ean_8','upc_a','upc_e','itf14','code_128','codabar'];
       const supportedFormats = BarcodeDetector.getSupportedFormats ? await BarcodeDetector.getSupportedFormats() : requestedFormats;
       const formats = requestedFormats.filter((format) => supportedFormats.includes(format));
       const detector = new BarcodeDetector(formats.length ? {formats} : undefined);
       const tick = async () => { if (!stream) return; try { const codes = await detector.detect($('#camera')); if (codes[0] && codes[0].rawValue) { stopCamera(); resolveBarcode(codes[0].rawValue); return; } } catch (_) {} scanFrame = requestAnimationFrame(tick); };
       scanFrame = requestAnimationFrame(tick);
-    } catch (_) { closeScanner(); }
+    } catch (_) {
+      if (cameraFallbackTimer) window.clearTimeout(cameraFallbackTimer);
+      cameraFallbackTimer = 0;
+      showManualFallback('No pudimos abrir la cámara. Ingresá el EAN o UPC.');
+    }
   }
   window.__ihtCameraReady = startCamera;
   window.__ihtCameraDenied = () => closeScanner();
 
   function openWebScanner(message = 'Alineá el código dentro del recuadro.', useCamera = true) {
+    const cameraAvailable = useCamera && Boolean(globalThis.navigator?.mediaDevices?.getUserMedia);
+    const scannerMessage = cameraAvailable ? 'Iniciando cámara…' : 'No pudimos abrir la cámara. Ingresá el EAN o UPC.';
     pendingScanProduct = null;
-    $('#scanMessage').textContent = message;
+    $('#scanMessage').textContent = scannerMessage;
     $('#scanOverlay').hidden = false;
     $('#scanOverlay').classList.remove('scan-result');
-    $('#scanOverlay').classList.toggle('manual-only', !useCamera);
+    // Mientras la cámara arranca mostramos siempre una salida manual legible;
+    // solo volvemos al visor oscuro cuando el preview ya está confirmado.
+    $('#scanOverlay').classList.add('manual-only');
     $('#camera').hidden = false;
     $('.frame').hidden = false;
     $('#barcode').value = '';
     updateModalLock();
-    if (useCamera) startCamera(); else stopCamera();
+    if (cameraAvailable) startCamera(); else {
+      stopCamera();
+      window.setTimeout(() => { if (!$('#scanOverlay').hidden && $('#scanOverlay').classList.contains('manual-only')) $('#barcode').focus(); }, 40);
+    }
   }
 
   async function openScanner() {
@@ -3529,6 +4054,30 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     return sameScore.length === 1 ? best.product : null;
   }
 
+  function findClosestProductsByIdentity(identity, limit = 4) {
+    const nameTokens = [...new Set(scanIdentityTokens(identity?.name))];
+    const brandTokens = [...new Set(scanIdentityTokens(identity?.brand))];
+    const identityCategory = scanCategoryPath(identity)[0] || '';
+    if (!nameTokens.length && !brandTokens.length) return [];
+    return products.map((product) => {
+      const productTokens = new Set(scanIdentityTokens(`${product.title || ''} ${product.brand || ''}`));
+      const matchedNameTokens = nameTokens.filter((token) => productTokens.has(token));
+      const matchedBrandTokens = brandTokens.filter((token) => productTokens.has(token));
+      const productCategory = productCategoryPath(product)[0] || '';
+      const sameCategory = Boolean(identityCategory && productCategory && identityCategory === productCategory);
+      const brandCoverage = brandTokens.length ? matchedBrandTokens.length / brandTokens.length : 0;
+      const nameCoverage = nameTokens.length ? matchedNameTokens.length / nameTokens.length : 0;
+      const score = brandCoverage * 6 + nameCoverage * 4 + (sameCategory ? 1 : 0);
+      const credible = brandTokens.length
+        ? matchedBrandTokens.length > 0 && matchedNameTokens.length > 0
+        : matchedNameTokens.length >= 2 && sameCategory;
+      return {product, score, credible, brandCoverage, nameCoverage};
+    })
+      .filter(({credible}) => credible)
+      .sort((a, b) => b.score - a.score || a.product.title.localeCompare(b.product.title, 'es'))
+      .slice(0, limit);
+  }
+
   function rememberBarcodeAssociation(code, product, identity) {
     const normalizedCode = String(code || '').replace(/\D/g, '');
     if (!normalizedCode || !product?.url) return;
@@ -3609,12 +4158,14 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
 
   async function barcodeIdentity(code) {
     try {
-      const url = `https://world.openfoodfacts.net/api/v2/product/${encodeURIComponent(code)}.json?fields=code,product_name,product_name_es,brands,categories,categories_tags`;
+      const url = `https://world.openfoodfacts.org/api/v3/product/${encodeURIComponent(code)}?fields=code,product_name,product_name_es,brands,categories,categories_tags`;
+      const headers = {Accept:'application/json'};
       const response = Capacitor.isNativePlatform()
-        ? await CapacitorHttp.get({url, connectTimeout:7000, readTimeout:7000})
-        : await fetch(url, {headers:{Accept:'application/json'}});
+        ? await CapacitorHttp.get({url, headers:{...headers, 'User-Agent':'IahadutHaTora/1.0.14 (https://vaad.ar)'}, connectTimeout:7000, readTimeout:7000})
+        : await fetch(url, {headers});
       const data = response?.data || await response.json();
-      if (Number(data?.status) !== 1 || !data?.product) return null;
+      const returnedCode = String(data?.product?.code || data?.code || '').replace(/\D/g, '');
+      if (data?.result?.id !== 'product_found' || !data?.product || returnedCode !== code) return null;
       const name = clean(data.product.product_name_es || data.product.product_name);
       const brand = clean(String(data.product.brands || '').split(',')[0]);
       const categoriesText = clean(data.product.categories || (Array.isArray(data.product.categories_tags) ? data.product.categories_tags.join(' ') : ''));
@@ -3643,8 +4194,11 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
       $('#scanMessage').innerHTML = `<span class="scan-result-status found">Producto identificado</span><strong class="scan-result-title">Elegí la presentación correcta</strong><small class="scan-result-code">Código escaneado: ${escapeHtml(code)}</small><span class="scan-result-note">Encontramos varias fichas compatibles con la información del código.</span><div class="scan-alternatives"><div class="scan-alternatives-grid">${matchesMarkup}</div></div><button class="scan-result-action secondary" type="button" data-scan-again>Escanear otro producto</button>`;
     } else {
       const identified = externalName ? `<strong class="scan-result-title">${escapeHtml(externalName)}${externalBrand ? ` · ${escapeHtml(externalBrand)}` : ''}</strong>` : '';
-      const alternatives = findScanAlternatives(identity, code);
-      const alternativesMarkup = alternatives.length ? `<div class="scan-alternatives"><strong>Te sugerimos productos de esta categoría</strong><div class="scan-alternatives-grid">${alternatives.map((item) => `<button class="scan-alternative" type="button" data-scan-alternative="${escapeHtml(item.url)}"><img src="${escapeHtml(item.image)}" alt=""><span>${escapeHtml(item.title)}</span></button>`).join('')}</div></div>` : '';
+      const closestMatches = findClosestProductsByIdentity(identity);
+      const alternatives = closestMatches.length ? closestMatches.map(({product}) => product) : findScanAlternatives(identity, code);
+      const alternativesHeading = closestMatches.length ? '¿Es alguno de estos productos del catálogo?' : 'Te sugerimos productos de esta categoría';
+      const alternativesNote = closestMatches.length ? '<span class="scan-result-note">Son posibles coincidencias por nombre o marca; elegí una para ver su ficha. Esto no confirma por sí solo el código.</span>' : '';
+      const alternativesMarkup = alternatives.length ? `<div class="scan-alternatives"><strong>${alternativesHeading}</strong>${alternativesNote}<div class="scan-alternatives-grid">${alternatives.map((item) => `<button class="scan-alternative" type="button" data-scan-alternative="${escapeHtml(item.url)}">${item.image ? `<img src="${escapeHtml(item.image)}" alt="">` : ''}<span>${escapeHtml(item.title)}</span></button>`).join('')}</div></div>` : '';
       const resultTitle = 'No encontramos este producto';
       const resultNote = 'Puede que el código todavía no esté cargado. Probá buscándolo en la lista por nombre o marca.';
       const searchMarkup = `<button class="scan-result-action" type="button" data-scan-search="${escapeHtml(externalName)}">Buscar en la lista</button>`;
@@ -3666,9 +4220,28 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     updateModalLock();
   }
 
+  function showInvalidBarcode(code) {
+    pendingScanProduct = null;
+    stopCamera();
+    $('#scanOverlay').hidden = false;
+    $('#scanOverlay').classList.add('scan-result', 'manual-only');
+    $('#camera').hidden = true;
+    $('.frame').hidden = true;
+    $('#scanMessage').innerHTML = `<span class="scan-result-status not-found">Lectura incompleta</span><strong class="scan-result-title">No se leyó un código de producto válido</strong><small class="scan-result-code">Código leído: ${escapeHtml(code)}</small><span class="scan-result-note">Alineá el código completo dentro del recuadro. Para productos del catálogo aceptamos EAN/UPC válidos.</span><button class="scan-result-action secondary" type="button" data-scan-again>Volver a escanear</button>`;
+    $('#barcode').value = code;
+    updateModalLock();
+  }
+
   async function resolveBarcode(raw) {
     const code = String(raw || '').replace(/\D/g,'');
     if (!code) return;
+    // The native scanner can decode non-retail numeric formats (or partial
+    // internal codes). Only query the catalog / Open Food Facts for a complete,
+    // checksum-valid GTIN so a short read cannot be mistaken for a product.
+    if (!validGtin(code)) {
+      showInvalidBarcode(code);
+      return;
+    }
     stopCamera();
     const exactMatches = findProductsByBarcode(code);
     if (exactMatches.length === 1) {
@@ -3752,7 +4325,7 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
       return;
     }
     const scanAgainButton = event.target.closest('[data-scan-again]');
-    if (scanAgainButton) { openWebScanner(); return; }
+    if (scanAgainButton) { openScanner(); return; }
     const scanSearchButton = event.target.closest('[data-scan-search]');
     if (scanSearchButton) {
       $('#homeQuery').value = scanSearchButton.dataset.scanSearch || '';
@@ -3791,7 +4364,7 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
       favoriteOnly = false; showView('searchView'); renderResults($('#query').value); renderSearchCategories(); return;
     }
     const retiredButton = event.target.closest('[data-open-retired]');
-    if (retiredButton) { showView('alertsView'); return; }
+    if (retiredButton) { showView('timelineView'); return; }
     const timelineButton = event.target.closest('[data-open-timeline]');
     if (timelineButton) { showView('timelineView'); return; }
     const categoryButton = event.target.closest('[data-category]'); if (categoryButton) { selectedCategory = categoryButton.dataset.category; favoriteOnly = false; showView('searchView'); renderResults(''); }
@@ -3802,13 +4375,17 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     const savedButton = event.target.closest('[data-saved]'); if (savedButton) { openSavedScreen(); return; }
     const clearHistoryButton = event.target.closest('[data-clear-history]'); if (clearHistoryButton) { if (!recent.length || window.confirm('¿Borrar el historial de búsquedas?')) { recent = []; localStorage.removeItem('iht_recent'); renderMore(); renderSearchCategories(); } }
     const notificationButton = event.target.closest('[data-enable-notifications]');
-    if (notificationButton) { setupPushNotifications(true).then(() => { renderAlerts(); renderPushNotifications(); renderMore(); }); return; }
+    if (notificationButton) { setupPushNotifications(true).then(() => { renderPushNotifications(); renderMore(); }); return; }
     const disableNotificationButton = event.target.closest('[data-disable-notifications]');
     if (disableNotificationButton) { disablePushNotifications(); return; }
+    const clearPushButton = event.target.closest('[data-clear-push-notifications]');
+    if (clearPushButton) { clearPushNotifications(); return; }
     const openAlertsButton = event.target.closest('[data-open-alerts]');
-    if (openAlertsButton) { showView('notificationsView'); return; }
+    if (openAlertsButton) { showView('alertsView'); return; }
     const openPlayStoreButton = event.target.closest('[data-open-play-store]');
     if (openPlayStoreButton) { openExternal(remoteControl.update_url || defaultRemoteControl.update_url); return; }
+    const rateAppButton = event.target.closest('[data-rate-app]');
+    if (rateAppButton) { event.preventDefault(); openExternal(appInstallUrl); return; }
     const updateButton = event.target.closest('[data-app-update]');
     if (updateButton) {
       if (playUpdateState.downloaded) {
@@ -3825,6 +4402,8 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
       });
       return;
     }
+    const infoSyncButton = event.target.closest('[data-info-sync]');
+    if (infoSyncButton) { if (!syncRequest) syncAndPreload(true).catch(() => {}); return; }
     const copyValueButton = event.target.closest('[data-copy-value]');
     if (copyValueButton) {
       const text = copyValueButton.dataset.copyValue || '';
@@ -3894,23 +4473,85 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
   $('#closeImage').onclick = closeImage;
   $('#imageOverlay').onclick = (event) => { if (event.target === $('#imageOverlay')) closeImage(); };
   $('#expandedImage').addEventListener('pointerdown', (event) => {
-    event.preventDefault(); $('#expandedImage').setPointerCapture?.(event.pointerId);
+    event.preventDefault();
+    $('#expandedImage').setPointerCapture?.(event.pointerId);
     imageGesture.pointers.set(event.pointerId, {x:event.clientX, y:event.clientY});
-    if (imageGesture.pointers.size === 2) { const [a,b] = [...imageGesture.pointers.values()]; imageGesture.startDistance = Math.hypot(a.x - b.x, a.y - b.y); imageGesture.startScale = imageGesture.scale; }
+    if (imageGesture.pointers.size === 1) {
+      imageGesture.moved = false;
+      imageGesture.hadMultiTouch = false;
+      imageGesture.tapStart = {x:event.clientX, y:event.clientY, time:performance.now()};
+    }
+    if (imageGesture.pointers.size === 2) {
+      const [a,b] = [...imageGesture.pointers.values()];
+      const frame = $('#expandedImage').parentElement.getBoundingClientRect();
+      const center = {x:(a.x + b.x) / 2, y:(a.y + b.y) / 2};
+      const frameCenter = {x:frame.left + frame.width / 2, y:frame.top + frame.height / 2};
+      imageGesture.hadMultiTouch = true;
+      imageGesture.startDistance = Math.hypot(a.x - b.x, a.y - b.y);
+      imageGesture.startScale = imageGesture.scale;
+      imageGesture.startCenter = center;
+      imageGesture.pinchPoint = {
+        x:(center.x - frameCenter.x - imageGesture.x) / imageGesture.scale,
+        y:(center.y - frameCenter.y - imageGesture.y) / imageGesture.scale
+      };
+    }
   });
   $('#expandedImage').addEventListener('pointermove', (event) => {
     if (!imageGesture.pointers.has(event.pointerId)) return;
     const previous = imageGesture.pointers.get(event.pointerId);
     imageGesture.pointers.set(event.pointerId, {x:event.clientX, y:event.clientY});
-    if (imageGesture.pointers.size >= 2) { const [a,b] = [...imageGesture.pointers.values()]; const distance = Math.hypot(a.x - b.x, a.y - b.y); imageGesture.scale = Math.min(5, Math.max(1, imageGesture.startScale * distance / Math.max(1, imageGesture.startDistance))); }
-    else if (imageGesture.scale > 1) { imageGesture.x += event.clientX - previous.x; imageGesture.y += event.clientY - previous.y; }
-    applyImageZoom();
+    if (Math.hypot(event.clientX - previous.x, event.clientY - previous.y) > 1.5) imageGesture.moved = true;
+    if (imageGesture.pointers.size >= 2) {
+      const [a,b] = [...imageGesture.pointers.values()];
+      const distance = Math.hypot(a.x - b.x, a.y - b.y);
+      const center = {x:(a.x + b.x) / 2, y:(a.y + b.y) / 2};
+      const frame = $('#expandedImage').parentElement.getBoundingClientRect();
+      const frameCenter = {x:frame.left + frame.width / 2, y:frame.top + frame.height / 2};
+      imageGesture.scale = Math.min(4, Math.max(1, imageGesture.startScale * distance / Math.max(1, imageGesture.startDistance)));
+      imageGesture.x = center.x - frameCenter.x - imageGesture.pinchPoint.x * imageGesture.scale;
+      imageGesture.y = center.y - frameCenter.y - imageGesture.pinchPoint.y * imageGesture.scale;
+    } else if (imageGesture.scale > 1) {
+      imageGesture.x += event.clientX - previous.x;
+      imageGesture.y += event.clientY - previous.y;
+    }
+    applyImageZoom(false);
   });
-  const endImagePointer = (event) => { imageGesture.pointers.delete(event.pointerId); if (imageGesture.pointers.size < 2) imageGesture.startDistance = 0; };
+  const endImagePointer = (event) => {
+    const wasSinglePointer = imageGesture.pointers.size === 1;
+    const tap = imageGesture.tapStart;
+    imageGesture.pointers.delete(event.pointerId);
+    if (imageGesture.pointers.size < 2) imageGesture.startDistance = 0;
+    if (imageGesture.scale < 1.03 && (imageGesture.hadMultiTouch || imageGesture.moved)) resetImageZoom(true);
+    else applyImageZoom(true);
+    if (wasSinglePointer && !imageGesture.hadMultiTouch && !imageGesture.moved && tap && performance.now() - tap.time < 280) {
+      const now = performance.now();
+      const isDoubleTap = imageGesture.lastTap
+        && now - imageGesture.lastTap.time < 320
+        && Math.hypot(event.clientX - imageGesture.lastTap.x, event.clientY - imageGesture.lastTap.y) < 36;
+      if (isDoubleTap) {
+        if (imageGesture.scale > 1.02) resetImageZoom(true);
+        else zoomImageAt(2.5, event.clientX, event.clientY, true);
+        imageGesture.lastTap = null;
+      } else {
+        imageGesture.lastTap = {x:event.clientX, y:event.clientY, time:now};
+      }
+    }
+    if (imageGesture.pointers.size === 0) {
+      imageGesture.tapStart = null;
+      imageGesture.hadMultiTouch = false;
+    }
+  };
   $('#expandedImage').addEventListener('pointerup', endImagePointer);
   $('#expandedImage').addEventListener('pointercancel', endImagePointer);
-  $('#expandedImage').addEventListener('dblclick', () => { imageGesture.scale = imageGesture.scale > 1 ? 1 : 2.5; if (imageGesture.scale === 1) { imageGesture.x = 0; imageGesture.y = 0; } applyImageZoom(); });
-  $('#expandedImage').addEventListener('wheel', (event) => { event.preventDefault(); imageGesture.scale = Math.min(5, Math.max(1, imageGesture.scale + (event.deltaY < 0 ? .25 : -.25))); if (imageGesture.scale === 1) { imageGesture.x = 0; imageGesture.y = 0; } applyImageZoom(); }, {passive:false});
+  $('#expandedImage').addEventListener('dblclick', (event) => {
+    if (event.pointerType === 'touch') return;
+    if (imageGesture.scale > 1.02) resetImageZoom(true);
+    else zoomImageAt(2.5, event.clientX, event.clientY, true);
+  });
+  $('#expandedImage').addEventListener('wheel', (event) => {
+    event.preventDefault();
+    zoomImageAt(imageGesture.scale + (event.deltaY < 0 ? .3 : -.3), event.clientX, event.clientY, false);
+  }, {passive:false});
   $('#closeCard').onclick = closeInfoCard;
   $('#cardImage').onclick = () => { if ($('#cardImage').src) openImage($('#cardImage').src, $('#cardTitle').textContent || 'Imagen'); };
   $('#cardOverlay').onclick = (event) => { if (event.target === $('#cardOverlay')) closeInfoCard(); };
@@ -3928,9 +4569,11 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
   const clearActiveFilter = () => { selectedCategory = 'all'; selectedRegion = 'all'; renderResults($('#query').value); };
   $('#resetFilter').onclick = () => { clearActiveFilter(); $('#filterOverlay').hidden = true; updateModalLock(); };
   $('#clearSearchScope').onclick = clearActiveFilter;
-  $('#syncStatus').onclick = () => syncAndPreload(true);
+  $('#syncStatus').onclick = () => { if (!syncRequest) syncAndPreload(true).catch(() => {}); };
   $('#accessRetry').onclick = () => refreshRemoteControl(true);
   $('#accessUpdate').onclick = () => openExternal(remoteControl.update_url);
+  $('#headerNotifications')?.setAttribute('aria-label', 'Abrir notificaciones push');
+  $('#headerNotifications')?.setAttribute('title', 'Notificaciones push');
   renderHome(); renderSearchCategories(); infoNoticeKeys.forEach((key) => updateInfoNotice(key));
   refreshAlertBadge();
   syncMessage(lastSyncMessage(), syncState.last ? 'ok' : '');

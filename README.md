@@ -25,12 +25,13 @@ El workflow `.github/workflows/firebase-catalog.yml` realiza este circuito:
 1. Consulta nuevamente la fuente oficial y prepara la copia autorizada del catálogo. El enriquecimiento de códigos de barras queda separado y pausado hasta una revisión específica; la sincronización no altera esos datos por accidente.
 2. Solo conserva códigos GTIN/EAN/UPC con dígito verificador válido y coincidencia inequívoca de producto, marca y variante. Las coincidencias ambiguas quedan sin código.
 3. Genera un plan de altas, cambios y bajas sin escribir todavía.
-4. Espera la aprobación del entorno protegido `catalog-production`.
-5. Recién después actualiza Firestore. Los productos dados de baja se archivan en `catalog_archive` y se eliminan de `catalog_products`, por lo que dejan de aparecer en el catálogo activo pero se conserva una trazabilidad mínima para poder auditar o restaurar.
+4. En la ejecución automática de cada 12 horas aplica únicamente una actualización incremental con la cuenta de servicio de GitHub. No crea infraestructura nueva ni requiere servicios pagos.
+5. Una ejecución manual sigue esperando la aprobación del entorno protegido `catalog-production`; este camino queda reservado para una carga inicial (`seed`) o una intervención controlada.
+6. Al actualizar Firestore, los productos dados de baja se archivan en `catalog_archive` y se eliminan de `catalog_products`, por lo que dejan de aparecer en el catálogo activo pero se conserva una trazabilidad mínima para poder auditar o restaurar.
 
 El proxy web de Firebase está en `functions/`. Para publicarlo, instalar Firebase CLI, iniciar sesión con la cuenta del proyecto y ejecutar `firebase deploy --only functions:vaadProxy --project iahadut-hatora`. El despliegue requiere que el proyecto tenga habilitado el plan de facturación correspondiente a Cloud Functions.
 
-Para habilitar la primera carga hay que crear en GitHub el entorno protegido `catalog-production`, agregar al menos un revisor requerido y guardar los secretos `FIREBASE_SERVICE_ACCOUNT_JSON` y `FCM_SERVICE_ACCOUNT_JSON` donde corresponda. Esas cuentas deben tener únicamente permisos de servidor; no se deben poner en la aplicación ni en el repositorio. La primera ejecución manual usa `seed`; las siguientes usan `incremental` y se ejecutan cada 12 horas, siempre con aprobación antes de escribir. El push real requiere instalar una APK/AAB nativa, aceptar el permiso de notificaciones y activar los avisos desde la app.
+Para habilitar la primera carga hay que crear en GitHub el entorno protegido `catalog-production`, agregar al menos un revisor requerido y guardar los secretos `FIREBASE_SERVICE_ACCOUNT_JSON` y `FCM_SERVICE_ACCOUNT_JSON` donde corresponda. Esas cuentas deben tener únicamente permisos de servidor; no se deben poner en la aplicación ni en el repositorio. La primera ejecución manual usa `seed` y requiere aprobación. Luego, la actualización incremental se ejecuta cada 12 horas sin quedar detenida esperando una aprobación; una ejecución manual continúa protegida. El push real requiere instalar una APK/AAB nativa, aceptar el permiso de notificaciones y activar los avisos desde la app.
 
 - Web: `web/`
 - App Android Capacitor: `android/`
@@ -38,7 +39,7 @@ Para habilitar la primera carga hay que crear en GitHub el entorno protegido `ca
 - Wrapper Android original de referencia: `app/`
 - Configuración multiplataforma: `capacitor.config.json`
 - Paquete: `ar.vaad.catalogo.app`
-- Versión fuente: `0.11.18` (código 33)
+- Versión Android preparada para la siguiente prueba interna: `1.0.14` (`versionCode` 66)
 - APK original de referencia: `Iahadut-HaTora-v12-3.apk`
 
 ## Compilar Android Capacitor
@@ -57,18 +58,18 @@ La APK de salida queda en `android/app/build/outputs/apk/debug/app-debug.apk`.
 La aplicación ya existe en Google Play. Cada actualización debe conservar exactamente estos datos:
 
 - `applicationId`: `ar.vaad.catalogo.app`
-- Versión actual del código fuente: `0.11.18`
-- `versionCode` actual: `33` (debe aumentar en cada actualización)
+- Versión preparada en el código fuente: `1.0.14`
+- `versionCode` local: `66` (la `1.0.13`/65 está disponible en prueba interna; la cerrada “Prueba personal S22” sigue en 63; aumentar en cada actualización)
 - `minSdkVersion`: `26`
 - `targetSdkVersion` y `compileSdkVersion`: `36`
 
-### Estado confirmado en Play Console
+### Estado de Play Console
 
-Al 8 de septiembre de 2026, la ficha correcta es `Iahadut HaTora` con paquete `ar.vaad.catalogo.app`. Play Console muestra activa la versión `0.11.17` con `versionCode` `32` en la prueba cerrada; la producción todavía figura inactiva. La versión local `0.11.18` con código `33` es la próxima actualización que se preparará para Play.
+La ficha correcta es `Iahadut HaTora` con paquete `ar.vaad.catalogo.app`. El 22 de septiembre de 2026, Play Console confirmó la versión `1.0.11` (`versionCode` 63) activa en la pista cerrada “Prueba personal S22” y la versión `1.0.9` en prueba interna. Luego se publicaron `1.0.12` (`versionCode` 64) y `1.0.13` (`versionCode` 65) en la pista de prueba interna. La pista cerrada permanece en `1.0.11`; esta rama prepara `1.0.14` (`versionCode` 66) para la próxima prueba interna.
 
-La prueba cerrada muestra 12 verificadores con 2 días consecutivos. Para solicitar acceso a producción, Play indica que deben mantenerse al menos 12 verificadores durante 14 días consecutivos y luego completar la solicitud correspondiente.
+El estado de verificadores, días consecutivos y disponibilidad de producción debe comprobarse directamente en Play Console antes de tomar decisiones de lanzamiento. La última cifra anotada anteriormente (12 verificadores y 2 días, el 8 de septiembre de 2026) es histórica y no debe tratarse como estado actual.
 
-La clave localizada en la Mac parece ser una upload key (`iahadut-upload`). Su certificado debe compararse en Play Console con el certificado de carga registrado antes de generar el próximo AAB; no debe compararse con la app signing key que Google usa para firmar los APK finales.
+La configuración local de firma está en `android/keystore.properties`; confirmar que su certificado corresponde a la upload key registrada en Play Console. No compararlo con la app signing key que Google usa para firmar los APK finales.
 
 ### Firma
 

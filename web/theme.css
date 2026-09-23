@@ -5,6 +5,26 @@
   --red: #c9363e;
   --blue: #4f718f;
   --topbar-sticky-height: 70px;
+  --font-ui: "Manrope Variable", "Manrope", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+/* Una sola familia tipográfica para toda la experiencia. */
+html,
+body,
+button,
+input,
+textarea,
+select,
+.brand strong,
+.hero h1,
+.page-head h1,
+.section h2,
+.results-head h2,
+.detail-body h1,
+.reader h1,
+.reader h2,
+.search-box .clear {
+  font-family: var(--font-ui);
 }
 
 /* Pulido de interacción: rápido, discreto y consistente en Android/iOS. */
@@ -111,7 +131,7 @@ button:focus-visible, a:focus-visible, summary:focus-visible {
 input[type="search"] { -webkit-appearance: none; appearance: none; }
 .search-box .clear { position: absolute; top: 9px; right: 7px; margin: 0; width: 40px; height: 40px; color: var(--muted); appearance: none; -webkit-appearance: none; }
 .search-box .clear:focus { outline: none; }
-.search-box .clear { color: #6f6b65 !important; font-family: Arial, sans-serif; font-size: 25px; font-weight: 400; line-height: 1; text-decoration: none; }
+.search-box .clear { color: #6f6b65 !important; font-family: var(--font-ui); font-size: 25px; font-weight: 400; line-height: 1; text-decoration: none; }
 .scan svg { width: 27px; height: 27px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
 .icon-btn svg, .clear svg { width: 21px; height: 21px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
 .product { width: 100%; min-width: 0; }
@@ -128,9 +148,9 @@ input[type="search"] { -webkit-appearance: none; appearance: none; }
 .hero:empty { display: none; }
 .logo { mix-blend-mode: multiply; }
 .topbar { padding: 8px 18px; background: #fffdf9; }
-.brand strong { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; font-size: 18px; font-weight: 700; letter-spacing: -.025em; }
+.brand strong { font-family: var(--font-ui); font-size: 18px; font-weight: 700; letter-spacing: -.025em; }
 .section { padding-top: 20px; }
-.section h2, .results-head h2 { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; font-size: 18px; font-weight: 700; letter-spacing: -.02em; }
+.section h2, .results-head h2 { font-family: var(--font-ui); font-size: 18px; font-weight: 700; letter-spacing: -.02em; }
 .category-grid .category-card { border-left: 2px solid var(--line); padding: 13px 8px 13px 12px; background: #fffdf9; }
 .category-grid .category-card[data-category="gondola"] { box-shadow: inset 2px 0 var(--green); }
 .category-grid .category-card[data-category="planta"] { box-shadow: inset 2px 0 var(--gold); }
@@ -320,7 +340,9 @@ button.alert-timeline-item { width: 100%; cursor: pointer; }
 .country-cards-list .country-flag, .country-card .country-flag { display: none; }
 .info-photo { display: block; width: 100%; aspect-ratio: 1 / 1; object-fit: cover; border: 1px solid #dfe5e0; border-radius: 12px; background: #eef2ef; }
 .seal-gallery { grid-template-columns: repeat(2, minmax(0, 1fr)); margin-top: 6px; }
-.seal-gallery .info-photo { aspect-ratio: 1 / 1; padding: 10px; object-fit: contain; border-radius: 14px; background: #fff; box-shadow: 0 3px 12px #26372d0c; cursor: zoom-in; }
+.seal-gallery .info-photo-frame { position: relative; display: block; min-width: 0; overflow: hidden; aspect-ratio: 1 / 1; border: 1px solid #dfe5e0; border-radius: 14px; background: linear-gradient(105deg, #e5ede7 20%, #f6faf7 45%, #e5ede7 70%); background-size: 200% 100%; animation: detail-loading-shimmer 1.15s ease-in-out infinite; }
+.seal-gallery .info-photo-frame:has(.asset-ready) { background: #eef2ef; animation: none; }
+.seal-gallery .info-photo-frame > .info-photo { position: relative; z-index: 1; width: 100%; height: 100%; aspect-ratio: auto; padding: 10px; border: 0; border-radius: inherit; object-fit: contain; background: transparent; box-shadow: none; cursor: zoom-in; }
 .seal-pair-list { display: grid; gap: 12px; }
 .seal-pair { display: grid; grid-template-columns: 104px minmax(0, 1fr); align-items: center; gap: 15px; padding: 14px; border: 1px solid #dce5df; border-radius: 16px; background: #fff; box-shadow: 0 3px 12px #26372d0b; }
 .seal-image-button { display: grid; width: 104px; height: 104px; place-items: center; padding: 0; border: 0; border-radius: 13px; background: #f7f9f7; }
@@ -452,6 +474,7 @@ button.alert-timeline-item { width: 100%; cursor: pointer; }
 .card-sheet { position: relative; width: 100%; height: 100%; max-height: none; overflow: auto; border-radius: 0; background: #fffdf9; box-shadow: none; }
 .card-sheet > .sheet-close { position: absolute; top: 12px; right: 12px; z-index: 1; }
 .card-hero { position: relative; height: 33vh; min-height: 220px; max-height: 310px; overflow: hidden; background: #f1f5f1; }
+.card-hero:has(#cardImage.asset-loading)::before { content: ''; position: absolute; z-index: 1; inset: 0; background: linear-gradient(105deg, #eaf1ec 20%, #f8fbf9 45%, #eaf1ec 70%); background-size: 200% 100%; animation: image-shimmer 1.2s ease-in-out infinite; }
 .card-hero:after { content: ''; position: absolute; inset: 35% 0 0; background: linear-gradient(transparent, #111c178c); pointer-events: none; }
 .card-hero > img { display: block; width: 100%; height: 100%; object-fit: cover; object-position: center; }
 .card-hero > h2 { position: absolute; right: 20px; bottom: 17px; left: 20px; z-index: 1; margin: 0; color: #fff; font-size: 28px; line-height: 1.05; text-shadow: 0 2px 10px #0008; }
@@ -499,6 +522,326 @@ button.alert-timeline-item { width: 100%; cursor: pointer; }
     left: calc(50% + 8px);
     border: 2px solid #174634;
   }
+}
+
+/* Más vida en Información útil: vidrio consistente con un matiz distinto por
+   recurso, para crear variedad sin perder la identidad de la app. */
+#homeView .useful-grid .link-row,
+#homeView .saved-home-action,
+#homeView .explore-categories-action {
+  position: relative;
+  overflow: hidden;
+  border-color: rgb(151 198 171 / 72%) !important;
+  background: linear-gradient(145deg, rgb(255 255 255 / 92%), rgb(226 244 232 / 84%)) !important;
+  box-shadow: 0 10px 22px rgb(36 91 69 / 12%), 0 2px 4px rgb(36 91 69 / 10%), inset 0 1px 0 rgb(255 255 255 / 92%), inset 0 -1px 0 rgb(47 122 89 / 10%) !important;
+  -webkit-backdrop-filter: blur(14px) saturate(125%);
+  backdrop-filter: blur(14px) saturate(125%);
+}
+
+#homeView .useful-grid .link-row::before,
+#homeView .saved-home-action::before,
+#homeView .explore-categories-action::before {
+  content: '';
+  position: absolute;
+  inset: 1px 1px 52% 1px;
+  border-radius: inherit;
+  background: linear-gradient(180deg, rgb(255 255 255 / 48%), rgb(255 255 255 / 0%));
+  pointer-events: none;
+}
+
+#homeView .useful-grid [data-info="shops"] {
+  border-color: rgb(115 183 145 / 66%) !important;
+  background: linear-gradient(145deg, rgb(249 255 251 / 94%), rgb(216 242 225 / 88%)) !important;
+}
+#homeView .useful-grid [data-info="catering"] {
+  border-color: rgb(211 181 111 / 62%) !important;
+  background: linear-gradient(145deg, rgb(255 253 245 / 95%), rgb(246 237 210 / 88%)) !important;
+}
+#homeView .useful-grid [data-info="notes"] {
+  border-color: rgb(128 171 202 / 58%) !important;
+  background: linear-gradient(145deg, rgb(248 252 255 / 95%), rgb(220 237 248 / 88%)) !important;
+}
+#homeView .useful-grid .whatsapp-tile {
+  border-color: rgb(91 190 132 / 64%) !important;
+  background: linear-gradient(145deg, rgb(247 255 249 / 95%), rgb(211 243 222 / 88%)) !important;
+}
+
+#homeView .useful-grid .link-row:active,
+#homeView .saved-home-action:active,
+#homeView .explore-categories-action:active {
+  transform: translateY(1px) scale(.988);
+  box-shadow: 0 4px 10px rgb(36 91 69 / 12%), inset 0 1px 0 rgb(255 255 255 / 72%), inset 0 -1px 0 rgb(47 122 89 / 14%) !important;
+}
+
+/* Estilo final de los botones: plano, limpio y contemporáneo. */
+#homeView .useful-grid .link-row,
+#homeView .saved-home-action,
+#homeView .explore-categories-action,
+#homeView .useful-grid [data-info="shops"],
+#homeView .useful-grid [data-info="catering"],
+#homeView .useful-grid [data-info="notes"],
+#homeView .useful-grid .whatsapp-tile {
+  border-width: 1px !important;
+  border-style: solid !important;
+  box-shadow: none !important;
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+  transform: none;
+}
+
+#homeView .useful-grid .link-row::before,
+#homeView .saved-home-action::before,
+#homeView .explore-categories-action::before {
+  display: none !important;
+}
+
+#homeView .useful-grid [data-info="shops"] {
+  background: #eef8f1 !important;
+  border-color: #c8e2d0 !important;
+}
+#homeView .useful-grid [data-info="catering"] {
+  background: #fbf7eb !important;
+  border-color: #e7d6a8 !important;
+}
+#homeView .useful-grid [data-info="notes"] {
+  background: #eff6fb !important;
+  border-color: #c9deec !important;
+}
+#homeView .useful-grid .whatsapp-tile {
+  background: #edf9f0 !important;
+  border-color: #bfe2c9 !important;
+}
+#homeView .saved-home-action {
+  background: #f1f8f3 !important;
+  border-color: #c8e2d0 !important;
+}
+#homeView .explore-categories-action {
+  background: #e4f1e8 !important;
+  border-color: #afd1bb !important;
+}
+
+#homeView .useful-grid .link-row:active,
+#homeView .saved-home-action:active,
+#homeView .explore-categories-action:active {
+  transform: none !important;
+  filter: brightness(.97);
+  box-shadow: none !important;
+}
+
+/* Cuatro accesos de Información útil: cada tarjeta usa un color propio,
+   con una superficie lisa y sin contorno visible. */
+#homeView .useful-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  gap: 8px !important;
+}
+#homeView .useful-grid .link-row,
+#homeView .useful-grid .link-row:nth-child(even),
+#homeView .useful-grid .whatsapp-tile {
+  display: grid !important;
+  grid-template-columns: 21px minmax(0, 1fr) 13px !important;
+  align-items: center;
+  min-height: 58px !important;
+  padding: 8px 9px !important;
+  gap: 7px !important;
+  border: 0 !important;
+  border-radius: 10px !important;
+  box-shadow: none !important;
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+}
+#homeView .useful-grid .link-row span:nth-child(2) {
+  min-width: 0;
+  padding: 0 !important;
+  color: #1f342a !important;
+  font-size: clamp(10px, 2.8vw, 12px) !important;
+  font-weight: 700 !important;
+  line-height: 1.12 !important;
+  overflow-wrap: anywhere;
+}
+#homeView .useful-grid .link-row span:last-child {
+  position: static !important;
+  color: #1f684b !important;
+  font-size: 17px !important;
+  line-height: 1 !important;
+}
+#homeView .useful-grid .link-row .info-icon {
+  width: 19px !important;
+  height: 19px !important;
+  stroke-width: 1.8;
+}
+#homeView .useful-grid [data-info="shops"] { background: #dff3e6 !important; }
+#homeView .useful-grid [data-info="catering"] { background: #fff0cf !important; }
+#homeView .useful-grid [data-info="notes"] { background: #e2f0fb !important; }
+#homeView .useful-grid .whatsapp-tile { background: #ddf5e5 !important; }
+
+@media (max-width: 320px) {
+  #homeView .useful-grid { gap: 6px !important; }
+  #homeView .useful-grid .link-row { min-height: 56px !important; padding-inline: 7px !important; gap: 5px !important; }
+  #homeView .useful-grid .link-row span:nth-child(2) { font-size: 10px !important; }
+}
+
+/* Ajuste final solicitado: tarjetas más grandes y colores de marca. */
+#homeView.view.active {
+  background:
+    radial-gradient(circle at 88% 8%, rgb(190 228 204 / 48%) 0%, transparent 36%),
+    linear-gradient(180deg, #d2ead9 0%, #dcefe2 56%, #e5f3e9 100%) !important;
+  background-image:
+    radial-gradient(circle at 88% 8%, rgb(190 228 204 / 48%) 0%, transparent 36%),
+    linear-gradient(180deg, #d2ead9 0%, #dcefe2 56%, #e5f3e9 100%) !important;
+}
+
+/* El hero comparte exactamente el mint del lienzo superior para integrarse
+   visualmente, incluso cuando queda fijo durante el scroll. */
+#appHero {
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+}
+body.app-scrolled #appHero {
+  background: rgb(238 247 240 / 88%) !important;
+  border: 0 !important;
+  box-shadow: 0 8px 24px rgb(36 91 69 / 10%) !important;
+  -webkit-backdrop-filter: blur(18px) saturate(130%) !important;
+  backdrop-filter: blur(18px) saturate(130%) !important;
+}
+
+#homeView .useful-section {
+  position: relative;
+  isolation: isolate;
+  border-top: 0 !important;
+  background: transparent !important;
+}
+#homeView .useful-section::before {
+  content: '';
+  position: absolute;
+  z-index: 0;
+  top: 0;
+  bottom: -900px;
+  left: 50%;
+  width: 100vw;
+  transform: translateX(-50%);
+  background: #fff;
+  border-radius: 40px 40px 0 0;
+  box-shadow: 0 -10px 26px rgb(43 103 70 / 9%);
+  pointer-events: none;
+}
+#homeView .useful-section > * {
+  position: relative;
+  z-index: 1;
+}
+#homeView .useful-section ~ * {
+  position: relative;
+  z-index: 1;
+}
+
+#homeView .useful-grid .link-row,
+#homeView .useful-grid .link-row:nth-child(even),
+#homeView .useful-grid .whatsapp-tile {
+  min-height: 76px !important;
+  padding: 11px 12px !important;
+  gap: 9px !important;
+  border-radius: 14px !important;
+}
+#homeView .useful-grid .link-row span:nth-child(2) {
+  font-size: clamp(12px, 3.3vw, 14px) !important;
+  line-height: 1.16 !important;
+}
+#homeView .useful-grid .link-row .info-icon {
+  width: 23px !important;
+  height: 23px !important;
+}
+#homeView .useful-grid [data-info="shops"] { background: #f8dce5 !important; }
+#homeView .useful-grid .link-row:nth-child(even)[data-info="catering"] { background: #fff0b8 !important; }
+#homeView .useful-grid [data-info="notes"] { background: #deedfa !important; }
+#homeView .useful-grid .link-row:nth-child(even).whatsapp-tile { background: #c8f0d5 !important; }
+
+@media (max-width: 320px) {
+  #homeView .useful-grid .link-row { min-height: 70px !important; padding: 9px !important; }
+  #homeView .useful-grid .link-row span:nth-child(2) { font-size: 11px !important; }
+}
+
+/* Ajuste final de tamaño y paleta para los accesos principales. */
+#homeView .useful-grid .link-row,
+#homeView .useful-grid .link-row:nth-child(even),
+#homeView .useful-grid .whatsapp-tile {
+  min-height: 76px !important;
+  padding: 11px 12px !important;
+  gap: 9px !important;
+  border-radius: 14px !important;
+}
+#homeView .useful-grid .link-row span:nth-child(2) {
+  font-size: clamp(12px, 3.3vw, 14px) !important;
+  line-height: 1.16 !important;
+}
+#homeView .useful-grid .link-row .info-icon {
+  width: 23px !important;
+  height: 23px !important;
+}
+#homeView .useful-grid [data-info="shops"] { background: #f8dce5 !important; }
+#homeView .useful-grid .link-row:nth-child(even)[data-info="catering"] { background: #fff0b8 !important; }
+#homeView .useful-grid [data-info="notes"] { background: #deedfa !important; }
+#homeView .useful-grid .link-row:nth-child(even).whatsapp-tile { background: #c8f0d5 !important; }
+
+@media (max-width: 320px) {
+  #homeView .useful-grid .link-row { min-height: 70px !important; padding: 9px !important; }
+  #homeView .useful-grid .link-row span:nth-child(2) { font-size: 11px !important; }
+}
+
+/* Estilo final: superficies planas y contemporáneas, sin volumen 3D. */
+#homeView .useful-grid .link-row,
+#homeView .saved-home-action,
+#homeView .explore-categories-action,
+#homeView .useful-grid [data-info="shops"],
+#homeView .useful-grid [data-info="catering"],
+#homeView .useful-grid [data-info="notes"],
+#homeView .useful-grid .whatsapp-tile {
+  border-width: 1px !important;
+  border-style: solid !important;
+  box-shadow: none !important;
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+  transform: none;
+}
+
+#homeView .useful-grid .link-row::before,
+#homeView .saved-home-action::before,
+#homeView .explore-categories-action::before {
+  display: none;
+}
+
+#homeView .useful-grid [data-info="shops"] {
+  background: #eef8f1 !important;
+  border-color: #c8e2d0 !important;
+}
+#homeView .useful-grid [data-info="catering"] {
+  background: #fbf7eb !important;
+  border-color: #e7d6a8 !important;
+}
+#homeView .useful-grid [data-info="notes"] {
+  background: #eff6fb !important;
+  border-color: #c9deec !important;
+}
+#homeView .useful-grid .whatsapp-tile {
+  background: #edf9f0 !important;
+  border-color: #bfe2c9 !important;
+}
+#homeView .saved-home-action {
+  background: #f1f8f3 !important;
+  border-color: #c8e2d0 !important;
+}
+#homeView .explore-categories-action {
+  background: #e4f1e8 !important;
+  border-color: #afd1bb !important;
+}
+
+#homeView .useful-grid .link-row:active,
+#homeView .saved-home-action:active,
+#homeView .explore-categories-action:active {
+  transform: none !important;
+  filter: brightness(.97);
+  box-shadow: none !important;
 }
 
 /* Sistema visual de producto: sobrio, legible y orientado a la búsqueda. */
@@ -670,14 +1013,14 @@ body { color: #252925; }
 .link-row span:last-child { color: #1f5d46; font-size: 22px; }
 .useful-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
 .useful-grid .link-row { position: relative; display: flex; flex-direction: column; align-items: flex-start; justify-content: space-between; gap: 12px; min-height: 112px; padding: 14px; border: 1px solid #dce5df; border-radius: 14px; background: #fff; box-shadow: 0 3px 10px #25352c0a; }
-.useful-grid .link-row:nth-child(1) { background: #f4f8f1; border-color: #d9e7d7; }
-.useful-grid .link-row:nth-child(2) { background: #fbf7ec; border-color: #eadfc5; }
-.useful-grid .link-row:nth-child(3) { background: #f4f7fb; border-color: #dce5f0; }
-.useful-grid .link-row:nth-child(4) { background: #f2faf5; border-color: #d6eadc; }
+.useful-grid .link-row:nth-child(1),
+.useful-grid .link-row:nth-child(2),
+.useful-grid .link-row:nth-child(3),
+.useful-grid .link-row:nth-child(4) { background: #f2f7f4; border-color: #cfe0d6; }
 .useful-grid .link-row .info-icon { width: 25px; height: 25px; }
 .useful-grid .link-row span:nth-child(2) { color: #29322c; font-size: 12px; font-weight: 650; line-height: 1.2; }
 .useful-grid .link-row span:last-child { position: absolute; right: 12px; bottom: 11px; font-size: 20px; }
-.useful-grid .whatsapp-tile { background: #fff; border-color: #dce5df; color: #29322c; text-decoration: none; }
+.useful-grid .whatsapp-tile { background: #f2f7f4; border-color: #cfe0d6; color: #29322c; text-decoration: none; }
 .useful-grid .whatsapp-tile .info-icon { color: #25d366; filter: none; }
 .useful-grid .whatsapp-tile span:nth-child(2) { color: #29322c; font-weight: 700; }
 .useful-grid .whatsapp-tile span:last-child { color: #1f5d46; }
@@ -697,15 +1040,15 @@ body { color: #252925; }
   min-height: 56px;
   margin: 12px 20px 0;
   padding: 12px 15px;
-  border: 1px solid #dce5df;
+  border: 1px solid #b8d0c0;
   border-radius: 14px;
-  background: #fff;
-  color: #1f5d46;
+  background: #d9eae0;
+  color: #245b45;
   text-align: left;
-  box-shadow: 0 3px 10px #25352c0a;
+  box-shadow: 0 3px 10px #285c4312;
 }
-.explore-categories-action .row-icon { width: 22px; height: 22px; fill: none; stroke: #1f5d46; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
-.explore-categories-action span:nth-child(2) { color: #1f5d46; font-size: 14px; font-weight: 700; }
+.explore-categories-action .row-icon { width: 26px; height: 26px; padding: 3px; border-radius: 8px; background: #c5dfcf; fill: none; stroke: #245b45; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.explore-categories-action span:nth-child(2) { color: #245b45; font-size: 14px; font-weight: 600; }
 .explore-categories-action span:last-child { font-size: 22px; line-height: 1; }
 .category-page-head { padding-bottom: 18px; }
 .alphabetical-category-list { margin: 0 20px 24px; overflow: hidden; border: 1px solid #dce5df; border-radius: 16px; background: #fff; box-shadow: 0 4px 16px #25352c0a; }
@@ -737,7 +1080,7 @@ body { color: #252925; }
 .saved-more-row strong, .saved-more-row small { color: #777d78; }
 .info-icon { width: 22px; height: 22px; fill: none; stroke: #1f5d46; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
 .page-head { padding-top: 26px; }
-.page-head h1 { color: #202722; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; font-size: 28px; font-weight: 750; letter-spacing: -.045em; }
+.page-head h1 { color: #202722; font-family: var(--font-ui); font-size: 28px; font-weight: 750; letter-spacing: -.045em; }
 .page-head p { color: #78817a; }
 .chips { padding-top: 9px; }
 .chips button { border-color: #d5ded8; border-radius: 20px; color: #1f5d46; background: #fff; }
@@ -792,13 +1135,24 @@ body { color: #252925; }
 .save { color: #1f5d46; }
 .detail-head { min-height: 60px; background: #fff; }
 .detail-head { grid-template-columns: 44px minmax(0, 1fr) auto; }
+.detail-head { text-align: left; }
+.detail-head > .back { position: relative; top: 0; align-self: center; }
+.detail-head > strong { justify-self: start; min-width: 0; overflow: hidden; text-align: left; text-overflow: ellipsis; white-space: nowrap; }
 .detail-head-actions { display: flex; align-items: center; justify-content: flex-end; gap: 0; }
 .detail-head-actions .icon-btn { width: 44px; min-width: 44px; }
 .detail-head-actions .icon-btn:disabled { opacity: .55; }
 .detail-head-actions svg { width: 21px; height: 21px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
 .detail-head-actions .icon-btn.is-loading { display: grid; place-items: center; }
 .share-button-spinner { display: block; width: 19px; height: 19px; border: 2px solid #b9d7c5; border-top-color: var(--green); border-radius: 50%; animation: spin .72s linear infinite; }
-.detail-content img { height: 224px; padding: 14px 18px 8px; background: #fff; }
+.detail-content img {
+  width: calc(100% - 32px);
+  height: 224px;
+  margin: 0 16px;
+  padding: 14px 18px 8px;
+  border-radius: 20px;
+  background: #fff;
+}
+.detail-content > img[data-expanded-image] { cursor: zoom-in; touch-action: manipulation; }
 .detail-content { padding-bottom: 92px; }
 .detail-region-badge { position: static; width: 30px; height: 30px; margin: 0 0 8px; padding: 2px; }
 .detail-region-badge .category-flag { width: 100%; height: 100%; }
@@ -829,7 +1183,7 @@ body { color: #252925; }
 .detail-body > .detail-category-especial { --detail-category-bg: #faeef0; --detail-category-border: #e5bbc1; --detail-category-ink: #993844; }
 .detail-body > .detail-category-uruguay { --detail-category-bg: #edf3f8; --detail-category-border: #bed0df; --detail-category-ink: #3f6e91; }
 .detail-body > .label .detail-special-seal { display: block; width: 36px; height: 29px; flex: 0 0 36px; padding: 0; border-radius: 5px; background: #fff; object-fit: contain; mix-blend-mode: multiply; }
-.detail-body h1, .reader h2 { color: #202722; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; font-size: 24px; font-weight: 750; line-height: 1.08; letter-spacing: -.04em; }
+.detail-body h1, .reader h2 { color: #202722; font-family: var(--font-ui); font-size: 24px; font-weight: 750; line-height: 1.08; letter-spacing: -.04em; }
 .detail-body h1 { margin: 0 0 14px; }
 .detail-body p, .reader p { color: #556058; font-size: 13px; }
 .verified-line { color: #1f5d46; }
@@ -959,12 +1313,49 @@ body.modal-open { overflow: hidden; }
 .developer-credit .app-version, .developer-credit .developer-name { justify-self: center; }
 .developer-credit .app-version { color: #68756d; font-size: 9px; font-weight: 650; letter-spacing: .03em; }
 .developer-credit .developer-name { margin-top: 78px; }
+.developer-credit .developer-name { margin-top: 6px; }
+.developer-credit .developer-name { display: inline-flex; align-items: center; gap: 8px; }
+.developer-credit .developer-name img {
+  display: block;
+  width: min(30px, 9vw);
+  height: auto;
+  opacity: .58;
+  filter: grayscale(1);
+}
+.developer-credit .developer-label { color: #737b76; font-size: 13px; font-weight: 500; letter-spacing: -.01em; transform: translateX(3px); }
+.developer-credit .developer-label strong { font-weight: 750; }
+.section h2, .results-head h2 { font-size: 20px !important; font-weight: 600 !important; }
+.useful-grid .link-row span:nth-child(2) { font-size: 12px !important; font-weight: 500 !important; }
 .developer-credit .developer-cta, .developer-credit .developer-whatsapp { margin-top: -5px; }
+.developer-credit { grid-template-columns: auto 1fr auto; width: min(280px, 86vw); column-gap: 10px; row-gap: 8px; }
+.developer-credit .developer-name { grid-column: 1; justify-self: start; align-self: center; }
+.developer-credit .developer-name { display: inline-flex; align-items: center; gap: 8px; }
+.developer-credit .developer-cta { display: none; }
+.developer-credit .developer-whatsapp { grid-column: 2; justify-self: start; width: 28px; height: 28px; margin-top: 0; border-radius: 0; background: transparent; color: #737b76; box-shadow: none; }
+.developer-credit .developer-whatsapp svg { width: 15px; height: 15px; }
+.developer-credit { width: 100%; grid-template-columns: 1fr auto auto 1fr; column-gap: 10px; row-gap: 14px; justify-content: stretch; }
+.developer-credit .developer-name { grid-column: 2; justify-self: end; }
+.developer-credit .developer-whatsapp { grid-column: 3; justify-self: start; }
+.developer-credit .developer-whatsapp { transform: translateY(2px); }
+.developer-credit .developer-name,
+.developer-credit .developer-whatsapp { transform: translateY(4px); }
+.developer-credit .developer-name { align-self: center; }
+.developer-credit .developer-whatsapp { align-self: center; transform: translateY(7px); }
 .developer-cta { color: #2f7a59; font-size: 10px; font-weight: 700; text-decoration: none; }
 .developer-cta:hover { text-decoration: underline; }
 
 .developer-whatsapp { display: grid; width: 18px; height: 18px; place-items: center; color: #8b948e; }
 .developer-whatsapp svg { width: 13px; height: 13px; fill: currentColor; }
+
+/* Filtros aprobados: visibles completos aun con el teclado abierto. */
+.font-unification,
+body,
+body h1, body h2, body h3, body h4, body p, body span, body strong,
+body small, body button, body input, body textarea, body select, body a {
+  font-family: var(--font-ui);
+}
+body h1, body h2, body h3, body h4 { font-weight: 600 !important; }
+body strong { font-weight: 600; }
 
 /* Filtros aprobados: visibles completos aun con el teclado abierto. */
 .quick-filters-label { padding: 16px 20px 9px; }
@@ -1040,6 +1431,7 @@ body.modal-open { overflow: hidden; }
 .popular-search-card { flex: 0 0 94px; display: grid; gap: 6px; padding: 7px; border: 1px solid #d6e5db; border-radius: 13px; background: #fff; color: #30443a; text-align: left; box-shadow: 0 3px 10px #26372d0d; }
 .popular-search-card img { width: 78px; height: 70px; object-fit: contain; border-radius: 8px; background: #f5f7f4; }
 .popular-search-card span { display: -webkit-box; overflow: hidden; font-size: 10px; font-weight: 700; line-height: 1.2; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
+.popular-search-card span { font-size: 9px; font-weight: 600; line-height: 1.22; }
 .popular-search-card:active { transform: scale(.97); }
 .search-scope { display: flex; align-items: center; flex-wrap: wrap; gap: 7px; margin-top: 8px; padding: 7px 9px; border: 1px solid #cfe3d7; border-radius: 10px; background: #eef7f1; color: #466257; font-size: 10px; line-height: 1.25; }
 .search-scope strong { color: #1f5d46; font-weight: 800; }
@@ -1469,11 +1861,11 @@ body.search-closing .bottom-nav {
     z-index: 49;
     height: var(--search-glass-height);
     background: linear-gradient(180deg,
-      rgb(247 248 246 / 98%) 0%,
-      rgb(247 248 246 / 90%) 42%,
-      rgb(247 248 246 / 66%) 68%,
-      rgb(247 248 246 / 28%) 86%,
-      rgb(247 248 246 / 0%) 100%);
+      rgb(252 248 245 / 96%) 0%,
+      rgb(247 239 237 / 88%) 42%,
+      rgb(232 220 223 / 54%) 68%,
+      rgb(232 220 223 / 24%) 86%,
+      rgb(232 220 223 / 0%) 100%);
     /* El desenfoque vive en el dock; aquí solo fundimos el fondo para que
        el extremo inferior no dibuje una línea recta sobre los resultados. */
     -webkit-backdrop-filter: none;
@@ -1491,9 +1883,9 @@ body.search-closing .bottom-nav {
   body.search-open:has(#query:placeholder-shown)::before {
     height: 104px;
     background: linear-gradient(180deg,
-      rgb(247 248 246 / 94%) 0%,
-      rgb(247 248 246 / 80%) 58%,
-      rgb(255 255 255 / 84%) 100%);
+      rgb(252 248 245 / 94%) 0%,
+      rgb(247 239 237 / 82%) 58%,
+      rgb(244 236 236 / 46%) 100%);
     -webkit-backdrop-filter: none;
     backdrop-filter: none;
   }
@@ -1631,7 +2023,19 @@ body.search-closing .bottom-nav {
   }
 }
 
+/* El vidrio del hero acompaña también los desplazamientos rápidos. La
+   transición larga dejaba el fondo visible durante varios frames al volver
+   hacia arriba, produciendo un cambio brusco al final del gesto. */
+.app-hero,
+.topbar,
+.topbar.is-scrolled {
+  will-change: background, box-shadow, backdrop-filter;
+  transition-duration: .08s !important;
+  transition-timing-function: linear !important;
+}
+
 .scanner-dev-badge {
+  display: none;
   justify-self: end;
   padding: 4px 7px;
   border: 1px solid #d5b66b88;
@@ -1677,14 +2081,14 @@ body.search-closing .bottom-nav {
   width: calc(100% - 40px);
   margin: 18px 20px 0;
   padding: 5px 6px 5px 12px;
-  border: 1px solid #b8d6c3;
+  border: 1px solid #cbded3;
   border-radius: 36px;
-  background: #edf7f1;
-  -webkit-backdrop-filter: blur(14px) saturate(1.1);
-  backdrop-filter: blur(14px) saturate(1.1);
-  box-shadow: 0 5px 16px #285c4318, inset 0 1px 0 #ffffffcc;
+  background: #fff;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  box-shadow: none;
 }
-#homeView #homeForm:focus-within { border-color: #76ad8f; box-shadow: 0 6px 18px #285c4320, 0 0 0 3px #2f7a5918, inset 0 1px 0 #ffffffcc; }
+#homeView #homeForm:focus-within { border-color: #91b8a2; box-shadow: none; }
 #homeView #homeForm .search-box input {
   height: 48px;
   border: 0;
@@ -1695,8 +2099,8 @@ body.search-closing .bottom-nav {
   font-size: 15px;
   padding-left: 34px;
 }
-#homeView #homeForm .search-box .home-search-icon { position: absolute; top: 50%; left: 8px; width: 19px; height: 19px; transform: translateY(-50%); fill: none; stroke: #5f786a; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; pointer-events: none; }
-#homeView #homeForm .search-box input::placeholder { color: #5f786a; font-size: 15px; }
+#homeView #homeForm .search-box .home-search-icon { position: absolute; top: 50%; left: 8px; width: 19px; height: 19px; transform: translateY(-50%); fill: none; stroke: #4f695a; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; pointer-events: none; }
+#homeView #homeForm .search-box input::placeholder { color: #52695c; font-size: 15px; font-weight: 550; }
 #homeView #homeForm .scan {
   width: 48px;
   height: 48px;
@@ -1720,6 +2124,8 @@ body.search-closing .bottom-nav {
 #homeView .recent-products-section .section-head { margin-bottom: 7px; }
 #homeView .recent-products-section .section-head { display: flex; align-items: center; gap: 0; }
 #homeView .recent-products-section .section-head h2 { flex: 1; min-width: 0; margin: 0; }
+#homeView .recent-products-section .section-head h2,
+#homeView .useful-section .section-head h2 { font-size: 16px !important; }
 .recent-timeline-link { display: flex; align-items: center; justify-content: space-between; width: 100%; min-height: 36px; padding: 0; border: 0; background: transparent; color: #1f684b; font: inherit; text-align: left; }
 .recent-timeline-link > span:first-child { min-width: 0; color: inherit; font-size: inherit; font-weight: inherit; }
 .recent-timeline-link > span:last-child { flex: 0 0 auto; margin-left: 12px; font-size: 25px; font-weight: 300; line-height: .8; }
@@ -1740,11 +2146,23 @@ body.search-closing .bottom-nav {
 #homeView .recent-product { box-sizing: border-box; }
 #homeView .useful-section { padding-top: 22px; }
 #homeView .useful-grid .link-row:active,
-#homeView .explore-categories-action:active,
 #homeView .saved-home-action:active { border-color: #a9cbb8; background-color: #f1f7f3; box-shadow: 0 4px 12px #2f7a5914; }
+#homeView .explore-categories-action:active { border-color: #285f45; background: #2a6549; box-shadow: 0 3px 9px #285c4329; }
+
+/* El campo mantiene una superficie blanca y uniforme dentro del marco. */
+#homeView #homeForm .search-box input {
+  background: #fff;
+  border-radius: 26px;
+  box-shadow: none;
+}
 .bottom-nav { transform: translate3d(-50%, 0, 0); contain: layout paint; }
 .bottom-nav { transform: translate3d(-50%, 0, 0); contain: layout paint; }
 html, body { overscroll-behavior-y: none; }
+
+/* Jerarquía tipográfica del Home: los secundarios respiran un poco más,
+   mientras el título principal conserva su presencia. */
+#homeView .section h2 { font-weight: 700; }
+#homeView .explore-categories-action span:nth-child(2) { font-weight: 700; }
 
 /* Reflujo global para zoom, tamaño de fuente aumentado y teléfonos angostos.
    La interfaz conserva la jerarquía visual, pero nunca depende de una línea fija. */
@@ -2041,7 +2459,7 @@ html, body { overscroll-behavior-y: none; }
     min-height: 100vh;
     margin-bottom: 0;
     padding-bottom: 45vh;
-    background: #fff !important;
+    background: var(--app-surface-gradient) !important;
   }
 }
 
@@ -2161,8 +2579,16 @@ html, body { overscroll-behavior-y: none; }
   line-height: 1.1;
   white-space: nowrap;
   pointer-events: none;
+  box-shadow: none;
 }
-#homeView #homeForm { margin-top: 22px; }
+#homeView #homeForm { margin-top: 8px; }
+
+/* La etiqueta de desarrollo del escáner no se muestra en la interfaz. */
+#homeView #homeForm .scan::before,
+#searchForm .scan::before {
+  content: none;
+  display: none;
+}
 
 /* La insignia del scanner sobresale ligeramente por arriba del botón. La
    barra no debe recortarla cuando el formulario pasa al modo catálogo. */
@@ -2229,4 +2655,2387 @@ html, body { overscroll-behavior-y: none; }
     width: calc(100% + 24px);
     margin-inline: -12px;
   }
+}
+
+/* Fondo degradado: aporta profundidad sin competir con la lectura. */
+html,
+body { background: #f1e7e9; }
+.app {
+  background:
+    radial-gradient(120% 34% at 50% -8%, #fffdfb 0%, #fffdfb00 72%),
+    radial-gradient(82% 48% at 0% 40%, #eadad7 0%, #eadad700 70%),
+    radial-gradient(76% 46% at 100% 70%, #dcebe2 0%, #dcebe200 72%),
+    linear-gradient(180deg, #fcf8f5 0%, #f7efed 46%, #e8dcdf 100%);
+}
+
+/* El header comparte la superficie del fondo: una capa de vidrio muy sutil
+   conserva la legibilidad sin volver a crear una franja blanca separada. */
+.topbar {
+  background: linear-gradient(180deg, rgb(252 248 245 / 78%), rgb(252 248 245 / 42%));
+  border-bottom-color: rgb(36 91 69 / 12%);
+  box-shadow: 0 1px 0 rgb(255 255 255 / 42%), 0 8px 22px rgb(36 91 69 / 7%);
+  -webkit-backdrop-filter: blur(14px) saturate(115%);
+  backdrop-filter: blur(14px) saturate(115%);
+}
+.detail-head { position: relative; z-index: 2; background: #f7f2f1 !important; -webkit-backdrop-filter: none; backdrop-filter: none; }
+.catalog-info span {
+  background: rgb(255 255 255 / 34%);
+  border-color: rgb(31 93 70 / 72%);
+}
+.catalog-notifications i,
+#navDot { border-color: rgb(252 248 245 / 82%); }
+.logo { mix-blend-mode: normal; }
+
+/* En reposo el header desaparece dentro de la misma superficie visual. Al
+   desplazarse, el estado .is-scrolled marca apenas su posición fija. */
+.topbar {
+  background: transparent;
+  border-bottom-color: transparent;
+  box-shadow: none;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  transition: background .22s ease, border-color .22s ease, box-shadow .22s ease, -webkit-backdrop-filter .22s ease, backdrop-filter .22s ease;
+}
+.topbar.is-scrolled {
+  background: linear-gradient(180deg, rgb(252 248 245 / 78%), rgb(252 248 245 / 42%));
+  border-bottom-color: rgb(36 91 69 / 12%);
+  box-shadow: 0 1px 0 rgb(255 255 255 / 42%), 0 8px 22px rgb(36 91 69 / 7%);
+  -webkit-backdrop-filter: blur(14px) saturate(115%);
+  backdrop-filter: blur(14px) saturate(115%);
+}
+
+/* La misma superficie cromática acompaña todas las vistas principales; las
+   tarjetas y listas mantienen sus fondos propios para conservar contraste. */
+:root {
+  --app-surface-gradient:
+    radial-gradient(circle at 88% 12%, rgb(194 224 202 / 38%) 0%, transparent 35%),
+    radial-gradient(circle at 8% 58%, rgb(211 233 216 / 48%) 0%, transparent 40%),
+    linear-gradient(145deg, #f7fbf7 0%, #edf6ef 40%, #e3f1e6 72%, #eef7f0 100%);
+}
+html,
+body,
+.app,
+.view,
+#searchView.view.active {
+  background: var(--app-surface-gradient) !important;
+}
+
+/* En el buscador la estructura queda fija; solo se desplaza el contenido
+   largo de categorías o resultados, evitando que la pantalla completa salte. */
+@media (min-width: 701px) {
+  body:has(#searchView.active) { overflow: hidden; }
+  #searchView.view.active {
+    position: fixed;
+    inset: 70px auto 86px;
+    left: 50%;
+    width: min(760px, 100%);
+    max-width: 760px;
+    transform: translateX(-50%) !important;
+    animation: none;
+    overflow: hidden;
+    background: transparent;
+  }
+  #searchView.view.active #searchCategories,
+  #searchView.view.active #results {
+    max-height: calc(100% - 150px);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-width: thin;
+  }
+}
+
+@media (max-width: 700px) {
+  body.search-open #searchView {
+    height: 100dvh;
+    max-height: 100dvh;
+    overflow: hidden;
+    overscroll-behavior: none;
+  }
+  body.search-open #searchView #searchCategories,
+  body.search-open #searchView #results {
+    max-height: calc(100% - max(var(--search-dock-space, 0px), 124px));
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
+/* La misma superficie cromática acompaña también la búsqueda móvil; las
+   tarjetas y controles conservan sus superficies propias para destacar. */
+body.search-open #searchView,
+body.search-open #searchView #searchCategories {
+  background: var(--app-surface-gradient) !important;
+}
+
+/* Los encabezados internos siguen la misma superficie que el resto de la
+   vista. La capa translúcida conserva jerarquía sin crear una franja blanca. */
+.detail-head,
+.search-screen-head {
+  background: linear-gradient(180deg, rgb(252 248 245 / 58%), rgb(252 248 245 / 22%)) !important;
+  border-bottom-color: rgb(36 91 69 / 12%);
+  box-shadow: 0 1px 0 rgb(255 255 255 / 38%), 0 6px 18px rgb(36 91 69 / 5%);
+  -webkit-backdrop-filter: blur(14px) saturate(115%);
+  backdrop-filter: blur(14px) saturate(115%);
+}
+
+/* En fichas y lecturas el contenido visual puede desplazarse debajo del
+   encabezado sticky. Lo aislamos con una superficie opaca para evitar halos
+   de imágenes o colores que se filtren por el header. */
+body:has(#detailView.view.active) .topbar,
+body:has(#readerView.view.active) .topbar,
+body:has(#detailView.view.active) .detail-head,
+body:has(#readerView.view.active) .detail-head {
+  background: linear-gradient(180deg, #fcf8f5 0%, #f7efed 100%) !important;
+  border-bottom-color: rgb(36 91 69 / 12%);
+  box-shadow: 0 1px 0 rgb(255 255 255 / 46%), 0 6px 16px rgb(36 91 69 / 6%);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+
+/* Un solo lienzo de fondo evita que el degradado se reinicie al terminar una
+   vista corta (por ejemplo, Alertas) y produzca una línea horizontal. */
+html,
+body,
+.app {
+  background: var(--app-surface-gradient) !important;
+  background-attachment: fixed;
+  background-size: cover;
+  background-repeat: no-repeat;
+}
+/* La superficie debe cubrir también el espacio vacío de vistas cortas en
+   teléfonos (por ejemplo Alertas), evitando que el degradado termine a mitad
+   de pantalla y deje una franja de otro color debajo. */
+html,
+body,
+.app {
+  min-height: 100dvh !important;
+}
+.app { background: transparent !important; }
+.view,
+#searchView.view.active,
+body.search-open #searchView,
+body.search-open #searchView #searchCategories {
+  background: transparent !important;
+}
+.detail-head,
+.search-screen-head,
+body:has(#detailView.view.active) .detail-head,
+body:has(#readerView.view.active) .detail-head {
+  background: rgb(238 247 240 / 92%) !important;
+  border-bottom-color: transparent !important;
+  box-shadow: none !important;
+  -webkit-backdrop-filter: blur(16px) saturate(120%) !important;
+  backdrop-filter: blur(16px) saturate(120%) !important;
+}
+body:has(#detailView.view.active) .topbar,
+body:has(#readerView.view.active) .topbar {
+  background: rgb(238 247 240 / 86%) !important;
+  border-bottom-color: transparent !important;
+  box-shadow: none !important;
+  -webkit-backdrop-filter: blur(18px) saturate(130%) !important;
+  backdrop-filter: blur(18px) saturate(130%) !important;
+}
+.topbar,
+.topbar.is-scrolled,
+.detail-head,
+.search-screen-head,
+body:has(#detailView.view.active) .topbar,
+body:has(#readerView.view.active) .topbar,
+body:has(#detailView.view.active) .detail-head,
+body:has(#readerView.view.active) .detail-head {
+  background: rgb(238 247 240 / 86%) !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  -webkit-backdrop-filter: blur(18px) saturate(130%) !important;
+  backdrop-filter: blur(18px) saturate(130%) !important;
+}
+.detail-head { position: sticky !important; top: var(--topbar-sticky-height) !important; z-index: 70; }
+html,
+body {
+  background-repeat: no-repeat !important;
+}
+
+/* En reposo, encabezado y títulos forman parte del mismo lienzo. El vidrio
+   aparece únicamente al desplazar contenido, cuando hace falta separarlos. */
+.topbar,
+.topbar.is-scrolled,
+.detail-head,
+.search-screen-head,
+body:has(#detailView.view.active) .topbar,
+body:has(#readerView.view.active) .topbar,
+body:has(#detailView.view.active) .detail-head,
+body:has(#readerView.view.active) .detail-head {
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+}
+body.app-scrolled .topbar,
+body.app-scrolled .detail-head,
+body.app-scrolled .search-screen-head {
+  background: rgb(238 247 240 / 88%) !important;
+  -webkit-backdrop-filter: blur(18px) saturate(130%) !important;
+  backdrop-filter: blur(18px) saturate(130%) !important;
+}
+
+/* El logo y el título activo viven dentro de un único hero real. */
+.app-hero {
+  position: sticky;
+  top: 0;
+  z-index: 80;
+  overflow: hidden;
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+  transition: background .22s ease, box-shadow .22s ease, -webkit-backdrop-filter .22s ease, backdrop-filter .22s ease;
+}
+.view-title-slot:empty { display: none; }
+.app-hero .topbar,
+.app-hero .detail-head {
+  position: relative !important;
+  top: auto !important;
+  z-index: auto;
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+}
+body.app-scrolled .app-hero {
+  background: rgb(238 247 240 / 88%);
+  box-shadow: 0 8px 24px rgb(36 91 69 / 7%);
+  -webkit-backdrop-filter: blur(18px) saturate(130%);
+  backdrop-filter: blur(18px) saturate(130%);
+}
+body.app-scrolled .app-hero .topbar,
+body.app-scrolled .app-hero .detail-head {
+  background: transparent !important;
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+}
+
+/* Títulos principales con el lenguaje tipográfico de iOS. */
+.page-head h1 {
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Helvetica Neue", sans-serif;
+  font-weight: 700;
+  letter-spacing: -.025em;
+}
+
+/* Respuesta inmediata del vidrio al scroll rápido. */
+.app-hero,
+.topbar,
+.topbar.is-scrolled {
+  will-change: background, box-shadow, backdrop-filter;
+  transition-duration: .08s !important;
+  transition-timing-function: linear !important;
+}
+
+/* Las listas y los estados vacíos deben continuar el lienzo de la app.
+   Las superficies blancas opacas anteriores generaban una franja cortada
+   entre el encabezado, los resultados y el degradado general. */
+.product-list,
+#searchView #results,
+#categoryProductsView #categoryProductList,
+#savedView #savedProductList {
+  background: transparent !important;
+  border-top-color: transparent !important;
+}
+
+.product-list .product {
+  background: rgb(226 241 231 / 88%) !important;
+  border-bottom-color: rgb(36 91 69 / 16%) !important;
+}
+.product-list .product:hover,
+.product-list .product:active {
+  background: rgb(215 235 222 / 94%) !important;
+}
+.product-list .product:nth-child(even) {
+  background: rgb(220 237 226 / 88%) !important;
+}
+
+.empty-state {
+  min-height: 300px;
+  background: transparent !important;
+}
+
+/* En pantallas estrechas el contenido del buscador no se recorta contra el
+   botón de cerrar: el campo ocupa el espacio disponible y muestra el final
+   del texto de forma natural. */
+@media (max-width: 700px) {
+  .search-open .bottom-nav.search-mode #searchForm {
+    grid-template-columns: minmax(0, 1fr) 48px;
+  }
+  .search-open .bottom-nav.search-mode #searchForm .search-box,
+  .search-open .bottom-nav.search-mode #searchForm .search-box input {
+    min-width: 0;
+    max-width: 100%;
+  }
+  .search-open .bottom-nav.search-mode #searchForm .search-box input {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  /* El encabezado, la lista y el espacio que queda debajo forman una sola
+     superficie; no debe aparecer un rectángulo blanco al terminar el área
+     desplazable. */
+  body.search-open #searchView #results {
+    min-height: 100%;
+    background: var(--app-surface-gradient) !important;
+    background-attachment: fixed;
+  }
+  body.search-open #searchView .results-head,
+  body.search-open #searchView .product-list {
+    background: transparent !important;
+    border-top-color: transparent !important;
+  }
+  body.search-open #searchView #results .results-head {
+    position: sticky;
+    top: max(var(--search-dock-space, 0px), 104px);
+    z-index: 6;
+    margin-bottom: 0;
+    padding-bottom: 14px;
+    background: rgb(233 245 237 / 94%) !important;
+    -webkit-backdrop-filter: blur(14px) saturate(115%);
+    backdrop-filter: blur(14px) saturate(115%);
+  }
+  body.search-open #searchView .product-list {
+    padding-bottom: 24vh;
+  }
+
+  /* El velo del buscador acompaña el verde de la aplicación y se desvanece
+     hacia el contenido, en vez de dejar una línea de corte visible. */
+  body.search-open::before {
+    background: linear-gradient(180deg,
+      rgb(247 252 248 / 96%) 0%,
+      rgb(233 245 237 / 90%) 44%,
+      rgb(226 241 231 / 58%) 72%,
+      rgb(226 241 231 / 0%) 100%) !important;
+  }
+  body.search-open:has(#query:placeholder-shown)::before {
+    background: linear-gradient(180deg,
+      rgb(247 252 248 / 94%) 0%,
+      rgb(233 245 237 / 82%) 58%,
+      rgb(226 241 231 / 0%) 100%) !important;
+  }
+}
+
+/* Pulido del Home: más jerarquía y aire, sin sumar bloques ni cortes. */
+#homeView #homeForm {
+  border-color: #a9cbb7;
+  background: rgb(250 254 251 / 94%);
+  box-shadow: 0 8px 20px rgb(36 91 69 / 12%), inset 0 1px 0 rgb(255 255 255 / 90%);
+}
+#homeView #homeForm:focus-within {
+  border-color: #5f9e7a;
+  box-shadow: 0 10px 24px rgb(36 91 69 / 16%), 0 0 0 3px rgb(95 158 122 / 14%);
+}
+#homeView .catalog-total {
+  margin-top: 3px;
+  color: #587166;
+  font-size: 11px;
+  font-weight: 600;
+}
+#homeView .recent-products-section {
+  padding-top: 25px;
+}
+#homeView .recent-products-section .section-head {
+  margin-bottom: 11px;
+}
+#homeView .recent-timeline-link {
+  color: #1d654a;
+  font-size: 18px;
+  font-weight: 750;
+  letter-spacing: -.025em;
+}
+#homeView .recent-timeline-link > span:last-child {
+  color: #4b8065;
+  font-size: 27px;
+}
+#homeView .recent-product {
+  border-color: #cfe3d5;
+  background: rgb(245 251 247 / 96%);
+  box-shadow: 0 5px 14px rgb(36 91 69 / 10%);
+}
+#homeView .recent-product img {
+  background: #edf6ef;
+}
+#homeView .explore-categories-action {
+  border-color: #8fbda1;
+  background: linear-gradient(135deg, #d4eadd 0%, #c4dfce 100%);
+  box-shadow: 0 7px 16px rgb(36 91 69 / 12%), inset 0 1px 0 rgb(255 255 255 / 70%);
+}
+#homeView .explore-categories-action span:nth-child(2) {
+  color: #1f6047;
+  font-size: 15px;
+  font-weight: 750;
+}
+#homeView .useful-section {
+  padding-top: 28px;
+}
+#homeView .useful-section .section-head {
+  margin-bottom: 11px;
+}
+#homeView .useful-section .section-head h2 {
+  color: #1d654a;
+  font-size: 18px !important;
+  font-weight: 750 !important;
+}
+#homeView .useful-grid .link-row {
+  border-color: #c7dfd0;
+  background: rgb(237 247 240 / 94%);
+  box-shadow: 0 5px 14px rgb(36 91 69 / 8%);
+}
+#homeView .useful-grid .link-row:nth-child(even) {
+  background: rgb(227 241 231 / 94%);
+}
+#homeView .useful-grid .link-row span:nth-child(2) {
+  color: #263b30;
+  font-size: 13px !important;
+  font-weight: 700 !important;
+}
+#homeView .saved-home-action {
+  border-color: #c7dfd0;
+  background: rgb(239 248 242 / 94%);
+  box-shadow: 0 5px 14px rgb(36 91 69 / 8%);
+}
+
+/* Tarjetas de información útil: navegación compacta y consistente. */
+#homeView .useful-grid .link-row {
+  display: grid;
+  grid-template-columns: 25px minmax(0, 1fr) 18px;
+  align-items: center;
+  gap: 11px;
+  min-height: 78px;
+  padding: 13px 14px;
+  border-radius: 16px;
+  border-color: #c4ddce;
+  background: rgb(240 248 243 / 96%);
+  box-shadow: 0 3px 10px rgb(36 91 69 / 6%);
+}
+#homeView .useful-grid .link-row:nth-child(even) {
+  background: rgb(232 244 235 / 96%);
+}
+#homeView .useful-grid .link-row .info-icon {
+  width: 23px;
+  height: 23px;
+}
+#homeView .useful-grid .link-row span:nth-child(2) {
+  min-width: 0;
+  padding-right: 0;
+  color: #263b30;
+  font-size: 13px !important;
+  font-weight: 700 !important;
+  line-height: 1.22;
+}
+#homeView .useful-grid .link-row span:last-child {
+  position: static;
+  color: #1f684b;
+  font-size: 22px;
+  line-height: 1;
+}
+/* La etiqueta repetida competía con el contenido y hacía parecer las tarjetas
+   piezas promocionales; las novedades se comunican en su sección propia. */
+#homeView .useful-grid [data-info].has-info-new::after {
+  content: none;
+}
+
+/* Desvanecido previo a la navegación: el contenido se integra con el nav sin
+   dejar una banda blanca dura al final de la pantalla. */
+body::after {
+  height: 126px;
+  background: linear-gradient(
+    to bottom,
+    rgb(229 243 233 / 0%) 0%,
+    rgb(229 243 233 / 16%) 30%,
+    rgb(229 243 233 / 46%) 58%,
+    rgb(248 252 249 / 91%) 100%
+  );
+  -webkit-backdrop-filter: blur(26px) saturate(108%);
+  backdrop-filter: blur(26px) saturate(108%);
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0%, rgb(0 0 0 / 22%) 30%, #000 82%);
+  mask-image: linear-gradient(to bottom, transparent 0%, rgb(0 0 0 / 22%) 30%, #000 82%);
+}
+body.search-open::after {
+  opacity: 0;
+}
+
+/* El encabezado de resultados se fija al inicio de su propio scrollport. El
+   dock de búsqueda ya ocupa el espacio superior, por lo que un top adicional
+   hacía que el título quedara debajo de la primera fila. */
+@media (max-width: 700px) {
+  /* El dock de búsqueda es siempre un elemento fijo del viewport. La
+     posición explícita evita que un scroll interno o un WebView con safe-area
+     lo desplace parcialmente fuera de la pantalla. */
+  body.search-open .bottom-nav.search-mode {
+    position: fixed !important;
+    top: calc(var(--app-safe-top, 24px) + 4px) !important;
+    right: 12px !important;
+    bottom: auto !important;
+    left: 12px !important;
+    margin-top: 0 !important;
+    transform: none !important;
+  }
+
+  body.search-open #searchView #results .results-head {
+    /* Al desplazarse, el título debe quedar debajo del dock, nunca debajo de
+       él. Esto evita que se recorte la parte superior del encabezado. */
+    top: max(var(--search-dock-space, 0px), 104px) !important;
+    margin-top: 0;
+    background: rgb(226 241 231 / 88%) !important;
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+  }
+  body.search-open #searchView #results {
+    padding-top: 0 !important;
+  }
+}
+
+/* Misma superficie para toda la grilla; el color queda reservado para
+   identificar rápidamente cada tipo de recurso. */
+#homeView .useful-grid .link-row,
+#homeView .useful-grid .link-row:nth-child(even),
+#homeView .useful-grid .whatsapp-tile {
+  background: rgb(237 247 240 / 96%) !important;
+  border-color: #c4ddce !important;
+}
+#homeView .useful-grid [data-info="shops"] .info-icon {
+  color: #28775b !important;
+}
+#homeView .useful-grid [data-info="catering"] .info-icon {
+  color: #ad792d !important;
+}
+#homeView .useful-grid [data-info="notes"] .info-icon {
+  color: #557ea3 !important;
+}
+#homeView .useful-grid .whatsapp-tile .whatsapp-logo {
+  color: #21a957 !important;
+  fill: currentColor !important;
+  stroke: none !important;
+}
+
+/* Si la cámara no inicia, el modo manual debe ser una salida clara, no una
+   pantalla negra sin feedback. */
+#scanOverlay.manual-only .scanner {
+  background: linear-gradient(180deg, #f6fbf7 0%, #e9f4ec 100%);
+  color: #1f5d46;
+}
+#scanOverlay.manual-only .detail-head.dark {
+  background: rgb(246 251 247 / 96%);
+  border-bottom-color: #d6e7da;
+  color: #1f5d46;
+}
+#scanOverlay.manual-only .camera {
+  background: transparent;
+}
+#scanOverlay.manual-only .camera p {
+  color: #587166;
+  font-size: 14px;
+}
+#scanOverlay.manual-only .manual {
+  background: rgb(230 242 233 / 96%);
+  border-top: 1px solid #d1e5d6;
+}
+#scanOverlay.manual-only .manual input {
+  border-color: #b8d2c0;
+  background: #fff;
+  color: #263b30;
+}
+#scanOverlay.manual-only .manual input::placeholder {
+  color: #718177;
+}
+#scanOverlay.manual-only .manual button {
+  background: #2f7a59;
+  color: #fff;
+}
+
+/* Reflujo móvil de las tarjetas de información: el chevron queda anclado al
+   borde y el título conserva palabras completas, en lugar de partirlas en
+   cortes como “certificad as”. */
+@media (max-width: 700px) {
+  #homeView .useful-grid .link-row {
+    grid-template-columns: 24px minmax(0, 1fr);
+    gap: 8px;
+    padding: 12px;
+  }
+
+  #homeView .useful-grid .link-row span:nth-child(2) {
+    width: auto !important;
+    min-width: 0;
+    padding-right: 18px;
+    overflow-wrap: normal !important;
+    word-break: normal !important;
+    hyphens: none;
+    font-size: clamp(13px, 3.8vw, 15px) !important;
+    line-height: 1.18;
+  }
+
+  #homeView .useful-grid .link-row span:last-child {
+    position: absolute;
+    top: 50%;
+    right: 10px;
+    bottom: auto;
+    transform: translateY(-50%);
+  }
+}
+
+/* Las tarjetas de producto forman una lista continua: no alternar fondos
+   entre filas evita el efecto de "una oscura y otra clara" al desplazarse. */
+.product-list .product,
+.product-list .product:nth-child(even),
+.product-list .product:nth-child(odd) {
+  background: rgb(226 241 231 / 88%) !important;
+}
+
+/* Paleta global refinada: base marfil casi blanca con un velo menta muy
+   sutil. Aporta color y profundidad sin competir con las tarjetas. */
+:root {
+  --app-surface-gradient:
+    radial-gradient(circle at 88% 8%, rgb(224 241 230 / 58%) 0%, transparent 34%),
+    radial-gradient(circle at 8% 58%, rgb(239 247 241 / 76%) 0%, transparent 42%),
+    linear-gradient(145deg, #fbfdfb 0%, #f6faf7 52%, #edf6ef 100%);
+}
+
+html,
+body,
+.app,
+.view,
+.view.active,
+#homeView,
+#searchView,
+#categoryDirectoryView,
+#subcategoryDirectoryView,
+#categoryProductsView,
+#savedView,
+#alertsView,
+#timelineView,
+#moreView,
+#detailView,
+#readerView {
+  background: var(--app-surface-gradient) !important;
+  background-image: var(--app-surface-gradient) !important;
+}
+
+body::after {
+  background: linear-gradient(to bottom, rgb(251 253 251 / 0%), rgb(251 253 251 / 88%)) !important;
+}
+
+/* La firma del desarrollador es un único objetivo táctil, no solo el
+   pequeño ícono de WhatsApp. */
+.developer-credit {
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-user-select: none;
+  user-select: none;
+  background-color: transparent;
+}
+.developer-credit,
+.developer-credit * {
+  -webkit-tap-highlight-color: transparent;
+}
+.developer-credit:active {
+  opacity: 1;
+  background-color: transparent;
+}
+.developer-credit:focus-visible {
+  outline: 2px solid rgb(47 122 89 / 30%);
+  outline-offset: 4px;
+  border-radius: 999px;
+}
+
+/* El hero cambia suavemente al comenzar el scroll: en reposo se integra con
+   el fondo y, al desplazarse, aparece como vidrio menta para marcar la capa
+   fija sin introducir una franja dura. */
+.app-hero {
+  transition: background .18s ease, box-shadow .18s ease, border-color .18s ease,
+    -webkit-backdrop-filter .18s ease, backdrop-filter .18s ease;
+}
+
+body.app-scrolled .app-hero {
+  background: linear-gradient(135deg,
+    rgb(241 251 251 / 95%) 0%,
+    rgb(214 240 239 / 91%) 100%) !important;
+  border-bottom: 1px solid rgb(63 143 145 / 18%);
+  box-shadow: 0 8px 24px rgb(46 119 121 / 13%);
+  -webkit-backdrop-filter: blur(20px) saturate(128%);
+  backdrop-filter: blur(20px) saturate(128%);
+}
+
+@media (max-width: 700px) {
+  /* El bloque ya tiene el espacio reservado debajo del dock; un offset sticky
+     adicional lo empujaba hacia abajo y dejaba el primer resultado cortado. */
+body.search-open #searchView #results .results-head {
+    top: 0 !important;
+    background: #fff !important;
+    border-bottom: 1px solid rgb(36 91 69 / 10%);
+    box-shadow: 0 5px 14px rgb(36 91 69 / 7%);
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+  }
+}
+
+/* Estilo final: superficies planas y contemporáneas, sin volumen 3D. */
+#homeView .useful-grid .link-row,
+#homeView .saved-home-action,
+#homeView .explore-categories-action {
+  position: relative;
+  overflow: hidden;
+  border-color: #c8e2d0 !important;
+  background: #f1f8f3 !important;
+  box-shadow: none !important;
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+}
+
+#homeView .useful-grid .link-row::before,
+#homeView .saved-home-action::before,
+#homeView .explore-categories-action::before {
+  display: none;
+}
+
+#homeView .useful-grid [data-info="shops"] {
+  border-color: #c8e2d0 !important;
+  background: #fff !important;
+}
+#homeView .useful-grid [data-info="catering"] {
+  border-color: #e7d6a8 !important;
+  background: #fff !important;
+}
+#homeView .useful-grid [data-info="notes"] {
+  border-color: #c9deec !important;
+  background: #fff !important;
+}
+#homeView .useful-grid .whatsapp-tile {
+  border-color: #bfe2c9 !important;
+  background: #fff !important;
+}
+
+#homeView .useful-grid .link-row:active,
+#homeView .saved-home-action:active,
+#homeView .explore-categories-action:active {
+  transform: none !important;
+  filter: brightness(.97);
+  box-shadow: none !important;
+}
+
+/* Override visual final para los cuatro accesos de Información útil. */
+#homeView .useful-grid .link-row,
+#homeView .useful-grid .link-row:nth-child(even),
+#homeView .useful-grid .whatsapp-tile {
+  min-height: 76px !important;
+  padding: 11px 12px !important;
+  gap: 9px !important;
+  border: 0 !important;
+  border-radius: 14px !important;
+}
+#homeView .useful-grid .link-row span:nth-child(2) {
+  font-size: clamp(12px, 3.3vw, 14px) !important;
+  line-height: 1.16 !important;
+}
+#homeView .useful-grid .link-row .info-icon {
+  width: 23px !important;
+  height: 23px !important;
+}
+#homeView .useful-grid [data-info="shops"] { background: #f8dce5 !important; }
+#homeView .useful-grid .link-row:nth-child(even)[data-info="catering"] { background: #fff0b8 !important; }
+#homeView .useful-grid [data-info="notes"] { background: #deedfa !important; }
+#homeView .useful-grid .link-row:nth-child(even).whatsapp-tile { background: #c8f0d5 !important; }
+
+/* Cuatro accesos de Información útil: cada tarjeta usa un color propio,
+   con una superficie lisa y sin contorno visible. */
+#homeView .useful-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  gap: 8px !important;
+}
+#homeView .useful-grid .link-row,
+#homeView .useful-grid .link-row:nth-child(even),
+#homeView .useful-grid .whatsapp-tile {
+  display: grid !important;
+  grid-template-columns: 21px minmax(0, 1fr) 13px !important;
+  align-items: center;
+  min-height: 76px !important;
+  padding: 11px 12px !important;
+  gap: 9px !important;
+  border: 0 !important;
+  border-radius: 14px !important;
+  box-shadow: none !important;
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+}
+#homeView .useful-grid .link-row span:nth-child(2) {
+  min-width: 0;
+  padding: 0 !important;
+  color: #1f342a !important;
+  font-size: clamp(12px, 3.3vw, 14px) !important;
+  font-weight: 700 !important;
+  line-height: 1.12 !important;
+  overflow-wrap: anywhere;
+}
+#homeView .useful-grid .link-row span:last-child {
+  position: static !important;
+  color: #1f684b !important;
+  font-size: 17px !important;
+  line-height: 1 !important;
+}
+#homeView .useful-grid .link-row .info-icon {
+  width: 23px !important;
+  height: 23px !important;
+  stroke-width: 1.8;
+}
+#homeView .useful-grid [data-info="shops"] { background: #f8dce5 !important; }
+#homeView .useful-grid .link-row:nth-child(even)[data-info="catering"] { background: #fff0b8 !important; }
+#homeView .useful-grid [data-info="notes"] { background: #deedfa !important; }
+#homeView .useful-grid .link-row:nth-child(even).whatsapp-tile { background: #c8f0d5 !important; }
+
+@media (max-width: 320px) {
+  #homeView .useful-grid { gap: 6px !important; }
+  #homeView .useful-grid .link-row { min-height: 70px !important; padding: 9px !important; gap: 7px !important; }
+  #homeView .useful-grid .link-row span:nth-child(2) { font-size: 11px !important; }
+}
+
+/* En teléfonos chicos las cuatro tarjetas conservan una proporción pareja y
+   dejan respirar el texto sin que los iconos empujen la segunda línea. */
+@media (min-width: 321px) and (max-width: 430px) {
+  #homeView .useful-grid {
+    gap: 10px !important;
+    padding-inline: 8px !important;
+  }
+  #homeView .useful-grid .link-row,
+  #homeView .useful-grid .link-row:nth-child(even),
+  #homeView .useful-grid .whatsapp-tile {
+    grid-template-columns: 20px minmax(0, 1fr) 12px !important;
+    min-height: 74px !important;
+    padding: 10px 10px !important;
+    gap: 7px !important;
+    border-radius: 18px !important;
+  }
+  #homeView .useful-grid .link-row span:nth-child(2) {
+    font-size: 13px !important;
+    line-height: 1.1 !important;
+  }
+  #homeView .useful-grid .link-row .info-icon {
+    width: 21px !important;
+    height: 21px !important;
+  }
+  #homeView .useful-grid .link-row span:last-child {
+    font-size: 17px !important;
+  }
+}
+
+/* Hero superior y búsqueda forman una sola superficie continua. En reposo
+   ambos bloques usan exactamente el mismo mint, sin borde ni franja blanca.
+   El vidrio se reserva para el estado que aparece al desplazarse. */
+#appHero,
+#homeView.view.active {
+  background: #dcefe2 !important;
+  background-image: none !important;
+}
+#homeView.view.active {
+  /* Contiene el margen superior del buscador para que no se colapse
+     fuera del Home y no deje una franja entre el hero y la búsqueda. */
+  display: flow-root !important;
+}
+#initialLoadProgress {
+  background: #dcefe2 !important;
+}
+#appHero .topbar,
+#appHero .detail-head {
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+}
+body.app-scrolled #appHero {
+  background: rgb(238 247 240 / 88%) !important;
+  border: 0 !important;
+  box-shadow: 0 8px 24px rgb(36 91 69 / 10%) !important;
+  -webkit-backdrop-filter: blur(18px) saturate(130%) !important;
+  backdrop-filter: blur(18px) saturate(130%) !important;
+}
+body.app-scrolled #appHero .topbar,
+body.app-scrolled #appHero .detail-head {
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+}
+
+/* Ritmo vertical del Home: el contador, novedades y accesos quedan más
+   próximos entre sí, sin perder respiración ni tocar el tamaño de las cards. */
+#homeView .recent-products-section {
+  /* Deja aire bajo el hero sticky para que el título no quede mordido al
+     volver a la parte de novedades o al desplazarse lentamente. */
+  padding-top: 32px !important;
+  scroll-margin-top: 82px;
+}
+#homeView .recent-products-section .section-head {
+  margin-bottom: 8px !important;
+}
+#homeView .explore-categories-action {
+  margin-top: 18px !important;
+}
+#homeView .useful-section {
+  /* El espacio se crea dentro de la sección para mover el panel y su
+     contenido juntos, sin depender del colapso de márgenes entre hermanos. */
+  padding-top: 42px !important;
+  margin-top: 0 !important;
+}
+#homeView .useful-section::before {
+  top: 22px !important;
+}
+#homeView .useful-section .section-head {
+  margin-bottom: 8px !important;
+}
+
+/* La superficie blanca acompaña los accesos inferiores y termina junto al
+   último botón, sin dejar una cola vacía al final del Home. */
+#homeView .useful-section::before {
+  bottom: -184px !important;
+}
+
+#homeView .useful-section .section-head h2 {
+  width: 100%;
+  margin-left: 0 !important;
+  text-align: center;
+}
+
+#homeView .useful-section {
+  padding-top: 44px !important;
+}
+
+/* Las notificaciones se consultan únicamente desde Alertas, en la navegación inferior. */
+#appHero #headerNotifications {
+  display: none !important;
+}
+
+/* Separadores del menú Más: verde oscuro muy sutil, integrado con la superficie. */
+#moreView .more-row {
+  border-bottom-color: rgb(36 91 69 / 18%) !important;
+}
+
+/* Alertas queda reservada para los avisos push; la cronología se abre desde Home. */
+#alertsView #catalogAlertsInAlerts {
+  display: none !important;
+}
+
+/* Avisos push: una invitación liviana y un estado activo discreto. */
+#alertsView .notification-permission {
+  min-height: 48px;
+  margin: 0 20px 12px;
+  padding: 9px 12px;
+  border-color: rgb(36 91 69 / 13%);
+  border-radius: 12px;
+  background: rgb(255 255 255 / 58%);
+  color: #356a53;
+  font-size: 11px;
+}
+#alertsView .notification-permission .text-btn,
+#alertsView .notification-permission .push-disable {
+  min-height: 32px;
+  padding-block: 4px;
+  color: #47735d;
+  font-size: 11px;
+  font-weight: 700;
+}
+#alertsView .notification-permission.active {
+  min-height: 40px;
+  padding-block: 7px;
+  border-color: rgb(47 139 97 / 18%);
+  background: rgb(231 244 235 / 70%);
+}
+#alertsView .notification-permission.active strong {
+  color: #47735d;
+  font-size: 11px;
+  font-weight: 650;
+}
+#alertsView .notification-permission.active strong::before {
+  content: none;
+}
+#alertsView .push-notification-item { grid-template-columns: minmax(0, 1fr); }
+
+/* Estado del catálogo: compacto, humano y sin una explicación redundante. */
+#homeView .update-section {
+  margin-top: 14px !important;
+  padding-bottom: 18px !important;
+}
+#homeView .update-section .sync.update-row {
+  min-height: 46px !important;
+  padding: 8px 0 2px !important;
+  gap: 10px;
+}
+#homeView .update-section .sync.update-row strong {
+  font-size: 12px !important;
+  font-weight: 650 !important;
+}
+#homeView .update-section .sync.update-row small {
+  font-size: 11px !important;
+}
+#homeView .update-section .official-source-note {
+  margin-top: 4px !important;
+  font-size: 10px !important;
+  opacity: .72 !important;
+}
+
+/* La sincronización vive dentro de Información, no ocupa espacio en Home. */
+#homeView .update-section {
+  display: none !important;
+}
+#readerView .catalog-info-sync {
+  margin: 16px 0 22px;
+  padding: 10px 14px 8px;
+  border: 1px solid #d6e8db;
+  border-radius: 14px;
+  background: rgb(247 252 248 / 78%);
+}
+#readerView .catalog-info-sync-row {
+  min-height: 42px;
+  padding: 4px 0;
+  border: 0;
+  gap: 10px;
+}
+#readerView .catalog-info-sync-row > span {
+  flex: 1;
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+#readerView .catalog-info-sync-row strong {
+  color: #356a53;
+  font-size: 12px;
+  font-weight: 700;
+}
+#readerView .catalog-info-sync-row small {
+  color: #6f8176;
+  font-size: 11px;
+}
+#readerView .catalog-info-sync-row > b {
+  display: grid;
+  width: 28px;
+  height: 28px;
+  place-items: center;
+  margin-left: auto;
+  color: #668071;
+}
+#readerView .catalog-info-sync-row .refresh-icon {
+  width: 20px;
+  height: 20px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+#readerView .catalog-info-sync-row:disabled {
+  opacity: .68;
+  cursor: wait;
+}
+#readerView .catalog-info-sync .official-source-note {
+  margin: 2px 0 0 14px;
+  font-size: 10px;
+  opacity: .72;
+}
+
+#homeView .catalog-total {
+  display: none !important;
+}
+
+.catalog-total-info {
+  display: grid;
+  gap: 4px;
+  margin: 16px 0 22px;
+  padding: 16px 18px;
+  border: 1px solid #c8e2d0;
+  border-radius: 14px;
+  background: #eff8f1;
+}
+.catalog-total-info strong {
+  color: #1f684b;
+  font-size: 20px;
+}
+.catalog-total-info span {
+  color: #78817a;
+  font-size: 12px;
+}
+
+/* CTA principal del catálogo: un poco más de contraste para que sea la
+   siguiente acción natural después del carrusel, sin volver al efecto 3D. */
+#homeView .explore-categories-action {
+  min-height: 64px !important;
+  border: 1px solid rgb(31 104 75 / 28%) !important;
+  background: #bfe7cd !important;
+  color: #1f684b !important;
+  box-shadow: none !important;
+}
+#homeView .explore-categories-action .row-icon {
+  background: #b8e2c7 !important;
+  color: #1f684b !important;
+}
+#homeView .explore-categories-action span:nth-child(2) {
+  color: #1f684b !important;
+  font-weight: 800 !important;
+}
+
+#homeView .explore-categories-action span:last-child {
+  color: #2f7a59 !important;
+  font-size: 25px;
+  font-weight: 700;
+}
+#homeView .explore-categories-action:focus-visible {
+  outline: 3px solid rgb(47 122 89 / 28%);
+  outline-offset: 3px;
+}
+
+/* Cierre visual común: todos los destinos empiezan en el mismo lienzo mint
+   del hero. Este bloque queda al final para ganar a las reglas históricas de
+   cada vista y evitar cortes blancos al navegar. */
+:root {
+  --hero-surface-gradient:
+    radial-gradient(circle at 88% 7%, rgb(191 228 204 / 42%) 0%, transparent 34%),
+    linear-gradient(180deg, #d7eddd 0%, #dcefe2 34%, #e8f4eb 70%, #f4faf6 100%);
+}
+
+#appHero,
+#homeView.view.active,
+#searchView.view.active,
+#categoryDirectoryView.view.active,
+#subcategoryDirectoryView.view.active,
+#categoryProductsView.view.active,
+#alertsView.view.active,
+#timelineView.view.active,
+#moreView.view.active,
+#savedView.view.active,
+#detailView.view.active,
+#readerView.view.active {
+  background: var(--hero-surface-gradient) !important;
+  background-image: var(--hero-surface-gradient) !important;
+}
+
+#appHero .topbar,
+#appHero .detail-head,
+.view.active > .detail-head,
+.view.active > .page-head {
+  background: transparent !important;
+  border-bottom-color: transparent !important;
+  box-shadow: none !important;
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+}
+
+/* El vidrio aparece al desplazarse, siempre sobre el mismo tono y sin crear
+   una franja blanca entre el hero y el contenido. */
+body.app-scrolled #appHero,
+body.app-scrolled .app-hero {
+  background: rgb(225 242 230 / 90%) !important;
+  border-bottom: 0 !important;
+  box-shadow: 0 8px 24px rgb(36 91 69 / 10%) !important;
+  -webkit-backdrop-filter: blur(18px) saturate(130%) !important;
+  backdrop-filter: blur(18px) saturate(130%) !important;
+}
+
+body.app-scrolled #appHero .topbar,
+body.app-scrolled #appHero .detail-head,
+body.app-scrolled .app-hero .topbar,
+body.app-scrolled .app-hero .detail-head {
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+}
+
+/* El hero y el cuerpo superior comparten una sola superficie continua. El
+   cambio de sección queda reservado al panel blanco de Información útil. */
+:root { --unified-hero-surface: #dcefe2; }
+
+#appHero,
+#homeView.view.active,
+#searchView.view.active,
+#categoryDirectoryView.view.active,
+#subcategoryDirectoryView.view.active,
+#categoryProductsView.view.active,
+#alertsView.view.active,
+#timelineView.view.active,
+#moreView.view.active,
+#savedView.view.active,
+#detailView.view.active,
+#readerView.view.active {
+  background: var(--unified-hero-surface) !important;
+  background-image: none !important;
+}
+
+/* Novedad de push: el indicador es únicamente un punto azul. No cambia el
+   color de la campana ni el texto de Alertas a dorado. */
+.catalog-notifications.has-alerts,
+.catalog-notifications.has-alerts:hover,
+.catalog-notifications.has-alerts:active,
+.nav[data-view="alertsView"].has-alerts,
+.bottom-nav .nav[data-view="alertsView"].has-alerts {
+  background: transparent !important;
+  color: #1f5d46 !important;
+  box-shadow: none !important;
+  text-shadow: none !important;
+  animation: none !important;
+}
+
+.catalog-notifications i,
+#navDot {
+  width: 8px !important;
+  height: 8px !important;
+  border: 2px solid #fff !important;
+  border-radius: 50% !important;
+  background: #2f80ed !important;
+  box-shadow: 0 1px 4px rgb(37 99 235 / 35%) !important;
+}
+
+/* Cronología del catálogo integrada debajo de las notificaciones push. */
+.catalog-alerts-in-alerts {
+  margin-top: 2px;
+  padding-top: 16px;
+  border-top: 1px solid rgb(31 93 70 / 12%);
+}
+.catalog-alerts-in-alerts-head {
+  margin: 0 20px 2px;
+}
+.catalog-alerts-in-alerts-head h2 {
+  margin: 0;
+  color: #1f5d46;
+  font-size: 18px;
+  line-height: 1.15;
+}
+.catalog-alerts-in-alerts-head p {
+  margin: 4px 0 0;
+  color: #78817a;
+  font-size: 11px;
+  line-height: 1.35;
+}
+.catalog-alert-shortcut {
+  margin-top: 6px;
+  padding: 16px 0 1px;
+  border-top: 1px solid rgb(31 93 70 / 12%);
+}
+.catalog-alert-shortcut-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 0 20px 10px;
+}
+.catalog-alert-shortcut-head strong {
+  color: #1f5d46;
+  font-size: 13px;
+}
+.catalog-alert-shortcut-head span {
+  color: #78817a;
+  font-size: 10px;
+}
+.catalog-alert-shortcut .alert-secondary-action {
+  margin-bottom: 20px;
+}
+
+/* Evita que la animación de entrada deje ver el lienzo blanco debajo durante
+   un frame al cambiar de sección. Conservamos el pequeño desplazamiento, no
+   el fundido de opacidad. */
+html,
+body,
+.app {
+  background-color: var(--unified-hero-surface) !important;
+}
+.view.active {
+  animation: view-enter-solid .18s ease-out both !important;
+}
+@keyframes view-enter-solid {
+  from { opacity: 1; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* El velo que acompaña al dock usa el mismo verde del lienzo; nunca debe
+   convertirse en una franja blanca al final de una pantalla corta. */
+body::after {
+  background: linear-gradient(
+    to bottom,
+    rgb(220 239 226 / 0%) 0%,
+    rgb(220 239 226 / 34%) 36%,
+    rgb(220 239 226 / 82%) 72%,
+    rgb(220 239 226 / 96%) 100%
+  ) !important;
+}
+
+/* Tarjetas editoriales: la imagen queda contenida y redondeada, sin pegarse
+   al borde ni mostrar esquinas rectas dentro de la grilla. */
+.info-gallery .info-card {
+  gap: 10px;
+  padding: 8px 8px 14px;
+  border-radius: 20px !important;
+  border-color: #d9e6dc;
+  box-shadow: 0 5px 16px rgb(36 91 69 / 8%);
+}
+.info-gallery .info-card-media {
+  overflow: hidden;
+  border-radius: 14px;
+  background: #eef5f0;
+}
+.info-gallery .info-card .info-photo {
+  display: block;
+  width: 100%;
+  aspect-ratio: 1.35 / 1;
+  border: 0;
+  border-radius: 14px !important;
+  object-fit: cover;
+  background: #eef5f0;
+}
+.info-gallery .info-card strong {
+  padding-inline: 4px;
+}
+
+/* Cierre anti-franja: no dejamos que el degradado histórico termine en un
+   blanco distinto al lienzo. Todas las vistas comparten el mismo mint base;
+   los estados de vidrio del hero tienen reglas más específicas y continúan
+   funcionando al desplazarse. */
+html,
+body,
+.app,
+#appHero,
+#homeView.view,
+#searchView.view,
+#categoryDirectoryView.view,
+#subcategoryDirectoryView.view,
+#categoryProductsView.view,
+#alertsView.view,
+#timelineView.view,
+#moreView.view,
+#savedView.view,
+#detailView.view,
+#readerView.view,
+#initialLoadProgress {
+  background-color: var(--unified-hero-surface) !important;
+  background-image: none !important;
+}
+body::after {
+  /* Velo amplio y suave encima del dock: deja entrever que la lista sigue
+     debajo sin crear una franja blanca ni cortar las tarjetas. */
+  height: 152px !important;
+  background: linear-gradient(
+    to bottom,
+    rgb(220 239 226 / 0%) 0%,
+    rgb(220 239 226 / 28%) 34%,
+    rgb(220 239 226 / 76%) 58%,
+    rgb(220 239 226 / 98%) 100%
+  ) !important;
+  -webkit-backdrop-filter: blur(28px) saturate(112%) !important;
+  backdrop-filter: blur(28px) saturate(112%) !important;
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0%, rgb(0 0 0 / 20%) 28%, #000 76%) !important;
+  mask-image: linear-gradient(to bottom, transparent 0%, rgb(0 0 0 / 20%) 28%, #000 76%) !important;
+}
+
+/* Hero de vidrio: una capa translúcida y limpia, sin volver a separarlo del
+   lienzo mint. Al desplazarse gana contraste y profundidad de forma sutil. */
+#appHero {
+  position: sticky;
+  top: 0;
+  z-index: 80;
+  isolation: isolate;
+  background: linear-gradient(
+    180deg,
+    rgb(239 250 243 / 78%) 0%,
+    rgb(216 240 224 / 64%) 100%
+  ) !important;
+  border-bottom: 0 !important;
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 52%),
+    0 8px 24px rgb(36 91 69 / 7%) !important;
+  -webkit-backdrop-filter: blur(22px) saturate(135%) !important;
+  backdrop-filter: blur(22px) saturate(135%) !important;
+}
+body.app-scrolled #appHero {
+  background: linear-gradient(
+    180deg,
+    rgb(244 253 247 / 70%) 0%,
+    rgb(194 229 205 / 52%) 100%
+  ) !important;
+  border-bottom: 0 !important;
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 48%),
+    0 8px 22px rgb(36 91 69 / 8%) !important;
+}
+
+/* Información del catálogo: una lectura editorial y liviana, sin tarjetas
+   apiladas que hagan parecer genérica la pantalla. */
+#readerView.view.active .reader {
+  padding: 18px 22px 112px !important;
+}
+#readerView.view.active .reader > .label {
+  display: block;
+  margin: 2px 0 18px !important;
+  color: #6f8176;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .12em;
+  line-height: 1.2;
+  text-transform: uppercase;
+}
+#readerView.view.active .catalog-info-sync {
+  margin: 0 0 24px !important;
+  padding: 0 0 16px !important;
+  border: 0 !important;
+  border-bottom: 1px solid rgb(36 91 69 / 14%) !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+}
+#readerView.view.active .catalog-info-sync-row {
+  min-height: 44px !important;
+  padding: 0 !important;
+  gap: 10px !important;
+  justify-content: flex-start !important;
+  text-align: left !important;
+}
+#readerView.view.active .catalog-info-sync-row > i {
+  width: 7px;
+  height: 7px;
+  flex: 0 0 7px;
+  margin: 0 !important;
+  border-radius: 50%;
+  background: #2f7a59;
+}
+#readerView.view.active .catalog-info-sync-row > span {
+  gap: 2px;
+}
+#readerView.view.active .catalog-info-sync-row strong {
+  color: #245b45;
+  font-size: 14px;
+  font-weight: 750;
+}
+#readerView.view.active .catalog-info-sync-row small {
+  color: #718078;
+  font-size: 12px;
+}
+#readerView.view.active .catalog-info-sync-row > b {
+  width: 30px;
+  height: 30px;
+  color: #5e7d6c;
+}
+#readerView.view.active .catalog-info-sync .official-source-note {
+  margin: 7px 0 0 17px !important;
+  color: #718078;
+  font-size: 10px;
+}
+#readerView.view.active .catalog-total-info {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+  margin: 0 0 28px !important;
+  padding: 0 0 18px !important;
+  border: 0 !important;
+  border-bottom: 1px solid rgb(36 91 69 / 14%) !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+}
+#readerView.view.active .catalog-total-info strong {
+  color: #245b45;
+  font-size: 21px;
+  font-weight: 750;
+  letter-spacing: -.035em;
+}
+#readerView.view.active .catalog-total-info span {
+  color: #718078;
+  font-size: 10px;
+  text-align: right;
+}
+#readerView.view.active .reader > h2 {
+  margin: 0 0 12px !important;
+  color: #29332d;
+  font-size: 18px;
+  font-weight: 750;
+  letter-spacing: -.025em;
+}
+#readerView.view.active .catalog-update-card {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 18px;
+  margin: 0 !important;
+  padding: 0 0 18px !important;
+  border: 0 !important;
+  border-bottom: 1px solid rgb(36 91 69 / 14%) !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+}
+#readerView.view.active .catalog-update-card strong {
+  color: #245b45;
+  font-size: 17px;
+  font-weight: 750;
+}
+#readerView.view.active .catalog-update-card span {
+  color: #718078;
+  font-size: 10px;
+  text-align: right;
+}
+
+/* La portada mantiene los accesos de Información útil, pero sin un título
+   redundante que compita con el contenido. */
+#homeView .useful-section .section-head {
+  display: none !important;
+}
+
+/* Buscador del Home: superficie blanca limpia, con solo un borde verde muy
+   suave para separarlo del fondo menta. */
+#homeView #homeForm,
+#homeView #homeForm .search-box,
+#homeView #homeForm .search-box input {
+  background: #fff !important;
+  background-image: none !important;
+}
+#homeView #homeForm {
+  border-color: #b8d4c2 !important;
+  box-shadow: none !important;
+  overflow: hidden !important;
+}
+
+/* El fondo blanco pertenece a la cápsula completa. Si el input también lo
+   pinta, tapa parte de la curva y deja una muesca visible en el borde
+   izquierdo en pantallas anchas. */
+#homeView #homeForm .search-box,
+#homeView #homeForm .search-box input {
+  background: transparent !important;
+  background-image: none !important;
+}
+
+/* La pantalla de catálogo conserva solo el dato útil de sincronización. */
+#readerView.view.active .catalog-info-sync .official-source-note {
+  display: none !important;
+}
+#readerView.view.active .catalog-info-sync {
+  margin-bottom: 22px !important;
+  padding-bottom: 12px !important;
+}
+
+/* Hero igual al de la versión publicada en la prueba interna: transparente
+   en reposo y vidrio acoplado únicamente al desplazarse. */
+#appHero {
+  background: transparent !important;
+  border-bottom: 0 !important;
+  box-shadow: none !important;
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+  transition:
+    background .52s cubic-bezier(.22, .61, .36, 1),
+    box-shadow .52s cubic-bezier(.22, .61, .36, 1),
+    -webkit-backdrop-filter .52s cubic-bezier(.22, .61, .36, 1),
+    backdrop-filter .52s cubic-bezier(.22, .61, .36, 1) !important;
+}
+
+#appHero::before {
+  display: none;
+}
+
+body.app-scrolled #appHero {
+  background: rgb(220 239 226 / 42%) !important;
+  border-bottom: 0 !important;
+  -webkit-backdrop-filter: blur(24px) saturate(125%) !important;
+  backdrop-filter: blur(24px) saturate(125%) !important;
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 48%),
+    0 8px 22px rgb(31 67 52 / 20%) !important;
+}
+
+/* Cabecera de sección más compacta dentro del hero, sin tocar la barra de
+   marca: conserva el área táctil y evita que el título robe espacio vertical. */
+#appHero .detail-head {
+  min-height: 48px !important;
+  height: 48px !important;
+  padding: 0 8px !important;
+  transform: translateY(0);
+  transition:
+    height .30s cubic-bezier(.22, .61, .36, 1),
+    min-height .30s cubic-bezier(.22, .61, .36, 1),
+    padding .30s cubic-bezier(.22, .61, .36, 1),
+    transform .30s cubic-bezier(.22, .61, .36, 1) !important;
+  will-change: height, min-height, padding, transform;
+}
+
+/* Al empezar el scroll el título sube apenas dentro de su franja; la altura
+   reservada permanece fija para no mover el contenido de toda la pantalla. */
+body.app-scrolled #appHero .detail-head {
+  min-height: 48px !important;
+  height: 48px !important;
+  padding: 0 8px !important;
+  transform: translateY(-3px);
+}
+
+/* Resultados: el encabezado continúa la superficie menta y deja aire al
+   título, sin el rectángulo blanco que cortaba la pantalla. */
+body.search-open #searchView #results,
+body.search-open #searchView #results .results-head {
+  background: #dcefe2 !important;
+  background-image: none !important;
+}
+body.search-open #searchView #results .results-head {
+  padding: 28px 20px 22px !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+}
+
+/* Responsive: las cuatro tarjetas de Información útil conservan la misma
+   proporción y ritmo en teléfonos angostos. */
+@media (max-width: 390px) {
+  #homeView .useful-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 8px !important;
+  }
+
+  #homeView .useful-grid .link-row,
+  #homeView .useful-grid .link-row:nth-child(even),
+  #homeView .useful-grid .whatsapp-tile {
+    grid-template-columns: 21px minmax(0, 1fr) 14px !important;
+    min-height: 76px !important;
+    padding: 10px 9px !important;
+    gap: 6px !important;
+    border-radius: 14px !important;
+  }
+
+  #homeView .useful-grid .link-row span:nth-child(2) {
+    font-size: clamp(11.5px, 3.4vw, 13px) !important;
+    line-height: 1.14 !important;
+  }
+
+  #homeView .useful-grid .link-row .info-icon {
+    width: 21px !important;
+    height: 21px !important;
+  }
+}
+
+/* En previews/tablets el lienzo puede crecer de golpe al redimensionar la
+   ventana. Un máximo fluido evita que las tarjetas salten de ancho; en
+   teléfonos siguen ocupando exactamente el espacio disponible. */
+#homeView .useful-grid {
+  width: min(100%, 640px) !important;
+  margin-inline: auto !important;
+}
+#homeView .saved-home-action,
+#homeView .explore-categories-action {
+  width: min(calc(100% - 40px), 640px) !important;
+  margin-inline: auto !important;
+  margin-top: 18px !important;
+}
+#homeView .certifications-home-action {
+  width: min(calc(100% - 40px), 640px) !important;
+  margin-inline: auto !important;
+  grid-template-columns: 22px minmax(0, 1fr) 18px !important;
+  gap: 8px !important;
+  padding-inline: 12px !important;
+}
+#homeView .certifications-home-action span:nth-child(2) {
+  overflow-wrap: normal !important;
+  word-break: normal !important;
+}
+#homeView .explore-categories-action {
+  width: min(100%, 640px) !important;
+  margin-inline: auto !important;
+}
+
+/* En el viewport más chico no reducir los márgenes laterales a 12px: ese
+   cambio hacía que la grilla pareciera saltar y quedar pegada a los bordes. */
+@media (max-width: 360px) {
+  #homeView .useful-section {
+    padding-inline: 20px !important;
+  }
+
+  #homeView .useful-grid {
+    width: 100% !important;
+  }
+
+  #homeView .explore-categories-action {
+    width: calc(100% - 16px) !important;
+    margin-inline: 8px !important;
+  }
+
+  /* En teléfonos de 320–360 px las tarjetas no deben encogerse hasta
+     parecer botones secundarios ni quedar debajo del dock fijo. Conservamos
+     las dos columnas, pero devolvemos un poco de altura y lectura al texto. */
+  #homeView .useful-grid .link-row,
+  #homeView .useful-grid .link-row:nth-child(even),
+  #homeView .useful-grid .whatsapp-tile {
+    min-height: 84px !important;
+    padding: 11px 10px !important;
+  }
+
+  #homeView .useful-grid .link-row span:nth-child(2) {
+    font-size: 12px !important;
+    line-height: 1.16 !important;
+  }
+
+  #homeView .saved-home-action,
+  #homeView .certifications-home-action {
+    min-height: 62px !important;
+  }
+}
+
+/* La grilla comparte el mismo borde que los accesos de arriba y abajo.
+   El padding heredado de la regla intermedia la encogía 8px por lado en
+   pantallas de teléfono, dejando las tarjetas visualmente desalineadas. */
+@media (min-width: 321px) and (max-width: 430px) {
+  #homeView .useful-grid {
+    padding-inline: 0 !important;
+  }
+}
+
+/* El logo respira con el mismo margen lateral que el resto del contenido en
+   móviles; el padding anterior de 12px lo dejaba demasiado pegado al borde. */
+@media (max-width: 700px) {
+  .topbar {
+    padding-inline: 18px !important;
+  }
+}
+
+/* La pantalla de certificaciones usa el ancho útil completo del lienzo. El
+   padding editorial del lector, sumado al margen de cada bloque, la dejaba
+   demasiado angosta en teléfonos. */
+#readerView.view.active:has(.world-certification-intro) .reader {
+  padding-inline: 0 !important;
+}
+#readerView.view.active:has(.world-certification-intro) .world-certification-intro,
+#readerView.view.active:has(.world-certification-intro) .country-cards-list {
+  margin-inline: 20px !important;
+}
+
+/* Acceso discreto para valorar la app sin competir con los recursos
+   oficiales del menú Más. */
+#moreView .rate-app-row {
+  margin-top: 4px;
+  color: #1f5d46;
+  border-top: 0;
+  border-bottom-color: #dce5df;
+  text-decoration: none;
+}
+#moreView .rate-app-row strong { color: #29322c; }
+#moreView .rate-app-row small { color: #78817a; }
+.rate-app-icon {
+  display: grid;
+  width: 28px;
+  height: 28px;
+  place-items: center;
+  border-radius: 9px;
+  background: transparent;
+  color: #8a938c;
+}
+.rate-app-icon svg {
+  display: block;
+  width: 22px;
+  height: 22px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* Acción secundaria para limpiar solo el historial de avisos push. */
+.clear-push-notifications {
+  display: block;
+  width: calc(100% - 40px);
+  min-height: 38px;
+  margin: -12px 20px 22px;
+  padding: 8px 14px;
+  border: 1px solid #cbded2;
+  border-radius: 11px;
+  background: transparent;
+  color: #6d7d73;
+  font: inherit;
+  font-size: 11px;
+  font-weight: 700;
+  text-align: center;
+}
+.clear-push-notifications:hover,
+.clear-push-notifications:focus-visible {
+  border-color: #9fc5ad;
+  background: #f2f8f4;
+  color: #356a53;
+  outline: none;
+}
+
+/* Densidad final del Home en teléfonos: menos vacío entre bloques sin
+   achicar controles ni perder el margen seguro superior. */
+@media (max-width: 700px) {
+  #appHero .topbar {
+    min-height: calc(64px + var(--app-safe-top, 24px)) !important;
+    padding-top: calc(6px + var(--app-safe-top, 24px)) !important;
+    padding-bottom: 7px !important;
+  }
+
+  #homeView .recent-products-section {
+    padding-top: 20px !important;
+  }
+
+  #homeView .explore-categories-action {
+    margin-top: 14px !important;
+  }
+
+  #homeView .useful-section {
+    padding-top: 34px !important;
+  }
+
+  #homeView .useful-section::before {
+    top: 16px !important;
+  }
+
+  #homeView .saved-home-action,
+  #homeView .certifications-home-action {
+    margin-top: 14px !important;
+  }
+}
+
+/* Evita que las sombras recortadas del carrusel se unan visualmente en una
+   franja gris bajo las tarjetas. El borde suave ya aporta separación. */
+#homeView .recent-product {
+  box-shadow: none !important;
+}
+
+/* Skeletons: durante la carga deben conservar la misma geometría amable que
+   las tarjetas finales, sin dejar bloques cuadrados que parezcan errores. */
+.content-skeleton i {
+  border-radius: 999px !important;
+}
+
+.detail-content-loading .detail-loading-image,
+.info-card-media:has(.asset-loading),
+.product > span:first-child:has(.asset-loading),
+.recent-product-media:has(.asset-loading),
+.popular-search-card:has(.asset-loading),
+.alert-product-image.asset-loading {
+  border-radius: 18px !important;
+}
+
+.detail-content-loading .detail-loading-image {
+  overflow: hidden;
+}
+
+/* En categorías, encabezado y filas comparten el mismo menta. Los
+   separadores conservan la lectura sin crear bandas de otro verde. */
+#categoryProductsView #categoryProductList .product,
+#categoryProductsView #categoryProductList .product:nth-child(even),
+#categoryProductsView #categoryProductList .product:nth-child(odd) {
+  background: transparent !important;
+}
+
+#categoryProductsView #categoryProductList .product:hover,
+#categoryProductsView #categoryProductList .product:active {
+  background: rgb(215 235 222 / 52%) !important;
+}
+
+/* Visor de imágenes: lienzo completo y gestos estables. La imagen conserva
+   su proporción; el zoom se anima solo al doble toque, no durante el gesto. */
+.image-overlay {
+  inset: 0;
+  padding: 0 !important;
+  touch-action: none;
+  background: rgb(10 18 14 / 97%) !important;
+}
+
+.image-overlay figure {
+  position: relative;
+  display: flex !important;
+  width: 100vw !important;
+  height: 100dvh !important;
+  max-width: none !important;
+  max-height: none !important;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.image-overlay figure img {
+  max-width: calc(100vw - 24px) !important;
+  max-height: calc(100dvh - 104px) !important;
+  border-radius: 14px !important;
+  object-fit: contain !important;
+  transform-origin: center center;
+  transition: none !important;
+  cursor: zoom-in;
+}
+
+.image-overlay.is-zoomed figure img {
+  cursor: grab;
+}
+
+.image-overlay.is-zoomed figure img:active {
+  cursor: grabbing;
+}
+
+.image-overlay figure img.zoom-animate {
+  transition: transform .24s cubic-bezier(.22, .61, .36, 1) !important;
+}
+
+.image-overlay figcaption {
+  position: absolute;
+  right: 20px;
+  bottom: max(20px, env(safe-area-inset-bottom, 20px));
+  left: 20px;
+  z-index: 2;
+  transition: opacity .18s ease;
+  pointer-events: none;
+}
+
+.image-overlay.is-zoomed figcaption {
+  opacity: 0;
+}
+
+.image-overlay .image-close {
+  z-index: 4;
+  top: max(16px, env(safe-area-inset-top, 16px));
+  right: 16px;
+  background: rgb(20 31 25 / 72%);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+}
+
+/* Superficie menta única en toda la navegación. Antes, las filas usaban un
+   verde translúcido sobre otro verde y producían bandas visibles. */
+.app,
+.view,
+.view.active,
+#appHero,
+#initialLoadProgress,
+#searchView #results,
+#searchView #results .results-head,
+.product-list,
+.alphabetical-category-list {
+  background-color: var(--unified-hero-surface) !important;
+  background-image: none !important;
+}
+
+.product-list .product,
+.product-list .product:nth-child(even),
+.product-list .product:nth-child(odd),
+#categoryProductsView #categoryProductList .product,
+#savedView #savedProductList .product {
+  background: transparent !important;
+}
+
+.product-list .product:hover,
+.product-list .product:active {
+  background: rgb(36 91 69 / 5%) !important;
+}
+
+/* Iteración visual: accesos de información más amplios y actuales. */
+#homeView .useful-grid .link-row,
+#homeView .useful-grid .link-row:nth-child(even),
+#homeView .useful-grid .whatsapp-tile {
+  min-height: clamp(84px, 23vw, 96px) !important;
+  padding: 14px !important;
+  border-radius: 22px !important;
+  border-width: 1px !important;
+  transition: transform .18s ease, border-color .18s ease, box-shadow .18s ease !important;
+}
+
+#homeView .useful-grid .link-row span:nth-child(2) {
+  font-size: clamp(12px, 3.5vw, 14px) !important;
+  line-height: 1.16 !important;
+  letter-spacing: -.01em;
+}
+
+#homeView .useful-grid .link-row span:last-child {
+  display: grid;
+  width: 28px;
+  height: 28px;
+  place-items: center;
+  border-radius: 50%;
+  background: rgb(255 255 255 / 28%);
+  font-size: 20px !important;
+  line-height: 1;
+}
+
+#homeView .useful-grid .link-row:hover,
+#homeView .useful-grid .whatsapp-tile:hover {
+  border-color: rgb(36 108 76 / 28%) !important;
+  box-shadow: 0 8px 18px rgb(36 91 69 / 8%) !important;
+  transform: translateY(-1px);
+}
+
+/* Cada acceso conserva el color de su categoría también en el contorno. */
+#homeView .useful-grid [data-info="shops"] { border: 1px solid #e7b8c9 !important; }
+#homeView .useful-grid [data-info="catering"],
+#homeView .useful-grid .link-row:nth-child(even)[data-info="catering"] { border: 1px solid #e6cf86 !important; }
+#homeView .useful-grid [data-info="notes"] { border: 1px solid #b9d3ec !important; }
+#homeView .useful-grid .whatsapp-tile,
+#homeView .useful-grid .link-row:nth-child(even).whatsapp-tile { border: 1px solid #acd9bc !important; }
+
+/* La flecha acompaña desde el borde inferior, sin burbuja alrededor. */
+#homeView .useful-grid .link-row span:last-child {
+  width: auto !important;
+  height: auto !important;
+  align-self: end;
+  justify-self: end;
+  margin-bottom: 1px;
+  border-radius: 0 !important;
+  background: transparent !important;
+  font-size: 25px !important;
+  transform: translateY(-6px);
+}
+
+/* El contador vuelve a ser un dato breve debajo del buscador. */
+#homeView .catalog-total {
+  display: block !important;
+  margin: 7px 20px 0 !important;
+  color: rgb(46 91 70 / 68%) !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  letter-spacing: .01em;
+  text-align: center;
+}
+
+/* Fondo general: degradado verde continuo, también detrás del hero compacto. */
+:root {
+  --app-green-gradient:
+    linear-gradient(180deg, #dff1e4 0%, #dcefe2 48%, #d9eddf 100%);
+}
+
+html,
+body,
+.app,
+.view,
+.view.active,
+#initialLoadProgress,
+#searchView #results,
+#searchView #results .results-head,
+.product-list,
+.alphabetical-category-list {
+  background: var(--app-green-gradient) !important;
+  background-image: var(--app-green-gradient) !important;
+}
+
+/* En reposo el hero deja ver exactamente el mismo degradado del contenido. */
+#appHero {
+  background: transparent !important;
+  background-image: none !important;
+  box-shadow: none !important;
+}
+
+/* Al acoplarse conserva el degradado debajo y suma solo una capa de vidrio. */
+body.app-scrolled #appHero,
+body.app-scrolled .app-hero {
+  background: linear-gradient(
+    180deg,
+    rgb(239 250 243 / 70%) 0%,
+    rgb(213 237 220 / 58%) 100%
+  ) !important;
+  background-image: linear-gradient(
+    180deg,
+    rgb(239 250 243 / 70%) 0%,
+    rgb(213 237 220 / 58%) 100%
+  ) !important;
+  border-bottom: 0 !important;
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 36%),
+    0 8px 22px rgb(31 67 52 / 13%) !important;
+}
+
+/* Compactación puntual del Home: conserva el hero y sus colores, reduce solo
+   el aire vertical de búsqueda y carrusel. La marca mantiene un poco de aire. */
+@media (max-width: 700px) {
+  #appHero .topbar {
+    min-height: calc(62px + var(--app-safe-top, 24px)) !important;
+    padding-top: calc(3px + var(--app-safe-top, 24px)) !important;
+    padding-bottom: 4px !important;
+    gap: 6px !important;
+  }
+
+  #appHero .logo {
+    width: 52px !important;
+    height: 40px !important;
+  }
+
+  #appHero .brand strong {
+    font-size: 17px !important;
+  }
+
+  #appHero .brand span {
+    font-size: 12px !important;
+  }
+
+  #homeView #homeForm {
+    margin-top: 7px !important;
+    grid-template-columns: minmax(0, 1fr) 46px !important;
+    align-items: center !important;
+    padding: 5px 8px !important;
+  }
+
+  #homeView #homeForm .search-box input {
+    height: 46px !important;
+    font-size: 15px !important;
+  }
+
+  #homeView #homeForm .scan {
+    width: 46px !important;
+    height: 46px !important;
+    justify-self: stretch !important;
+    margin: 0 !important;
+  }
+
+  #homeView .catalog-total {
+    padding-top: 2px !important;
+    line-height: 1.1 !important;
+  }
+
+  #homeView .recent-products-section {
+    padding-top: 12px !important;
+  }
+
+  #homeView .recent-products-section .section-head {
+    margin-bottom: 5px !important;
+  }
+}
+
+/* El contenido de la ficha respira un poco debajo del encabezado del hero. */
+#detailView.view.active #detailContent .detail-content {
+  padding-top: 8px !important;
+}
+
+/* Aviso nuevo en el nav: la campana conserva exactamente el tratamiento
+   blanco del resto de los iconos. El único cambio visual es la luz azul. */
+.bottom-nav .nav[data-view="alertsView"].has-alerts {
+  background: transparent !important;
+  color: #d8e9df !important;
+  box-shadow: none !important;
+  text-shadow: none !important;
+}
+
+.bottom-nav .nav[data-view="alertsView"].has-alerts.active {
+  background: #2f7a59 !important;
+  color: #fff !important;
+}
+
+.bottom-nav .nav[data-view="alertsView"].has-alerts svg {
+  color: inherit !important;
+  filter: none !important;
+}
+
+#navDot {
+  width: 9px !important;
+  height: 9px !important;
+  border: 2px solid rgb(23 70 52 / 92%) !important;
+  background: #55b7ff !important;
+  box-shadow: 0 0 0 2px rgb(85 183 255 / 18%), 0 0 9px rgb(69 169 255 / 90%) !important;
+}
+/* Keep Home geometry continuous when the viewport crosses the 700px breakpoint. */
+#appHero .topbar {
+  min-height: max(86px, calc(62px + var(--app-safe-top, 24px))) !important;
+}
+
+#homeView #homeForm {
+  margin-top: 7px !important;
+  height: 58px !important;
+  box-sizing: border-box !important;
+}
+
+/* Cuando está vacío, el botón de borrar no se muestra: devolverle ese espacio
+   al placeholder evita cortar “Encontrá una categoría” en celulares angostos. */
+#homeView #homeForm .search-box input:placeholder-shown {
+  padding-right: 8px;
+}
+
+#homeView .catalog-total {
+  padding-top: 2px !important;
+  line-height: 1.1 !important;
+}
+
+#homeView .recent-products-section {
+  padding-top: 12px !important;
+}
+
+#homeView .recent-products-section .section-head {
+  margin-bottom: 5px !important;
+}
+
+#homeView .explore-categories-action {
+  margin-top: 14px !important;
+}
+
+#homeView .useful-section {
+  padding-top: 34px !important;
+}
+
+#homeView .saved-home-action,
+#homeView .certifications-home-action {
+  margin-top: 14px !important;
+}
+
+/* El resize cruzaba el breakpoint de 700px y encogía el encabezado/nav de
+   golpe. Mantener la marca fluida y el dock con una geometría constante. */
+#appHero .topbar {
+  padding-top: max(env(safe-area-inset-top, 0px), clamp(9px, calc(243px - 36vw), 27px)) !important;
+  padding-bottom: 9px !important;
+  padding-inline: 18px !important;
+  gap: 8px !important;
+}
+
+#appHero .logo {
+  width: clamp(56px, calc(51.3px + 1.47vw), 62px) !important;
+  height: clamp(44px, calc(40.1px + 1.22vw), 49px) !important;
+}
+
+#appHero .brand strong {
+  font-size: 18px !important;
+  line-height: 1.1 !important;
+}
+
+#appHero .brand > span {
+  font-size: 11px !important;
+  line-height: 1.1 !important;
+}
+
+.bottom-nav {
+  min-height: 73px !important;
+  bottom: 14px !important;
+  width: calc(100% - 20px) !important;
+  padding-top: 6px !important;
+  padding-inline: 5px !important;
+}
+
+.bottom-nav .nav {
+  min-height: 60px !important;
+  font-size: 11px !important;
+}
+
+/* Las fotos editoriales se muestran a su proporción natural, sin bandas de
+   relleno que las encajonen sobre el fondo blanco. */
+.info-flow-photo {
+  display: block;
+  max-height: none !important;
+  height: auto !important;
+  aspect-ratio: auto !important;
+  object-fit: initial !important;
+  margin: 9px 0 18px !important;
+  border-radius: 14px;
+  background: transparent !important;
+}
+
+/* Los cuatro elementos del dock usan el mismo blanco legible sobre el verde. */
+.bottom-nav .nav,
+.bottom-nav .nav.active {
+  color: #fff !important;
+}
+
+/* Alinea el control de volver con el texto del campo de búsqueda. */
+#searchView .search-inline-back,
+.search-open .bottom-nav.search-mode #searchForm .search-inline-back {
+  top: 50% !important;
+}
+
+/* Buscador expandido compacto: altura equilibrada con el botón de escaneo. */
+@media (max-width: 700px) {
+  #homeView #homeForm {
+    padding-right: 8px !important;
+  }
+  body.search-open .bottom-nav.search-mode {
+    min-height: 0 !important;
+    height: auto !important;
+    padding: 5px 8px !important;
+  }
+  .search-open .bottom-nav.search-mode #searchForm {
+    min-height: 48px !important;
+    padding-right: 0 !important;
+    transform: none !important;
+  }
+  .search-open .bottom-nav.search-mode #searchForm .search-box input {
+    height: 48px !important;
+    line-height: 48px !important;
+  }
+}
+
+/* El fondo verde continúa por debajo del dock: sin nube blanca ni desenfoque. */
+body::after {
+  height: 116px !important;
+  background: linear-gradient(
+    to bottom,
+    rgb(220 239 226 / 0%) 0%,
+    rgb(220 239 226 / 82%) 24%,
+    #dcefe2 100%
+  ) !important;
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+  -webkit-mask-image: none !important;
+  mask-image: none !important;
+}
+
+/* Elimina el halo verdoso que proyectaba el dock sobre el fondo blanco. */
+.bottom-nav {
+  box-shadow: 0 8px 22px rgb(15 23 42 / 8%), inset 0 1px 0 rgb(255 255 255 / 11%) !important;
+}
+
+/* El vidrio del hero gana una separación breve al pasar sobre el contenido. */
+body.app-scrolled #appHero {
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 36%),
+    0 8px 14px -7px rgb(27 73 52 / 24%),
+    0 16px 26px -19px rgb(27 73 52 / 16%) !important;
+}
+
+/* Información del catálogo: tres datos compactos, sin títulos duplicados. */
+#readerView.view.active .reader:has(.catalog-info-sync) {
+  padding: 6px 22px 112px !important;
+}
+#readerView.view.active .catalog-info-sync {
+  margin: 0 !important;
+  padding: 12px 0 14px !important;
+}
+#readerView.view.active .catalog-info-sync-row {
+  min-height: 38px !important;
+}
+#readerView.view.active .catalog-info-sync-row strong {
+  font-size: 13px;
+}
+#readerView.view.active .catalog-info-sync-row small {
+  font-size: 11px;
+}
+#readerView.view.active .catalog-info-sync-row > b,
+#readerView.view.active .catalog-info-sync-row .refresh-icon {
+  width: 20px;
+  height: 20px;
+}
+#readerView.view.active .catalog-total-info {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  margin: 0 !important;
+  padding: 16px 0 !important;
+}
+#readerView.view.active .catalog-total-info span {
+  color: #355d49;
+  font-size: 13px;
+  font-weight: 650;
+  text-align: left;
+}
+#readerView.view.active .catalog-total-info strong {
+  font-size: 21px;
+  line-height: 1;
+  white-space: nowrap;
+}
+#readerView.view.active .catalog-update-card {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: baseline;
+  gap: 4px 12px;
+  padding: 16px 0 !important;
+}
+#readerView.view.active .catalog-update-card .catalog-update-label {
+  color: #355d49;
+  font-size: 13px;
+  font-weight: 650;
+  text-align: left;
+}
+#readerView.view.active .catalog-update-card strong {
+  font-size: 14px;
+  white-space: nowrap;
+}
+#readerView.view.active .catalog-update-card small {
+  grid-column: 1 / -1;
+  color: #718078;
+  font-size: 10px;
+  line-height: 1.3;
 }

@@ -105,7 +105,11 @@ for (const batch of batches) {
     ? `${items.length} ${type === 'alta' ? 'productos nuevos' : 'productos retirados'}${productNames.length ? `: ${productNames.slice(0, 3).join(', ')}${productNames.length > 3 ? ` y ${productNames.length - 3} más` : ''}` : ''}`
     : 'Hay una novedad disponible para consultar.';
   const eventKey = `batch:${type}:${createHash('sha256').update(items.map((item) => `${item.type}:${item.text}`).join('|')).digest('hex').slice(0, 16)}`;
-  const message = {message: {topic, notification: {title: notificationTitle, body}, android: {priority: 'HIGH', ttl: '3600s', collapse_key: 'catalog-updates', notification: {channel_id: 'catalog-updates', sound: 'default', tag: 'catalog-updates'}}, data: {action: 'sync', alertType: type, eventKey, sentAt: new Date(now * 1000).toISOString(), title: notificationTitle, body, text: body, items: JSON.stringify(items.map((item) => ({text:item.text, url:item.url || ''}))), url: items.length === 1 ? items[0].url || '' : ''}}};
+  // Separate collapse keys/tags by type: otherwise FCM/Android can replace a
+  // pending catering or note alert with a product alert from the same run.
+  // Repeated updates of the same type still collapse into a single notice.
+  const notificationGroup = `catalog-${type}`;
+  const message = {message: {topic, notification: {title: notificationTitle, body}, android: {priority: 'HIGH', ttl: '3600s', collapse_key: notificationGroup, notification: {channel_id: 'catalog-updates', sound: 'default', tag: notificationGroup}}, data: {action: 'sync', alertType: type, eventKey, sentAt: new Date(now * 1000).toISOString(), title: notificationTitle, body, text: body, items: JSON.stringify(items.map((item) => ({text:item.text, url:item.url || ''}))), url: items.length === 1 ? items[0].url || '' : ''}}};
   const sendResponse = await fetch(`https://fcm.googleapis.com/v1/projects/${serviceAccount.project_id}/messages:send`, {method: 'POST', headers: {'content-type': 'application/json', Authorization: `Bearer ${accessToken}`}, body: JSON.stringify(message)});
   if (!sendResponse.ok) throw new Error(`FCM rechazó la notificación: HTTP ${sendResponse.status}`);
   items.forEach((item) => { stateAfterSuccessfulSends[`${item.type}:${item.text}`] = item; });
