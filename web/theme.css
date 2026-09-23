@@ -3250,6 +3250,16 @@ body.search-open::after {
   color: #fff;
 }
 
+/* El encabezado del escáner vive dentro de un overlay de pantalla completa:
+   no debe heredar el desplazamiento sticky reservado para las vistas que se
+   montan debajo del hero. Conserva únicamente la zona segura del sistema. */
+#scanOverlay .scanner .detail-head.dark {
+  position: relative !important;
+  top: 0 !important;
+  min-height: calc(60px + env(safe-area-inset-top));
+  padding-top: env(safe-area-inset-top);
+}
+
 /* Reflujo móvil de las tarjetas de información: el chevron queda anclado al
    borde y el título conserva palabras completas, en lugar de partirlas en
    cortes como “certificad as”. */

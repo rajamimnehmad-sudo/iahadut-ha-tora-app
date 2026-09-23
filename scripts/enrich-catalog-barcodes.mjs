@@ -20,6 +20,7 @@ const delayMs = Number(process.env.BARCODE_ENRICH_DELAY_MS || 6500);
 const maxRequests = Number(process.env.BARCODE_ENRICH_MAX_REQUESTS || 0);
 const requestTimeoutMs = Number(process.env.BARCODE_ENRICH_TIMEOUT_MS || 20_000);
 const shouldWrite = process.argv.includes('--write');
+const evidenceOnly = process.argv.includes('--evidence-only');
 const clean = (value) => String(value || '').replace(/\s+/g, ' ').trim();
 const normalize = (value) => clean(value).normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
 const tokens = (value) => normalize(value).replace(/[^a-z0-9]+/g, ' ').split(/\s+/).filter((token) => token.length > 1);
@@ -208,7 +209,7 @@ const assignments = [...evidenceAssignments];
 const reviews = [];
 let requests = 0;
 
-for (const product of identities) {
+for (const product of evidenceOnly ? [] : identities) {
   const identityKey = `${normalize(product.title)}|${brandKey(product.brand)}`;
   if (duplicateIdentities.has(identityKey) || product.barcode || (evidence[product.url] && validGtin(evidence[product.url].code))) continue;
   const query = searchText(product);

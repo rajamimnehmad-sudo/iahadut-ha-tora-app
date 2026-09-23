@@ -615,5 +615,13 @@
     "sourceType": "RETAIL_EAN_VISUAL",
     "sourceUpdatedAt": "2026-09-06",
     "secondarySource": "https://kikkomanusa.com/products/teriyaki-marinade-sauce/"
+  },
+  "https://vaad.ar/producto/barrita-marca-wiki/": {
+    "code": "7798055091038",
+    "label": "Barra de quinoa inflada y chocolate Wik Taste",
+    "source": "https://world.openfoodfacts.org/product/7798055091038",
+    "sourceType": "DEVICE_SCAN_AND_OPEN_FOOD_FACTS",
+    "sourceUpdatedAt": "2026-09-23",
+    "secondarySource": "https://vaad.ar/producto/barrita-marca-wiki/"
   }
 }

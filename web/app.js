@@ -4003,14 +4003,15 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     return products.filter((product) => associatedUrls.has(product.url));
   }
 
-  const scanIdentityStopWords = new Set(['con', 'para', 'del', 'una', 'uno', 'de', 'el', 'la', 'los', 'las', 'and', 'the', 'with', 'sabor', 'flavor', 'flavour', 'bebida', 'drink', 'beverage', 'producto', 'product', 'marca', 'brand']);
+  const scanIdentityStopWords = new Set(['con', 'para', 'del', 'una', 'uno', 'de', 'el', 'la', 'los', 'las', 'and', 'the', 'with', 'sabor', 'flavor', 'flavour', 'taste', 'bebida', 'drink', 'beverage', 'producto', 'product', 'marca', 'brand']);
   const scanIdentityAliases = new Map([
     ['grape', 'uva'], ['grapes', 'uva'], ['uva', 'uva'],
     ['orange', 'naranja'], ['naranja', 'naranja'], ['laranja', 'naranja'],
     ['apple', 'manzana'], ['apples', 'manzana'], ['manzana', 'manzana'],
     ['lemon', 'limon'], ['limon', 'limon'], ['lime', 'lima'], ['lima', 'lima'],
     ['peach', 'durazno'], ['durazno', 'durazno'], ['zero', 'zero'],
-    ['berry', 'berry'], ['berries', 'berry'], ['frutilla', 'frutilla'], ['strawberry', 'frutilla']
+    ['berry', 'berry'], ['berries', 'berry'], ['frutilla', 'frutilla'], ['strawberry', 'frutilla'],
+    ['barra', 'barrita'], ['bar', 'barrita'], ['bars', 'barrita'], ['barrita', 'barrita']
   ]);
   const scanIdentityTokens = (value) => normalize(value)
     .replace(/[^a-z0-9]+/g, ' ')
@@ -4161,7 +4162,7 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
       const url = `https://world.openfoodfacts.org/api/v3/product/${encodeURIComponent(code)}?fields=code,product_name,product_name_es,brands,categories,categories_tags`;
       const headers = {Accept:'application/json'};
       const response = Capacitor.isNativePlatform()
-        ? await CapacitorHttp.get({url, headers:{...headers, 'User-Agent':'IahadutHaTora/1.0.14 (https://vaad.ar)'}, connectTimeout:7000, readTimeout:7000})
+        ? await CapacitorHttp.get({url, headers:{...headers, 'User-Agent':`IahadutHaTora/${APP_VERSION} (https://vaad.ar)`}, connectTimeout:7000, readTimeout:7000})
         : await fetch(url, {headers});
       const data = response?.data || await response.json();
       const returnedCode = String(data?.product?.code || data?.code || '').replace(/\D/g, '');
