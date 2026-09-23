@@ -34,11 +34,17 @@ jobs:
         run: |
           set -euo pipefail
           ACCESS_TOKEN=$(gcloud auth application-default print-access-token)
-          response=$(curl --fail-with-body --silent --show-error -X POST \
+          result=$(curl --silent --show-error -w '\n%{http_code}' -X POST \
             -H "Authorization: Bearer $ACCESS_TOKEN" \
             -H 'Content-Type: application/json' \
             -d '{}' \
             "https://androidpublisher.googleapis.com/androidpublisher/v3/applications/$PACKAGE_NAME/edits")
+          status=$(tail -n1 <<<"$result")
+          response=$(sed '$d' <<<"$result")
+          if [ "$status" != '200' ]; then
+            jq '{code:.error.code,status:.error.status,message:.error.message}' <<<"$response"
+            exit 1
+          fi
           edit_id=$(jq -r '.id' <<<"$response")
           tracks=$(curl --fail-with-body --silent --show-error \
             -H "Authorization: Bearer $ACCESS_TOKEN" \
