@@ -4957,15 +4957,10 @@ body.app-scrolled .app-hero {
   }
 }
 
-/* El fondo verde continúa por debajo del dock: sin nube blanca ni desenfoque. */
+/* Fondo blanco continuo detrás y debajo del dock. */
 body::after {
   height: 116px !important;
-  background: linear-gradient(
-    to bottom,
-    rgb(220 239 226 / 0%) 0%,
-    rgb(220 239 226 / 82%) 24%,
-    #dcefe2 100%
-  ) !important;
+  background: #fff !important;
   -webkit-backdrop-filter: none !important;
   backdrop-filter: none !important;
   -webkit-mask-image: none !important;
