@@ -39,7 +39,7 @@ Para habilitar la primera carga hay que crear en GitHub el entorno protegido `ca
 - Wrapper Android original de referencia: `app/`
 - Configuración multiplataforma: `capacitor.config.json`
 - Paquete: `ar.vaad.catalogo.app`
-- Versión Android publicada en prueba interna: `1.0.20` (`versionCode` 72)
+- Versión Android publicada en prueba interna: `1.0.21` (`versionCode` 73)
 - APK original de referencia: `Iahadut-HaTora-v12-3.apk`
 
 ## Compilar Android Capacitor
@@ -59,13 +59,13 @@ La aplicación ya existe en Google Play. Cada actualización debe conservar exac
 
 - `applicationId`: `ar.vaad.catalogo.app`
 - Versión actual en el código fuente: `1.0.21`
-- `versionCode` local: `73` (la `1.0.20`/72 está disponible en prueba interna; la cerrada “Prueba personal S22” sigue en 63; aumentar en cada actualización)
+- `versionCode` local: `73` (la `1.0.21`/73 está disponible en prueba interna; la cerrada “Prueba personal S22” sigue en 63; aumentar en cada actualización)
 - `minSdkVersion`: `26`
 - `targetSdkVersion` y `compileSdkVersion`: `36`
 
 ### Estado de Play Console
 
-La ficha correcta es `Iahadut HaTora` con paquete `ar.vaad.catalogo.app`. El 22 de septiembre de 2026, Play Console confirmó la versión `1.0.11` (`versionCode` 63) activa en la pista cerrada “Prueba personal S22” y la versión `1.0.9` en prueba interna. Luego se publicaron `1.0.12` (`versionCode` 64), `1.0.13` (`versionCode` 65), `1.0.14` (`versionCode` 66), `1.0.15` (`versionCode` 67), `1.0.16` (`versionCode` 68), `1.0.17` (`versionCode` 69), `1.0.18` (`versionCode` 70), `1.0.19` (`versionCode` 71) y, el 23 de septiembre de 2026, `1.0.20` (`versionCode` 72) en la pista de prueba interna. La versión `1.0.20` incorpora el nuevo icono en alta calidad, ajustes visuales globales y la clasificación única auditada de los 1.060 productos. La pista cerrada permanece en `1.0.11`.
+La ficha correcta es `Iahadut HaTora` con paquete `ar.vaad.catalogo.app`. El 22 de septiembre de 2026, Play Console confirmó la versión `1.0.11` (`versionCode` 63) activa en la pista cerrada “Prueba personal S22” y la versión `1.0.9` en prueba interna. Luego se publicaron `1.0.12` (`versionCode` 64), `1.0.13` (`versionCode` 65), `1.0.14` (`versionCode` 66), `1.0.15` (`versionCode` 67), `1.0.16` (`versionCode` 68), `1.0.17` (`versionCode` 69), `1.0.18` (`versionCode` 70), `1.0.19` (`versionCode` 71), `1.0.20` (`versionCode` 72) y, el 23 de septiembre de 2026, `1.0.21` (`versionCode` 73) en la pista de prueba interna. La versión `1.0.21` refina la navegación inferior de Inicio, elimina franjas y cortes bruscos, y centra el ícono con mayor margen para lanzadores adaptativos como el del S22. La pista cerrada permanece en `1.0.11`.
 
 El estado de verificadores, días consecutivos y disponibilidad de producción debe comprobarse directamente en Play Console antes de tomar decisiones de lanzamiento. La última cifra anotada anteriormente (12 verificadores y 2 días, el 8 de septiembre de 2026) es histórica y no debe tratarse como estado actual.
 
