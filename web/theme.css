@@ -4964,6 +4964,23 @@ body::after {
   display: none !important;
 }
 
+/* En el Home, la base fija del dock continúa la superficie blanca inferior.
+   Vive detrás del contenido, por lo que nunca recorta botones ni tarjetas. */
+#homeView.view.active::after {
+  content: '';
+  position: fixed;
+  inset: auto 0 0;
+  z-index: 0;
+  height: 152px;
+  background: #fff;
+  pointer-events: none;
+}
+
+#homeView.view.active > * {
+  position: relative;
+  z-index: 1;
+}
+
 /* Profundidad contenida del dock: lo separa del contenido sin agregar un velo. */
 .bottom-nav {
   box-shadow:
