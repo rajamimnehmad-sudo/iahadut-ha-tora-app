@@ -4957,10 +4957,17 @@ body.app-scrolled .app-hero {
   }
 }
 
-/* El fondo real de cada vista continúa hasta el borde inferior. */
+/* Material inferior del dock: oculta el contenido que alcanza el borde sin
+   crear una franja de color ni extender el blur por encima de la navegación. */
 body::after {
-  content: none !important;
-  display: none !important;
+  content: '' !important;
+  display: block !important;
+  height: max(8px, env(safe-area-inset-bottom, 0px)) !important;
+  background: rgb(245 248 246 / 76%) !important;
+  -webkit-backdrop-filter: blur(14px) saturate(90%) !important;
+  backdrop-filter: blur(14px) saturate(90%) !important;
+  -webkit-mask-image: none !important;
+  mask-image: none !important;
 }
 
 /* Base del Home anclada a la ventana, fuera del contenedor animado de la vista.
