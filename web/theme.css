@@ -4957,17 +4957,31 @@ body.app-scrolled .app-hero {
   }
 }
 
-/* Material inferior del dock: oculta el contenido que alcanza el borde sin
-   crear una franja de color ni extender el blur por encima de la navegación. */
+/* Difuminado inferior del dock: el contenido se desvanece progresivamente
+   hacia el color de la vista, sin formar una placa sólida. */
 body::after {
   content: '' !important;
   display: block !important;
-  height: max(8px, env(safe-area-inset-bottom, 0px)) !important;
-  background: rgb(245 248 246 / 76%) !important;
-  -webkit-backdrop-filter: blur(14px) saturate(90%) !important;
-  backdrop-filter: blur(14px) saturate(90%) !important;
-  -webkit-mask-image: none !important;
-  mask-image: none !important;
+  height: calc(34px + env(safe-area-inset-bottom, 0px)) !important;
+  background: linear-gradient(
+    to bottom,
+    rgb(220 239 226 / 0%) 0%,
+    rgb(220 239 226 / 68%) 52%,
+    #dcefe2 100%
+  ) !important;
+  -webkit-backdrop-filter: blur(12px) saturate(94%) !important;
+  backdrop-filter: blur(12px) saturate(94%) !important;
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0%, #000 42%, #000 100%) !important;
+  mask-image: linear-gradient(to bottom, transparent 0%, #000 42%, #000 100%) !important;
+}
+
+body:has(#homeView.view.active)::after {
+  background: linear-gradient(
+    to bottom,
+    rgb(255 255 255 / 0%) 0%,
+    rgb(255 255 255 / 72%) 52%,
+    #fff 100%
+  ) !important;
 }
 
 /* Base del Home anclada a la ventana, fuera del contenedor animado de la vista.
@@ -4998,7 +5012,7 @@ body:has(#homeView.view.active) .app::before {
 
 /* Profundidad contenida del dock: lo separa del contenido sin agregar un velo. */
 body:not(.search-open) .bottom-nav {
-  bottom: max(8px, env(safe-area-inset-bottom, 0px)) !important;
+  bottom: max(14px, env(safe-area-inset-bottom, 0px)) !important;
 }
 
 .bottom-nav {
