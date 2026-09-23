@@ -4922,51 +4922,35 @@ body:not(.search-open) .bottom-nav {
   line-height: 1.3;
 }
 
-/* Header común: vidrio menta integrado en reposo y profundidad al desplazarse. */
+/* Lienzo y header comparten exactamente el mismo tono en toda la app. */
+html,
+body,
+.app {
+  background: var(--unified-hero-surface) !important;
+  background-image: none !important;
+}
+
+/* Header común: se funde con el lienzo y al desplazarse suma solo profundidad. */
 #appHero {
   position: sticky;
   top: 0;
   z-index: 80;
   isolation: isolate;
-  background: linear-gradient(
-    180deg,
-    rgb(232 247 237 / 86%) 0%,
-    rgb(220 239 226 / 76%) 100%
-  ) !important;
-  background-image: linear-gradient(
-    180deg,
-    rgb(232 247 237 / 86%) 0%,
-    rgb(220 239 226 / 76%) 100%
-  ) !important;
+  background: var(--unified-hero-surface) !important;
+  background-image: none !important;
   border: 0 !important;
-  border-bottom: 1px solid rgb(255 255 255 / 22%) !important;
-  box-shadow:
-    inset 0 1px 0 rgb(255 255 255 / 52%),
-    0 5px 16px -15px rgb(27 73 52 / 24%) !important;
-  -webkit-backdrop-filter: blur(12px) saturate(118%) !important;
-  backdrop-filter: blur(12px) saturate(118%) !important;
-  transition:
-    background .24s cubic-bezier(.22, .61, .36, 1),
-    box-shadow .24s cubic-bezier(.22, .61, .36, 1),
-    -webkit-backdrop-filter .24s cubic-bezier(.22, .61, .36, 1),
-    backdrop-filter .24s cubic-bezier(.22, .61, .36, 1) !important;
+  box-shadow: none !important;
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+  transition: box-shadow .24s cubic-bezier(.22, .61, .36, 1) !important;
 }
 
 body.app-scrolled #appHero {
-  background: linear-gradient(
-    180deg,
-    rgb(235 248 239 / 92%) 0%,
-    rgb(216 237 223 / 84%) 100%
-  ) !important;
-  background-image: linear-gradient(
-    180deg,
-    rgb(235 248 239 / 92%) 0%,
-    rgb(216 237 223 / 84%) 100%
-  ) !important;
-  -webkit-backdrop-filter: blur(14px) saturate(122%) !important;
-  backdrop-filter: blur(14px) saturate(122%) !important;
+  background: var(--unified-hero-surface) !important;
+  background-image: none !important;
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
   box-shadow:
-    inset 0 1px 0 rgb(255 255 255 / 58%),
-    0 8px 20px -11px rgb(27 73 52 / 30%),
-    0 16px 30px -24px rgb(27 73 52 / 22%) !important;
+    0 8px 18px -12px rgb(27 73 52 / 28%),
+    0 16px 28px -24px rgb(27 73 52 / 18%) !important;
 }
