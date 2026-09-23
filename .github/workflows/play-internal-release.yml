@@ -60,7 +60,8 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           ASSET_URL: ${{ inputs.release_asset_url }}
-        run: gh api "$ASSET_URL" -H 'Accept: application/octet-stream' > "$RUNNER_TEMP/iahadut-1.0.15-67.aab"
+        run: |
+          gh api "$ASSET_URL" -H 'Accept: application/octet-stream' > "$RUNNER_TEMP/iahadut-1.0.15-67.aab"
 
       - name: Publicar versión 67 en prueba interna
         if: inputs.publish
