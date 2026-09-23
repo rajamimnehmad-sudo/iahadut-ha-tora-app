@@ -39,7 +39,7 @@ Para habilitar la primera carga hay que crear en GitHub el entorno protegido `ca
 - Wrapper Android original de referencia: `app/`
 - Configuración multiplataforma: `capacitor.config.json`
 - Paquete: `ar.vaad.catalogo.app`
-- Versión Android preparada para la siguiente prueba interna: `1.0.16` (`versionCode` 68)
+- Versión Android publicada en prueba interna: `1.0.16` (`versionCode` 68)
 - APK original de referencia: `Iahadut-HaTora-v12-3.apk`
 
 ## Compilar Android Capacitor
@@ -58,14 +58,14 @@ La APK de salida queda en `android/app/build/outputs/apk/debug/app-debug.apk`.
 La aplicación ya existe en Google Play. Cada actualización debe conservar exactamente estos datos:
 
 - `applicationId`: `ar.vaad.catalogo.app`
-- Versión preparada en el código fuente: `1.0.16`
+- Versión actual en el código fuente: `1.0.16`
 - `versionCode` local: `66` (la `1.0.13`/65 está disponible en prueba interna; la cerrada “Prueba personal S22” sigue en 63; aumentar en cada actualización)
 - `minSdkVersion`: `26`
 - `targetSdkVersion` y `compileSdkVersion`: `36`
 
 ### Estado de Play Console
 
-La ficha correcta es `Iahadut HaTora` con paquete `ar.vaad.catalogo.app`. El 22 de septiembre de 2026, Play Console confirmó la versión `1.0.11` (`versionCode` 63) activa en la pista cerrada “Prueba personal S22” y la versión `1.0.9` en prueba interna. Luego se publicaron `1.0.12` (`versionCode` 64), `1.0.13` (`versionCode` 65), `1.0.14` (`versionCode` 66) y `1.0.15` (`versionCode` 67) en la pista de prueba interna. La pista cerrada permanece en `1.0.11`; esta rama prepara `1.0.16` (`versionCode` 68) para la próxima prueba interna.
+La ficha correcta es `Iahadut HaTora` con paquete `ar.vaad.catalogo.app`. El 22 de septiembre de 2026, Play Console confirmó la versión `1.0.11` (`versionCode` 63) activa en la pista cerrada “Prueba personal S22” y la versión `1.0.9` en prueba interna. Luego se publicaron `1.0.12` (`versionCode` 64), `1.0.13` (`versionCode` 65), `1.0.14` (`versionCode` 66), `1.0.15` (`versionCode` 67) y, el 23 de septiembre de 2026, `1.0.16` (`versionCode` 68) en la pista de prueba interna. La pista cerrada permanece en `1.0.11`.
 
 El estado de verificadores, días consecutivos y disponibilidad de producción debe comprobarse directamente en Play Console antes de tomar decisiones de lanzamiento. La última cifra anotada anteriormente (12 verificadores y 2 días, el 8 de septiembre de 2026) es histórica y no debe tratarse como estado actual.
 
