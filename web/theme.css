@@ -4957,21 +4957,10 @@ body.app-scrolled .app-hero {
   }
 }
 
-/* Extensión de fondo limitada al área segura que queda debajo del dock.
-   Evita que asome contenido cortado sin cubrir la zona desplazable. */
+/* El fondo real de cada vista continúa hasta el borde inferior. */
 body::after {
-  content: '' !important;
-  display: block !important;
-  height: calc(16px + env(safe-area-inset-bottom, 0px)) !important;
-  background: var(--unified-hero-surface) !important;
-  -webkit-backdrop-filter: none !important;
-  backdrop-filter: none !important;
-  -webkit-mask-image: none !important;
-  mask-image: none !important;
-}
-
-body:has(#homeView.view.active)::after {
-  background: #fff !important;
+  content: none !important;
+  display: none !important;
 }
 
 /* Base del Home anclada a la ventana, fuera del contenedor animado de la vista.
@@ -5001,6 +4990,10 @@ body:has(#homeView.view.active) .app::before {
 }
 
 /* Profundidad contenida del dock: lo separa del contenido sin agregar un velo. */
+body:not(.search-open) .bottom-nav {
+  bottom: max(8px, env(safe-area-inset-bottom, 0px)) !important;
+}
+
 .bottom-nav {
   box-shadow:
     0 8px 18px rgb(15 23 42 / 12%),
