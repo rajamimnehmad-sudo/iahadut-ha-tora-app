@@ -21,19 +21,19 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Autenticar la cuenta de servicio del proyecto
-        id: auth
         uses: google-github-actions/auth@v2
         with:
           credentials_json: ${{ secrets.FCM_SERVICE_ACCOUNT_JSON }}
-          token_format: access_token
-          access_token_scopes: https://www.googleapis.com/auth/androidpublisher
+
+      - name: Preparar Google Cloud CLI
+        uses: google-github-actions/setup-gcloud@v2
 
       - name: Comprobar acceso a la aplicación y pista interna
         env:
-          ACCESS_TOKEN: ${{ steps.auth.outputs.access_token }}
           PACKAGE_NAME: ar.vaad.catalogo.app
         run: |
           set -euo pipefail
+          ACCESS_TOKEN=$(gcloud auth application-default print-access-token)
           response=$(curl --fail-with-body --silent --show-error -X POST \
             -H "Authorization: Bearer $ACCESS_TOKEN" \
             -H 'Content-Type: application/json' \
@@ -59,11 +59,11 @@ jobs:
       - name: Publicar versión 67 en prueba interna
         if: inputs.publish
         env:
-          ACCESS_TOKEN: ${{ steps.auth.outputs.access_token }}
           PACKAGE_NAME: ar.vaad.catalogo.app
           AAB_PATH: ${{ runner.temp }}/iahadut-1.0.15-67.aab
         run: |
           set -euo pipefail
+          ACCESS_TOKEN=$(gcloud auth application-default print-access-token)
           response=$(curl --fail-with-body --silent --show-error -X POST \
             -H "Authorization: Bearer $ACCESS_TOKEN" \
             -H 'Content-Type: application/json' \
