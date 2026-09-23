@@ -2344,6 +2344,7 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
   window.visualViewport?.addEventListener('resize', scheduleSearchDockSpace, {passive:true});
 
   function showView(viewId, {preserveSearch = false} = {}) {
+    document.body.dataset.activeView = viewId;
     if (viewId !== 'searchView') {
       document.body.classList.remove('search-open');
       setSearchHomeHidden(false);
