@@ -1,0 +1,80 @@
+name: Promover Android a producción
+
+on:
+  workflow_dispatch:
+    inputs:
+      publish:
+        description: Promover la versión interna 74 a producción
+        required: true
+        default: false
+        type: boolean
+
+permissions:
+  contents: read
+
+jobs:
+  production:
+    if: inputs.publish
+    runs-on: ubuntu-latest
+    steps:
+      - name: Autenticar la cuenta de servicio del proyecto
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.FCM_SERVICE_ACCOUNT_JSON }}
+
+      - name: Preparar Google Cloud CLI
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Validar versión interna y promover a producción
+        env:
+          PACKAGE_NAME: ar.vaad.catalogo.app
+          VERSION_CODE: "74"
+        run: |
+          set -euo pipefail
+          ACCESS_TOKEN=$(gcloud auth application-default print-access-token --scopes=https://www.googleapis.com/auth/androidpublisher)
+
+          response=$(curl --fail-with-body --silent --show-error -X POST \
+            -H "Authorization: Bearer $ACCESS_TOKEN" \
+            -H 'Content-Type: application/json' \
+            -d '{}' \
+            "https://androidpublisher.googleapis.com/androidpublisher/v3/applications/$PACKAGE_NAME/edits")
+          edit_id=$(jq -r '.id' <<<"$response")
+
+          internal=$(curl --fail-with-body --silent --show-error \
+            -H "Authorization: Bearer $ACCESS_TOKEN" \
+            "https://androidpublisher.googleapis.com/androidpublisher/v3/applications/$PACKAGE_NAME/edits/$edit_id/tracks/internal")
+          jq -e --arg version "$VERSION_CODE" \
+            '.releases[]? | select(.status == "completed") | .versionCodes[]? | select(. == $version)' \
+            <<<"$internal" >/dev/null
+
+          jq -n --arg version "$VERSION_CODE" \
+            '{track:"production",releases:[{name:"1.0.22 · Experiencia visual refinada",versionCodes:[$version],status:"completed",releaseNotes:[{language:"es-419",text:"Nuevo ícono optimizado, mejoras de navegación y encabezado, experiencia responsive refinada, catálogo revisado y un cierre visual más limpio en Inicio."}]}]}' \
+            > "$RUNNER_TEMP/production-track.json"
+
+          curl --fail-with-body --silent --show-error -X PUT \
+            -H "Authorization: Bearer $ACCESS_TOKEN" \
+            -H 'Content-Type: application/json' \
+            --data-binary "@$RUNNER_TEMP/production-track.json" \
+            "https://androidpublisher.googleapis.com/androidpublisher/v3/applications/$PACKAGE_NAME/edits/$edit_id/tracks/production" >/dev/null
+
+          curl --fail-with-body --silent --show-error -X POST \
+            -H "Authorization: Bearer $ACCESS_TOKEN" \
+            "https://androidpublisher.googleapis.com/androidpublisher/v3/applications/$PACKAGE_NAME/edits/$edit_id:commit" >/dev/null
+
+          verify_response=$(curl --fail-with-body --silent --show-error -X POST \
+            -H "Authorization: Bearer $ACCESS_TOKEN" \
+            -H 'Content-Type: application/json' \
+            -d '{}' \
+            "https://androidpublisher.googleapis.com/androidpublisher/v3/applications/$PACKAGE_NAME/edits")
+          verify_edit_id=$(jq -r '.id' <<<"$verify_response")
+          production=$(curl --fail-with-body --silent --show-error \
+            -H "Authorization: Bearer $ACCESS_TOKEN" \
+            "https://androidpublisher.googleapis.com/androidpublisher/v3/applications/$PACKAGE_NAME/edits/$verify_edit_id/tracks/production")
+          jq -e --arg version "$VERSION_CODE" \
+            '.releases[]? | select(.status == "completed") | .versionCodes[]? | select(. == $version)' \
+            <<<"$production" >/dev/null
+          curl --fail-with-body --silent --show-error -X DELETE \
+            -H "Authorization: Bearer $ACCESS_TOKEN" \
+            "https://androidpublisher.googleapis.com/androidpublisher/v3/applications/$PACKAGE_NAME/edits/$verify_edit_id"
+
+          echo 'Versión 74 confirmada en la pista production.'
