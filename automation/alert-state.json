@@ -279,5 +279,20 @@
     "type": "alta",
     "text": "Jardinera marca «Arcor» (24/09/2026)",
     "url": "https://vaad.ar/producto/jardinera-marca-arcor/"
+  },
+  "alta:Cerveza pale ale marca «Barba Roja» (24/09/2026)": {
+    "type": "alta",
+    "text": "Cerveza pale ale marca «Barba Roja» (24/09/2026)",
+    "url": "https://vaad.ar/producto/cerveza-pale-ale-marca-barba-roja/"
+  },
+  "alta:Cerveza lager marca «Barba Roja» (24/09/2026)": {
+    "type": "alta",
+    "text": "Cerveza lager marca «Barba Roja» (24/09/2026)",
+    "url": "https://vaad.ar/producto/cerveza-lager-marca-barba-roja/"
+  },
+  "alta:Cerveza Noche Azul marca «Barba Roja» (24/09/2026)": {
+    "type": "alta",
+    "text": "Cerveza Noche Azul marca «Barba Roja» (24/09/2026)",
+    "url": "https://vaad.ar/producto/cerveza-noche-azul-marca-barba-roja/"
   }
 }
