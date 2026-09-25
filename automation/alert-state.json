@@ -203,7 +203,7 @@
   "alta:Dulce de batata marca «Noel» (24/09/2026)": {
     "type": "alta",
     "text": "Dulce de batata marca «Noel» (24/09/2026)",
-    "url": "https://vaad.ar/producto/dulce-de-batata-marca-noel-2/"
+    "url": "https://vaad.ar/producto/dulce-de-batata-marca-noel/"
   },
   "alta:Arvejas marca «Arcor» (24/09/2026)": {
     "type": "alta",
@@ -294,5 +294,60 @@
     "type": "alta",
     "text": "Cerveza Noche Azul marca «Barba Roja» (24/09/2026)",
     "url": "https://vaad.ar/producto/cerveza-noche-azul-marca-barba-roja/"
+  },
+  "alta:Aceite de maíz marca »Arcor» (24/09/2026)": {
+    "type": "alta",
+    "text": "Aceite de maíz marca »Arcor» (24/09/2026)",
+    "url": "https://vaad.ar/producto/aceite-de-maiz-marca-arcor/"
+  },
+  "alta:Puré de tomate marca »Arcor» (24/09/2026)": {
+    "type": "alta",
+    "text": "Puré de tomate marca »Arcor» (24/09/2026)",
+    "url": "https://vaad.ar/producto/pure-de-tomate-marca-arcor/"
+  },
+  "alta:Durazno marca »Arcor» (24/09/2026)": {
+    "type": "alta",
+    "text": "Durazno marca »Arcor» (24/09/2026)",
+    "url": "https://vaad.ar/producto/durazno-marca-arcor/"
+  },
+  "alta:Coctel de frutas marca »Arcor» (24/09/2026)": {
+    "type": "alta",
+    "text": "Coctel de frutas marca »Arcor» (24/09/2026)",
+    "url": "https://vaad.ar/producto/coctel-de-frutas-marca-arcor/"
+  },
+  "alta:Polenta marca »Arcor» (24/09/2026)": {
+    "type": "alta",
+    "text": "Polenta marca »Arcor» (24/09/2026)",
+    "url": "https://vaad.ar/producto/polenta-marca-arcor/"
+  },
+  "alta:Choclo cremoso marca “Arcor” (24/09/2026)": {
+    "type": "alta",
+    "text": "Choclo cremoso marca “Arcor” (24/09/2026)",
+    "url": "https://vaad.ar/producto/choclo-marca-arcor/"
+  },
+  "alta:Extracto de tomate marca «La Campagnola» (24/09/2026)": {
+    "type": "alta",
+    "text": "Extracto de tomate marca «La Campagnola» (24/09/2026)",
+    "url": "https://vaad.ar/producto/extracto-de-tomate-marca-la-campagnola/"
+  },
+  "alta:Salsa basilico marca «La campagnola» (24/09/2026)": {
+    "type": "alta",
+    "text": "Salsa basilico marca «La campagnola» (24/09/2026)",
+    "url": "https://vaad.ar/producto/salsa-basilico-marca-la-campagnola/"
+  },
+  "alta:Salsa de oliva marca «La campagnola» (24/09/2026)": {
+    "type": "alta",
+    "text": "Salsa de oliva marca «La campagnola» (24/09/2026)",
+    "url": "https://vaad.ar/producto/salsa-de-oliva-marca-la-campagnola/"
+  },
+  "alta:Garbanzo marca «Arcor» (24/09/2026)": {
+    "type": "alta",
+    "text": "Garbanzo marca «Arcor» (24/09/2026)",
+    "url": "https://vaad.ar/producto/298662/"
+  },
+  "alta:Dulce de batata marca «Arcor» (24/09/2026)": {
+    "type": "alta",
+    "text": "Dulce de batata marca «Arcor» (24/09/2026)",
+    "url": "https://vaad.ar/producto/dulce-de-batata-marca-arcor/"
   }
 }
