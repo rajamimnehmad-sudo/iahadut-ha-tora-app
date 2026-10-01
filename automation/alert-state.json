@@ -514,5 +514,55 @@
     "type": "baja",
     "text": "Mermelada Orange marca «Mackays» (Dado de baja el 01/10/2026)",
     "url": ""
+  },
+  "alta:Puré de tomate marca »La campagnola» (01/10/2026)": {
+    "type": "alta",
+    "text": "Puré de tomate marca »La campagnola» (01/10/2026)",
+    "url": "https://vaad.ar/producto/pure-de-tomate-marca-la-campagnola/"
+  },
+  "alta:Puré de tomate marca »Noel» (01/10/2026)": {
+    "type": "alta",
+    "text": "Puré de tomate marca »Noel» (01/10/2026)",
+    "url": "https://vaad.ar/producto/pure-de-tomate-marca-noel/"
+  },
+  "alta:Mermelada Raspberry marca «Mackays» (01/10/2026)": {
+    "type": "alta",
+    "text": "Mermelada Raspberry marca «Mackays» (01/10/2026)",
+    "url": "https://vaad.ar/producto/mermelada-mackays-raspberry/"
+  },
+  "alta:Mermelada Sweet Navelina Orange marca «Mackays» (01/10/2026)": {
+    "type": "alta",
+    "text": "Mermelada Sweet Navelina Orange marca «Mackays» (01/10/2026)",
+    "url": "https://vaad.ar/producto/mermelada-sweet-navelina-orange-marca-mackays/"
+  },
+  "alta:Mermelada Ginger marca «Mackays» (01/10/2026)": {
+    "type": "alta",
+    "text": "Mermelada Ginger marca «Mackays» (01/10/2026)",
+    "url": "https://vaad.ar/producto/mermelada-ginger-marca-mackays/"
+  },
+  "alta:Mermelada Orange Lemon & Ginger marca «Mackays» (01/10/2026)": {
+    "type": "alta",
+    "text": "Mermelada Orange Lemon & Ginger marca «Mackays» (01/10/2026)",
+    "url": "https://vaad.ar/producto/mermelada-orange-lemon-ginger-marca-mackays/"
+  },
+  "alta:Mermelada Blueberry & Blackcurrant marca «Mackays» (01/10/2026)": {
+    "type": "alta",
+    "text": "Mermelada Blueberry & Blackcurrant marca «Mackays» (01/10/2026)",
+    "url": "https://vaad.ar/producto/mermelada-blueberry-blackcurrant-marca-mackays/"
+  },
+  "alta:Choclo cremoso marca «La campagnola» (01/10/2026)": {
+    "type": "alta",
+    "text": "Choclo cremoso marca «La campagnola» (01/10/2026)",
+    "url": "https://vaad.ar/producto/choclo-marca-la-campagnola/"
+  },
+  "alta:Salmon ahumado (01/10/2026)": {
+    "type": "alta",
+    "text": "Salmon ahumado (01/10/2026)",
+    "url": "https://vaad.ar/producto/salmon-ahumado/"
+  },
+  "alta:Barrita proteica marca «Vitalgy» (29/09/2026)": {
+    "type": "alta",
+    "text": "Barrita proteica marca «Vitalgy» (29/09/2026)",
+    "url": "https://vaad.ar/producto/barrita-marca-vitalgy-3/"
   }
 }
