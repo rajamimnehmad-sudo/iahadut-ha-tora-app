@@ -494,5 +494,25 @@
     "type": "alta",
     "text": "Mermelada de Membrillo BC marca «La Campagnola» (29/09/2026)",
     "url": "https://vaad.ar/producto/mermelada-de-membrillo-bc-marca-la-campagnola/"
+  },
+  "alta:Mermelada de Damasco marca «Arcor» (29/09/2026)": {
+    "type": "alta",
+    "text": "Mermelada de Damasco marca «Arcor» (29/09/2026)",
+    "url": "https://vaad.ar/producto/mermelado-de-damasco-marca-arcor/"
+  },
+  "alta:Mermelada de Durazno marca «Arcor» (29/09/2026)": {
+    "type": "alta",
+    "text": "Mermelada de Durazno marca «Arcor» (29/09/2026)",
+    "url": "https://vaad.ar/producto/mermelada-de-durazno-marca-arcor/"
+  },
+  "alta:Acelga congelada marca «Greens» (29/09/2026)": {
+    "type": "alta",
+    "text": "Acelga congelada marca «Greens» (29/09/2026)",
+    "url": "https://vaad.ar/producto/acelga-congelada-marca-greens/"
+  },
+  "baja:Mermelada Orange marca «Mackays» (Dado de baja el 01/10/2026)": {
+    "type": "baja",
+    "text": "Mermelada Orange marca «Mackays» (Dado de baja el 01/10/2026)",
+    "url": ""
   }
 }
