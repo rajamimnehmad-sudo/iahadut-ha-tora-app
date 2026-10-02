@@ -42,10 +42,13 @@ La versión 80 está publicada en la pista interna de Google Play. Firebase ya c
 - Fotos de Destacados y fichas verificadas. Buscar aceite devolvió 32 productos; ficha de aceite de coco Chennai con foto y descripción. Compartir abrió el selector nativo de Android; se canceló sin enviar contenido.
 - Cámara: permiso rechazado, nuevo intento con permiso temporal, lector abierto y cancelado correctamente. Decodificación de un producto físico todavía pendiente.
 - Hallazgos menores corregidos para 81: hora nueva de Alertas en 24 horas; permiso previo de cámara con salida manual en español, evitando el diálogo inglés del SDK. Incluye la pausa local del respaldo Supabase posterior al AAB 80.
-- Build 81 y 38 pruebas JavaScript aprobados; pruebas nativas aprobadas durante bundleRelease/testReleaseUnitTest. Publicación interna y comprobación física de 81 pendientes.
+- Build 81 y 38 pruebas JavaScript aprobados; pruebas nativas aprobadas durante bundleRelease/testReleaseUnitTest. Publicación interna 81 aprobada (37061773063); instalada desde Play en el S22. Salida manual de cámara rechazada y hora 17:41 de push nuevo verificadas (37062149222). SHA256 del AAB: a659d86df11c434c1ad5382a15d7cc89aea2db9d999f4803c88119115aabb71c. PR 2 integrado tras CI 37061774878 aprobado.
 
 ## Pendiente antes de producción
 
-1. Completar toque de notificación y verificar los ajustes de 81 mediante actualización desde Play.
-2. Decodificación real de un producto con cámara. iOS necesita configuración Firebase/APNs y pruebas propias.
+1. Asociación del código físico 7798224212585 con polvo para hornear La Parmesana: publicación y comprobación final pendientes. El lector decodificó correctamente; la ficha central tenía barcode vacío. El propietario confirmó la identidad del producto.
+2. iOS necesita configuración Firebase/APNs y pruebas propias.
 3. La versión interna no se promovió a producción. Ninguna prueba envió al tema público.
+
+- Toque de notificación 37061656182 abre Alertas sin duplicados. Guardados agrega y quita un producto correctamente. Ingreso manual de EAN 7792180001641 abre aceite de girasol Cañuelas.
+- Hallazgo editorial de la fuente: la ficha oficial de mermelada de Durazno light Noel incluye una foto de Damasco light (mermelada14.jpg); comprobado en HTML de vaad.ar. No se modificó el contenido oficial por inferencia.
