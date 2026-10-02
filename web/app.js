@@ -538,8 +538,7 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     const local = location.port === '5173' && (location.hostname === 'localhost' || location.hostname === '127.0.0.1');
     if (!local) {
       const encoded = encodeURIComponent(url);
-      // Firebase is the primary public proxy. The Supabase URL remains a
-      // temporary fallback until the function is deployed everywhere.
+      // Consult the configured public proxies in order; retain cached content on failure.
       return [
         `https://us-central1-iahadut-hatora.cloudfunctions.net/vaadProxy?url=${encoded}`,
         `https://syeycayasyufedwoprea.supabase.co/functions/v1/iahadut-demo/proxy?url=${encoded}`
@@ -560,11 +559,11 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
       for (let attempt = 0; attempt < 3; attempt += 1) {
         try {
           if (Capacitor.isNativePlatform()) {
-            const response = await CapacitorHttp.get({url:candidate, responseType:'text', headers:{Accept:'text/html'}});
+            const response = await CapacitorHttp.get({url:candidate, responseType:'text', connectTimeout:10000, readTimeout:15000, headers:{Accept:'text/html'}});
             if (response.status < 200 || response.status >= 300) throw new Error(`HTTP ${response.status}`);
             return String(response.data || '');
           }
-          const response = await fetch(candidate, {cache:'no-store', headers:{Accept:'text/html'}});
+          const response = await fetch(candidate, {cache:'no-store', signal:AbortSignal.timeout(15000), headers:{Accept:'text/html'}});
           if (!response.ok) throw new Error(`HTTP ${response.status}`);
           return response.text();
         } catch (error) {

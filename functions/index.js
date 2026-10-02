@@ -1,6 +1,6 @@
 const {onRequest} = require('firebase-functions/v2/https');
 
-const ALLOWED_HOSTS = new Set(['vaad.ar', 'www.vaad.ar']);
+const {officialTarget, fetchOfficial} = require('./official-proxy');
 const ALLOWED_ORIGINS = [
   /^https:\/\/[^/]+\.github\.io$/,
   /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/
@@ -37,28 +37,18 @@ exports.vaadProxy = onRequest({
   const requestedUrl = String(request.query.url || '');
   let target;
   try {
-    target = new URL(requestedUrl);
+    target = officialTarget(requestedUrl);
   } catch (_) {
     response.status(400).send('URL inválida');
     return;
   }
-  if (target.protocol !== 'https:' || !ALLOWED_HOSTS.has(target.hostname)) {
-    response.status(400).send('Solo se permite consultar vaad.ar');
-    return;
-  }
 
   try {
-    const upstream = await fetch(target, {
-      headers: {
-        Accept: 'text/html,application/xhtml+xml',
-        'User-Agent': 'IahadutHaTora-Proxy/1.0'
-      }
-    });
-    const body = await upstream.text();
+    const upstream = await fetchOfficial(target.href);
     response.status(upstream.status);
     response.set('Cache-Control', 'public, max-age=60, s-maxage=300');
-    response.set('Content-Type', upstream.headers.get('content-type') || 'text/html; charset=utf-8');
-    response.send(body);
+    response.set('Content-Type', upstream.contentType);
+    response.send(upstream.body);
   } catch (_) {
     response.status(502).send('No se pudo consultar la fuente oficial');
   }
