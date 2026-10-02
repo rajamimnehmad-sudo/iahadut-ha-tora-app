@@ -6,7 +6,7 @@ on:
       version_code:
         description: Código de la versión ya probada en la pista interna
         required: true
-        default: '79'
+        default: '80'
         type: string
       release_version:
         description: Versión visible de la app

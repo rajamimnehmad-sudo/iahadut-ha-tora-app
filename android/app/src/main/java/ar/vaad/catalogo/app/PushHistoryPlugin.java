@@ -76,6 +76,11 @@ public final class PushHistoryPlugin extends Plugin {
         task.addOnCompleteListener(result -> {
             if (!result.isSuccessful()) { call.reject("Could not update FCM subscriptions", result.getException()); return; }
             PushHistoryStore.preferences(getContext()).edit().putString("test_topic", enabled ? testTopic : "").apply();
+            // USB diagnostics expose only an irreversible topic hash, never
+            // the registration token. This permits private device-only tests.
+            if (enabled && android.provider.Settings.Global.getInt(getContext().getContentResolver(), android.provider.Settings.Global.ADB_ENABLED, 0) == 1) {
+                android.util.Log.i("IhtPushTest", testTopic);
+            }
             call.resolve();
         });
     }

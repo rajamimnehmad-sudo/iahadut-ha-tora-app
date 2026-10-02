@@ -4,6 +4,7 @@ import { APP_VERSION, accessDecision, defaultRemoteControl, loadRemoteControl } 
 import { firebaseConfig } from './firebase-config.js';
 import { notificationIsRevoked, readRevokedPushes, loadRevokedPushes } from './push-revocations.js';
 import { catalogSnapshotNeedsRepair } from './catalog-cache.js';
+import {normalizedSnapshot, snapshotHash, readPublishedSnapshot} from './published-catalog.js';
 import catalogSnapshot from './data/catalog.json';
 import { productText } from './product-text.js';
 import featuredProductsSnapshot from './data/featured-products.json';
@@ -289,17 +290,6 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     }
     return firebaseReadyPromise;
   }
-  async function loadGlobalPopularity() {
-    try {
-      const firebase = await getFirebaseCatalogApi();
-      if (!firebase) return;
-      globalPopularityDb = firebase.db;
-      globalPopularityApi = firebase.api;
-      const snapshot = await firebase.api.getDocs(firebase.api.query(firebase.api.collection(globalPopularityDb, 'product_popularity'), firebase.api.orderBy('score', 'desc'), firebase.api.limit(12)));
-      globalPopularity = Object.fromEntries(snapshot.docs.map((doc) => [doc.data().productUrl, doc.data()]));
-      renderSearchCategories();
-    } catch (_) {}
-  }
   let firebaseAnalytics = null;
   if (Capacitor.isNativePlatform()) import('@capacitor-firebase/analytics').then(({FirebaseAnalytics}) => { firebaseAnalytics = FirebaseAnalytics; }).catch(() => {});
   const logAnalyticsEvent = (name, params) => { try { firebaseAnalytics?.logEvent({name, params}); } catch (_) {} };
@@ -308,15 +298,7 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     entry[type] = (entry[type] || 0) + 1;
     popularity[key] = entry;
     localStorage.setItem('iht_popularity', JSON.stringify(popularity));
-    if (globalPopularityDb && globalPopularityApi && !String(key).startsWith('query:')) {
-      const product = products.find((item) => item.url === key);
-      const ref = globalPopularityApi.doc(globalPopularityDb, 'product_popularity', popularityDocId(key));
-      globalPopularityApi.runTransaction(globalPopularityDb, async (transaction) => {
-        const snapshot = await transaction.get(ref);
-        const current = snapshot.exists() ? snapshot.data() : {};
-        transaction.set(ref, {productUrl:snapshot.exists() ? current.productUrl : key, title:snapshot.exists() ? current.title : product?.title || key, image:snapshot.exists() ? current.image : product?.image || '', searches:Number(current.searches || 0) + (type === 'searches' ? 1 : 0), opens:Number(current.opens || 0) + (type === 'opens' ? 1 : 0), score:Number(current.score || 0) + 1, updatedAt:globalPopularityApi.serverTimestamp()}, {merge:true});
-      }).catch(() => {});
-    }
+
   };
   let selectedCategory = 'all';
   let selectedRegion = 'argentina';
@@ -1225,6 +1207,52 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     return syncRequest;
   }
 
+  async function syncCatalogFromPublishedFiles(onProgress = null) {
+    const base = import.meta.env.DEV ? '/data/published/' : 'https://raw.githubusercontent.com/rajamimnehmad-sudo/iahadut-ha-tora-app/main/web/data/published/';
+    const baseline = normalizedSnapshot({catalog:activeCatalogSnapshot, content:activeContentSnapshot, productDetails:activeProductDetailsSnapshot});
+    baseline.catalog.products.sort((a,b) => a.url.localeCompare(b.url, 'en'));
+    const stored = readJson('iht_published_snapshot');
+    const previous = stored?.snapshot || baseline;
+    const previousHash = stored?.hash || await snapshotHash(baseline);
+    const currentDate = Date.parse(localStorage.getItem('iht_catalog_version') || activeCatalogSnapshot.generatedAt || '') || 0;
+    onProgress?.(8, 'Consultando la versión del catálogo…');
+    const result = await readPublishedSnapshot(async (file) => {
+      const response = await fetch(base + file, {cache:file === 'manifest.json' ? 'no-cache' : 'default', signal:AbortSignal.timeout(15000)});
+      if (!response.ok) throw new Error(`Copia del catálogo HTTP ${response.status}`);
+      const value = await response.json();
+      if (file === 'manifest.json' && (Date.parse(value.version) || 0) < currentDate) throw new Error('Se conserva la copia más reciente del catálogo');
+      return value;
+    }, previous, previousHash);
+    const next = result.snapshot;
+    const previousUrls = new Set(products.map(product => product.url));
+    // Persist the verified complete copy before changing the visible catalog.
+    localStorage.setItem('iht_published_snapshot', JSON.stringify({hash:result.hash, snapshot:next}));
+    const validUrls = new Set(next.catalog.products.map(product => product.url));
+    Object.keys(productCache).forEach(url => { if (!validUrls.has(url)) delete productCache[url]; });
+    Object.entries(next.productDetails.products).forEach(([url,detail]) => { productCache[url] = {...detail, fetchedAt:Date.now()}; });
+    products = next.catalog.products.map(product => ({...product, barcode:canonicalBarcode(product.barcode || next.productDetails.products[product.url]?.barcode), description:next.productDetails.products[product.url]?.description || product.description || ''}));
+    const additions = products.filter(product => !previousUrls.has(product.url));
+    recentProducts = additions.length ? additions.slice(0,10) : products.slice(0,10);
+    Object.keys(infoCache).forEach(key => { delete infoCache[key]; });
+    Object.entries(next.content.info).forEach(([key,value]) => { infoCache[key] = {...value, fetchedAt:Date.now()}; });
+    Object.keys(cardCache).forEach(key => { delete cardCache[key]; });
+    Object.entries(next.content.cards).forEach(([key,value]) => { cardCache[key] = {...value, fetchedAt:Date.now()}; });
+    localStorage.setItem('iht_product_cache', JSON.stringify({version:INFO_CACHE_VERSION, items:productCache}));
+    localStorage.setItem('iht_info_cache', JSON.stringify({version:INFO_CACHE_VERSION, items:infoCache}));
+    localStorage.setItem('iht_card_cache', JSON.stringify({version:INFO_CACHE_VERSION, items:cardCache}));
+    localStorage.setItem('iht_recent_products', JSON.stringify(recentProducts));
+    localStorage.setItem('iht_catalog_version', result.version);
+    localStorage.setItem('iht_catalog_generated_at', String(Date.parse(result.version) || currentDate));
+    if (next.catalog.officialUpdate) localStorage.setItem('iht_official_update', next.catalog.officialUpdate);
+    syncState.last = String(Date.now());
+    localStorage.setItem('iht_last_sync', syncState.last);
+    save();
+    syncMessage(`${products.length.toLocaleString('es-AR')} productos · actualizado`, 'ok');
+    renderHome();
+    if (document.querySelector('.view.active')?.id === 'searchView') renderSearchCategories();
+    return true;
+  }
+
   function localProductFromFirestore(data, previous = null) {
     const url = clean(data?.sourceUrl);
     const title = clean(data?.title);
@@ -1408,13 +1436,13 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
       }
       let firebaseUpdated = false;
       let firebaseError = null;
-      try { firebaseUpdated = await syncCatalogFromFirestore(minimumCatalogTotal, onProgress); } catch (error) { firebaseError = error; }
+      try { firebaseUpdated = await syncCatalogFromPublishedFiles(onProgress); } catch (error) { firebaseError = error; }
       if (firebaseUpdated) return;
       // A valid bundled or cached catalog is safer than falling back to a
       // full scrape on every manual sync. Full pagination is reserved for a
       // genuinely empty catalog/recovery state.
       if (products.length > seed.length) {
-        syncState.error = firebaseError?.message || 'No se pudo consultar la sincronización incremental';
+        syncState.error = firebaseError?.message || 'No se pudo consultar la copia del catálogo';
         syncMessage('Sin cambios verificados · se conserva la copia guardada', 'bad');
         return;
       }
@@ -4714,7 +4742,7 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
   // La interfaz queda disponible de inmediato. La precarga completa continúa
   // en segundo plano y comunica su estado en la barra superior.
   preloadInitialProductImages();
-  loadGlobalPopularity();
+  // Popularity stays on-device so user growth cannot exhaust Firestore quotas.
   const remoteControlReady = refreshRemoteControl(false);
   void refreshPushRevocations();
   refreshPlayUpdate();

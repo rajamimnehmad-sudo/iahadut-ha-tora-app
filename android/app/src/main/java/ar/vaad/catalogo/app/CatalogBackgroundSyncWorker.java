@@ -28,9 +28,8 @@ import java.nio.charset.StandardCharsets;
 import java.util.concurrent.TimeUnit;
 
 /**
- * Keeps a fresh copy of the public catalog outside the WebView lifecycle.
- * WorkManager persists this job across app minimization, process death and
- * device reboots, while Android still controls the exact execution window.
+ * Reads the previous native cache for migration and retires full-download jobs.
+ * Public static catalog synchronization now runs through the WebView client.
  */
 public final class CatalogBackgroundSyncWorker extends Worker {
     private static final String WORK_NAME = "catalog-background-sync";
@@ -48,26 +47,12 @@ public final class CatalogBackgroundSyncWorker extends Worker {
     }
 
     public static void schedule(Context context) {
-        Context appContext = context.getApplicationContext();
-        Constraints constraints = new Constraints.Builder()
-                .setRequiredNetworkType(NetworkType.CONNECTED)
-                .build();
-        PeriodicWorkRequest periodic = new PeriodicWorkRequest.Builder(
-                CatalogBackgroundSyncWorker.class, 12, TimeUnit.HOURS)
-                .setConstraints(constraints)
-                .build();
-        WorkManager.getInstance(appContext).enqueueUniquePeriodicWork(
-                WORK_NAME, ExistingPeriodicWorkPolicy.KEEP, periodic);
-
-        SharedPreferences prefs = appContext.getSharedPreferences(PREFS, Context.MODE_PRIVATE);
-        File catalog = new File(new File(appContext.getFilesDir(), CACHE_DIR), SNAPSHOT);
-        if (!catalog.exists() || prefs.getLong(PREF_LAST_SUCCESS, 0L) == 0L) {
-            OneTimeWorkRequest initial = new OneTimeWorkRequest.Builder(CatalogBackgroundSyncWorker.class)
-                    .setConstraints(constraints)
-                    .build();
-            WorkManager.getInstance(appContext).enqueueUniqueWork(
-                    INITIAL_WORK_NAME, ExistingWorkPolicy.KEEP, initial);
-        }
+        // The server checks the source every 12 hours. Clients read its static
+        // manifest when opened or explicitly refreshed, then download deltas.
+        // Retire the legacy worker which downloaded every full file per phone.
+        WorkManager manager = WorkManager.getInstance(context.getApplicationContext());
+        manager.cancelUniqueWork(WORK_NAME);
+        manager.cancelUniqueWork(INITIAL_WORK_NAME);
     }
 
     @NonNull

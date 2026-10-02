@@ -25,7 +25,7 @@ test('manual update repairs an incomplete equal-version snapshot and protects ne
  assert.equal(catalogSnapshotNeedsRepair([{url:'one'},{url:'other'}],snapshot.generatedAt,snapshot),true);
  assert.equal(catalogSnapshotNeedsRepair(snapshot.products,snapshot.generatedAt,snapshot),false);
 });
-test('actual manual sync repairs a corrupt cache even when Firebase cannot be reached',async()=>{
+test('actual manual sync repairs a corrupt cache even when the public copy cannot be reached',async()=>{
  const snapshot={generatedAt:'2026-10-02T19:04:48.624Z',products:[{url:'one'},{url:'featured'}]};
  const storage=new Map([['iht_catalog_version',snapshot.generatedAt]]);
  const context=vm.createContext({
@@ -33,7 +33,7 @@ test('actual manual sync repairs a corrupt cache even when Firebase cannot be re
   localStorage:{getItem:key=>storage.get(key),setItem:(key,value)=>storage.set(key,value)},
   syncState:{running:false,last:'0'},syncMessage(){},categories:[{count:2}],productCache:{},seed:[],canonicalBarcode:value=>value||'',
   recentProducts:[],save(){},renderHome(){},renderSearchCategories(){},document:{querySelector:()=>null},
-  syncCatalogFromFirestore:async()=>{throw new Error('Offline');}
+  syncCatalogFromPublishedFiles:async()=>{throw new Error('Offline');}
  });
  const sync=source.slice(source.indexOf('  async function syncCatalog('),source.indexOf('  function categoryMarkup('));
  vm.runInContext(sync,context);await vm.runInContext('syncCatalog(true)',context);
