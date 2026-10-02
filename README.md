@@ -8,13 +8,13 @@ La aplicación se desarrolla primero para Android, pero la interfaz y la lógica
 
 La fuente web es compartida para Android, iOS y navegador mediante Capacitor. La configuración multiplataforma está en `package.json` y `capacitor.config.json`.
 
-La sincronización consulta primero la versión publicada en Firestore (`catalog_metadata/current`). Si la versión local coincide y el total es consistente, termina sin descargar productos; si cambió, lee únicamente los productos activos modificados y las bajas archivadas desde la última versión. Para una instalación nueva o una recuperación sin catálogo local, hace una carga inicial autorizada desde Firestore; la lectura paginada de las categorías oficiales queda reservada únicamente para recuperar una instalación que no tenga ningún catálogo válido. Ante una caída de Firebase conserva la copia incluida o guardada y no inicia una lectura masiva. Se intenta al iniciar, al volver la app a primer plano, cuando vuelve la conexión y se puede forzar tocando el estado de sincronización. La app muestra primero la copia incluida o guardada y actualiza el contenido en segundo plano para que las secciones abran sin esperar.
+La app consulta un manifiesto estático en `web/data/published/`. Si su huella coincide con la copia guardada, conserva el catálogo; si cambió, descarga los cambios inmutables desde su última versión y comprueba la huella y la presencia de todas las fichas antes de aplicarlos. Una instalación sin copia válida descarga una instantánea completa. Ante un error conserva la copia incluida o guardada. El servidor revisa la fuente cada 12 horas; Actualizar ahora consulta la última copia publicada, sin disparar una extracción ni escrituras en Firestore por cada usuario. Los contadores de popularidad quedan en el teléfono para evitar consumo de Firestore por búsquedas y aperturas. Las versiones anteriores pueden seguir consumiendo su cuota hasta actualizarse.
 
 En el primer arranque online se completa una preparación inicial: se descargan las fichas, las imágenes y la información necesaria para que las páginas de productos abran desde la copia local. La preparación puede tardar, pero se realiza una sola vez por versión de contenido. En las revisiones posteriores de 12 horas o al actualizar manualmente, se comparan los productos y se descargan únicamente los nuevos, eliminados o modificados, junto con sus imágenes nuevas.
 
-En Vite local, las consultas pasan por el proxy `/vaad-api`. En la web pública de GitHub Pages usan primero la Cloud Function `vaadProxy` de Firebase, porque `vaad.ar` no publica CORS; la función solo admite URLs de ese dominio. La URL de Supabase queda como respaldo temporal hasta desplegar la función en todos los entornos. En Android/iOS, el código usa `CapacitorHttp` nativo; de esa forma el APK puede actualizarse sin depender de un proxy web. Las respuestas se reintentan hasta tres veces y se conserva la última copia válida si el teléfono está sin conexión.
+Las consultas HTML complementarias en Vite local pasan por el proxy `/vaad-api`. En la web pública de GitHub Pages usan la Cloud Function `vaadProxy` de Firebase, porque `vaad.ar` no publica CORS; la función solo admite URLs de ese dominio. El respaldo de Supabase está pausado para esta app: no se hacen consultas a ese servicio, pero se conserva su referencia para una eventual reactivación. En Android/iOS, el código usa `CapacitorHttp` nativo; de esa forma el APK puede actualizarse sin depender de un proxy web. Las respuestas se reintentan hasta tres veces y se conserva la última copia válida si el teléfono está sin conexión.
 
-La actualización de 12 horas en el cliente se ejecuta al iniciar o reanudar la app. `.github/workflows/catalog-alerts.yml` actualiza únicamente las instantáneas: no envía push. Los avisos se envían exclusivamente con `.github/workflows/manual-push.yml` (ejecución manual, título y texto; por defecto muestra una vista previa). El envío usa `FCM_SERVICE_ACCOUNT_JSON` y genera un `eventKey` que figura en el resultado de la ejecución.
+La actualización de 12 horas en el cliente se ejecuta al iniciar o reanudar la app. `.github/workflows/catalog-alerts.yml` publica instantáneas y cambios estáticos y mantiene la base central mediante escrituras incrementales; no envía push. Los avisos se envían exclusivamente con `.github/workflows/manual-push.yml` (ejecución manual, título y texto; por defecto muestra una vista previa). El envío usa `FCM_SERVICE_ACCOUNT_JSON` y genera un `eventKey` que figura en el resultado de la ejecución.
 
 Los avisos manuales aparecen en Alertas y no vencen por tiempo ni por cantidad. Android conserva el historial incluso con la app cerrada. Para retirar un aviso para todos, ejecutar `.github/workflows/revoke-manual-push.yml` con su `eventKey`, desde la versión publicada en `main`. El workflow actualiza `web/data/push-revocations.json`; la app consulta ese registro público al iniciar, reanudar y abrir Alertas. La retirada se conserva localmente para impedir que una entrega atrasada lo restaure. Sin conexión se mantiene la última lista conocida hasta la siguiente consulta. Esta función retira el contenido del panel de la app; no revoca un aviso que Android ya mostró en su bandeja. El botón Limpiar borra únicamente el historial del teléfono.
 
@@ -24,16 +24,16 @@ Para que la retirada funcione en producción deben publicarse tanto los workflow
 
 El catálogo central autorizado se guarda en Firestore en `catalog_products`. La copia incluida en `web/data/catalog.json` se mantiene para que la aplicación abra rápido y pueda funcionar sin conexión; Firestore es la fuente central para altas, cambios y bajas autorizadas.
 
-El workflow `.github/workflows/firebase-catalog.yml` realiza este circuito:
+El workflow `.github/workflows/catalog-alerts.yml` mantiene el catálogo cada 12 horas; `.github/workflows/firebase-catalog.yml` conserva el camino manual protegido. El circuito del servidor es:
 
 1. Consulta nuevamente la fuente oficial y prepara la copia autorizada del catálogo. El enriquecimiento de códigos de barras queda separado y pausado hasta una revisión específica; la sincronización no altera esos datos por accidente.
 2. Solo conserva códigos GTIN/EAN/UPC con dígito verificador válido y coincidencia inequívoca de producto, marca y variante. Las coincidencias ambiguas quedan sin código.
 3. Genera un plan de altas, cambios y bajas sin escribir todavía.
-4. En la ejecución automática de cada 12 horas aplica únicamente una actualización incremental con la cuenta de servicio de GitHub. No crea infraestructura nueva ni requiere servicios pagos.
+4. Publica el manifiesto, la copia completa y los cambios estáticos. Cada 12 horas aplica una actualización incremental de Firestore con la cuenta de servicio de GitHub; guarda también las fichas completas y el contenido complementario. No crea infraestructura ni activa facturación.
 5. Una ejecución manual sigue esperando la aprobación del entorno protegido `catalog-production`; este camino queda reservado para una carga inicial (`seed`) o una intervención controlada.
 6. Al actualizar Firestore, los productos dados de baja se archivan en `catalog_archive` y se eliminan de `catalog_products`, por lo que dejan de aparecer en el catálogo activo pero se conserva una trazabilidad mínima para poder auditar o restaurar.
 
-El proxy web de Firebase está en `functions/`. Para publicarlo, instalar Firebase CLI, iniciar sesión con la cuenta del proyecto y ejecutar `firebase deploy --only functions:vaadProxy --project iahadut-hatora`. El despliegue requiere que el proyecto tenga habilitado el plan de facturación correspondiente a Cloud Functions.
+El proxy web opcional de Firebase está en `functions/`, pero no está habilitado en el proyecto actual. Su despliegue requeriría facturación para Cloud Functions; no se activó y el catálogo se distribuye mediante archivos sin depender del proxy. Supabase permanece pausado únicamente en el código de esta app; no se modificó el proyecto remoto.
 
 Para habilitar la primera carga hay que crear en GitHub el entorno protegido `catalog-production`, agregar al menos un revisor requerido y guardar los secretos `FIREBASE_SERVICE_ACCOUNT_JSON` y `FCM_SERVICE_ACCOUNT_JSON` donde corresponda. Esas cuentas deben tener únicamente permisos de servidor; no se deben poner en la aplicación ni en el repositorio. La primera ejecución manual usa `seed` y requiere aprobación. Luego, la actualización incremental se ejecuta cada 12 horas sin quedar detenida esperando una aprobación; una ejecución manual continúa protegida. El push real requiere instalar una APK/AAB nativa, aceptar el permiso de notificaciones y activar los avisos desde la app.
 
@@ -43,7 +43,7 @@ Para habilitar la primera carga hay que crear en GitHub el entorno protegido `ca
 - Wrapper Android original de referencia: `app/`
 - Configuración multiplataforma: `capacitor.config.json`
 - Paquete: `ar.vaad.catalogo.app`
-- Versión Android publicada en prueba interna: `1.0.22` (`versionCode` 74)
+- Versión Android publicada en prueba interna: `1.0.26` (`versionCode` 80), confirmada el 2 de octubre de 2026. La pausa del respaldo Supabase se incorporó al código después de esa compilación y queda para la siguiente.
 - APK original de referencia: `Iahadut-HaTora-v12-3.apk`
 
 ## Compilar Android Capacitor
@@ -63,7 +63,7 @@ La aplicación ya existe en Google Play. Cada actualización debe conservar exac
 
 - `applicationId`: `ar.vaad.catalogo.app`
 - Versión actual en el código fuente: `1.0.26`
-- `versionCode` local: `79`. El AAB local está preparado; confirmar el estado real de las pistas antes de promoverlo.
+- `versionCode` local: `80`, ya publicado en prueba interna. Cada nuevo AAB requiere un código mayor. Confirmar las pruebas físicas y las pistas actuales antes de promoverlo.
 - `minSdkVersion`: `26`
 - `targetSdkVersion` y `compileSdkVersion`: `36`
 

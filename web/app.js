@@ -520,10 +520,10 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     const local = location.port === '5173' && (location.hostname === 'localhost' || location.hostname === '127.0.0.1');
     if (!local) {
       const encoded = encodeURIComponent(url);
-      // Consult the configured public proxies in order; retain cached content on failure.
+      // Supabase is paused for this app; retain cached content on proxy failure.
       return [
-        `https://us-central1-iahadut-hatora.cloudfunctions.net/vaadProxy?url=${encoded}`,
-        `https://syeycayasyufedwoprea.supabase.co/functions/v1/iahadut-demo/proxy?url=${encoded}`
+        `https://us-central1-iahadut-hatora.cloudfunctions.net/vaadProxy?url=${encoded}`
+        // Paused fallback: https://syeycayasyufedwoprea.supabase.co/functions/v1/iahadut-demo/proxy
       ];
     }
     const parsed = new URL(url);
