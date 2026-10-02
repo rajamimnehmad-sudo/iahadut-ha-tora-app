@@ -1,3 +1,4 @@
+import {productSearchKey, validGlobalRanking} from './global-popularity.js';
 import { Capacitor, CapacitorHttp, registerPlugin } from '@capacitor/core';
 import { App } from '@capacitor/app';
 import { APP_VERSION, accessDecision, defaultRemoteControl, loadRemoteControl } from './remote-control.js';
