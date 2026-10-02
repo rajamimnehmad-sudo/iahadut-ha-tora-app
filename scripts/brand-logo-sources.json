@@ -1,0 +1,288 @@
+[
+  {
+    "source": "https://vaad.ar/wp-content/uploads/2026/09/logo-noel-300x151.png",
+    "name": "noel",
+    "asset": "assets/brands/brand-00.png",
+    "bounds": [
+      2,
+      8,
+      297,
+      149
+    ]
+  },
+  {
+    "source": "https://vaad.ar/wp-content/uploads/2026/09/logo-la-campagnola-300x130.png",
+    "name": "la campagnola",
+    "asset": "assets/brands/brand-01.png",
+    "bounds": [
+      0,
+      1,
+      300,
+      129
+    ]
+  },
+  {
+    "source": "https://vaad.ar/wp-content/uploads/2026/09/logo-barba-roja-300x225.png",
+    "name": "barba roja",
+    "asset": "assets/brands/brand-02.png",
+    "bounds": [
+      16,
+      2,
+      284,
+      222
+    ]
+  },
+  {
+    "source": "https://vaad.ar/wp-content/uploads/2026/09/logo-arcor-300x200.png",
+    "name": "arcor",
+    "asset": "assets/brands/brand-03.png",
+    "bounds": [
+      8,
+      8,
+      291,
+      191
+    ]
+  },
+  {
+    "source": "https://vaad.ar/wp-content/uploads/2026/09/logo-300x300.png",
+    "name": "Planta certificada",
+    "asset": "assets/brands/brand-04.png",
+    "bounds": [
+      19,
+      20,
+      279,
+      272
+    ]
+  },
+  {
+    "source": "https://vaad.ar/wp-content/uploads/2026/09/logo-275x300.jpg",
+    "name": "Planta certificada",
+    "asset": "assets/brands/brand-05.png",
+    "bounds": [
+      7,
+      23,
+      268,
+      277
+    ]
+  },
+  {
+    "source": "https://vaad.ar/wp-content/uploads/2026/08/monda_300x300.png",
+    "name": "monda_300x300",
+    "asset": "assets/brands/brand-06.png",
+    "bounds": [
+      7,
+      119,
+      293,
+      180
+    ]
+  },
+  {
+    "source": "https://vaad.ar/wp-content/uploads/2026/08/logo-rodez-300x112.png",
+    "name": "rodez",
+    "asset": "assets/brands/brand-07.png",
+    "bounds": [
+      12,
+      20,
+      282,
+      106
+    ]
+  },
+  {
+    "source": "https://vaad.ar/wp-content/uploads/2026/06/pomona.png",
+    "name": "pomona",
+    "asset": "assets/brands/brand-08.png",
+    "bounds": [
+      23,
+      34,
+      161,
+      176
+    ]
+  },
+  {
+    "source": "https://vaad.ar/wp-content/uploads/2026/06/el-parque.png",
+    "name": "el parque",
+    "asset": "assets/brands/brand-09.png",
+    "bounds": [
+      68,
+      63,
+      127,
+      137
+    ]
+  },
+  {
+    "source": "https://vaad.ar/wp-content/uploads/2026/06/la-parmesana.png",
+    "name": "la parmesana",
+    "asset": "assets/brands/brand-10.png",
+    "bounds": [
+      7,
+      43,
+      194,
+      163
+    ]
+  },
+  {
+    "source": "https://vaad.ar/wp-content/uploads/2026/06/karu.png",
+    "name": "karu",
+    "asset": "assets/brands/brand-11.png",
+    "bounds": [
+      30,
+      65,
+      170,
+      129
+    ]
+  },
+  {
+    "source": "https://vaad.ar/wp-content/uploads/2026/06/sozoe.png",
+    "name": "sozoe",
+    "asset": "assets/brands/brand-12.png",
+    "bounds": [
+      0,
+      62,
+      200,
+      138
+    ]
+  },
+  {
+    "source": "https://vaad.ar/wp-content/uploads/2026/06/av.png",
+    "name": "av",
+    "asset": "assets/brands/brand-13.png",
+    "bounds": [
+      31,
+      27,
+      170,
+      175
+    ]
+  },
+  {
+    "source": "https://vaad.ar/wp-content/uploads/2026/06/pura-fruta.png",
+    "name": "pura fruta",
+    "asset": "assets/brands/brand-14.png",
+    "bounds": [
+      0,
+      57,
+      200,
+      143
+    ]
+  },
+  {
+    "source": "https://vaad.ar/wp-content/uploads/2026/06/ait.png",
+    "name": "ait",
+    "asset": "assets/brands/brand-15.png",
+    "bounds": [
+      12,
+      44,
+      188,
+      142
+    ]
+  },
+  {
+    "source": "https://vaad.ar/wp-content/uploads/2026/06/alnuna.png",
+    "name": "alnuna",
+    "asset": "assets/brands/brand-16.png",
+    "bounds": [
+      22,
+      82,
+      177,
+      118
+    ]
+  },
+  {
+    "source": "https://vaad.ar/wp-content/uploads/2026/06/almirante.png",
+    "name": "almirante",
+    "asset": "assets/brands/brand-17.png",
+    "bounds": [
+      0,
+      0,
+      200,
+      200
+    ]
+  },
+  {
+    "source": "https://vaad.ar/wp-content/uploads/2026/06/amande.png",
+    "name": "amande",
+    "asset": "assets/brands/brand-18.png",
+    "bounds": [
+      9,
+      58,
+      191,
+      142
+    ]
+  },
+  {
+    "source": "https://vaad.ar/wp-content/uploads/2026/06/ancestral.png",
+    "name": "ancestral",
+    "asset": "assets/brands/brand-19.png",
+    "bounds": [
+      0,
+      0,
+      200,
+      200
+    ]
+  },
+  {
+    "source": "https://vaad.ar/wp-content/uploads/2026/06/api-frank.png",
+    "name": "api frank",
+    "asset": "assets/brands/brand-20.png",
+    "bounds": [
+      13,
+      13,
+      184,
+      184
+    ]
+  },
+  {
+    "source": "https://vaad.ar/wp-content/uploads/2026/06/finca-balcarce.png",
+    "name": "finca balcarce",
+    "asset": "assets/brands/brand-21.png",
+    "bounds": [
+      34,
+      30,
+      165,
+      157
+    ]
+  },
+  {
+    "source": "https://vaad.ar/wp-content/uploads/2026/06/la-simona.png",
+    "name": "la simona",
+    "asset": "assets/brands/brand-22.png",
+    "bounds": [
+      8,
+      53,
+      190,
+      147
+    ]
+  },
+  {
+    "source": "https://vaad.ar/wp-content/uploads/2026/06/mudra.png",
+    "name": "mudra",
+    "asset": "assets/brands/brand-23.png",
+    "bounds": [
+      48,
+      58,
+      152,
+      142
+    ]
+  },
+  {
+    "source": "https://vaad.ar/wp-content/uploads/2026/06/vitalgy.png",
+    "name": "vitalgy",
+    "asset": "assets/brands/brand-24.png",
+    "bounds": [
+      0,
+      83,
+      200,
+      117
+    ]
+  },
+  {
+    "source": "https://vaad.ar/wp-content/uploads/2026/06/wik.png",
+    "name": "wik",
+    "asset": "assets/brands/brand-25.png",
+    "bounds": [
+      11,
+      30,
+      186,
+      167
+    ]
+  }
+]

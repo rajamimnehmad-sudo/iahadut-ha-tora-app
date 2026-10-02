@@ -1,0 +1,43 @@
+name: Enviar aviso push manual
+
+on:
+  workflow_dispatch:
+    inputs:
+      title:
+        description: Título del aviso
+        required: true
+        type: string
+      body:
+        description: Mensaje que aparecerá en Alertas
+        required: true
+        type: string
+      test_topic:
+        description: Tema individual de prueba; vacío envía a todos los suscriptores
+        required: false
+        type: string
+      send:
+        description: Enviar el aviso (desmarcado solo muestra una vista previa)
+        default: false
+        type: boolean
+
+permissions:
+  contents: read
+
+jobs:
+  send:
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Enviar únicamente el aviso ingresado manualmente
+        env:
+          MANUAL_PUSH_APPROVED: '1'
+          PUSH_SEND: ${{ inputs.send && '1' || '0' }}
+          PUSH_TITLE: ${{ inputs.title }}
+          PUSH_BODY: ${{ inputs.body }}
+          PUSH_TEST_TOPIC: ${{ inputs.test_topic }}
+          FCM_SERVICE_ACCOUNT_JSON: ${{ secrets.FCM_SERVICE_ACCOUNT_JSON }}
+        run: node scripts/send-manual-push.mjs

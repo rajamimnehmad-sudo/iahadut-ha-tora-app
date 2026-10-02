@@ -36,6 +36,7 @@ public class MainActivity extends BridgeActivity {
     public void onCreate(Bundle savedInstanceState) {
         registerPlugin(PlayStoreUpdatesPlugin.class);
         registerPlugin(CatalogBackgroundSyncPlugin.class);
+        registerPlugin(PushHistoryPlugin.class);
         super.onCreate(savedInstanceState);
         getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE);
         // The WebView must be opaque. During an IME resize Android may expose

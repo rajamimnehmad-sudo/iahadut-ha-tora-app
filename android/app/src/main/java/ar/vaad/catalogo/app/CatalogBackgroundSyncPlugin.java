@@ -15,10 +15,11 @@ public final class CatalogBackgroundSyncPlugin extends Plugin {
 
     @PluginMethod
     public void readCache(PluginCall call) {
+        org.json.JSONObject snapshot = CatalogBackgroundSyncWorker.readSnapshot(getContext());
         JSObject result = new JSObject();
-        result.put("catalog", CatalogBackgroundSyncWorker.read(getContext(), "catalog.json"));
-        result.put("productDetails", CatalogBackgroundSyncWorker.read(getContext(), "product-details.json"));
-        result.put("content", CatalogBackgroundSyncWorker.read(getContext(), "content.json"));
+        result.put("catalog", snapshot.optString("catalog.json", ""));
+        result.put("productDetails", snapshot.optString("product-details.json", ""));
+        result.put("content", snapshot.optString("content.json", ""));
         call.resolve(result);
     }
 }

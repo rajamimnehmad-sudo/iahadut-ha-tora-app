@@ -3,8 +3,18 @@ name: Promover Android a producción
 on:
   workflow_dispatch:
     inputs:
+      version_code:
+        description: Código de la versión ya probada en la pista interna
+        required: true
+        default: '80'
+        type: string
+      release_version:
+        description: Versión visible de la app
+        required: true
+        default: '1.0.26'
+        type: string
       publish:
-        description: Promover la versión interna 74 a producción
+        description: Promover la versión interna indicada a producción
         required: true
         default: false
         type: boolean
@@ -28,9 +38,12 @@ jobs:
       - name: Validar versión interna y promover a producción
         env:
           PACKAGE_NAME: ar.vaad.catalogo.app
-          VERSION_CODE: "74"
+          VERSION_CODE: ${{ inputs.version_code }}
+          RELEASE_VERSION: ${{ inputs.release_version }}
         run: |
           set -euo pipefail
+          [[ "$VERSION_CODE" =~ ^[1-9][0-9]*$ ]]
+          [[ "$RELEASE_VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]
           ACCESS_TOKEN=$(gcloud auth application-default print-access-token --scopes=https://www.googleapis.com/auth/androidpublisher)
 
           response=$(curl --fail-with-body --silent --show-error -X POST \
@@ -47,8 +60,8 @@ jobs:
             '.releases[]? | select(.status == "completed") | .versionCodes[]? | select(. == $version)' \
             <<<"$internal" >/dev/null
 
-          jq -n --arg version "$VERSION_CODE" \
-            '{track:"production",releases:[{name:"1.0.22 · Experiencia visual refinada",versionCodes:[$version],status:"completed",releaseNotes:[{language:"es-419",text:"Nuevo ícono optimizado, mejoras de navegación y encabezado, experiencia responsive refinada, catálogo revisado y un cierre visual más limpio en Inicio."}]}]}' \
+          jq -n --arg version "$VERSION_CODE" --arg name "$RELEASE_VERSION" \
+            '{track:"production",releases:[{name:$name,versionCodes:[$version],status:"completed",releaseNotes:[{language:"es-419",text:"Mejoras del catálogo, fichas sin conexión y avisos manuales."}]}]}' \
             > "$RUNNER_TEMP/production-track.json"
 
           put_result=$(curl --silent --show-error -w '\n%{http_code}' -X PUT \
@@ -92,4 +105,4 @@ jobs:
             -H "Authorization: Bearer $ACCESS_TOKEN" \
             "https://androidpublisher.googleapis.com/androidpublisher/v3/applications/$PACKAGE_NAME/edits/$verify_edit_id"
 
-          echo 'Versión 74 confirmada en la pista production.'
+          echo "Versión $VERSION_CODE confirmada en la pista production."
