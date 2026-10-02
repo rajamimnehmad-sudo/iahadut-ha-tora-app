@@ -46,6 +46,11 @@ service cloud.firestore {
       allow write: if false;
     }
 
+    match /catalog_content/{documentId} {
+      allow read: if isAnonymousAppUser();
+      allow write: if false;
+    }
+
     match /catalog_archive/{documentId} {
       allow read: if isAnonymousAppUser();
       allow write: if false;

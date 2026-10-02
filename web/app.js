@@ -1236,7 +1236,7 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
       cat:clean(data?.category || 'gondola'),
       image:clean(data?.imageUrl),
       barcode:canonicalBarcode(data?.barcode),
-      description:previous?.description || '',
+      description:clean(data?.description) || previous?.description || '',
       catalogGeneratedAt:clean(data?.catalogGeneratedAt),
       updatedAt:clean(data?.updatedAt)
     };
@@ -1252,6 +1252,31 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     const remoteVersion = clean(metadataSnapshot.data()?.version);
     if (!remoteVersion) return false;
     const remoteProductCount = Number(metadataSnapshot.data()?.activeProductCount) || 0;
+    const contentVersion = clean(metadataSnapshot.data()?.contentVersion);
+    let centralContent = null;
+    if (contentVersion && contentVersion !== localStorage.getItem('iht_central_content_version')) {
+      const contentDocument = await firebase.api.getDoc(firebase.api.doc(firebase.db, 'catalog_content', 'current'));
+      if (!contentDocument.exists() || clean(contentDocument.data()?.version) !== contentVersion) throw new Error('Contenido central incompleto; se conserva la copia local');
+      centralContent = JSON.parse(contentDocument.data().contentJson);
+      if (!centralContent?.info || !centralContent?.cards) throw new Error('Contenido central inválido; se conserva la copia local');
+    }
+    const applyCentralContent = () => {
+      if (centralContent) {
+        Object.keys(infoCache).forEach((key) => { delete infoCache[key]; });
+        Object.assign(infoCache, centralContent.info);
+        Object.keys(cardCache).forEach((key) => { delete cardCache[key]; });
+        Object.assign(cardCache, centralContent.cards);
+        localStorage.setItem('iht_info_cache', JSON.stringify({version:INFO_CACHE_VERSION, items:infoCache}));
+        localStorage.setItem('iht_card_cache', JSON.stringify({version:INFO_CACHE_VERSION, items:cardCache}));
+        localStorage.setItem('iht_central_content_version', contentVersion);
+      }
+      const officialUpdate = clean(metadataSnapshot.data()?.officialUpdate);
+      if (officialUpdate) {
+        localStorage.setItem('iht_official_update', officialUpdate);
+        const updateNode = document.querySelector('#officialUpdateDate');
+        if (updateNode) updateNode.textContent = officialUpdate;
+      }
+    };
 
     // Never infer the cursor from the bundled snapshot when a previous
     // installation already has its own cached catalog. That cache may be
@@ -1269,6 +1294,11 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     // A versioned local catalog is already a valid snapshot. Do not force a
     // full download just because the old category counters drifted.
     if (localIsAtLeastAsNew && products.length > seed.length && !catalogNeedsReconcile) {
+      if (centralContent && remoteDate === localDate) {
+        const confirmed = await firebase.api.getDoc(metadataRef);
+        if (!confirmed.exists() || confirmed.data()?.syncInProgress || clean(confirmed.data()?.version) !== remoteVersion || clean(confirmed.data()?.contentVersion) !== contentVersion) throw new Error('El contenido cambió durante la descarga');
+        applyCentralContent();
+      }
       syncState.last = String(Date.now());
       localStorage.setItem('iht_last_sync', syncState.last);
       syncMessage(`${products.length.toLocaleString('es-AR')} productos · actualizado`, 'ok');
@@ -1289,12 +1319,18 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     const nextByUrl = needsFullSnapshot ? new Map() : new Map(previousByUrl);
     const changedUrls = new Set();
     const additions = [];
+    const updatedDetails = new Map();
     activeSnapshot.docs.forEach((document) => {
       const product = localProductFromFirestore(document.data(), previousByUrl.get(document.data()?.sourceUrl));
       if (!product) return;
       if (!previousByUrl.has(product.url)) additions.push(product);
       nextByUrl.set(product.url, product);
       changedUrls.add(product.url);
+      if (document.data()?.detailsJson) {
+        const detail = JSON.parse(document.data().detailsJson);
+        if (detail?.textFormatVersion !== 1 || !Array.isArray(detail.images) || typeof detail.description !== 'string') throw new Error('Ficha central inválida; se conserva la copia local');
+        updatedDetails.set(product.url, {...detail, fetchedAt:Date.now()});
+      }
     });
     if (hasUsableLocalVersion) {
       archiveSnapshot.docs.forEach((document) => {
@@ -1312,11 +1348,14 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
 
     const confirmedMetadata = await firebase.api.getDoc(metadataRef);
     if (!confirmedMetadata.exists() || confirmedMetadata.data()?.syncInProgress || clean(confirmedMetadata.data()?.version) !== remoteVersion || (Number(confirmedMetadata.data()?.activeProductCount) || 0) !== remoteProductCount) throw new Error('El catálogo cambió durante la descarga; se conserva la copia local');
+    if (contentVersion && clean(confirmedMetadata.data()?.contentVersion) !== contentVersion) throw new Error('El contenido cambió durante la descarga');
     const nextProducts = [...nextByUrl.values()];
     const minimumCatalogTotal = remoteProductCount || fallbackMinimumCatalogTotal;
     if ((remoteProductCount && nextProducts.length !== remoteProductCount) || nextProducts.length < minimumCatalogTotal) throw new Error(`Catálogo Firebase incompleto (${nextProducts.length} de ${minimumCatalogTotal} productos)`);
     previousByUrl.forEach((_, url) => { if (!nextByUrl.has(url)) changedUrls.add(url); });
+    applyCentralContent();
     changedUrls.forEach((url) => { delete productCache[url]; });
+    updatedDetails.forEach((detail, url) => { if (nextByUrl.has(url)) productCache[url] = detail; });
     products = nextProducts;
     recentProducts = additions.length ? additions.slice(0, 10) : nextProducts.slice(0, 10);
     localStorage.setItem('iht_recent_products', JSON.stringify(recentProducts));

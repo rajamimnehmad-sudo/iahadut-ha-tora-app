@@ -116,10 +116,12 @@ async function listCollection(token, collection) {
   return documents;
 }
 
-function productDocument(product, generatedAt) {
+function productDocument(product, generatedAt, detail) {
   const barcode = validGtin(product.barcode);
   return {
     sourceUrl: clean(product.url),
+    description: clean(detail.description),
+    detailsJson: JSON.stringify({barcode:detail.barcode || '', images:detail.images || [], category:detail.category || '', description:detail.description || '', textFormatVersion:1, descriptionAvailable:Boolean(detail.descriptionAvailable), beraja:detail.beraja || ''}),
     title: clean(product.title),
     brand: clean(product.brand),
     category: clean(product.cat),
@@ -137,7 +139,7 @@ function sameProduct(a, b) {
   // catalogGeneratedAt identifies the last snapshot in which this product
   // changed. It must not make every unchanged product look modified when a
   // new snapshot is generated.
-  const fields = ['sourceUrl', 'title', 'brand', 'category', 'imageUrl', 'barcode', 'barcodeStatus', 'status', 'source'];
+  const fields = ['sourceUrl', 'title', 'brand', 'category', 'imageUrl', 'barcode', 'barcodeStatus', 'status', 'source', 'description', 'detailsJson'];
   return fields.every((field) => String(a?.[field] ?? '') === String(b?.[field] ?? ''));
 }
 
@@ -156,11 +158,16 @@ async function commit(token, writes) {
 }
 
 const catalog = JSON.parse(await readFile(catalogPath, 'utf8'));
+const content = JSON.parse(await readFile(resolve(projectRoot, 'web/data/content.json'), 'utf8'));
+const details = JSON.parse(await readFile(resolve(projectRoot, 'web/data/product-details.json'), 'utf8')).products || {};
+for (const product of catalog.products || []) {
+  if (details[product.url]?.textFormatVersion !== 1) throw new Error(`Falta la ficha completa de ${product.url}; se cancela la publicación.`);
+}
 const sourceProducts = Array.isArray(catalog.products) ? catalog.products : [];
 const activeProducts = [...new Map(sourceProducts
   .filter((product) => product?.url && product?.title)
   .map((product) => [documentId(product.url), product])).entries()]
-  .map(([id, product]) => ({id, data: productDocument(product, catalog.generatedAt)}));
+  .map(([id, product]) => ({id, data: productDocument(product, catalog.generatedAt, details[product.url])}));
 if (activeProducts.length < 900) throw new Error(`Catálogo incompleto: ${activeProducts.length} productos. Se cancela para no borrar datos válidos.`);
 
 console.log(`Catálogo fuente: ${activeProducts.length} productos activos · ${activeProducts.filter(({data}) => data.barcode).length} códigos con formato GTIN válido.`);
@@ -209,9 +216,13 @@ for (const [id, previous] of existing) {
   writes.push(deleteFor(`catalog_products/${id}`));
 }
 
+writes.push(writeFor('catalog_content/current', {version:clean(catalog.generatedAt), contentJson:JSON.stringify(content)}));
+
 writes.push(writeFor('catalog_metadata/current', {
   version: clean(catalog.generatedAt) || now,
   source: 'vaad.ar',
+  contentVersion:clean(catalog.generatedAt),
+  officialUpdate:clean(catalog.officialUpdate),
   activeProductCount: activeProducts.length,
   validBarcodeCount: activeProducts.filter(({data}) => data.barcode).length,
   updatedAt: now,
