@@ -1,0 +1,38 @@
+name: Actualizar ranking global de búsquedas
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '47 */12 * * *'
+permissions:
+  contents: write
+concurrency:
+  group: global-popularity
+  cancel-in-progress: false
+jobs:
+  ranking:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.FCM_SERVICE_ACCOUNT_JSON }}
+      - uses: google-github-actions/setup-gcloud@v2
+      - name: Consultar estadísticas agregadas
+        env:
+          ANALYTICS_PROPERTY_ID: '552698323'
+        run: |
+          set -euo pipefail
+          export ANALYTICS_ACCESS_TOKEN=$(gcloud auth application-default print-access-token --scopes=https://www.googleapis.com/auth/analytics.readonly)
+          node scripts/publish-global-popularity.mjs
+      - name: Publicar copia compartida
+        if: github.ref == 'refs/heads/main'
+        run: |
+          git config user.name 'iahadut-ranking[bot]'
+          git config user.email 'iahadut-ranking[bot]@users.noreply.github.com'
+          git add web/data/global-popularity.json
+          git diff --cached --quiet || git commit -m 'chore: actualizar ranking global agregado'
+          git pull --rebase origin main
+          git push
