@@ -1,6 +1,6 @@
 # Revisión de Android 1.0.26 / 80 y servidor
 
-La versión 80 está publicada en la pista interna de Google Play. Firebase ya contiene el catálogo completo. El código de distribución pública y los workflows nuevos permanecen en el PR de revisión; todavía deben publicarse en main. La validación física de push está pendiente de volver a conectar el S22. No se promovió una versión a producción ni se enviaron avisos al topic público.
+La versión 80 está publicada en la pista interna de Google Play. Firebase ya contiene el catálogo completo. El PR 1 fue integrado a main con autorización del propietario. El workflow seguro fue reactivado y su ejecución 37060617579 terminó correctamente: 1109 productos, 0 altas, 0 modificaciones y 0 bajas. La versión 80 instalada desde Play fue probada en el S22 por USB. No se promovió una versión a producción ni se enviaron avisos al topic público.
 
 ## Catálogo y cuota gratuita
 
@@ -18,7 +18,7 @@ La versión 80 está publicada en la pista interna de Google Play. Firebase ya c
 - Reparación de la caché 1048 mal identificada con la versión del catálogo completo. Se conserva una copia autorizada más nueva aunque contenga bajas legítimas. Inicio, búsqueda, fichas, categorías y Guardados comparten la colección activa; los 18 Destacados pertenecen a ella.
 - Push exclusivamente manual. La actualización del catálogo no envía FCM. El workflow de envío inicia en vista previa; enviar requiere marcar su opción explícita. Respeta desactivación, rotación de token, permisos y canal Android v2.
 - Historial nativo persistido antes de mostrar avisos en segundo plano; recuperación desde icono o toque en la notificación. Sin límite de cantidad ni vencimiento del historial.
-- Retirada individual mediante identificador del aviso, conservada offline para impedir reaparición de entregas atrasadas. Requiere publicar registro y workflow en main. Retira la entrada de Alertas; no elimina avisos ya mostrados por Android.
+- Retirada individual mediante identificador del aviso, conservada offline para impedir reaparición de entregas atrasadas. Registro y workflow publicados en main. Retira la entrada de Alertas; no elimina avisos ya mostrados por Android.
 - El diagnóstico USB registra únicamente el tema individual derivado por hash cuando ADB está activado, nunca el token FCM. Permite dirigir la prueba al S22 sin avisar a todos los usuarios.
 
 ## Evidencia y límites
@@ -31,8 +31,21 @@ La versión 80 está publicada en la pista interna de Google Play. Firebase ya c
 - Navegador integrado: las fotos de Destacados cargan; Actualizar catálogo termina con 1109 productos. Búsqueda, fichas, Guardados y contenido sin conexión fueron comprobados durante la auditoría.
 - Play interno 80: ejecución 37059246489 exitosa. AAB release-artifacts/internal-80/iahadut-1.0.26-80.aab. SHA256 c14292371d90a145d76485a7b041738d96c349afbe2719ba82dc1a28cff521e6.
 
+## Pruebas físicas del S22 — 2 de octubre
+
+- Android 16, SM-S908E, versión 80 instalada desde Google Play. Permiso rechazado: avisos desactivados; segundo intento autorizado: suscripción correcta.
+- Push privado con app abierta: ejecución 37060904483, visible en Alertas una vez.
+- Proceso cerrado mediante am kill después de ir a Inicio: ejecución 37060960004. FCM inició el proceso y conservó el aviso; recuperado al abrir por el icono, sin duplicado.
+- Desactivación: ejecución 37061043607 aceptada por FCM para el tema anterior; el aviso no apareció en el teléfono. Reactivar cambió el tema individual al rotar el token.
+- Retirada: ejecución 37061000892 borró solo el identificador 6d90841e-fe3e-4e93-8ac9-23154e2c8312. El otro aviso permaneció. Se reflejó tras varios minutos de propagación. Sin Wi-Fi y datos móviles, el aviso retirado no reapareció. Ambas conexiones se restauraron.
+- Actualización manual en el teléfono: completada, 1109 productos. Fecha oficial 01/10/2026, diferente de la fecha de extracción del servidor.
+- Fotos de Destacados y fichas verificadas. Buscar aceite devolvió 32 productos; ficha de aceite de coco Chennai con foto y descripción. Compartir abrió el selector nativo de Android; se canceló sin enviar contenido.
+- Cámara: permiso rechazado, nuevo intento con permiso temporal, lector abierto y cancelado correctamente. Decodificación de un producto físico todavía pendiente.
+- Hallazgos menores corregidos para 81: hora nueva de Alertas en 24 horas; permiso previo de cámara con salida manual en español, evitando el diálogo inglés del SDK. Incluye la pausa local del respaldo Supabase posterior al AAB 80.
+- Build 81 y 38 pruebas JavaScript aprobados; pruebas nativas aprobadas durante bundleRelease/testReleaseUnitTest. Publicación interna y comprobación física de 81 pendientes.
+
 ## Pendiente antes de producción
 
-1. Publicar el PR en main para que existan el manifiesto estático, los cambios, el registro de retiradas y los workflows manuales; reactivar el actualizador de catálogo seguro. El antiguo workflow está desactivado manualmente y no se reactivó con su código anterior.
-2. Actualizar el S22 desde Play, comprobar push privado abierto/cerrado/desde icono, permiso/desactivación y retirada online/offline. El teléfono se autorizó por USB y se comprobó la instalación 78 de Play; después se desconectó. El propietario avisará al volver a conectarlo.
-3. Cámara, compartir nativo y Play Core necesitan la prueba física. No están verificados. iOS tampoco queda habilitado: faltan configuración Firebase/APNs y pruebas propias.
+1. Completar toque de notificación y verificar los ajustes de 81 mediante actualización desde Play.
+2. Decodificación real de un producto con cámara. iOS necesita configuración Firebase/APNs y pruebas propias.
+3. La versión interna no se promovió a producción. Ninguna prueba envió al tema público.

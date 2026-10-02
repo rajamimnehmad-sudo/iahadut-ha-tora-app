@@ -10,7 +10,7 @@ android {
         applicationId "ar.vaad.catalogo.app"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 80
+        versionCode 81
         versionName "1.0.26"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
