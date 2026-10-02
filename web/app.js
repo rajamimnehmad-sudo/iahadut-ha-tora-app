@@ -2287,7 +2287,7 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
       const titleText = normalize(`${product.title} ${product.brand || ''}`);
       const text = normalize(`${titleText} ${product.barcode || ''} ${product.description || ''} ${taxonomyText} ${sourceCategory?.name || ''} ${sourceCategory?.desc || ''}`);
       const identityWords = titleText.split(/[^a-z0-9]+/).filter(Boolean);
-      const matchesSearch = !term || text.includes(term) || searchTokens.every((token) => text.includes(token) || identityWords.some((word) => searchWordMatches(token, word)));
+      const matchesSearch = !term || text.includes(term) || searchTokens.length > 0 && searchTokens.every((token) => text.includes(token) || identityWords.some((word) => searchWordMatches(token, word)));
       if (!(matchesRegion && matchesCategory && matchesFavorite && matchesSearch)) return null;
       if (!term) return {product, relevance:0};
       const titleTokens = new Set(titleText.split(/[^a-z0-9]+/).filter(Boolean));
@@ -2825,6 +2825,7 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
   }
 
   function doSearch(input, fromHome = false) {
+    window.clearTimeout(searchTimer);
     const value = clean(input.value);
     if (!value) return;
     countPopularity(`query:${normalize(value)}`, 'searches');
@@ -4601,7 +4602,7 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
   $('#homeForm').onsubmit = (event) => { event.preventDefault(); dismissKeyboard($('#homeQuery')); doSearch($('#homeQuery'), true); };
   $('#searchForm').onsubmit = (event) => { event.preventDefault(); dismissKeyboard($('#query')); doSearch($('#query')); };
   $('#homeClear').onclick = () => { $('#homeQuery').value = ''; $('#homeClear').hidden = true; };
-  $('#clear').onclick = () => { $('#query').value = ''; updateSearchScanAction(false); $('.bottom-nav').classList.remove('has-query'); $('#clear').hidden = true; $('#results').hidden = true; $('#searchCategories').hidden = false; $('#recentSearches').hidden = false; $('#query').focus(); startSearchPlaceholders(); };
+  $('#clear').onclick = () => { window.clearTimeout(searchTimer); $('#query').value = ''; updateSearchScanAction(false); $('.bottom-nav').classList.remove('has-query'); $('#clear').hidden = true; $('#results').hidden = true; $('#searchCategories').hidden = false; $('#recentSearches').hidden = false; $('#query').focus(); startSearchPlaceholders(); };
   $('#detailSave').onclick = () => { if (currentProduct) toggleFavorite(currentProduct.url); };
   $('#detailShare').onclick = shareCurrentProduct;
   $('#homeQuery').addEventListener('input', () => {
@@ -4624,7 +4625,11 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     }
     window.clearTimeout(searchTimer);
     const value = clean($('#query').value);
-    if (value) renderResults(value);
+    if (value) {
+      searchTimer = window.setTimeout(() => {
+        if (clean($('#query').value) === value) renderResults(value);
+      }, 180);
+    }
     else { $('#results').hidden = true; $('#searchCategories').hidden = false; $('#recentSearches').hidden = false; }
   });
   $('#homeQuery').addEventListener('focus', openSearchScreen);
