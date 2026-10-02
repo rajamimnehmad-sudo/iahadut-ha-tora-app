@@ -2207,7 +2207,7 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     const regions = `<div class="region-switch" role="group" aria-label="País del catálogo"><button class="${selectedRegion === 'argentina' ? 'active' : ''}" type="button" data-region="argentina" aria-pressed="${selectedRegion === 'argentina'}"><span class="category-icon category-flag category-flag-arg"><img src="assets/flag-argentina.svg" alt=""></span><span>Argentina</span></button><button class="${selectedRegion === 'uruguay' ? 'active' : ''}" type="button" data-region="uruguay" aria-pressed="${selectedRegion === 'uruguay'}">${categoryIcon('uruguay')}<span>Uruguay</span></button></div>`;
     const popularitySource = Object.keys(globalPopularity).length ? globalPopularity : popularity;
     const popular = products.filter((product) => product.image).sort((a, b) => ((popularitySource[b.url]?.score || 0) || ((popularitySource[b.url]?.searches || 0) + (popularitySource[b.url]?.opens || 0))) - ((popularitySource[a.url]?.score || 0) || ((popularitySource[a.url]?.searches || 0) + (popularitySource[a.url]?.opens || 0)))).slice(0, 6);
-    const popularMarkup = popular.length ? `<div class="popular-searches"><strong>Más buscados</strong><div class="popular-searches-track">${popular.map((product) => `<button class="popular-search-card" type="button" data-product="${escapeHtml(product.url)}" aria-label="Ver ${escapeHtml(product.title)}"><img class="asset-loading" src="${escapeHtml(product.image)}" alt="" loading="eager"><span>${escapeHtml(compactProductTitle(product.title))}</span></button>`).join('')}</div></div>` : '';
+    const popularMarkup = popular.length ? `<div class="popular-searches"><strong>Sugeridos</strong><div class="popular-searches-track">${popular.map((product) => `<button class="popular-search-card" type="button" data-product="${escapeHtml(product.url)}" aria-label="Ver ${escapeHtml(product.title)}"><img class="asset-loading" src="${escapeHtml(product.image)}" alt="" loading="eager"><span>${escapeHtml(compactProductTitle(product.title))}</span></button>`).join('')}</div></div>` : '';
     $('#searchCategories').innerHTML = `<div class="region-shortcut-wrap" aria-label="Filtro de país">${regions}</div>${popularMarkup}`;
     $('#recentSearches').innerHTML = '';
   }
@@ -2287,7 +2287,7 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
       const titleText = normalize(`${product.title} ${product.brand || ''}`);
       const text = normalize(`${titleText} ${product.barcode || ''} ${product.description || ''} ${taxonomyText} ${sourceCategory?.name || ''} ${sourceCategory?.desc || ''}`);
       const identityWords = titleText.split(/[^a-z0-9]+/).filter(Boolean);
-      const matchesSearch = !term || text.includes(term) || searchTokens.every((token) => text.includes(token) || identityWords.some((word) => searchWordMatches(token, word)));
+      const matchesSearch = !term || text.includes(term) || searchTokens.length > 0 && searchTokens.every((token) => text.includes(token) || identityWords.some((word) => searchWordMatches(token, word)));
       if (!(matchesRegion && matchesCategory && matchesFavorite && matchesSearch)) return null;
       if (!term) return {product, relevance:0};
       const titleTokens = new Set(titleText.split(/[^a-z0-9]+/).filter(Boolean));
@@ -2825,6 +2825,7 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
   }
 
   function doSearch(input, fromHome = false) {
+    window.clearTimeout(searchTimer);
     const value = clean(input.value);
     if (!value) return;
     countPopularity(`query:${normalize(value)}`, 'searches');
@@ -4601,7 +4602,7 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
   $('#homeForm').onsubmit = (event) => { event.preventDefault(); dismissKeyboard($('#homeQuery')); doSearch($('#homeQuery'), true); };
   $('#searchForm').onsubmit = (event) => { event.preventDefault(); dismissKeyboard($('#query')); doSearch($('#query')); };
   $('#homeClear').onclick = () => { $('#homeQuery').value = ''; $('#homeClear').hidden = true; };
-  $('#clear').onclick = () => { $('#query').value = ''; updateSearchScanAction(false); $('.bottom-nav').classList.remove('has-query'); $('#clear').hidden = true; $('#results').hidden = true; $('#searchCategories').hidden = false; $('#recentSearches').hidden = false; $('#query').focus(); startSearchPlaceholders(); };
+  $('#clear').onclick = () => { window.clearTimeout(searchTimer); $('#query').value = ''; updateSearchScanAction(false); $('.bottom-nav').classList.remove('has-query'); $('#clear').hidden = true; $('#results').hidden = true; $('#searchCategories').hidden = false; $('#recentSearches').hidden = false; $('#query').focus(); startSearchPlaceholders(); };
   $('#detailSave').onclick = () => { if (currentProduct) toggleFavorite(currentProduct.url); };
   $('#detailShare').onclick = shareCurrentProduct;
   $('#homeQuery').addEventListener('input', () => {
@@ -4624,7 +4625,11 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     }
     window.clearTimeout(searchTimer);
     const value = clean($('#query').value);
-    if (value) renderResults(value);
+    if (value) {
+      searchTimer = window.setTimeout(() => {
+        if (clean($('#query').value) === value) renderResults(value);
+      }, 180);
+    }
     else { $('#results').hidden = true; $('#searchCategories').hidden = false; $('#recentSearches').hidden = false; }
   });
   $('#homeQuery').addEventListener('focus', openSearchScreen);
