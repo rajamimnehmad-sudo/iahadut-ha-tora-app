@@ -15,6 +15,7 @@ import '@phosphor-icons/web/regular';
 
 const PlayStoreUpdates = registerPlugin('PlayStoreUpdates');
 const CatalogBackgroundSync = registerPlugin('CatalogBackgroundSync');
+const ScannerPermissions = registerPlugin('ScannerPermissions');
 const PushHistory = registerPlugin('PushHistory');
 
 const initialPreparationPreview = import.meta.env.DEV && new URLSearchParams(location.search).get('preview') === 'initial-load';
@@ -3565,7 +3566,7 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
       eventKey: clean(data.eventKey),
       title: clean(notification?.title || data.title || data['gcm.n.title'] || fallbackTitle),
       body: clean(notification?.body || data.body || data.text || data['gcm.n.body'] || 'Hay una actualización disponible.'),
-      time: new Date(notification?.receivedAt || data.sentAt || Date.now()).toLocaleString('es-AR'),
+      time: new Date(notification?.receivedAt || data.sentAt || Date.now()).toLocaleString('es-AR', {hour12:false}),
       url: notificationPlayStoreUrl(notification)
     };
     if (notificationIsRevoked(item, revokedPushes)) return null;
@@ -4071,7 +4072,7 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
 
   function openWebScanner(message = 'Alineá el código dentro del recuadro.', useCamera = true) {
     const cameraAvailable = useCamera && Boolean(globalThis.navigator?.mediaDevices?.getUserMedia);
-    const scannerMessage = cameraAvailable ? 'Iniciando cámara…' : 'No pudimos abrir la cámara. Ingresá el EAN o UPC.';
+    const scannerMessage = cameraAvailable ? 'Iniciando cámara…' : (message === 'Alineá el código dentro del recuadro.' ? 'No pudimos abrir la cámara. Ingresá el EAN o UPC.' : message);
     pendingScanProduct = null;
     $('#scanMessage').textContent = scannerMessage;
     $('#scanOverlay').hidden = false;
@@ -4095,6 +4096,13 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
       return;
     }
     try {
+      if (Capacitor.getPlatform() === 'android') {
+        const permission = await ScannerPermissions.requestCamera();
+        if (!permission.granted) {
+          openWebScanner('La cámara no tiene permiso. Podés habilitarla en Ajustes o ingresar el EAN o UPC.', false);
+          return;
+        }
+      }
       const {
         CapacitorBarcodeScanner,
         CapacitorBarcodeScannerAndroidScanningLibrary,
