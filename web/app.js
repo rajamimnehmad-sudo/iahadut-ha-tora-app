@@ -268,7 +268,27 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
   let recent = Array.isArray(storedRecent) ? storedRecent : [];
   let popularity = readJson('iht_popularity', {});
   if (!popularity || typeof popularity !== 'object' || Array.isArray(popularity)) popularity = {};
-  let globalPopularity = {};
+  let globalRanking = readJson('iht_global_ranking', null);
+  if (!validGlobalRanking(globalRanking)) globalRanking = null;
+  let globalPopularityRequest = null;
+  async function refreshGlobalRanking() {
+    if (globalPopularityRequest || Date.now() - Number(localStorage.getItem('iht_global_ranking_check') || 0) < 12 * 60 * 60 * 1000) return globalPopularityRequest;
+    const url = import.meta.env.DEV ? '/data/global-popularity.json' : 'https://raw.githubusercontent.com/rajamimnehmad-sudo/iahadut-ha-tora-app/main/web/data/global-popularity.json';
+    globalPopularityRequest = (async () => {
+      try {
+        const response = await fetch(url, {cache:'no-cache', signal:AbortSignal.timeout(10000)});
+        if (!response.ok) throw new Error('Ranking no disponible');
+        const value = await response.json();
+        if (!validGlobalRanking(value)) throw new Error('Ranking inválido');
+        if (!globalRanking || Date.parse(value.generatedAt) >= Date.parse(globalRanking.generatedAt)) {
+          globalRanking = value; localStorage.setItem('iht_global_ranking', JSON.stringify(value));
+        }
+        localStorage.setItem('iht_global_ranking_check', String(Date.now()));
+        if (document.querySelector('.view.active')?.id === 'searchView' && !$('#query').value.trim()) renderSearchCategories();
+      } catch (_) { /* Conservar la copia válida anterior, sin reemplazarla por sugerencias falsas. */ }
+    })().finally(() => { globalPopularityRequest = null; });
+    return globalPopularityRequest;
+  }
   let globalPopularityDb = null;
   let globalPopularityApi = null;
   let firebaseCatalogDb = null;
@@ -293,7 +313,7 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
   }
   let firebaseAnalytics = null;
   if (Capacitor.isNativePlatform()) import('@capacitor-firebase/analytics').then(({FirebaseAnalytics}) => { firebaseAnalytics = FirebaseAnalytics; }).catch(() => {});
-  const logAnalyticsEvent = (name, params) => { try { firebaseAnalytics?.logEvent({name, params}); } catch (_) {} };
+  const logAnalyticsEvent = (name, params) => { try { firebaseAnalytics?.logEvent({name, params})?.catch(() => {}); } catch (_) {} };
   const countPopularity = (key, type) => {
     const entry = popularity[key] || {searches: 0, opens: 0};
     entry[type] = (entry[type] || 0) + 1;
@@ -1189,6 +1209,7 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
   }
 
   function syncAndPreload(force = false) {
+    void refreshGlobalRanking();
     if (syncRequest) return syncRequest;
     document.querySelectorAll('#syncStatus, [data-info-sync]').forEach((button) => {
       button.disabled = true;
@@ -2205,9 +2226,10 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
 
   function renderSearchCategories() {
     const regions = `<div class="region-switch" role="group" aria-label="País del catálogo"><button class="${selectedRegion === 'argentina' ? 'active' : ''}" type="button" data-region="argentina" aria-pressed="${selectedRegion === 'argentina'}"><span class="category-icon category-flag category-flag-arg"><img src="assets/flag-argentina.svg" alt=""></span><span>Argentina</span></button><button class="${selectedRegion === 'uruguay' ? 'active' : ''}" type="button" data-region="uruguay" aria-pressed="${selectedRegion === 'uruguay'}">${categoryIcon('uruguay')}<span>Uruguay</span></button></div>`;
-    const popularitySource = Object.keys(globalPopularity).length ? globalPopularity : popularity;
-    const popular = products.filter((product) => product.image).sort((a, b) => ((popularitySource[b.url]?.score || 0) || ((popularitySource[b.url]?.searches || 0) + (popularitySource[b.url]?.opens || 0))) - ((popularitySource[a.url]?.score || 0) || ((popularitySource[a.url]?.searches || 0) + (popularitySource[a.url]?.opens || 0)))).slice(0, 6);
-    const popularMarkup = popular.length ? `<div class="popular-searches"><strong>Sugeridos</strong><div class="popular-searches-track">${popular.map((product) => `<button class="popular-search-card" type="button" data-product="${escapeHtml(product.url)}" aria-label="Ver ${escapeHtml(product.title)}"><img class="asset-loading" src="${escapeHtml(product.image)}" alt="" loading="eager"><span>${escapeHtml(compactProductTitle(product.title))}</span></button>`).join('')}</div></div>` : '';
+    const ranked = (globalRanking?.products || []).map(entry => products.find(product => product.url === entry.url && product.image)).filter(Boolean);
+    const popularitySource = popularity;
+    const popular = ranked.length ? ranked.slice(0,6) : products.filter((product) => product.image).sort((a, b) => ((popularitySource[b.url]?.score || 0) || ((popularitySource[b.url]?.searches || 0) + (popularitySource[b.url]?.opens || 0))) - ((popularitySource[a.url]?.score || 0) || ((popularitySource[a.url]?.searches || 0) + (popularitySource[a.url]?.opens || 0)))).slice(0, 6);
+    const popularMarkup = popular.length ? `<div class="popular-searches"><strong>${ranked.length ? 'Más buscados' : 'Sugeridos'}</strong><div class="popular-searches-track">${popular.map((product) => `<button class="popular-search-card" type="button" data-product="${escapeHtml(product.url)}" aria-label="Ver ${escapeHtml(product.title)}"><img class="asset-loading" src="${escapeHtml(product.image)}" alt="" loading="eager"><span>${escapeHtml(compactProductTitle(product.title))}</span></button>`).join('')}</div></div>` : '';
     $('#searchCategories').innerHTML = `<div class="region-shortcut-wrap" aria-label="Filtro de país">${regions}</div>${popularMarkup}`;
     $('#recentSearches').innerHTML = '';
   }
@@ -3280,6 +3302,9 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
 
   function openDetail(url, options = {}) {
     const product = products.find((item) => item.url === url); if (!product) return;
+    if (options.fromSearch && !options.retry && document.querySelector('.view.active')?.id === 'searchView' && $('#query').value.trim()) {
+      void productSearchKey(product.url).then(product_key => logAnalyticsEvent('catalog_product_search', {product_key})).catch(() => {});
+    }
     countPopularity(product.url, 'opens');
     logAnalyticsEvent('product_open', {product_url: product.url, product_name: product.title?.slice(0, 80) || ''});
     if (!options.retry) {
@@ -4539,7 +4564,7 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     const timelineButton = event.target.closest('[data-open-timeline]');
     if (timelineButton) { timelineKind = timelineButton.dataset.openTimeline === 'alta' ? 'alta' : 'all'; showView('timelineView'); return; }
     const categoryButton = event.target.closest('[data-category]'); if (categoryButton) { selectedCategory = categoryButton.dataset.category; favoriteOnly = false; showView('searchView'); renderResults(''); }
-    const productButton = event.target.closest('[data-product]'); if (productButton && !event.target.closest('[data-favorite]')) openDetail(productButton.dataset.product);
+    const productButton = event.target.closest('[data-product]'); if (productButton && !event.target.closest('[data-favorite]')) openDetail(productButton.dataset.product, {fromSearch:Boolean(productButton.closest('#productList'))});
     const favoriteButton = event.target.closest('[data-favorite]'); if (favoriteButton) { event.stopPropagation(); toggleFavorite(favoriteButton.dataset.favorite); }
     const recentButton = event.target.closest('[data-recent]'); if (recentButton) { $('#query').value = recentButton.dataset.recent; renderResults(recentButton.dataset.recent); }
     const infoButton = event.target.closest('[data-info]'); if (infoButton) openInfo(infoButton.dataset.info);
@@ -4755,7 +4780,7 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
   // La interfaz queda disponible de inmediato. La precarga completa continúa
   // en segundo plano y comunica su estado en la barra superior.
   preloadInitialProductImages();
-  // Popularity stays on-device so user growth cannot exhaust Firestore quotas.
+  // El ranking global se consulta como copia estática; nunca usa Firestore por usuario.
   const remoteControlReady = refreshRemoteControl(false);
   void refreshPushRevocations();
   refreshPlayUpdate();

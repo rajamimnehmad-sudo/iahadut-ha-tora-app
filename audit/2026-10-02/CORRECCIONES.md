@@ -40,15 +40,25 @@ La versión 80 está publicada en la pista interna de Google Play. Firebase ya c
 - Retirada: ejecución 37061000892 borró solo el identificador 6d90841e-fe3e-4e93-8ac9-23154e2c8312. El otro aviso permaneció. Se reflejó tras varios minutos de propagación. Sin Wi-Fi y datos móviles, el aviso retirado no reapareció. Ambas conexiones se restauraron.
 - Actualización manual en el teléfono: completada, 1109 productos. Fecha oficial 01/10/2026, diferente de la fecha de extracción del servidor.
 - Fotos de Destacados y fichas verificadas. Buscar aceite devolvió 32 productos; ficha de aceite de coco Chennai con foto y descripción. Compartir abrió el selector nativo de Android; se canceló sin enviar contenido.
-- Cámara: permiso rechazado, nuevo intento con permiso temporal, lector abierto y cancelado correctamente. Decodificación de un producto físico todavía pendiente.
+- Cámara: permiso rechazado, nuevo intento con permiso temporal, lector abierto y cancelado correctamente. Decodificación física comprobada: 7798224212585, envase de polvo para hornear La Parmesana confirmado por el propietario.
 - Hallazgos menores corregidos para 81: hora nueva de Alertas en 24 horas; permiso previo de cámara con salida manual en español, evitando el diálogo inglés del SDK. Incluye la pausa local del respaldo Supabase posterior al AAB 80.
 - Build 81 y 38 pruebas JavaScript aprobados; pruebas nativas aprobadas durante bundleRelease/testReleaseUnitTest. Publicación interna 81 aprobada (37061773063); instalada desde Play en el S22. Salida manual de cámara rechazada y hora 17:41 de push nuevo verificadas (37062149222). SHA256 del AAB: a659d86df11c434c1ad5382a15d7cc89aea2db9d999f4803c88119115aabb71c. PR 2 integrado tras CI 37061774878 aprobado.
 
-## Pendiente antes de producción
+## Cierre y límites de la verificación
 
-1. Asociación del código físico 7798224212585 con polvo para hornear La Parmesana: publicación y comprobación final pendientes. El lector decodificó correctamente; la ficha central tenía barcode vacío. El propietario confirmó la identidad del producto.
-2. iOS necesita configuración Firebase/APNs y pruebas propias.
-3. La versión interna no se promovió a producción. Ninguna prueba envió al tema público.
+1. Segunda lectura física de La Parmesana tras la corrección: aprobada; el propietario confirmó que abrió la ficha correcta en el S22. La asociación 7798224212585 ya se publicó mediante PR 3 integrado y se descargó con Actualizar ahora en el S22. La ejecución 37062770407 terminó correctamente: 1109 fichas, cero errores y solo un cambio aplicado en Firebase. La extracción siguiente conservó la asociación y la huella 645d4aef50a7. El lector había decodificado correctamente; la ficha central tenía barcode vacío.
+2. Cobertura del lector: 143 de los 1109 productos tienen códigos GTIN registrados; los demás se encuentran por nombre. No se infieren códigos sin evidencia.
+3. iOS necesita configuración Firebase/APNs y pruebas propias.
+4. Versión 81 (1.0.26) enviada a producción al 100% desde Play Console el 2 de octubre de 2026. Estado confirmado: Cambios en la etapa de revisión; verificaciones rápidas de Google en curso. Publicación administrada desactivada. Todavía no se confirmó disponibilidad pública. El intento automático 37063367713 recibió 403 de permisos para producción; el envío se completó con la sesión del propietario. Ninguna prueba envió al tema público. Comprobante: play-production-81-enviada.png.
 
 - Toque de notificación 37061656182 abre Alertas sin duplicados. Guardados agrega y quita un producto correctamente. Ingreso manual de EAN 7792180001641 abre aceite de girasol Cañuelas.
 - Hallazgo editorial de la fuente: la ficha oficial de mermelada de Durazno light Noel incluye una foto de Damasco light (mermelada14.jpg); comprobado en HTML de vaad.ar. No se modificó el contenido oficial por inferencia.
+
+## Seguimiento: buscador y ranking global
+
+- La versión 81 se retiró de revisión al detectar bloqueo del teclado al borrar. Comprobante: play-production-81-retirada.png.
+- Corrección: agrupar el filtrado/renderizado después de 180 ms sin texto nuevo; cancelar búsquedas pendientes al limpiar/enviar y evitar que una búsqueda vacía de tokens coincida con todos los productos. PR 4 integrado; CI 37064577543 aprobado, 41 pruebas.
+- Versión 82 publicada en prueba interna por 37064632577 e instalada desde Play en el S22. El propietario confirmó que escribir y mantener borrar ahora responde fluido.
+- La lista anterior no era un ranking global: usaba actividad local y, sin datos, productos sugeridos. Ahora se identifica como Sugeridos.
+- Preparación del ranking real mediante eventos de selección de productos desde resultados de búsqueda, agregados de Google Analytics de los últimos 28 días completos y publicación estática cada 12 horas. No usa Firestore por usuario ni publica consultas libres o identificadores de usuarios. Hasta disponer de datos reales mantiene Sugeridos.
+- Propiedad Analytics 552698323 confirmada vinculada a Firebase; dimensión product_key creada como Producto buscado. Acceso del servidor e informe real aún pendientes de comprobación.
