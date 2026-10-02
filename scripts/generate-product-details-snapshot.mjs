@@ -2,6 +2,7 @@ import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { DOMParser } from 'linkedom';
+import { productText } from '../web/product-text.js';
 
 const projectRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const catalogPath = resolve(projectRoot, 'web/data/catalog.json');
@@ -89,12 +90,13 @@ function parseProduct(product, html) {
     : '';
   const imageNode = root.querySelector('.woocommerce-product-gallery img, img.wp-post-image, .et_pb_wc_images img');
   const rawImage = imageNode && (imageNode.getAttribute('data-large_image') || imageNode.getAttribute('data-src') || imageNode.getAttribute('data-lazy-src') || imageNode.getAttribute('src'));
-  const description = descriptionParts.join(' ').trim() || fallbackDescription;
+  const description = (descriptionRoot ? productText(descriptionRoot) : descriptionParts.join('\n\n')).trim() || fallbackDescription;
   return {
     barcode,
     images: rawImage ? [{ src: new URL(rawImage, product.url).href, alt: product.title }] : [],
     category: clean(root.querySelector('.product_meta .posted_in a')?.textContent || ''),
     description,
+    textFormatVersion: 1,
     descriptionAvailable: Boolean(description),
     beraja,
     fetchedAt: generatedAt,
@@ -111,11 +113,12 @@ const workers = Array.from({ length: 8 }, async () => {
   while (cursor < sourceProducts.length) {
     const product = sourceProducts[cursor++];
     try {
-      products[product.url] = !refreshAll && previousProducts[product.url]
+      products[product.url] = !refreshAll && previousProducts[product.url]?.textFormatVersion === 1
         ? previousProducts[product.url]
         : parseProduct(product, await fetchHtml(product.url));
     } catch (error) {
       failures.push({ url: product.url, error: error.message });
+      if (previousProducts[product.url]) products[product.url] = previousProducts[product.url];
     }
     completed += 1;
     if (completed % 25 === 0 || completed === sourceProducts.length) console.log(`Fichas: ${completed}/${sourceProducts.length}`);

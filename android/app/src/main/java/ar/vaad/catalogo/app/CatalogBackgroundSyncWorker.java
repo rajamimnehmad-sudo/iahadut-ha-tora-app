@@ -36,6 +36,7 @@ public final class CatalogBackgroundSyncWorker extends Worker {
     private static final String WORK_NAME = "catalog-background-sync";
     private static final String INITIAL_WORK_NAME = "catalog-background-sync-initial";
     private static final String CACHE_DIR = "catalog-background-cache";
+    private static final String SNAPSHOT = "snapshot-v2.json";
     private static final String PREFS = "catalog_background_sync";
     private static final String PREF_LAST_SUCCESS = "last_success_ms";
     private static final int MAX_BYTES = 16 * 1024 * 1024;
@@ -59,7 +60,7 @@ public final class CatalogBackgroundSyncWorker extends Worker {
                 WORK_NAME, ExistingPeriodicWorkPolicy.KEEP, periodic);
 
         SharedPreferences prefs = appContext.getSharedPreferences(PREFS, Context.MODE_PRIVATE);
-        File catalog = new File(new File(appContext.getFilesDir(), CACHE_DIR), "catalog.json");
+        File catalog = new File(new File(appContext.getFilesDir(), CACHE_DIR), SNAPSHOT);
         if (!catalog.exists() || prefs.getLong(PREF_LAST_SUCCESS, 0L) == 0L) {
             OneTimeWorkRequest initial = new OneTimeWorkRequest.Builder(CatalogBackgroundSyncWorker.class)
                     .setConstraints(constraints)
@@ -75,11 +76,25 @@ public final class CatalogBackgroundSyncWorker extends Worker {
         File directory = new File(getApplicationContext().getFilesDir(), CACHE_DIR);
         if (!directory.exists() && !directory.mkdirs()) return Result.retry();
         try {
+            JSONObject snapshot = new JSONObject();
             for (String fileName : FILES) {
                 String payload = download(RAW_BASE + fileName);
                 validate(fileName, payload);
-                writeAtomically(new File(directory, fileName), payload);
+                snapshot.put(fileName, payload);
             }
+            JSONObject catalog = new JSONObject(snapshot.getString("catalog.json"));
+            JSONObject details = new JSONObject(snapshot.getString("product-details.json")).getJSONObject("products");
+            for (int i = 0; i < catalog.getJSONArray("products").length(); i++) {
+                String url = catalog.getJSONArray("products").getJSONObject(i).getString("url");
+                if (!details.has(url)) throw new IOException("Missing product detail");
+            }
+            // If a release landed during the download, retain the last complete
+            // snapshot. Readers never see a mix of individually replaced files.
+            JSONObject confirmed = new JSONObject(download(RAW_BASE + "catalog.json"));
+            if (!catalog.getString("generatedAt").equals(confirmed.getString("generatedAt"))) {
+                throw new IOException("Catalog changed during download");
+            }
+            writeAtomically(new File(directory, SNAPSHOT), snapshot.toString());
             getApplicationContext().getSharedPreferences(PREFS, Context.MODE_PRIVATE)
                     .edit().putLong(PREF_LAST_SUCCESS, System.currentTimeMillis()).apply();
             return Result.success();
@@ -143,17 +158,17 @@ public final class CatalogBackgroundSyncWorker extends Worker {
         }
     }
 
-    public static String read(Context context, String fileName) {
-        File file = new File(new File(context.getApplicationContext().getFilesDir(), CACHE_DIR), fileName);
-        if (!file.isFile() || file.length() <= 0 || file.length() > MAX_BYTES) return "";
+    public static JSONObject readSnapshot(Context context) {
+        File file = new File(new File(context.getApplicationContext().getFilesDir(), CACHE_DIR), SNAPSHOT);
+        if (!file.isFile() || file.length() <= 0 || file.length() > MAX_BYTES * 3L) return new JSONObject();
         try (FileInputStream input = new FileInputStream(file);
              ByteArrayOutputStream output = new ByteArrayOutputStream((int) file.length())) {
             byte[] buffer = new byte[8192];
             int read;
             while ((read = input.read(buffer)) != -1) output.write(buffer, 0, read);
-            return output.toString(StandardCharsets.UTF_8.name());
-        } catch (IOException error) {
-            return "";
+            return new JSONObject(output.toString(StandardCharsets.UTF_8.name()));
+        } catch (Exception error) {
+            return new JSONObject();
         }
     }
 }

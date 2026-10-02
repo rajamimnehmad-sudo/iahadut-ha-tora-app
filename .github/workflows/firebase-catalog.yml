@@ -17,6 +17,10 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: firebase-catalog
+  cancel-in-progress: false
+
 jobs:
   prepare:
     name: Preparar y revisar cambios
@@ -70,7 +74,7 @@ jobs:
         env:
           CATALOG_FIREBASE_APPROVED: '1'
           FIREBASE_PROJECT_ID: iahadut-hatora
-          FIREBASE_SERVICE_ACCOUNT_JSON: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_JSON }}
+          FIREBASE_SERVICE_ACCOUNT_JSON: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_JSON || secrets.FCM_SERVICE_ACCOUNT_JSON }}
         run: |
           cp prepared/web/data/catalog.json web/data/catalog.json
           cp prepared/web/data/product-details.json web/data/product-details.json
@@ -102,7 +106,7 @@ jobs:
         env:
           CATALOG_FIREBASE_APPROVED: '1'
           FIREBASE_PROJECT_ID: iahadut-hatora
-          FIREBASE_SERVICE_ACCOUNT_JSON: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_JSON }}
+          FIREBASE_SERVICE_ACCOUNT_JSON: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_JSON || secrets.FCM_SERVICE_ACCOUNT_JSON }}
         run: |
           cp prepared/web/data/catalog.json web/data/catalog.json
           cp prepared/web/data/product-details.json web/data/product-details.json

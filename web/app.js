@@ -2,7 +2,11 @@ import { Capacitor, CapacitorHttp, registerPlugin } from '@capacitor/core';
 import { App } from '@capacitor/app';
 import { APP_VERSION, accessDecision, defaultRemoteControl, loadRemoteControl } from './remote-control.js';
 import { firebaseConfig } from './firebase-config.js';
+import { notificationIsRevoked, readRevokedPushes, loadRevokedPushes } from './push-revocations.js';
+import { catalogSnapshotNeedsRepair } from './catalog-cache.js';
 import catalogSnapshot from './data/catalog.json';
+import { productText } from './product-text.js';
+import featuredProductsSnapshot from './data/featured-products.json';
 import contentSnapshot from './data/content.json';
 import productDetailsSnapshot from './data/product-details.json';
 import '@fontsource-variable/manrope';
@@ -10,6 +14,7 @@ import '@phosphor-icons/web/regular';
 
 const PlayStoreUpdates = registerPlugin('PlayStoreUpdates');
 const CatalogBackgroundSync = registerPlugin('CatalogBackgroundSync');
+const PushHistory = registerPlugin('PushHistory');
 
 const initialPreparationPreview = import.meta.env.DEV && new URLSearchParams(location.search).get('preview') === 'initial-load';
 
@@ -233,16 +238,21 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
   const bundledProducts = Array.isArray(activeCatalogSnapshot?.products) ? activeCatalogSnapshot.products : [];
   const bundledProductByUrl = new Map(bundledProducts.map((product) => [product.url, product]));
   const bundledProductDetails = activeProductDetailsSnapshot?.products || {};
-  const storedCatalogTimestampAtBoot = Number(localStorage.getItem('iht_catalog_generated_at') || 0);
+  // Older builds stamped the last download time as the catalog date, even
+  // when the actual source version was older. Trust the source cursor.
+  const storedCatalogTimestampAtBoot = Date.parse(localStorage.getItem('iht_catalog_version') || '') || 0;
   const activeCatalogTimestampAtBoot = Date.parse(activeCatalogSnapshot?.generatedAt || '') || 0;
   // A WorkManager download can refresh the native cache while an older
   // WebView copy remains in localStorage. Prefer the newer snapshot at boot
   // so Android does not keep showing the old 1.048-product list.
-  const storedCatalogIsCurrent = (!activeCatalogTimestampAtBoot || storedCatalogTimestampAtBoot >= activeCatalogTimestampAtBoot)
-    // A previous sync can stamp an old/partial cache with a newer local time.
-    // If the shipped snapshot contains more products, keep those products
-    // (and their images) instead of regressing to that cache.
-    && (!bundledProducts.length || !Array.isArray(storedProducts) || storedProducts.length >= bundledProducts.length);
+  // A newer authorized snapshot can contain fewer products after removals.
+  // Product count must never override the catalog version.
+  // Equal versions must represent the same snapshot. Legacy builds could
+  // assign the bundle cursor to a different cached list (1,048 products).
+  // A strictly newer source still wins even when authorized removals shrink it.
+  const storedCatalogIsCurrent = !activeCatalogTimestampAtBoot
+    || storedCatalogTimestampAtBoot > activeCatalogTimestampAtBoot
+    || (storedCatalogTimestampAtBoot === activeCatalogTimestampAtBoot && storedProducts?.length === bundledProducts.length);
   const productSource = Array.isArray(storedProducts) && storedProducts.length && storedCatalogIsCurrent
     ? storedProducts
     : bundledProducts.length ? bundledProducts : Array.isArray(storedProducts) && storedProducts.length ? storedProducts : seed;
@@ -275,7 +285,7 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
         firebaseCatalogDb = firestoreModule.getFirestore(app);
         firebaseCatalogApi = firestoreModule;
         return {db:firebaseCatalogDb, api:firebaseCatalogApi};
-      })().catch(() => null);
+      })().catch(() => { firebaseReadyPromise = null; return null; });
     }
     return firebaseReadyPromise;
   }
@@ -341,6 +351,14 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
   let playUpdateState = {available:false, downloaded:false, flexibleAllowed:false, checked:false};
   let remoteTaxonomyRules = [];
   let pushListenersReady = false;
+  let pushSetupRequest = null;
+  let pushRegistrationQueue = Promise.resolve();
+  let pushGeneration = 0;
+  let pushHistoryRequest = null;
+  // Preserve existing subscribers; fresh installations require explicit opt-in.
+  if (localStorage.getItem('iht_push_enabled') === null) {
+    localStorage.setItem('iht_push_enabled', ['active', 'registered'].includes(localStorage.getItem('iht_push_status')) ? '1' : '0');
+  }
   const imageGesture = {
     scale: 1,
     x: 0,
@@ -409,6 +427,7 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
   const alertUrl = 'https://vaad.ar/alertas-de-productos/';
   const storedAlertCache = readJson('iht_alert_cache');
   let alertCache = storedAlertCache?.version === INFO_CACHE_VERSION ? storedAlertCache : (activeContentSnapshot?.alerts ? {version:INFO_CACHE_VERSION, items:activeContentSnapshot.alerts, fetchedAt:Number(activeContentSnapshot.generatedAt) || 0} : null);
+  let timelineKind = 'all';
   const alertProductOverrides = new Map();
   const storedBarcodeAssociations = readJson('iht_barcode_associations', {});
   const barcodeAssociations = storedBarcodeAssociations && typeof storedBarcodeAssociations === 'object' && !Array.isArray(storedBarcodeAssociations) ? storedBarcodeAssociations : {};
@@ -430,7 +449,9 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
   };
   let pushNotifications = readJson('iht_push_notifications', []);
   if (!Array.isArray(pushNotifications)) pushNotifications = [];
-  pushNotifications = dedupePushNotifications(pushNotifications).slice(0, 30);
+  let revokedPushes = readRevokedPushes();
+  let pushRevocationsRequest = null;
+  pushNotifications = dedupePushNotifications(pushNotifications).filter((item) => !notificationIsRevoked(item, revokedPushes));
   const assetCacheKey = `iht_asset_cache_${INFO_CACHE_VERSION}`;
   const storedAssetCache = readJson(assetCacheKey, []);
   const assetCache = new Set(Array.isArray(storedAssetCache) ? storedAssetCache : []);
@@ -441,8 +462,10 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
   // Una instalación nueva puede usar la instantánea incluida como baseline.
   // Si ya existe un catálogo local, primero se reconcilia con Firebase para
   // no confundir una copia anterior con la versión empaquetada.
-  if (!localStorage.getItem('iht_catalog_version') && !(Array.isArray(storedProducts) && storedProducts.length) && activeCatalogSnapshot?.generatedAt) {
+  if (productSource === bundledProducts && activeCatalogSnapshot?.generatedAt) {
     localStorage.setItem('iht_catalog_version', String(activeCatalogSnapshot.generatedAt));
+    localStorage.setItem('iht_catalog_generated_at', String(activeCatalogTimestamp));
+    localStorage.setItem('iht_products', JSON.stringify(products));
   }
   const infoNoticeVersion = 'v3';
   const infoNoticeKeys = ['shops', 'catering', 'notes'];
@@ -476,6 +499,8 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
   }
 
   function syncMessage(message, tone = '') {
+    const totalLabel = document.querySelector('.catalog-total-info strong');
+    if (totalLabel) totalLabel.textContent = totalCount().toLocaleString('es-AR');
     const status = $('#syncStatus');
     status.className = `sync update-row ${tone}`;
     $('#syncMessage').textContent = message;
@@ -880,7 +905,7 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
 
   async function fetchProductContent(product, force = false) {
     if (!product?.url) return null;
-    if (!force && productCache[product.url]) return productCache[product.url];
+    if (!force && productCache[product.url]?.textFormatVersion === 1) return productCache[product.url];
     const document = new DOMParser().parseFromString(await fetchText(sourceUrl(product.url)), 'text/html');
     const structuredBarcodes = [];
     const collectStructuredBarcodes = (value) => {
@@ -920,7 +945,7 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     const descriptionParts = descriptionRoot
       ? [descriptionRoot, ...descriptionRoot.querySelectorAll('p, li, blockquote, address, div')]
         .filter((node) => ![...node.children].some((child) => clean(child.textContent)))
-        .map((node) => clean(node.textContent))
+        .map((node) => productText(node))
         .filter((text, index, all) => text.length > 4 && all.indexOf(text) === index)
       : [];
     const beraja = descriptionRoot
@@ -930,13 +955,13 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
         .map((match) => clean(match[1]))
         .sort((first, second) => first.length - second.length)[0] || ''
       : '';
-    const description = descriptionParts.join(' ').trim() || blocks
+    const description = (descriptionRoot ? productText(descriptionRoot) : descriptionParts.join('\n\n')).trim() || blocks
       .filter((block) => block.tag === 'p')
       .filter((block) => !/^BERAJ[ÁA]\s*:/i.test(block.text))
       .map((block) => block.text)
-      .join(' ')
+      .join('\n\n')
       .trim();
-    const result = {blocks, images, category, description, descriptionAvailable:Boolean(description), beraja, barcode:officialBarcode || canonicalBarcode(product.barcode), fetchedAt:Date.now(), bundled:false};
+    const result = {blocks, images, category, description, textFormatVersion:1, descriptionAvailable:Boolean(description), beraja, barcode:officialBarcode || canonicalBarcode(product.barcode), fetchedAt:Date.now(), bundled:false};
     productCache[product.url] = result;
     localStorage.setItem('iht_product_cache', JSON.stringify({version:INFO_CACHE_VERSION, items:productCache}));
     return result;
@@ -1164,6 +1189,8 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     Object.assign(infoCache, cached.content?.info || {});
     Object.assign(cardCache, cached.content?.cards || {});
     localStorage.setItem('iht_catalog_generated_at', String(generatedAt));
+    localStorage.setItem('iht_catalog_version', cached.catalog.generatedAt);
+    localStorage.setItem('iht_last_sync', String(Date.now()));
     localStorage.setItem('iht_recent_products', JSON.stringify(recentProducts));
     save();
     renderHome();
@@ -1222,6 +1249,7 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     const metadataRef = firebase.api.doc(firebase.db, 'catalog_metadata', 'current');
     const metadataSnapshot = await firebase.api.getDoc(metadataRef);
     if (!metadataSnapshot.exists()) return false;
+    if (metadataSnapshot.data()?.syncInProgress) throw new Error('El catálogo central se está actualizando; se conserva la copia local');
     const remoteVersion = clean(metadataSnapshot.data()?.version);
     if (!remoteVersion) return false;
     const remoteProductCount = Number(metadataSnapshot.data()?.activeProductCount) || 0;
@@ -1237,7 +1265,7 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     // The metadata version and the product count are published separately.
     // If the count grew without a version bump, a timestamp-only check would
     // incorrectly keep the old local catalog forever (the 1.048-products bug).
-    const catalogNeedsReconcile = Boolean(remoteProductCount && products.length > seed.length && products.length < remoteProductCount);
+    const catalogNeedsReconcile = Boolean(remoteProductCount && remoteDate >= localDate && products.length !== remoteProductCount);
     const needsFullSnapshot = !hasUsableLocalVersion || catalogNeedsReconcile;
     // A versioned local catalog is already a valid snapshot. Do not force a
     // full download just because the old category counters drifted.
@@ -1283,9 +1311,12 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
       });
     }
 
+    const confirmedMetadata = await firebase.api.getDoc(metadataRef);
+    if (!confirmedMetadata.exists() || confirmedMetadata.data()?.syncInProgress || clean(confirmedMetadata.data()?.version) !== remoteVersion || (Number(confirmedMetadata.data()?.activeProductCount) || 0) !== remoteProductCount) throw new Error('El catálogo cambió durante la descarga; se conserva la copia local');
     const nextProducts = [...nextByUrl.values()];
     const minimumCatalogTotal = remoteProductCount || fallbackMinimumCatalogTotal;
-    if (nextProducts.length < minimumCatalogTotal) throw new Error(`Catálogo Firebase incompleto (${nextProducts.length} de ${minimumCatalogTotal} productos)`);
+    if ((remoteProductCount && nextProducts.length !== remoteProductCount) || nextProducts.length < minimumCatalogTotal) throw new Error(`Catálogo Firebase incompleto (${nextProducts.length} de ${minimumCatalogTotal} productos)`);
+    previousByUrl.forEach((_, url) => { if (!nextByUrl.has(url)) changedUrls.add(url); });
     changedUrls.forEach((url) => { delete productCache[url]; });
     products = nextProducts;
     recentProducts = additions.length ? additions.slice(0, 10) : nextProducts.slice(0, 10);
@@ -1312,51 +1343,6 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     return 'gondola';
   }
 
-  // La página oficial puede publicar una alta unas horas antes de que el
-  // snapshot de Firebase esté disponible para la web. En ese caso la alerta
-  // ya conoce la URL de la ficha: la usamos para incorporar el producto
-  // completo y mantener el contador alineado con la app nativa.
-  async function syncMissingAlertProducts() {
-    if (!navigator.onLine) return 0;
-    const groups = isFresh(alertCache) ? alertCache.items : await fetchAlerts(true).catch(() => null);
-    const alta = realAlertItems(groups?.alta);
-    if (!alta.length) return 0;
-    const dated = alta.map((item) => ({item, parsed:alertDate(typeof item === 'string' ? item : item?.text || '')})).filter((entry) => entry.parsed?.key);
-    const newestKey = dated.reduce((latest, entry) => !latest || entry.parsed.key > latest ? entry.parsed.key : latest, '');
-    const candidates = (newestKey ? dated.filter((entry) => entry.parsed.key === newestKey).map((entry) => entry.item) : alta).slice(0, 12);
-    const knownUrls = new Set(products.map((product) => product.url));
-    const missing = candidates.filter((item) => item && typeof item === 'object' && item.url && !knownUrls.has(item.url));
-    if (!missing.length) return 0;
-
-    const additions = await Promise.all(missing.map(async (item) => {
-      const title = alertTextWithoutDate(item.text || '') || 'Producto nuevo';
-      const brandMatch = title.match(/marca\s+(.+)$/i);
-      const candidate = {url:item.url, title, brand:brandMatch ? clean(brandMatch[1]) : '', barcode:'', cat:'gondola', image:'', description:''};
-      try {
-        const official = await fetchProductContent(candidate, true);
-        return {
-          ...candidate,
-          cat:catalogCategoryKey(official?.category),
-          image:official?.images?.[0]?.src || '',
-          barcode:official?.barcode || '',
-          description:official?.description || ''
-        };
-      } catch (_) {
-        return null;
-      }
-    }));
-    const validAdditions = additions.filter(Boolean).filter((product, index, all) => all.findIndex((candidate) => candidate.url === product.url) === index);
-    if (!validAdditions.length) return 0;
-    products = [...products, ...validAdditions];
-    recentProducts = [...validAdditions, ...(Array.isArray(recentProducts) ? recentProducts : [])]
-      .filter((product, index, all) => all.findIndex((candidate) => candidate.url === product.url) === index)
-      .slice(0, 10);
-    localStorage.setItem('iht_recent_products', JSON.stringify(recentProducts));
-    save();
-    localStorage.setItem('iht_product_cache', JSON.stringify({version:INFO_CACHE_VERSION, items:productCache}));
-    return validAdditions.length;
-  }
-
   async function syncCatalog(force = false, onProgress = null) {
     if (syncState.running) return;
     const twelveHours = 12 * 60 * 60 * 1000;
@@ -1370,19 +1356,22 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     syncState.error = '';
     syncMessage('Actualizando…', 'busy');
     try {
+      if (force && catalogSnapshotNeedsRepair(products, localStorage.getItem('iht_catalog_version'), activeCatalogSnapshot)) {
+        products = bundledProducts.map((product) => ({...product, barcode:canonicalBarcode(product.barcode || bundledProductDetails[product.url]?.barcode)}));
+        recentProducts = products.slice(0, 10);
+        Object.assign(productCache, bundledProductDetails);
+        localStorage.setItem('iht_catalog_version', activeCatalogSnapshot.generatedAt);
+        localStorage.setItem('iht_catalog_generated_at', String(activeCatalogTimestamp));
+        localStorage.setItem('iht_recent_products', JSON.stringify(recentProducts));
+        save();
+        renderHome();
+        renderSearchCategories();
+        if (document.querySelector('.view.active')?.id === 'searchView') renderResults($('#query').value);
+      }
       let firebaseUpdated = false;
       let firebaseError = null;
       try { firebaseUpdated = await syncCatalogFromFirestore(minimumCatalogTotal, onProgress); } catch (error) { firebaseError = error; }
-      let alertProductsAdded = 0;
-      try { alertProductsAdded = await syncMissingAlertProducts(); } catch (_) {}
-      if (alertProductsAdded) {
-        syncState.last = String(Date.now());
-        localStorage.setItem('iht_last_sync', syncState.last);
-        syncMessage(`${products.length.toLocaleString('es-AR')} productos · actualizado`, 'ok');
-        renderHome();
-        if (document.querySelector('.view.active')?.id === 'searchView') renderSearchCategories();
-      }
-      if (firebaseUpdated || alertProductsAdded) return;
+      if (firebaseUpdated) return;
       // A valid bundled or cached catalog is safer than falling back to a
       // full scrape on every manual sync. Full pagination is reserved for a
       // genuinely empty catalog/recovery state.
@@ -1435,8 +1424,7 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
       localStorage.setItem('iht_product_cache', JSON.stringify({version:INFO_CACHE_VERSION, items:productCache}));
       syncState.last = String(Date.now());
       localStorage.setItem('iht_last_sync', syncState.last);
-      const sourceVersion = clean(activeCatalogSnapshot?.generatedAt);
-      if (sourceVersion && Date.parse(sourceVersion)) localStorage.setItem('iht_catalog_version', sourceVersion);
+      localStorage.setItem('iht_catalog_version', new Date(Number(syncState.last)).toISOString());
       localStorage.setItem('iht_catalog_generated_at', syncState.last);
       try {
         const officialUpdate = await fetchOfficialUpdateDate();
@@ -1462,13 +1450,13 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
   }
 
   function renderHome() {
-    $('#homeTotal').textContent = `${totalCount().toLocaleString('es-AR')} productos en el catálogo`;
     const updateNode = $('#officialUpdateDate');
     if (updateNode) updateNode.textContent = officialUpdateMessage();
     const sourceNote = document.querySelector('#homeView .official-source-note');
     if (sourceNote) sourceNote.innerHTML = '<span aria-hidden="true">✓</span> Fuente oficial';
-    const recentCandidates = [...(Array.isArray(recentProducts) ? recentProducts : []), ...products, ...bundledProducts];
-    const items = [...new Map(recentCandidates.map((product) => [product.url, product])).values()].slice(0, 10);
+    const catalogByUrl = new Map(products.map((product) => [product.url, product]));
+    // Explicit selection and order, independent of catalog additions or sync.
+    const items = featuredProductsSnapshot.products.map((product) => catalogByUrl.get(product.url)).filter(Boolean);
     const itemsKey = items.map((product) => `${product.url}|${product.image || ''}`).join('\n');
     if (itemsKey === renderedHomeItemsKey) {
       renderAlertPreview();
@@ -2199,10 +2187,29 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     return `${text.slice(0, match.index).trim()} · ${brand}${text.slice(match.index + match[0].length)}`.replace(/\s+/g, ' ').trim();
   }
 
+  // Allow small typing mistakes, including swapped adjacent letters.
+  function searchWordMatches(query, word) {
+    if (word.includes(query)) return true;
+    if (query.length < 4 || /\d/.test(query + word)) return false;
+    const limit = query.length >= 7 ? 2 : 1;
+    if (Math.abs(query.length - word.length) > limit) return false;
+    const distances = Array.from({length:query.length + 1}, () => Array(word.length + 1).fill(0));
+    for (let i = 0; i <= query.length; i++) distances[i][0] = i;
+    for (let j = 0; j <= word.length; j++) distances[0][j] = j;
+    for (let i = 1; i <= query.length; i++) {
+      for (let j = 1; j <= word.length; j++) {
+        distances[i][j] = Math.min(distances[i-1][j] + 1, distances[i][j-1] + 1, distances[i-1][j-1] + (query[i-1] === word[j-1] ? 0 : 1));
+        if (i > 1 && j > 1 && query[i-1] === word[j-2] && query[i-2] === word[j-1]) distances[i][j] = Math.min(distances[i][j], distances[i-2][j-2] + 1);
+      }
+    }
+    return distances[query.length][word.length] <= limit;
+  }
+
   function filtered(query) {
     const term = normalize(query);
     const searchTokens = term.split(/\s+/).filter((token) => token.length > 1 && !['de', 'del', 'la', 'el', 'los', 'las', 'un', 'una', 'marca'].includes(token));
-    return products.map((product) => {
+    const searchableProducts = products;
+    return searchableProducts.map((product) => {
       const isUruguay = product.cat === 'uruguay' || product.category === 'uruguay';
       const matchesRegion = selectedRegion === 'all' || (selectedRegion === 'uruguay' ? isUruguay : !isUruguay);
       const matchesCategory = selectedCategory === 'all' || (selectedCategory === 'gondola' ? product.cat === 'gondola' && !isUruguay : product.cat === selectedCategory);
@@ -2212,7 +2219,8 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
       const sourceCategory = categoryFor(product.cat);
       const titleText = normalize(`${product.title} ${product.brand || ''}`);
       const text = normalize(`${titleText} ${product.barcode || ''} ${product.description || ''} ${taxonomyText} ${sourceCategory?.name || ''} ${sourceCategory?.desc || ''}`);
-      const matchesSearch = !term || text.includes(term) || searchTokens.every((token) => text.includes(token));
+      const identityWords = titleText.split(/[^a-z0-9]+/).filter(Boolean);
+      const matchesSearch = !term || text.includes(term) || searchTokens.every((token) => text.includes(token) || identityWords.some((word) => searchWordMatches(token, word)));
       if (!(matchesRegion && matchesCategory && matchesFavorite && matchesSearch)) return null;
       if (!term) return {product, relevance:0};
       const titleTokens = new Set(titleText.split(/[^a-z0-9]+/).filter(Boolean));
@@ -2370,14 +2378,12 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     mountViewTitle(viewId);
     document.querySelectorAll('.nav').forEach((button) => button.classList.toggle('active', button.dataset.view === viewId));
     if (viewId === 'searchView' && !preserveSearch) { renderSearchCategories(); $('#results').hidden = true; $('#searchCategories').hidden = false; $('#recentSearches').hidden = false; }
-    if (viewId === 'timelineView') renderCatalogTimeline();
+    if (viewId === 'timelineView') renderCatalogTimeline(undefined, '', timelineKind);
     if (viewId === 'alertsView') {
       setPushNotificationBadge(false);
       renderPushNotifications();
-      // Alertas reúne los avisos push y, debajo, la cronología del catálogo.
-      // Así las altas/bajas siguen visibles dentro de la campana sin mezclar
-      // su acción secundaria con la lista de notificaciones del dispositivo.
-      renderAlerts();
+      // Manual push messages are the only entries in this inbox.
+      void restorePushHistory(true);
     }
     if (viewId === 'moreView') renderMore();
     if (viewId === 'savedView') renderSaved();
@@ -2402,7 +2408,15 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     if (clearButton) clearButton.hidden = pushNotifications.length === 0;
   }
 
-  function clearPushNotifications() {
+  async function clearPushNotifications() {
+    await pushHistoryRequest;
+    if (Capacitor.isNativePlatform()) {
+      try {
+        if (Capacitor.getPlatform() === 'android') await PushHistory.clearHistory();
+        const {FirebaseMessaging} = await import('@capacitor-firebase/messaging');
+        await FirebaseMessaging.removeAllDeliveredNotifications();
+      } catch (_) { return; }
+    }
     pushNotifications = [];
     localStorage.removeItem('iht_push_notifications');
     setPushNotificationBadge(false);
@@ -2423,9 +2437,14 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     const status = localStorage.getItem('iht_push_status');
     const active = status === 'active';
     const failed = status === 'error' || status === 'unavailable';
+    const disableFailed = localStorage.getItem('iht_push_disable_error') === '1';
     document.querySelectorAll('.notification-permission').forEach((container) => {
       container.classList.toggle('active', active);
-      container.innerHTML = active
+      container.innerHTML = disableFailed
+        ? '<strong>No pudimos completar la desactivación</strong><button class="text-btn" data-disable-notifications type="button">Reintentar desactivación</button>'
+        : status === 'denied'
+        ? '<strong>Notificaciones bloqueadas en el teléfono</strong><span>Habilitalas en Ajustes → Aplicaciones → Iahadut HaTora → Notificaciones.</span><button class="text-btn" data-enable-notifications type="button">Volver a comprobar</button>'
+        : active
         ? '<strong>Notificación push activada</strong><button class="push-disable" data-disable-notifications type="button">Desactivar <span aria-hidden="true">›</span></button>'
         : `<strong>${failed ? 'No pudimos activar los avisos push' : 'Recibí avisos push de novedades'}</strong><button class="text-btn" data-enable-notifications type="button">${failed ? 'Reintentar' : 'Activar avisos'}</button>`;
     });
@@ -2433,6 +2452,8 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
 
   function setPushNotificationBadge(hasNew) {
     const value = Boolean(hasNew);
+    if (value) localStorage.setItem('iht_push_unread', '1');
+    else localStorage.removeItem('iht_push_unread');
     $('#headerNotificationDot').hidden = !value;
     $('#headerNotifications')?.classList.toggle('has-alerts', value);
     $('#navDot').hidden = !value;
@@ -2440,10 +2461,65 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
   }
 
   // La campana y la pestaña Alertas representan avisos push. Las novedades
-  // editoriales del catálogo siguen viviendo únicamente en Cronología.
+  // editoriales del catálogo siguen viviendo únicamente en Cronología. Esta
+  // función queda como compatibilidad para llamadas antiguas, pero no debe
+  // ocultar ni reemplazar el indicador de pushes sin leer.
   function setCatalogAlertBadge() {
-    $('#navDot').hidden = true;
-    $('.nav[data-view="alertsView"]')?.classList.remove('has-alerts');
+    return;
+  }
+
+  async function refreshDeliveredPushBadge(FirebaseMessaging, markRead = false) {
+    try {
+      const result = await FirebaseMessaging.getDeliveredNotifications();
+      for (const notification of result?.notifications || []) {
+        // Native history carries the FCM message ID; Android's status-bar ID
+        // does not. Do not import a second copy of the same displayed notice.
+        if (!pushNotifications.some((item) => item.title === clean(notification.title) && item.body === clean(notification.body))) {
+          persistPushNotification(notification, !markRead);
+        }
+      }
+      setPushNotificationBadge(!markRead && localStorage.getItem('iht_push_unread') === '1');
+      // Only clear messages after successfully importing their content.
+      if (markRead) await FirebaseMessaging.removeAllDeliveredNotifications();
+    } catch (_) {
+      setPushNotificationBadge(!markRead && localStorage.getItem('iht_push_unread') === '1');
+    }
+  }
+
+  async function restorePushHistory(markRead = false) {
+    await refreshPushRevocations();
+    if (!Capacitor.isNativePlatform()) return;
+    if (pushHistoryRequest) {
+      await pushHistoryRequest;
+      if (markRead) return restorePushHistory(true);
+      return;
+    }
+    pushHistoryRequest = (async () => {
+      const {FirebaseMessaging} = await import('@capacitor-firebase/messaging');
+      if (Capacitor.getPlatform() === 'android') {
+        const result = await PushHistory.getHistory({markRead});
+        for (const notification of result.notifications || []) persistPushNotification(notification, !markRead && notification.unread === true);
+      }
+      await refreshDeliveredPushBadge(FirebaseMessaging, markRead);
+      if (markRead) setPushNotificationBadge(false);
+      if (document.querySelector('.view.active')?.id === 'alertsView') renderPushNotifications();
+    })().catch(() => {}).finally(() => { pushHistoryRequest = null; });
+    return pushHistoryRequest;
+  }
+
+  async function refreshPushRevocations() {
+    if (pushRevocationsRequest) return pushRevocationsRequest;
+    pushRevocationsRequest = loadRevokedPushes().then((ids) => {
+      revokedPushes = ids;
+      const remaining = pushNotifications.filter((item) => !notificationIsRevoked(item, ids));
+      if (remaining.length !== pushNotifications.length) {
+        pushNotifications = remaining;
+        localStorage.setItem('iht_push_notifications', JSON.stringify(remaining));
+        if (!remaining.length) setPushNotificationBadge(false);
+        renderPushNotifications();
+      }
+    }).finally(() => { pushRevocationsRequest = null; });
+    return pushRevocationsRequest;
   }
 
   function alertHasItems(items) {
@@ -3061,7 +3137,7 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     const category = categoryFor(product.cat);
     // La miniatura del catálogo ya está cargada en la pantalla anterior. Usarla
     // también en la ficha evita una segunda descarga y cualquier parpadeo.
-    const officialImage = product.image || official?.images?.[0]?.src;
+    const officialImage = official?.images?.[0]?.src || product.image;
     const officialDescription = official?.loading
       ? 'La ficha oficial está tardando un poco. Seguimos cargándola…'
       : official?.loadFailed
@@ -3135,7 +3211,7 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
   }
 
   function openDetail(url, options = {}) {
-    const product = [...(Array.isArray(recentProducts) ? recentProducts : []), ...products, ...bundledProducts, ...alertProductOverrides.values()].find((item) => item.url === url); if (!product) return;
+    const product = products.find((item) => item.url === url); if (!product) return;
     countPopularity(product.url, 'opens');
     logAnalyticsEvent('product_open', {product_url: product.url, product_name: product.title?.slice(0, 80) || ''});
     if (!options.retry) {
@@ -3152,7 +3228,9 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     }
     if (options.fromScan) showKosherToast(product);
     if (cachedOfficial) {
-      if (!isFresh(cachedOfficial)) fetchProductContent(product, true).catch(() => {});
+      if (navigator.onLine && (cachedOfficial.textFormatVersion !== 1 || !isFresh(cachedOfficial))) fetchProductContent(product, true).then((official) => {
+        if (currentProduct?.url === product.url) renderDetail(product, official);
+      }).catch(() => {});
       return;
     }
     const slowNotice = window.setTimeout(() => {
@@ -3194,7 +3272,7 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
   // Resolve them against both sources so a fresh alert still has its product
   // photo and remains tappable on an older installed build.
   function findProductForAlert(item, text = '') {
-    const pools = [products, bundledProducts];
+    const pools = [products];
     const url = typeof item === 'object' ? item?.url : '';
     if (url) {
       for (const pool of pools) {
@@ -3338,99 +3416,45 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     $('#alertsMeta').textContent = state === 'error' ? 'Sin conexión · no pudimos actualizar las novedades.' : 'Altas y bajas, ordenadas por fecha.';
   }
 
-  async function renderCatalogTimeline(items = alertCache?.items, state = '') {
+  function renderTimelineItems(items, state, kind) {
+    const isRemovalTimeline = kind === 'baja';
+    $('#timelineTitle').textContent = isRemovalTimeline ? 'Productos dados de baja' : kind === 'alta' ? 'Últimos productos incorporados a la lista' : 'Últimos cambios';
+    $('#timelineMeta').textContent = isRemovalTimeline ? 'Productos retirados del catálogo, ordenados por fecha.' : 'Altas y bajas, ordenadas por fecha.';
+    const showAllButton = isRemovalTimeline
+      ? '<button class="alert-secondary-action" type="button" data-open-all-changes><span class="alert-secondary-icon" aria-hidden="true">↗</span><span><strong>Ver todos los cambios</strong><small>Altas y bajas del catálogo</small></span><span class="alert-secondary-arrow" aria-hidden="true">›</span></button>'
+      : '';
+    $('#timelineList').innerHTML = `${showAllButton}${alertTimelineMarkup(items || {alta:[], baja:[], general:[]}, state, kind)}`;
+  }
+
+  async function renderCatalogTimeline(items = alertCache?.items, state = '', kind = timelineKind) {
     if (!$('#timelineList')) return;
     if (items && !Array.isArray(items)) {
-      $('#timelineList').innerHTML = alertMarkup(items);
-      $('#timelineMeta').textContent = 'Información guardada · actualizando novedades…';
+      renderTimelineItems(items, state, kind);
+      if (state !== 'error') $('#timelineMeta').textContent = kind === 'baja' ? 'Información guardada · actualizando bajas…' : 'Información guardada · actualizando novedades…';
     } else {
       $('#timelineList').innerHTML = '<div class="content-skeleton alert-skeleton" aria-label="Preparando cronología"><i></i><i></i><i></i></div>';
     }
     if (state === 'error') {
-      $('#timelineList').innerHTML = alertMarkup(items || {}, state);
-      $('#timelineMeta').textContent = 'Sin conexión · no pudimos actualizar las novedades.';
+      renderTimelineItems(items || {}, state, kind);
       return;
     }
     try {
       const freshItems = await fetchAlerts();
       if (document.querySelector('.view.active')?.id === 'timelineView') {
-        $('#timelineList').innerHTML = alertMarkup(freshItems);
-        $('#timelineMeta').textContent = 'Altas y bajas, ordenadas por fecha.';
+        renderTimelineItems(freshItems, '', kind);
       }
       // Some very recent alerts can be published before their product is
       // present in the catalog snapshot. Fetch that product's official image
       // in the background and replace the temporary marker when it arrives.
       hydrateAlertProducts(freshItems).then((changed) => {
         if (changed && document.querySelector('.view.active')?.id === 'timelineView') {
-          $('#timelineList').innerHTML = alertMarkup(freshItems);
+          renderTimelineItems(freshItems, '', kind);
         }
       }).catch(() => {});
     } catch (_) {
       if (document.querySelector('.view.active')?.id === 'timelineView') {
-        $('#timelineList').innerHTML = alertMarkup(alertCache?.items || {}, 'error');
-        $('#timelineMeta').textContent = 'Sin conexión · no pudimos actualizar las novedades.';
+        renderTimelineItems(alertCache?.items || {}, 'error', kind);
       }
-    }
-  }
-
-  function pushAlertEntries(notification) {
-    const type = notification?.data?.alertType;
-    if (type !== 'alta' && type !== 'baja') return [];
-    let entries = [];
-    try {
-      const parsed = JSON.parse(notification?.data?.items || '[]');
-      if (Array.isArray(parsed)) entries = parsed;
-    } catch (_) {}
-    if (!entries.length) entries = [{text:notification?.data?.text || notification?.body || (type === 'alta' ? 'Nueva alta en el catálogo' : 'Producto dado de baja'), url:notification?.data?.url || ''}];
-    return entries.map((entry) => ({text:clean(entry?.text || entry), url:clean(entry?.url || '')})).filter((entry) => entry.text);
-  }
-
-  function cachePushCatalogAlert(notification) {
-    const type = notification?.data?.alertType;
-    const entries = pushAlertEntries(notification);
-    if (!entries.length) return false;
-    const current = alertCache?.items && !Array.isArray(alertCache.items)
-      ? alertCache.items
-      : {alta:[], baja:[], general:[]};
-    const list = Array.isArray(current[type]) ? current[type] : [];
-    const additions = entries.filter((entry) => !list.some((item) => {
-      const itemText = typeof item === 'string' ? item : item?.text || '';
-      return (entry.url && item?.url === entry.url) || normalize(itemText) === normalize(entry.text);
-    }));
-    if (!additions.length) return false;
-    const next = {
-      alta: type === 'alta' ? [...additions, ...list].slice(0, 40) : (current.alta || []),
-      baja: type === 'baja' ? [...additions, ...list].slice(0, 40) : (current.baja || []),
-      general: current.general || []
-    };
-    alertCache = {version:INFO_CACHE_VERSION, items:next, fetchedAt:Date.now()};
-    localStorage.setItem('iht_alert_cache', JSON.stringify(alertCache));
-    setCatalogAlertBadge(true);
-    renderRetiredShortcut(next);
-    if (document.querySelector('.view.active')?.id === 'timelineView') renderCatalogTimeline(next);
-    if (document.querySelector('.view.active')?.id === 'alertsView') renderAlerts();
-    return true;
-  }
-
-  async function renderAlerts() {
-    $('#alertsMeta').textContent = alertMetaText();
-    if (alertCache?.items && !Array.isArray(alertCache.items)) {
-      renderRetiredAlerts(alertCache.items);
-      $('#alertsMeta').textContent = 'Información guardada · actualizando novedades…';
-    } else {
-      $('#alertList').innerHTML = '<div class="content-skeleton alert-skeleton" aria-label="Preparando alertas"><i></i><i></i><i></i></div>';
-    }
-    try {
-      const items = await fetchAlerts();
-      if (document.querySelector('.view.active')?.id === 'alertsView') {
-        renderRetiredAlerts(items);
-        markAlertsSeen(items);
-      }
-    } catch (_) {
-      const items = alertCache?.items || {alta:[], baja:['No pudimos actualizar las alertas. Revisá tu conexión e intentá nuevamente.'], general:[]};
-      if (document.querySelector('.view.active')?.id === 'alertsView') markAlertsSeen(items);
-      if (document.querySelector('.view.active')?.id === 'alertsView') renderRetiredAlerts(alertCache?.items || {}, 'error');
-      if (document.querySelector('.view.active')?.id === 'timelineView') renderCatalogTimeline(alertCache?.items || {}, 'error');
     }
   }
 
@@ -3469,22 +3493,21 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
 
   function persistPushNotification(notification, unread = true) {
     const data = notification?.data && typeof notification.data === 'object' ? notification.data : {};
-    const alertType = clean(data.alertType);
-    const fallbackTitle = alertType === 'alta' ? 'Nuevos productos' : alertType === 'baja' ? 'Productos dados de baja' : 'Novedad del catálogo';
+    const fallbackTitle = 'Aviso de Iahadut HaTora';
     const item = {
-      id: clean(notification?.id || data.messageId || data['google.message_id']),
+      id: clean(notification?.id || data.messageId || data['google.message_id']) || `notice:${clean(notification?.title || data.title)}|${clean(notification?.body || data.body)}|${clean(data.sentAt || notification?.receivedAt)}`,
       eventKey: clean(data.eventKey),
       title: clean(notification?.title || data.title || data['gcm.n.title'] || fallbackTitle),
       body: clean(notification?.body || data.body || data.text || data['gcm.n.body'] || 'Hay una actualización disponible.'),
-      time: new Date().toLocaleString('es-AR'),
+      time: new Date(notification?.receivedAt || data.sentAt || Date.now()).toLocaleString('es-AR'),
       url: notificationPlayStoreUrl(notification)
     };
-    cachePushCatalogAlert(notification);
+    if (notificationIsRevoked(item, revokedPushes)) return null;
     if (!pushNotifications.some((stored) => pushNotificationKey(stored) === pushNotificationKey(item))) {
-      pushNotifications = [item, ...pushNotifications].slice(0, 30);
+      pushNotifications = [item, ...pushNotifications];
       localStorage.setItem('iht_push_notifications', JSON.stringify(pushNotifications));
     }
-    setPushNotificationBadge(unread);
+    if (unread) setPushNotificationBadge(true);
     if (document.querySelector('.view.active')?.id === 'alertsView') renderPushNotifications();
     return item;
   }
@@ -3496,18 +3519,31 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     return `iahadut-test-${suffix}`;
   }
 
-  async function registerPushToken(token, FirebaseMessaging) {
-    if (!token) return '';
-    localStorage.setItem('iht_push_token', token);
-    const testTopic = await pushTestTopicForToken(token);
-    await FirebaseMessaging.subscribeToTopic({topic:'catalog-updates'});
-    await FirebaseMessaging.subscribeToTopic({topic:testTopic});
-    localStorage.setItem('iht_push_test_topic', testTopic);
-    console.info(`[IHT] Canal de prueba individual: ${testTopic}`);
-    if (remoteControl.device_registration_url) {
-      try { await CapacitorHttp.post({url:remoteControl.device_registration_url, headers:{'Content-Type':'application/json'}, data:{token, platform:Capacitor.getPlatform(), topic:'catalog-updates', testTopic, appVersion:APP_VERSION}}); } catch (_) {}
-    }
-    return testTopic;
+  const pushEnabled = () => localStorage.getItem('iht_push_enabled') === '1';
+
+  function registerPushToken(token, FirebaseMessaging) {
+    if (!token) return Promise.reject(new Error('No se recibió un token de notificaciones'));
+    const generation = pushGeneration;
+    const register = async () => {
+      if (!pushEnabled() || generation !== pushGeneration) return '';
+      const testTopic = await pushTestTopicForToken(token);
+      if (!pushEnabled() || generation !== pushGeneration) return '';
+      if (Capacitor.getPlatform() === 'android') {
+        // The native bridge waits for FCM subscription tasks to complete.
+        await PushHistory.configure({enabled:true, testTopic});
+      } else {
+        await FirebaseMessaging.subscribeToTopic({topic:'catalog-updates'});
+        if (!pushEnabled() || generation !== pushGeneration) return '';
+        await FirebaseMessaging.subscribeToTopic({topic:testTopic});
+      }
+      if (!pushEnabled() || generation !== pushGeneration) return '';
+      localStorage.setItem('iht_push_token', token);
+      localStorage.setItem('iht_push_test_topic', testTopic);
+      return testTopic;
+    };
+    const task = pushRegistrationQueue.then(register);
+    pushRegistrationQueue = task.catch(() => {});
+    return task;
   }
 
   async function refreshPlayUpdate() {
@@ -3550,68 +3586,106 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     return decision;
   }
 
-  async function setupPushNotifications(requestPermission = false) {
-    if (!Capacitor.isNativePlatform()) return 'unavailable';
-    if (!requestPermission && localStorage.getItem('iht_push_status') === 'disabled') return 'disabled';
-    if (!remoteControl.configured) {
-      localStorage.setItem('iht_push_status', 'pending-config');
-      return 'pending-config';
+  function setupPushNotifications(requestPermission = false) {
+    if (!Capacitor.isNativePlatform()) return Promise.resolve('unavailable');
+    if (requestPermission) {
+      if (!pushEnabled()) pushGeneration += 1;
+      localStorage.setItem('iht_push_enabled', '1');
+      localStorage.removeItem('iht_push_disable_error');
     }
+    const generation = pushGeneration;
+    if (pushSetupRequest) {
+      return pushSetupRequest.then(() => requestPermission && pushEnabled() && generation === pushGeneration ? setupPushNotifications(true) : localStorage.getItem('iht_push_status'));
+    }
+    pushSetupRequest = configurePushNotifications(requestPermission, generation)
+      .finally(() => { pushSetupRequest = null; });
+    return pushSetupRequest;
+  }
+
+  async function configurePushNotifications(requestPermission, generation) {
     try {
       const {FirebaseMessaging} = await import('@capacitor-firebase/messaging');
       if (!pushListenersReady) {
-        pushListenersReady = true;
         await FirebaseMessaging.addListener('tokenReceived', async ({token}) => {
-          try { await registerPushToken(token, FirebaseMessaging); } catch (_) { localStorage.setItem('iht_push_token', token); }
-          if (localStorage.getItem('iht_push_status') !== 'active') localStorage.setItem('iht_push_status', 'registered');
-          if (document.querySelector('.view.active')?.id === 'moreView') renderMore();
+          if (!pushEnabled()) return;
+          try {
+            const topic = await registerPushToken(token, FirebaseMessaging);
+            if (topic && pushEnabled()) localStorage.setItem('iht_push_status', 'active');
+          } catch (_) {
+            if (pushEnabled()) localStorage.setItem('iht_push_status', 'error');
+          }
+          renderNotificationPermission();
         });
         await FirebaseMessaging.addListener('notificationReceived', ({notification}) => {
-          persistPushNotification(notification, true);
-          if (notification.data?.action === 'sync') void syncAndPreload(true).catch(() => {});
+          if (!pushEnabled()) return;
+          const viewingAlerts = document.querySelector('.view.active')?.id === 'alertsView';
+          persistPushNotification(notification, !viewingAlerts);
+          void restorePushHistory(viewingAlerts);
         });
-        await FirebaseMessaging.addListener('notificationActionPerformed', ({notification}) => {
+        await FirebaseMessaging.addListener('notificationActionPerformed', async ({notification}) => {
+          await restorePushHistory(false);
           persistPushNotification(notification, false);
-          if (notification.data?.action === 'sync') void syncAndPreload(true).catch(() => {});
-          const playUrl = notificationPlayStoreUrl(notification);
-          if (playUrl) { openExternal(playUrl); return; }
           showView('alertsView');
         });
-        await FirebaseMessaging.createChannel({id:'catalog-updates', name:'Actualizaciones del catálogo', description:'Altas, bajas y cambios importantes', importance:4, vibration:true});
+        pushListenersReady = true;
+      }
+      await restorePushHistory(document.querySelector('.view.active')?.id === 'alertsView');
+      if (!pushEnabled() || generation !== pushGeneration) {
+        localStorage.setItem('iht_push_status', 'disabled');
+        if (Capacitor.getPlatform() === 'android') await PushHistory.setEnabled({enabled:false});
+        renderNotificationPermission();
+        return 'disabled';
+      }
+      if (Capacitor.getPlatform() === 'android') {
+        await FirebaseMessaging.createChannel({id:'catalog-updates-v2', name:'Avisos de Iahadut HaTora', description:'Avisos enviados por el equipo', importance:4, vibration:true, lights:true, lightColor:'#0000FF'});
       }
       let permission = await FirebaseMessaging.checkPermissions();
-      if (requestPermission && permission.receive === 'prompt') permission = await FirebaseMessaging.requestPermissions();
-      if (permission.receive === 'granted') {
-        try {
-          const tokenResult = await FirebaseMessaging.getToken();
-          const token = tokenResult?.token;
-          if (token) await registerPushToken(token, FirebaseMessaging);
-          localStorage.setItem('iht_push_status', 'active');
-          renderNotificationPermission();
-        } catch (_) {
-          localStorage.setItem('iht_push_status', 'error');
-          renderNotificationPermission();
-          return 'error';
-        }
-        return 'active';
+      if (requestPermission && ['prompt', 'prompt-with-rationale'].includes(permission.receive)) permission = await FirebaseMessaging.requestPermissions();
+      if (!pushEnabled() || generation !== pushGeneration) return 'disabled';
+      if (permission.receive !== 'granted') {
+        localStorage.setItem('iht_push_status', permission.receive === 'denied' ? 'denied' : 'pending');
+        renderNotificationPermission();
+        return permission.receive;
       }
-      localStorage.setItem('iht_push_status', permission.receive === 'denied' ? 'denied' : 'pending');
-      return permission.receive;
-    } catch (_) { localStorage.setItem('iht_push_status', 'unavailable'); return 'unavailable'; }
+      const {token} = await FirebaseMessaging.getToken();
+      if (!token) throw new Error('No se recibió un token de notificaciones');
+      const topic = await registerPushToken(token, FirebaseMessaging);
+      if (!topic || !pushEnabled() || generation !== pushGeneration) return 'disabled';
+      localStorage.setItem('iht_push_status', 'active');
+      renderNotificationPermission();
+      return 'active';
+    } catch (_) {
+      const status = pushEnabled() && generation === pushGeneration ? 'error' : 'disabled';
+      localStorage.setItem('iht_push_status', status);
+      renderNotificationPermission();
+      return status;
+    }
   }
 
   async function disablePushNotifications() {
+    localStorage.setItem('iht_push_enabled', '0');
     localStorage.setItem('iht_push_status', 'disabled');
+    pushGeneration += 1;
+    renderNotificationPermission();
     const testTopic = localStorage.getItem('iht_push_test_topic');
-    localStorage.removeItem('iht_push_token');
-    localStorage.removeItem('iht_push_test_topic');
-    setPushNotificationBadge(false);
-    try {
+    const cleanup = async () => {
       const {FirebaseMessaging} = await import('@capacitor-firebase/messaging');
-      await FirebaseMessaging.unsubscribeFromTopic({topic:'catalog-updates'});
-      if (testTopic) await FirebaseMessaging.unsubscribeFromTopic({topic:testTopic});
-      await FirebaseMessaging.deleteToken();
-    } catch (_) {}
+      if (Capacitor.getPlatform() === 'android') await PushHistory.configure({enabled:false});
+      else {
+        await FirebaseMessaging.unsubscribeFromTopic({topic:'catalog-updates'});
+        if (testTopic) await FirebaseMessaging.unsubscribeFromTopic({topic:testTopic});
+        await FirebaseMessaging.deleteToken();
+      }
+      localStorage.removeItem('iht_push_token');
+      localStorage.removeItem('iht_push_test_topic');
+      localStorage.removeItem('iht_push_disable_error');
+    };
+    try {
+      if (Capacitor.getPlatform() === 'android') await PushHistory.setEnabled({enabled:false});
+      const task = pushRegistrationQueue.then(cleanup);
+      pushRegistrationQueue = task.catch(() => {});
+      await task;
+    } catch (_) { localStorage.setItem('iht_push_disable_error', '1'); }
     renderNotificationPermission();
     renderPushNotifications();
     renderMore();
@@ -4324,8 +4398,10 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     }).catch(() => {});
     App.addListener('appStateChange', ({isActive}) => {
       if (!isActive) return;
+      void refreshPushRevocations();
       void applyNativeCatalogCacheIfNewer();
       refreshPlayUpdate();
+      void setupPushNotifications(false);
     }).catch(() => {});
   }
 
@@ -4382,9 +4458,11 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
       favoriteOnly = false; showView('searchView'); renderResults($('#query').value); renderSearchCategories(); return;
     }
     const retiredButton = event.target.closest('[data-open-retired]');
-    if (retiredButton) { showView('timelineView'); return; }
+    if (retiredButton) { timelineKind = 'baja'; showView('timelineView'); return; }
+    const allChangesButton = event.target.closest('[data-open-all-changes]');
+    if (allChangesButton) { timelineKind = 'all'; renderCatalogTimeline(undefined, '', timelineKind); return; }
     const timelineButton = event.target.closest('[data-open-timeline]');
-    if (timelineButton) { showView('timelineView'); return; }
+    if (timelineButton) { timelineKind = timelineButton.dataset.openTimeline === 'alta' ? 'alta' : 'all'; showView('timelineView'); return; }
     const categoryButton = event.target.closest('[data-category]'); if (categoryButton) { selectedCategory = categoryButton.dataset.category; favoriteOnly = false; showView('searchView'); renderResults(''); }
     const productButton = event.target.closest('[data-product]'); if (productButton && !event.target.closest('[data-favorite]')) openDetail(productButton.dataset.product);
     const favoriteButton = event.target.closest('[data-favorite]'); if (favoriteButton) { event.stopPropagation(); toggleFavorite(favoriteButton.dataset.favorite); }
@@ -4600,9 +4678,10 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
   preloadInitialProductImages();
   loadGlobalPopularity();
   const remoteControlReady = refreshRemoteControl(false);
+  void refreshPushRevocations();
   refreshPlayUpdate();
   setupPushNotifications(false);
-  remoteControlReady.then(() => setupPushNotifications(false)).catch(() => {});
+  remoteControlReady.catch(() => {});
   startBackgroundPreparation().finally(() => {
     window.setTimeout(scheduleAppPreload, 350);
     syncAndPreload(false).finally(scheduleAppPreload);

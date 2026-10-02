@@ -1,11 +1,10 @@
-import {createHash, createSign} from 'node:crypto';
+import {createHash} from 'node:crypto';
 import {mkdir, readFile, rename, writeFile} from 'node:fs/promises';
 import {dirname, resolve} from 'node:path';
 import {DOMParser} from 'linkedom';
 
 const sourceUrl = 'https://vaad.ar/alertas-de-productos/';
 const statePath = resolve(process.env.ALERT_STATE_PATH || 'automation/alert-state.json');
-const topic = process.env.FCM_TOPIC || 'catalog-updates';
 const productTypes = new Set(['alta', 'baja']);
 const clean = (value) => String(value || '').replace(/\s+/g, ' ').trim();
 const absolute = (value) => value ? new URL(value, sourceUrl).href : '';
@@ -63,58 +62,5 @@ if (!changes.length) {
   process.exit(0);
 }
 
-if (process.env.SEED_ONLY === '1') {
-  await persistState();
-  console.log(`${changes.length} cambio(s) detectado(s); se guardó la línea de base sin enviar push.`);
-  process.exit(0);
-}
-
-if (!process.env.FCM_SERVICE_ACCOUNT_JSON) {
-  throw new Error(`${changes.length} cambio(s) detectado(s), pero falta FCM_SERVICE_ACCOUNT_JSON. No se actualizó el estado para no perder las notificaciones.`);
-}
-
-console.log(`${changes.length} cambio(s) detectado(s); preparando notificaciones push agrupadas.`);
-
-const serviceAccount = JSON.parse(process.env.FCM_SERVICE_ACCOUNT_JSON);
-const now = Math.floor(Date.now() / 1000);
-const header = Buffer.from(JSON.stringify({alg: 'RS256', typ: 'JWT'})).toString('base64url');
-const claim = Buffer.from(JSON.stringify({iss: serviceAccount.client_email, scope: 'https://www.googleapis.com/auth/firebase.messaging', aud: 'https://oauth2.googleapis.com/token', iat: now, exp: now + 3600})).toString('base64url');
-const unsigned = `${header}.${claim}`;
-const signer = createSign('RSA-SHA256'); signer.update(unsigned);
-const assertion = `${unsigned}.${signer.sign(serviceAccount.private_key, 'base64url')}`;
-const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {method: 'POST', headers: {'content-type': 'application/x-www-form-urlencoded'}, body: new URLSearchParams({grant_type: 'urn:ietf:params:oauth:grant-type:jwt-bearer', assertion})});
-if (!tokenResponse.ok) throw new Error(`No se pudo obtener autorización FCM: HTTP ${tokenResponse.status}`);
-const {access_token: accessToken} = await tokenResponse.json();
-const stateAfterSuccessfulSends = needsProductBaseline
-  ? {...previousEntries, ...Object.fromEntries(current.filter((item) => productTypes.has(item.type)).map((item) => [`${item.type}:${item.text}`, item]))}
-  : {...previousEntries};
-// A single run can discover several products at once. Sending one FCM message
-// per product creates a notification storm on Android and also makes the
-// in-app alert history race with itself. Keep one message per change type and
-// include the individual entries in `data.items` so the app can render every
-// product without losing detail.
-const batches = [...new Set(changes.map((item) => item.type))].map((type) => ({
-  type,
-  items: changes.filter((item) => item.type === type)
-}));
-for (const batch of batches) {
-  const {type, items} = batch;
-  const notificationTitle = type === 'alta' ? 'Nuevas altas en el catálogo' : type === 'baja' ? 'Productos dados de baja' : type === 'notes' ? 'Nueva nota de Kashrut' : 'Nuevo catering certificado';
-  const productNames = items.map((item) => item.text.replace(/\s*\([^)]*\)\s*$/, '')).filter(Boolean);
-  const body = type === 'alta' || type === 'baja'
-    ? `${items.length} ${type === 'alta' ? 'productos nuevos' : 'productos retirados'}${productNames.length ? `: ${productNames.slice(0, 3).join(', ')}${productNames.length > 3 ? ` y ${productNames.length - 3} más` : ''}` : ''}`
-    : 'Hay una novedad disponible para consultar.';
-  const eventKey = `batch:${type}:${createHash('sha256').update(items.map((item) => `${item.type}:${item.text}`).join('|')).digest('hex').slice(0, 16)}`;
-  // Separate collapse keys/tags by type: otherwise FCM/Android can replace a
-  // pending catering or note alert with a product alert from the same run.
-  // Repeated updates of the same type still collapse into a single notice.
-  const notificationGroup = `catalog-${type}`;
-  const message = {message: {topic, notification: {title: notificationTitle, body}, android: {priority: 'HIGH', ttl: '3600s', collapse_key: notificationGroup, notification: {channel_id: 'catalog-updates', sound: 'default', tag: notificationGroup}}, data: {action: 'sync', alertType: type, eventKey, sentAt: new Date(now * 1000).toISOString(), title: notificationTitle, body, text: body, items: JSON.stringify(items.map((item) => ({text:item.text, url:item.url || ''}))), url: items.length === 1 ? items[0].url || '' : ''}}};
-  const sendResponse = await fetch(`https://fcm.googleapis.com/v1/projects/${serviceAccount.project_id}/messages:send`, {method: 'POST', headers: {'content-type': 'application/json', Authorization: `Bearer ${accessToken}`}, body: JSON.stringify(message)});
-  if (!sendResponse.ok) throw new Error(`FCM rechazó la notificación: HTTP ${sendResponse.status}`);
-  items.forEach((item) => { stateAfterSuccessfulSends[`${item.type}:${item.text}`] = item; });
-  await persistState(stateAfterSuccessfulSends);
-  console.log(`Notificación agrupada enviada: ${type} · ${items.length} elemento(s)`);
-}
-
-await persistState(mergedState());
+await persistState();
+console.log(`${changes.length} cambio(s) registrados. El catálogo nunca envía push; usar el envío manual.`);

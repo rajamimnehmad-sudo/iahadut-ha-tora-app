@@ -64,6 +64,7 @@ async function loadServiceAccount() {
   if (!raw) throw new Error('Falta FIREBASE_SERVICE_ACCOUNT_JSON; nunca se debe guardar una cuenta de servicio en el repositorio.');
   const serviceAccount = JSON.parse(raw);
   if (!serviceAccount.client_email || !serviceAccount.private_key) throw new Error('La cuenta de servicio no tiene client_email o private_key.');
+  if (serviceAccount.project_id !== projectId) throw new Error('La cuenta de servicio no pertenece al proyecto configurado.');
   return serviceAccount;
 }
 
@@ -214,9 +215,12 @@ writes.push(writeFor('catalog_metadata/current', {
   activeProductCount: activeProducts.length,
   validBarcodeCount: activeProducts.filter(({data}) => data.barcode).length,
   updatedAt: now,
-  syncMode: seedMode ? 'initial-seed' : 'incremental-authorized'
+  syncMode: seedMode ? 'initial-seed' : 'incremental-authorized',
+  syncInProgress: false
 }));
 
 console.log(`Plan autorizado: ${added} altas · ${updated} cambios · ${retired} bajas archivadas.`);
+// Clients must retain their previous snapshot while multi-batch writes run.
+await commit(token, [{...writeFor('catalog_metadata/current', {syncInProgress:true}), updateMask:{fieldPaths:['syncInProgress']}}]);
 await commit(token, writes);
 console.log(`Firebase actualizado: ${activeProducts.length} productos activos en catalog_products.`);

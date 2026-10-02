@@ -1,0 +1,43 @@
+name: Retirar un aviso de Alertas
+
+on:
+  workflow_dispatch:
+    inputs:
+      event_key:
+        description: Identificador del aviso que querés borrar de Alertas
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+concurrency:
+  group: revoke-manual-push
+  cancel-in-progress: false
+
+jobs:
+  revoke:
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Retirar solamente el aviso seleccionado
+        env:
+          MANUAL_PUSH_APPROVED: '1'
+          PUSH_EVENT_KEY: ${{ inputs.event_key }}
+        run: node scripts/revoke-manual-push.mjs
+      - name: Publicar la retirada
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add web/data/push-revocations.json
+          if ! git diff --cached --quiet; then
+            git commit -m 'Retirar aviso manual de Alertas'
+            git pull --rebase origin main
+            git push origin main
+          fi

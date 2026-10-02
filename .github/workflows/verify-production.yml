@@ -1,0 +1,30 @@
+name: Verificar catálogo y push manual
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+      - run: npm ci
+      - name: Probar regresiones de catálogo, recepción y retirada de avisos
+        run: node --test tests/*.test.mjs
+      - run: npm run build
+      - run: npx cap sync android
+      - name: Verificar persistencia nativa y manifest de Android
+        working-directory: android
+        run: ./gradlew :app:testReleaseUnitTest :app:processReleaseMainManifest
