@@ -100,7 +100,7 @@ jobs:
             "https://androidpublisher.googleapis.com/upload/androidpublisher/v3/applications/$PACKAGE_NAME/edits/$edit_id/bundles?uploadType=media")
           version_code=$(jq -r '.versionCode' <<<"$upload")
           test "$version_code" = "$VERSION_CODE"
-          jq -n --arg version "$version_code" --arg name "$RELEASE_VERSION" '{track:"internal",releases:[{name:$name,versionCodes:[$version],status:"completed",releaseNotes:[{language:"es-419",text:"Mejoras del catálogo, fichas sin conexión y avisos manuales."}]}]}' > "$RUNNER_TEMP/track.json"
+          jq -n --arg version "$version_code" --arg name "$RELEASE_VERSION" '{track:"internal",releases:[{name:$name,versionCodes:[$version],status:"completed",releaseNotes:[{language:"es-419",text:"Apertura de fichas con indicador de carga, mayor estabilidad y mejoras al deslizar productos destacados."}]}]}' > "$RUNNER_TEMP/track.json"
           curl --fail-with-body --silent --show-error -X PUT \
             -H "Authorization: Bearer $ACCESS_TOKEN" \
             -H 'Content-Type: application/json' \
