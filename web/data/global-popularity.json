@@ -3,26 +3,22 @@
   "source": "google-analytics",
   "metric": "catalog_product_search",
   "windowDays": 28,
-  "generatedAt": "2026-10-06T06:53:00.708Z",
+  "generatedAt": "2026-10-06T18:37:58.326Z",
   "products": [
     {
       "url": "https://vaad.ar/producto/pure-de-tomate-marca-arcor/",
-      "searches": 6
-    },
-    {
-      "url": "https://vaad.ar/producto/pure-de-tomate-marca-la-campagnola/",
-      "searches": 6
-    },
-    {
-      "url": "https://vaad.ar/producto/pure-de-tomate-marolio/",
       "searches": 5
     },
     {
-      "url": "https://vaad.ar/producto/pure-de-tomate-marca-corper/",
+      "url": "https://vaad.ar/producto/pure-de-tomate-marca-la-campagnola/",
+      "searches": 5
+    },
+    {
+      "url": "https://vaad.ar/producto/pure-de-tomate-marolio/",
       "searches": 3
     },
     {
-      "url": "https://vaad.ar/producto/pure-de-tomate-marca-la-joya/",
+      "url": "https://vaad.ar/producto/salsa-de-oliva-marca-la-campagnola/",
       "searches": 3
     },
     {
@@ -70,19 +66,23 @@
       "searches": 2
     },
     {
-      "url": "https://vaad.ar/producto/pure-de-tomate-marca-de-la-huerta/",
+      "url": "https://vaad.ar/producto/pure-de-tomate-marca-corper/",
       "searches": 2
     },
     {
-      "url": "https://vaad.ar/producto/pure-de-tomate-marca-dulcor/",
+      "url": "https://vaad.ar/producto/pure-de-tomate-marca-la-joya/",
       "searches": 2
     },
     {
-      "url": "https://vaad.ar/producto/pure-de-tomate-marca-inca/",
+      "url": "https://vaad.ar/producto/queso-brie-marca-cabana-piedras-blancas-2/",
       "searches": 2
     },
     {
-      "url": "https://vaad.ar/producto/pure-de-tomate-marca-knorr/",
+      "url": "https://vaad.ar/producto/queso-brie-marca-cabana-piedras-blancas/",
+      "searches": 2
+    },
+    {
+      "url": "https://vaad.ar/producto/tofu-organico-marca-sozoe/",
       "searches": 2
     }
   ]
