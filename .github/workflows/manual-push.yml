@@ -45,4 +45,5 @@ jobs:
           PUSH_IMAGE_URL: ${{ inputs.image_url }}
           PUSH_TEST_TOPIC: ${{ inputs.test_topic }}
           FCM_SERVICE_ACCOUNT_JSON: ${{ secrets.FCM_SERVICE_ACCOUNT_JSON }}
+          ALERTS_INGEST_SECRET: ${{ secrets.ALERTS_INGEST_SECRET }}
         run: node scripts/send-manual-push.mjs
