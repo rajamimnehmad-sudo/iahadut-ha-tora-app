@@ -1,18 +1,27 @@
 import {createSign, randomUUID} from 'node:crypto';
 import {pathToFileURL} from 'node:url';
+import {pushImageUrl} from '../web/push-image.js';
 
 // The catalog pipeline cannot call this sender without an explicit manual gate.
-export function manualPushMessage({title, body, topic = 'catalog-updates', eventKey = randomUUID(), sentAt = new Date().toISOString()}) {
+export function manualPushMessage({title, body, imageUrl = '', topic = 'catalog-updates', eventKey = randomUUID(), sentAt = new Date().toISOString()}) {
   title = String(title || '').trim();
   body = String(body || '').trim();
   if (!title || !body) throw new Error('Ingresá un título y un mensaje.');
+  if (imageUrl && !pushImageUrl(imageUrl)) throw new Error('La foto debe tener una URL HTTPS pública.');
+  imageUrl = pushImageUrl(imageUrl);
   if (topic !== 'catalog-updates' && !/^iahadut-test-[a-f0-9]{20}$/.test(topic)) throw new Error('El tema de prueba individual no es válido.');
   const message = {
     topic,
     notification:{title, body},
     android:{priority:'HIGH', ttl:'604800s', notification:{channel_id:'catalog-updates-v2', icon:'ic_notification', sound:'default', tag:eventKey}},
+    apns:{headers:{'apns-push-type':'alert', 'apns-priority':'10'}, payload:{aps:{sound:'default', 'mutable-content':1}}},
     data:{action:'alerts', type:'manual', eventKey, sentAt, title, body}
   };
+  if (imageUrl) {
+    message.notification.image = imageUrl;
+    message.android.notification.image = imageUrl;
+    message.data.imageUrl = imageUrl;
+  }
   // Keys and values count toward FCM's topic payload limit. Reserve headroom.
   const bytes = Object.entries({...message.notification, ...Object.fromEntries(Object.entries(message.data).map(([key, value]) => [`data.${key}`, value]))})
     .reduce((size, [key, value]) => size + Buffer.byteLength(key) + Buffer.byteLength(value), 0);
@@ -21,7 +30,7 @@ export function manualPushMessage({title, body, topic = 'catalog-updates', event
 }
 
 export async function sendManualPush(env = process.env, fetcher = fetch) {
-  const message = manualPushMessage({title:env.PUSH_TITLE, body:env.PUSH_BODY, topic:env.PUSH_TEST_TOPIC || 'catalog-updates'});
+  const message = manualPushMessage({title:env.PUSH_TITLE, body:env.PUSH_BODY, imageUrl:env.PUSH_IMAGE_URL, topic:env.PUSH_TEST_TOPIC || 'catalog-updates'});
   if (env.MANUAL_PUSH_APPROVED !== '1') throw new Error('El envío requiere una ejecución manual explícita.');
   if (env.PUSH_SEND !== '1') {
     console.log('Vista previa; no se envió ninguna notificación.');
