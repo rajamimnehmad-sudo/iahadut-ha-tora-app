@@ -369,6 +369,7 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
   let pushSetupRequest = null;
   let pushRegistrationQueue = Promise.resolve();
   let pushGeneration = 0;
+  let pushPhase = '';
   let pushHistoryRequest = null;
   // Preserve existing subscribers; fresh installations require explicit opt-in.
   if (localStorage.getItem('iht_push_enabled') === null) {
@@ -2717,7 +2718,9 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     const disableFailed = localStorage.getItem('iht_push_disable_error') === '1';
     document.querySelectorAll('.notification-permission').forEach((container) => {
       container.classList.toggle('active', active);
-      container.innerHTML = disableFailed
+      container.innerHTML = pushPhase
+        ? `<strong>${pushPhase === 'activating' ? 'Activando avisos…' : 'Desactivando avisos…'}</strong><button class="text-btn" type="button" disabled>Esperá un momento</button>`
+        : disableFailed
         ? '<strong>No pudimos completar la desactivación</strong><button class="text-btn" data-disable-notifications type="button">Reintentar desactivación</button>'
         : status === 'denied'
         ? '<strong>Notificaciones bloqueadas en el teléfono</strong><span>Habilitalas en Ajustes → Aplicaciones → Iahadut HaTora → Notificaciones.</span><button class="text-btn" data-enable-notifications type="button">Volver a comprobar</button>'
@@ -3956,17 +3959,20 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
 
   function setupPushNotifications(requestPermission = false) {
     if (!Capacitor.isNativePlatform()) return Promise.resolve('unavailable');
+    if (pushPhase === 'deactivating') return Promise.resolve('disabled');
+    if (!requestPermission && pushPhase) return pushSetupRequest || Promise.resolve('pending');
+    if (requestPermission && pushPhase === 'activating') return pushSetupRequest || Promise.resolve('pending');
+    if (pushSetupRequest) return pushSetupRequest.then(() => requestPermission ? setupPushNotifications(true) : localStorage.getItem('iht_push_status'));
     if (requestPermission) {
       if (!pushEnabled()) pushGeneration += 1;
       localStorage.setItem('iht_push_enabled', '1');
       localStorage.removeItem('iht_push_disable_error');
+      pushPhase = 'activating';
+      renderNotificationPermission();
     }
     const generation = pushGeneration;
-    if (pushSetupRequest) {
-      return pushSetupRequest.then(() => requestPermission && pushEnabled() && generation === pushGeneration ? setupPushNotifications(true) : localStorage.getItem('iht_push_status'));
-    }
     pushSetupRequest = configurePushNotifications(requestPermission, generation)
-      .finally(() => { pushSetupRequest = null; });
+      .finally(() => { pushSetupRequest = null; if (pushPhase === 'activating') pushPhase = ''; renderNotificationPermission(); });
     return pushSetupRequest;
   }
 
@@ -3975,7 +3981,7 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
       const {FirebaseMessaging} = await import('@capacitor-firebase/messaging');
       if (!pushListenersReady) {
         await FirebaseMessaging.addListener('tokenReceived', async ({token}) => {
-          if (!pushEnabled()) return;
+          if (!pushEnabled() || pushPhase) return;
           try {
             const topic = await registerPushToken(token, FirebaseMessaging);
             if (topic && pushEnabled()) localStorage.setItem('iht_push_status', 'active');
@@ -3997,8 +4003,10 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
         });
         pushListenersReady = true;
       }
-      await restorePushHistory(document.querySelector('.view.active')?.id === 'alertsView');
-      if (!pushEnabled() || generation !== pushGeneration) {
+      // An inbox download must never delay Android's permission/activation UI.
+      void restorePushHistory(document.querySelector('.view.active')?.id === 'alertsView');
+      if (generation !== pushGeneration) return 'disabled';
+      if (!pushEnabled()) {
         localStorage.setItem('iht_push_status', 'disabled');
         await PushHistory.setEnabled({enabled:false});
         renderNotificationPermission();
@@ -4015,7 +4023,7 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
         renderNotificationPermission();
         return permission.receive;
       }
-      const {token} = await FirebaseMessaging.getToken();
+      const {token} = await pushOperationTimeout(FirebaseMessaging.getToken());
       if (!token) throw new Error('No se recibió un token de notificaciones');
       const topic = await registerPushToken(token, FirebaseMessaging);
       if (!topic || !pushEnabled() || generation !== pushGeneration) return 'disabled';
@@ -4031,6 +4039,8 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
   }
 
   async function disablePushNotifications() {
+    if (pushPhase === 'deactivating') return;
+    pushPhase = 'deactivating';
     localStorage.setItem('iht_push_enabled', '0');
     localStorage.setItem('iht_push_status', 'disabled');
     pushGeneration += 1;
@@ -4055,9 +4065,15 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
       pushRegistrationQueue = task.catch(() => {});
       await task;
     } catch (_) { localStorage.setItem('iht_push_disable_error', '1'); }
+    pushPhase = '';
     renderNotificationPermission();
     renderPushNotifications();
     renderMore();
+  }
+
+  function pushOperationTimeout(operation, milliseconds = 30000) {
+    let timer;
+    return Promise.race([operation,new Promise((_,reject)=>{timer=setTimeout(()=>reject(new Error('La conexión de notificaciones no respondió. Reintentá con conexión.')),milliseconds);})]).finally(()=>clearTimeout(timer));
   }
 
   function renderMore() {

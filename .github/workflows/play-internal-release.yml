@@ -103,7 +103,7 @@ jobs:
           fi
           version_code=$(jq -r '.versionCode' <<<"$upload")
           test "$version_code" = "$VERSION_CODE"
-          jq -n --arg version "$version_code" --arg name "$RELEASE_VERSION" '{track:"internal",releases:[{name:$name,versionCodes:[$version],status:"completed",releaseNotes:[{language:"es-419",text:"Alertas con fotos disponibles aunque los push estén desactivados. Mejoras en la vinculación del teléfono de prueba."}]}]}' > "$RUNNER_TEMP/track.json"
+          jq -n --arg version "$version_code" --arg name "$RELEASE_VERSION" '{track:"internal",releases:[{name:$name,versionCodes:[$version],status:"completed",releaseNotes:[{language:"es-419",text:"Corrección al volver a activar avisos push. Estado visible durante la activación y manejo de conexiones lentas."}]}]}' > "$RUNNER_TEMP/track.json"
           curl --fail-with-body --silent --show-error -X PUT \
             -H "Authorization: Bearer $ACCESS_TOKEN" \
             -H 'Content-Type: application/json' \

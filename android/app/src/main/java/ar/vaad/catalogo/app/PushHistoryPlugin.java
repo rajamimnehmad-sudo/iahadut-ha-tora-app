@@ -9,9 +9,12 @@ import com.getcapacitor.annotation.CapacitorPlugin;
 import com.google.android.gms.tasks.Task;
 import com.google.android.gms.tasks.Tasks;
 import com.google.firebase.messaging.FirebaseMessaging;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 @CapacitorPlugin(name = "PushHistory")
 public final class PushHistoryPlugin extends Plugin {
+    private final AtomicInteger configurationGeneration = new AtomicInteger();
     @PluginMethod
     public void getTestTopic(PluginCall call) {
         try { JSObject result = new JSObject(); result.put("topic", PushHistoryStore.inboxTopic(getContext())); call.resolve(result); }
@@ -43,6 +46,7 @@ public final class PushHistoryPlugin extends Plugin {
 
     @PluginMethod
     public void setEnabled(PluginCall call) {
+        configurationGeneration.incrementAndGet();
         boolean enabled = Boolean.TRUE.equals(call.getBoolean("enabled", false));
         if (!PushHistoryStore.preferences(getContext()).edit().putBoolean("enabled", enabled).commit()) {
             call.reject("Could not save notification preference");
@@ -61,6 +65,7 @@ public final class PushHistoryPlugin extends Plugin {
             return;
         }
         FirebaseMessaging messaging = FirebaseMessaging.getInstance();
+        int generation = configurationGeneration.incrementAndGet();
         String previousTopic = PushHistoryStore.preferences(getContext()).getString("test_topic", "");
         if (!PushHistoryStore.preferences(getContext()).edit().putBoolean("enabled", enabled).commit()) {
             call.reject("Could not save notification preference");
@@ -70,16 +75,18 @@ public final class PushHistoryPlugin extends Plugin {
         Task<Void> task;
         if (enabled) {
             task = messaging.subscribeToTopic("catalog-updates")
-                    .onSuccessTask(unused -> messaging.subscribeToTopic(testTopic))
-                    .onSuccessTask(unused -> previousTopic.isEmpty() || previousTopic.equals(testTopic)
+                    .onSuccessTask(unused -> generation != configurationGeneration.get() ? Tasks.forException(new IllegalStateException("Superseded configuration")) : messaging.subscribeToTopic(testTopic))
+                    .onSuccessTask(unused -> generation != configurationGeneration.get() || previousTopic.isEmpty() || previousTopic.equals(testTopic)
                             ? Tasks.forResult(null) : messaging.unsubscribeFromTopic(previousTopic));
         } else {
             task = messaging.unsubscribeFromTopic("catalog-updates")
-                    .onSuccessTask(unused -> previousTopic.isEmpty() ? Tasks.forResult(null) : messaging.unsubscribeFromTopic(previousTopic))
-                    .onSuccessTask(unused -> messaging.deleteToken());
+                    .onSuccessTask(unused -> generation != configurationGeneration.get() || previousTopic.isEmpty() ? Tasks.forResult(null) : messaging.unsubscribeFromTopic(previousTopic));
+            // Opt-out removes subscriptions; deleting the installation token is
+            // unnecessary and can strand a quick subsequent activation.
         }
-        task.addOnCompleteListener(result -> {
+        Tasks.withTimeout(task, 30, TimeUnit.SECONDS).addOnCompleteListener(result -> {
             if (!result.isSuccessful()) { call.reject("Could not update FCM subscriptions", result.getException()); return; }
+            if (generation != configurationGeneration.get()) { call.reject("Superseded configuration"); return; }
             // Keep the inbox identity when push is disabled or FCM rotates its token.
             if (enabled) PushHistoryStore.preferences(getContext()).edit().putString("test_topic", testTopic).putString("inbox_topic", testTopic).apply();
             // USB diagnostics expose only an irreversible topic hash, never
