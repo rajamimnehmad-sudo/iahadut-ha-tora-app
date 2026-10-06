@@ -38,6 +38,15 @@ export async function sendManualPush(env = process.env, fetcher = fetch) {
     return;
   }
   if (!env.FCM_SERVICE_ACCOUNT_JSON) throw new Error('Falta FCM_SERVICE_ACCOUNT_JSON en GitHub.');
+  if (!env.ALERTS_INGEST_SECRET) throw new Error('Falta la conexión con la bandeja de Alertas.');
+  const saved = await fetcher('https://waien-hub.waien-studiodev-3c4.workers.dev/api/alerts', {
+    method:'POST', headers:{'content-type':'application/json',Authorization:`Bearer ${env.ALERTS_INGEST_SECRET}`},
+    body:JSON.stringify({eventKey:message.data.eventKey,title:message.data.title,body:message.data.body,imageUrl:message.data.imageUrl || '',topic:message.topic,sentAt:message.data.sentAt}),
+    signal:AbortSignal.timeout(20000)
+  });
+  if (!saved.ok) throw new Error(`No se pudo guardar en Alertas: HTTP ${saved.status}. No se envió push.`);
+  console.log('Aviso guardado en Alertas, independientemente de la preferencia de push.');
+  console.log(`Identificador para retirarlo de Alertas: ${message.data.eventKey}`);
   const account = JSON.parse(env.FCM_SERVICE_ACCOUNT_JSON);
   if (account.project_id !== 'iahadut-hatora') throw new Error('La cuenta de servicio no pertenece al proyecto de la app.');
   const now = Math.floor(Date.now() / 1000);
@@ -53,7 +62,6 @@ export async function sendManualPush(env = process.env, fetcher = fetch) {
   const response = await fetcher(`https://fcm.googleapis.com/v1/projects/${account.project_id}/messages:send`, {method:'POST', headers:{'content-type':'application/json', Authorization:`Bearer ${token}`}, body:JSON.stringify({message}), signal:AbortSignal.timeout(20000)});
   if (!response.ok) throw new Error(`FCM rechazó el aviso manual: HTTP ${response.status}`);
   console.log('Aviso manual aceptado por FCM. La recepción se comprueba en el dispositivo.');
-  console.log(`Identificador para retirarlo de Alertas: ${message.data.eventKey}`);
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {

@@ -12,6 +12,11 @@ import com.google.firebase.messaging.FirebaseMessaging;
 
 @CapacitorPlugin(name = "PushHistory")
 public final class PushHistoryPlugin extends Plugin {
+    @PluginMethod
+    public void getTestTopic(PluginCall call) {
+        try { JSObject result = new JSObject(); result.put("topic", PushHistoryStore.inboxTopic(getContext())); call.resolve(result); }
+        catch (Exception error) { call.reject("Could not save inbox identity",error); }
+    }
     @Override
     public void load() { PushHistoryStore.ensureChannel(getContext()); }
 
@@ -75,7 +80,8 @@ public final class PushHistoryPlugin extends Plugin {
         }
         task.addOnCompleteListener(result -> {
             if (!result.isSuccessful()) { call.reject("Could not update FCM subscriptions", result.getException()); return; }
-            PushHistoryStore.preferences(getContext()).edit().putString("test_topic", enabled ? testTopic : "").apply();
+            // Keep the inbox identity when push is disabled or FCM rotates its token.
+            if (enabled) PushHistoryStore.preferences(getContext()).edit().putString("test_topic", testTopic).putString("inbox_topic", testTopic).apply();
             // USB diagnostics expose only an irreversible topic hash, never
             // the registration token. This permits private device-only tests.
             if (enabled && android.provider.Settings.Global.getInt(getContext().getContentResolver(), android.provider.Settings.Global.ADB_ENABLED, 0) == 1) {

@@ -21,6 +21,15 @@ final class PushHistoryStore {
         // Existing installations may already be subscribed before migration.
         return preferences(context).getBoolean("enabled", true);
     }
+    static synchronized String inboxTopic(Context context) {
+        String topic = preferences(context).getString("inbox_topic", "");
+        if (!topic.matches("iahadut-test-[a-f0-9]{20}")) {
+            topic = preferences(context).getString("test_topic", "");
+            if (!topic.matches("iahadut-test-[a-f0-9]{20}")) topic = "iahadut-test-" + java.util.UUID.randomUUID().toString().replace("-", "").substring(0, 20);
+            if (!preferences(context).edit().putString("inbox_topic", topic).commit()) throw new IllegalStateException("Could not save inbox identity");
+        }
+        return topic;
+    }
 
     static synchronized JSONArray read(Context context) {
         try { return new JSONArray(preferences(context).getString("notifications", "[]")); }

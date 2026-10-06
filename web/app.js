@@ -14,6 +14,7 @@ import { mergeAlertHistory } from './alert-history.js';
 import { categoryInformation } from './category-info.js';
 import {collectOfflineImages, createOfflineDownload, offlineNetworkMayDownload} from './offline-download.js';
 import {pushImageUrl} from './push-image.js';
+import {mergeInboxNotifications} from './alerts-inbox.js';
 import featuredProductsSnapshot from './data/featured-products.json';
 import featuredImageBounds from './data/featured-image-bounds.json';
 import contentSnapshot from './data/content.json';
@@ -2691,6 +2692,8 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
         await FirebaseMessaging.removeAllDeliveredNotifications();
       } catch (_) { return; }
     }
+    const dismissed = JSON.parse(localStorage.getItem('iht_alerts_dismissed') || '[]');
+    localStorage.setItem('iht_alerts_dismissed',JSON.stringify([...new Set([...dismissed,...pushNotifications.map(item=>item.eventKey || item.id)])]));
     pushNotifications = [];
     localStorage.removeItem('iht_push_notifications');
     setPushNotificationBadge(false);
@@ -2766,8 +2769,37 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     }
   }
 
+  let inboxRequest = null;
+  async function syncAlertsInbox(markRead = false) {
+    if (inboxRequest) return inboxRequest;
+    inboxRequest=(async()=>{
+      try {
+        let topic=localStorage.getItem('iht_alerts_test_topic') || localStorage.getItem('iht_push_test_topic') || '';
+        if (Capacitor.getPlatform()==='android') {
+          const result=await PushHistory.getTestTopic();
+          topic=result.topic;
+          localStorage.setItem('iht_alerts_test_topic',topic);
+        }
+        const response=await fetch(`https://waien-hub.waien-studiodev-3c4.workers.dev/api/alerts${topic?`?topic=${encodeURIComponent(topic)}`:''}`,{cache:'no-store',signal:AbortSignal.timeout(15000)});
+        if(!response.ok) return;
+        const {notices}=await response.json();
+        if(!Array.isArray(notices)) return;
+        const dismissed=JSON.parse(localStorage.getItem('iht_alerts_dismissed') || '[]');
+        const previous=new Set(pushNotifications.map(item=>item.eventKey || item.id));
+        pushNotifications=mergeInboxNotifications(pushNotifications,notices,revokedPushes,dismissed);
+        localStorage.setItem('iht_push_notifications',JSON.stringify(pushNotifications));
+        const reading=markRead || document.querySelector('.view.active')?.id==='alertsView';
+        if(!reading && pushNotifications.some(item=>!previous.has(item.eventKey || item.id))) setPushNotificationBadge(true);
+        if(reading) setPushNotificationBadge(false);
+        if(document.querySelector('.view.active')?.id==='alertsView') renderPushNotifications();
+      } catch (_) { /* Preserve cached inbox when offline. */ }
+    })().finally(()=>{inboxRequest=null;});
+    return inboxRequest;
+  }
+
   async function restorePushHistory(markRead = false) {
     await refreshPushRevocations();
+    await syncAlertsInbox(markRead);
     if (!Capacitor.isNativePlatform()) return;
     if (pushHistoryRequest) {
       await pushHistoryRequest;
@@ -3817,16 +3849,19 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
       id: clean(notification?.id || data.messageId || data['google.message_id']) || `notice:${clean(notification?.title || data.title)}|${clean(notification?.body || data.body)}|${clean(data.sentAt || notification?.receivedAt)}`,
       eventKey: notificationEventKey(notification),
       imageUrl: pushImageUrl(data.imageUrl || notification?.image || data['gcm.n.image']),
+      sentAt: data.sentAt || notification?.receivedAt || new Date().toISOString(),
       title: clean(notification?.title || data.title || data['gcm.n.title'] || fallbackTitle),
       body: clean(notification?.body || data.body || data.text || data['gcm.n.body'] || 'Hay una actualización disponible.'),
       time: new Date(notification?.receivedAt || data.sentAt || Date.now()).toLocaleString('es-AR', {hour12:false}),
       url: notificationPlayStoreUrl(notification)
     };
     if (notificationIsRevoked(item, revokedPushes)) return null;
-    if (!pushNotifications.some((stored) => pushNotificationKey(stored) === pushNotificationKey(item))) {
+    try { if(JSON.parse(localStorage.getItem('iht_alerts_dismissed') || '[]').includes(item.eventKey || item.id)) return null; } catch (_) { /* Keep new messages if a local preference was damaged. */ }
+    const existing=pushNotifications.findIndex(stored=>pushNotificationKey(stored)===pushNotificationKey(item));
+    if (existing<0) {
       pushNotifications = [item, ...pushNotifications];
-      localStorage.setItem('iht_push_notifications', JSON.stringify(pushNotifications));
-    }
+    } else pushNotifications[existing]={...pushNotifications[existing],...item,imageUrl:item.imageUrl || pushNotifications[existing].imageUrl};
+    localStorage.setItem('iht_push_notifications', JSON.stringify(pushNotifications));
     if (unread) setPushNotificationBadge(true);
     if (document.querySelector('.view.active')?.id === 'alertsView') renderPushNotifications();
     return item;
@@ -3846,7 +3881,8 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     const generation = pushGeneration;
     const register = async () => {
       if (!pushEnabled() || generation !== pushGeneration) return '';
-      const testTopic = await pushTestTopicForToken(token);
+      const testTopic = Capacitor.getPlatform()==='android' ? (await PushHistory.getTestTopic()).topic : localStorage.getItem('iht_alerts_test_topic') || await pushTestTopicForToken(token);
+      localStorage.setItem('iht_alerts_test_topic',testTopic);
       if (!pushEnabled() || generation !== pushGeneration) return '';
       if (Capacitor.getPlatform() === 'android') {
         // The native bridge waits for FCM subscription tasks to complete.
@@ -4053,7 +4089,8 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     const developerWhatsApp = `https://wa.me/5491135195674?text=${encodeURIComponent('¡Me gustó la app de Iahadut HaTora! ¿Podemos hacer un proyecto juntos?')}`;
     const developerCredit = `<div class="developer-credit"><span class="app-version">Versión ${escapeHtml(APP_VERSION)}</span><span class="developer-name">Y.R.N Soluciones Software</span><a class="developer-cta" href="https://wa.me/5491135195674" target="_blank" rel="noopener">¿Necesitás una app?</a><a class="developer-whatsapp" href="https://wa.me/5491135195674" target="_blank" rel="noopener" aria-label="Contactar por WhatsApp"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c0 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/></svg></a></div>`;
     const moreInfo = Object.entries(info).filter(([key]) => !['shops', 'catering', 'notes', 'world'].includes(key));
-    $('#moreList').innerHTML = moreInfo.map(([key, value]) => `<button class="more-row" data-info="${key}">${infoIcon(key)}<span><strong>${escapeHtml(value[0])}</strong><small>${escapeHtml(value[1])}</small></span><span class="row-arrow" aria-hidden="true">›</span></button>`).join('') + offline + update + rateApp + officialWebsite + developerCredit;
+    const support = Capacitor.getPlatform()==='android' ? '<button class="more-row" data-copy-support><span class="more-row-leading-icon" aria-hidden="true">⌘</span><span><strong>Copiar código de soporte</strong></span><span class="row-arrow" aria-hidden="true">›</span></button>' : '';
+    $('#moreList').innerHTML = moreInfo.map(([key, value]) => `<button class="more-row" data-info="${key}">${infoIcon(key)}<span><strong>${escapeHtml(value[0])}</strong><small>${escapeHtml(value[1])}</small></span><span class="row-arrow" aria-hidden="true">›</span></button>`).join('') + offline + update + rateApp + officialWebsite + support + developerCredit;
     document.querySelectorAll('.developer-name').forEach((node) => {
       node.innerHTML = `<img src="${developerLogoAssetUrl}" alt="waien studio" width="520" height="290" loading="lazy" decoding="async"><span class="developer-label"><strong>Waien</strong> Studio</span>`;
     });
@@ -4761,6 +4798,7 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     App.addListener('appStateChange', ({isActive}) => {
       if (!isActive) return;
       void refreshPushRevocations();
+      void syncAlertsInbox(document.querySelector('.view.active')?.id === 'alertsView');
       void applyNativeCatalogCacheIfNewer();
       refreshPlayUpdate();
       void setupPushNotifications(false);
@@ -4845,6 +4883,9 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     const savedButton = event.target.closest('[data-saved]'); if (savedButton) { openSavedScreen(); return; }
     const clearHistoryButton = event.target.closest('[data-clear-history]'); if (clearHistoryButton) { if (!recent.length || window.confirm('¿Borrar el historial de búsquedas?')) { recent = []; localStorage.removeItem('iht_recent'); renderMore(); renderSearchCategories(); } }
     const notificationButton = event.target.closest('[data-enable-notifications]');
+    if(event.target.closest('[data-copy-support]')) {
+      void (async()=>{try{const {topic}=await PushHistory.getTestTopic();localStorage.setItem('iht_alerts_test_topic',topic);try{await navigator.clipboard.writeText(topic);window.alert('Código copiado. Podés enviarlo a soporte para vincular tu teléfono.');}catch{window.prompt('Tu código de soporte:',topic);}}catch{window.alert('No se pudo obtener el código. Intentá nuevamente.');}})();return;
+    }
     if (notificationButton) { setupPushNotifications(true).then(() => { renderPushNotifications(); renderMore(); }); return; }
     const disableNotificationButton = event.target.closest('[data-disable-notifications]');
     if (disableNotificationButton) { disablePushNotifications(); return; }
@@ -5058,8 +5099,8 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
   $('#syncStatus').onclick = () => { if (!syncRequest) syncAndPreload(true).catch(() => {}); };
   $('#accessRetry').onclick = () => refreshRemoteControl(true);
   $('#accessUpdate').onclick = () => openExternal(remoteControl.update_url);
-  $('#headerNotifications')?.setAttribute('aria-label', 'Abrir notificaciones push');
-  $('#headerNotifications')?.setAttribute('title', 'Notificaciones push');
+  $('#headerNotifications')?.setAttribute('aria-label', 'Abrir Alertas');
+  $('#headerNotifications')?.setAttribute('title', 'Alertas');
   renderHome(); renderSearchCategories(); infoNoticeKeys.forEach((key) => updateInfoNotice(key));
   window.setTimeout(resumeOfflineWhenOpen, 0);
   refreshAlertBadge();
@@ -5070,11 +5111,13 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
   // El ranking global se consulta como copia estática; nunca usa Firestore por usuario.
   const remoteControlReady = refreshRemoteControl(false);
   void refreshPushRevocations();
+  void syncAlertsInbox(false);
   // A withdrawal is not another push: refresh while the inbox is on screen.
   // No polling while hidden, offline, or browsing other sections.
   setInterval(() => {
-    if (!document.hidden && navigator.onLine && document.querySelector('.view.active')?.id === 'alertsView') {
-      void restorePushHistory(true);
+    if (!document.hidden && navigator.onLine) {
+      void syncAlertsInbox(document.querySelector('.view.active')?.id === 'alertsView');
+      if(document.querySelector('.view.active')?.id === 'alertsView') void restorePushHistory(true);
     }
   }, 30000);
   refreshPlayUpdate();
@@ -5086,7 +5129,7 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
   });
   setInterval(() => syncAndPreload(false), 12 * 60 * 60 * 1000);
   document.addEventListener('visibilitychange', () => {
-    if (!document.hidden) { void refreshPushRevocations(); syncAndPreload(false); refreshRemoteControl(false); refreshPlayUpdate(); }
+    if (!document.hidden) { void refreshPushRevocations(); void syncAlertsInbox(document.querySelector('.view.active')?.id === 'alertsView'); syncAndPreload(false); refreshRemoteControl(false); refreshPlayUpdate(); }
   });
-  window.addEventListener('online', () => { void refreshPushRevocations(); syncAndPreload(false).finally(scheduleAppPreload); });
+  window.addEventListener('online', () => { void refreshPushRevocations(); void syncAlertsInbox(document.querySelector('.view.active')?.id === 'alertsView'); syncAndPreload(false).finally(scheduleAppPreload); });
 })();
