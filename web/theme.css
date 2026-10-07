@@ -3924,6 +3924,9 @@ body.app-scrolled .app-hero .detail-head {
 .trusted-brands-track { display: flex; width: max-content; animation: trusted-brands-scroll 130s linear infinite; animation-delay: var(--trusted-brands-delay, 0s); will-change: transform; }
 .trusted-brands-group { display: flex; flex: 0 0 auto; align-items: center; gap: 29px; padding-right: 29px; }
 .trusted-brands-group img { object-fit: contain; flex: 0 0 auto; }
+.trusted-brand-link { display: grid; place-items: center; flex: 0 0 auto; min-height: 44px; padding: 0; border: 0; border-radius: 8px; background: transparent; cursor: pointer; touch-action: pan-y; }
+.trusted-brand-link > img { display: block; }
+.trusted-brand-link:focus-visible { outline: 3px solid #2f7a59; outline-offset: 4px; }
 @keyframes trusted-brands-scroll { to { transform: translateX(-50%); } }
 @media (prefers-reduced-motion: reduce) { .trusted-brands-track { animation: none; } .trusted-brands-window { overflow-x: auto; } }
 @media (min-width: 701px) and (max-width: 1200px) {

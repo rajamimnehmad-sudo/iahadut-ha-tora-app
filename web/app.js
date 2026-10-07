@@ -16,7 +16,8 @@ import {collectOfflineImages, createOfflineDownload, offlineNetworkMayDownload} 
 import {pushImageUrl} from './push-image.js';
 import {mergeInboxNotifications, alertExpired} from './alerts-inbox.js';
 import {matchingCategories, navigationScrollKey, matchingBrands, brandName, brandKey} from './category-navigation.js';
-import {brandLogo} from './brand-logos.js';
+import {brandLogo, brandForLogoPath} from './brand-logos.js';
+import {additionKeys, unreadAdditionCount} from './catalog-unread.js';
 import featuredProductsSnapshot from './data/featured-products.json';
 import featuredImageBounds from './data/featured-image-bounds.json';
 import contentSnapshot from './data/content.json';
@@ -572,6 +573,27 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
   // Repair previously truncated caches even offline or while still fresh.
   if (alertCache) alertCache = {...alertCache, items:mergeAlertHistory(alertCache.items, activeContentSnapshot?.alerts, contentSnapshot?.alerts)};
   let timelineKind = 'all';
+  const storedSeenAdditions = readJson('iht_catalog_additions_seen', []);
+  const seenAdditions = new Set(Array.isArray(storedSeenAdditions) ? storedSeenAdditions.filter(key => typeof key === 'string') : []);
+  function renderNewProductCount(items = alertCache?.items) {
+    const count = unreadAdditionCount(items, seenAdditions);
+    document.querySelectorAll('[data-open-timeline="alta"]').forEach(button => {
+      let badge = button.querySelector('.catalog-unread-count');
+      if (!badge) {
+        badge = document.createElement('span');
+        badge.className = 'catalog-unread-count';
+        button.firstElementChild.append(badge);
+      }
+      badge.hidden = count === 0;
+      badge.textContent = count ? ` (${count.toLocaleString('es-AR')})` : '';
+    });
+  }
+  function markNewProductsSeen(items) {
+    additionKeys(items).forEach(key => seenAdditions.add(key));
+    try { localStorage.setItem('iht_catalog_additions_seen', JSON.stringify([...seenAdditions])); } catch (_) {}
+    renderNewProductCount(items);
+  }
+  renderNewProductCount();
   const alertProductOverrides = new Map();
   const storedBarcodeAssociations = readJson('iht_barcode_associations', {});
   const barcodeAssociations = storedBarcodeAssociations && typeof storedBarcodeAssociations === 'object' && !Array.isArray(storedBarcodeAssociations) ? storedBarcodeAssociations : {};
@@ -1991,6 +2013,7 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
   }
 
   async function updateRecentFromAlerts(groups) {
+    renderNewProductCount(groups);
     const alerts = Array.isArray(groups) ? groups : groups?.alta || [];
     if (!alerts.length || products.length <= seed.length) return;
     const matches = [];
@@ -2675,6 +2698,32 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
   // Los logos son locales y pequeños. Preparar también los que aún están
   // fuera de pantalla para no dejar huecos al avanzar la franja.
   document.querySelectorAll('.trusted-brands-group img').forEach(image => { image.loading = 'eager'; });
+  document.querySelectorAll('.trusted-brands-group img').forEach(image => {
+    const name = brandForLogoPath(image.getAttribute('src'));
+    if (!name) return;
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'trusted-brand-link';
+    button.dataset.searchBrand = name;
+    button.setAttribute('aria-label', `Ver productos de ${name}`);
+    // The duplicated animation group remains mouse/touch accessible without
+    // adding duplicate keyboard stops inside its aria-hidden subtree.
+    if (image.closest('[aria-hidden="true"]')) button.tabIndex = -1;
+    image.replaceWith(button);
+    button.append(image);
+  });
+  let brandPointerStart = null;
+  let suppressBrandClickUntil = 0;
+  document.querySelector('.trusted-brands-track')?.addEventListener('pointerdown', event => {
+    brandPointerStart = {x:event.clientX, y:event.clientY, id:event.pointerId};
+  }, {passive:true});
+  const finishBrandGesture = event => {
+    if (!brandPointerStart || event.pointerId !== brandPointerStart.id) return;
+    if (event.type === 'pointercancel' || Math.hypot(event.clientX-brandPointerStart.x, event.clientY-brandPointerStart.y) > 10) suppressBrandClickUntil = performance.now()+500;
+    brandPointerStart = null;
+  };
+  window.addEventListener('pointerup', finishBrandGesture, {passive:true});
+  window.addEventListener('pointercancel', finishBrandGesture, {passive:true});
 
   function resumeBrandMarquee() {
     const track = document.querySelector('.trusted-brands-track');
@@ -3817,6 +3866,7 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
       ? '<button class="alert-secondary-action" type="button" data-open-all-changes><span class="alert-secondary-icon" aria-hidden="true">↗</span><span><strong>Ver todos los cambios</strong><small>Altas y bajas del catálogo</small></span><span class="alert-secondary-arrow" aria-hidden="true">›</span></button>'
       : '';
     $('#timelineList').innerHTML = `${showAllButton}${alertTimelineMarkup(items || {alta:[], baja:[], general:[]}, state, kind)}`;
+    if (state !== 'error' && document.querySelector('.view.active')?.id === 'timelineView' && timelineKind === kind && kind !== 'baja') markNewProductsSeen(items);
   }
 
   async function renderCatalogTimeline(items = alertCache?.items, state = '', kind = timelineKind) {
@@ -4903,6 +4953,15 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     if (loadMoreButton) { appendProductBatch(); return; }
     const brandButton = event.target.closest('[data-search-brand]');
     if (brandButton) {
+      if (brandButton.classList.contains('trusted-brand-link')) {
+        if (performance.now() < suppressBrandClickUntil && event.detail !== 0) return;
+        openSearchScreen();
+        window.clearTimeout(searchFocusTimer);
+        $('#query').blur();
+        selectedRegion = 'all';
+        selectedCategory = 'all';
+        favoriteOnly = false;
+      }
       window.clearTimeout(searchTimer);
       searchBrand = brandButton.dataset.searchBrand;
       $('#query').value = searchBrand;
