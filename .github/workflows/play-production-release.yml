@@ -60,8 +60,17 @@ jobs:
             '.releases[]? | select(.status == "completed") | .versionCodes[]? | select(. == $version)' \
             <<<"$internal" >/dev/null
 
+          previous_production=$(curl --fail-with-body --silent --show-error \
+            -H "Authorization: Bearer $ACCESS_TOKEN" \
+            "https://androidpublisher.googleapis.com/androidpublisher/v3/applications/$PACKAGE_NAME/edits/$edit_id/tracks/production")
+          echo 'Estado de producción antes de promover:'
+          jq '{track,releases}' <<<"$previous_production"
+          jq -e --arg version "$VERSION_CODE" \
+            '[.releases[]?.versionCodes[]? | tonumber] | all(. <= ($version | tonumber))' \
+            <<<"$previous_production" >/dev/null
+
           jq -n --arg version "$VERSION_CODE" --arg name "$RELEASE_VERSION" \
-            '{track:"production",releases:[{name:$name,versionCodes:[$version],status:"completed",releaseNotes:[{language:"es-419",text:"Mejoras del catálogo, fichas sin conexión y avisos manuales."}]}]}' \
+            '{track:"production",releases:[{name:$name,versionCodes:[$version],status:"completed",releaseNotes:[{language:"es-419",text:"Descargá el catálogo y las fotos para usar sin conexión, con progreso, pausa y reanudación automática al volver a abrir la app."}]}]}' \
             > "$RUNNER_TEMP/production-track.json"
 
           put_result=$(curl --silent --show-error -w '\n%{http_code}' -X PUT \
@@ -98,6 +107,8 @@ jobs:
           production=$(curl --fail-with-body --silent --show-error \
             -H "Authorization: Bearer $ACCESS_TOKEN" \
             "https://androidpublisher.googleapis.com/androidpublisher/v3/applications/$PACKAGE_NAME/edits/$verify_edit_id/tracks/production")
+          echo 'Estado de producción después del envío:'
+          jq '{track,releases}' <<<"$production"
           jq -e --arg version "$VERSION_CODE" \
             '.releases[]? | select(.status == "completed") | .versionCodes[]? | select(. == $version)' \
             <<<"$production" >/dev/null

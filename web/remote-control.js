@@ -1,16 +1,25 @@
 import { firebaseConfig } from './firebase-config.js';
+import { Capacitor } from '@capacitor/core';
+import { platformRemoteControl } from './platform-store.js';
 
 import packageJson from '../package.json';
 
 export const APP_VERSION = packageJson.version;
-const CACHE_KEY = 'iht_remote_control';
+const platform = Capacitor.getPlatform();
+const CACHE_KEY = platform === 'ios' ? 'iht_remote_control_ios' : 'iht_remote_control';
+const forPlatform = control => platformRemoteControl(control, platform, APP_VERSION, import.meta.env.VITE_IOS_STORE_URL);
 
 export const defaultRemoteControl = {
   app_enabled: true,
+  // Versioned key: old builds and their cached control do not activate this backend.
+  live_search_ranking_v1_enabled: true,
   maintenance_message: 'Esta versión de prueba no está disponible temporalmente.',
   minimum_version: APP_VERSION,
   latest_version: APP_VERSION,
   update_url: 'https://play.google.com/store/apps/details?id=ar.vaad.catalogo.app',
+  ios_minimum_version: '',
+  ios_latest_version: '',
+  ios_update_url: '',
   trial_expires_at: '',
   enforce_online_check: false,
   offline_grace_hours: 24,
@@ -27,7 +36,7 @@ const configured = () => Boolean(firebaseConfig.apiKey && firebaseConfig.project
 
 export async function loadRemoteControl(force = false) {
   const cached = readCache();
-  if (!configured()) return {...defaultRemoteControl, ...(cached?.values || {}), configured:false, checkedAt:cached?.checkedAt || 0};
+  if (!configured()) return forPlatform({...defaultRemoteControl, ...(cached?.values || {}), configured:false, checkedAt:cached?.checkedAt || 0});
   try {
     const [{initializeApp, getApps}, remoteModule] = await Promise.all([import('firebase/app'), import('firebase/remote-config')]);
     const app = getApps()[0] || initializeApp(firebaseConfig);
@@ -38,10 +47,14 @@ export async function loadRemoteControl(force = false) {
     await remoteModule.fetchAndActivate(remote);
     const values = {
       app_enabled:remoteModule.getBoolean(remote, 'app_enabled'),
+      live_search_ranking_v1_enabled:remoteModule.getBoolean(remote, 'live_search_ranking_v1_enabled'),
       maintenance_message:remoteModule.getString(remote, 'maintenance_message'),
       minimum_version:remoteModule.getString(remote, 'minimum_version'),
       latest_version:remoteModule.getString(remote, 'latest_version'),
       update_url:remoteModule.getString(remote, 'update_url'),
+      ios_minimum_version:remoteModule.getString(remote, 'ios_minimum_version'),
+      ios_latest_version:remoteModule.getString(remote, 'ios_latest_version'),
+      ios_update_url:remoteModule.getString(remote, 'ios_update_url'),
       trial_expires_at:remoteModule.getString(remote, 'trial_expires_at'),
       enforce_online_check:remoteModule.getBoolean(remote, 'enforce_online_check'),
       offline_grace_hours:Number(remoteModule.getString(remote, 'offline_grace_hours')) || 24,
@@ -51,9 +64,9 @@ export async function loadRemoteControl(force = false) {
     };
     const result = {values, checkedAt:Date.now()};
     localStorage.setItem(CACHE_KEY, JSON.stringify(result));
-    return {...defaultRemoteControl, ...values, configured:true, checkedAt:result.checkedAt};
+    return forPlatform({...defaultRemoteControl, ...values, configured:true, checkedAt:result.checkedAt});
   } catch (error) {
-    return {...defaultRemoteControl, ...(cached?.values || {}), configured:true, checkedAt:cached?.checkedAt || 0, error:String(error?.message || error)};
+    return forPlatform({...defaultRemoteControl, ...(cached?.values || {}), configured:true, checkedAt:cached?.checkedAt || 0, error:String(error?.message || error)});
   }
 }
 

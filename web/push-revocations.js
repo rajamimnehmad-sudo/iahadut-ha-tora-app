@@ -1,8 +1,27 @@
 const STORAGE_KEY = 'iht_revoked_pushes';
 const SOURCE = 'https://raw.githubusercontent.com/rajamimnehmad-sudo/iahadut-ha-tora-app/main/web/data/push-revocations.json';
 
+export function notificationEventKey(item) {
+  return String(item?.eventKey || item?.data?.eventKey || item?.tag || item?.data?.['gcm.n.tag'] || '').trim();
+}
+
 export function notificationIsRevoked(item, revoked) {
-  return Boolean((item.eventKey && revoked.includes(item.eventKey)) || (item.id && revoked.includes(item.id)));
+  return Boolean(revoked.includes(notificationEventKey(item)) || (item?.id && revoked.includes(item.id)));
+}
+
+// Repair old tray copies that were stored without their event key. Only use a
+// unique native match; identical text from distinct notices is not sufficient.
+export function reconcilePushHistory(items, nativeItems, revoked) {
+  const text = value => String(value || '').replace(/\s+/g, ' ').trim();
+  return items.map(item => {
+    if (notificationEventKey(item)) return item;
+    const exact = nativeItems.filter(candidate => item.id && String(candidate.id) === String(item.id));
+    const matches = exact.length ? exact : nativeItems.filter(candidate =>
+      text(candidate.title || candidate.data?.title) === text(item.title) &&
+      text(candidate.body || candidate.data?.body) === text(item.body));
+    const keys = [...new Set(matches.map(notificationEventKey).filter(Boolean))];
+    return keys.length === 1 ? {...item, eventKey:keys[0]} : item;
+  }).filter(item => !notificationIsRevoked(item, revoked));
 }
 
 export function readRevokedPushes(storage = localStorage) {

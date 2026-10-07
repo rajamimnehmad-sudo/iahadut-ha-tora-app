@@ -15,6 +15,9 @@ test('manual message opens Alertas and preserves its withdrawal identifier', () 
   assert.equal(message.data.action, 'alerts');
   assert.equal(message.android.notification.channel_id, 'catalog-updates-v2');
   assert.equal(message.android.notification.tag, 'notice-1');
+  assert.equal(message.apns.headers['apns-push-type'], 'alert');
+  assert.equal(message.apns.payload.aps['mutable-content'], 1);
+  assert.equal(message.apns.payload.aps.sound, 'default');
 });
 test('oversized UTF-8 payload and unsupported topics are rejected before sending', () => {
   assert.throws(() => manualPushMessage({title:'Aviso', body:'ñ'.repeat(1500)}));

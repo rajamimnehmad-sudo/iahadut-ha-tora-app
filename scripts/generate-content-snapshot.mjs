@@ -180,12 +180,18 @@ function parseCard(card, html) {
 
 function parseAlerts(html) {
   const document = new DOMParser().parseFromString(html, 'text/html');
-  const extract = (selector) => [...(document.querySelector(selector)?.querySelectorAll('li') || [])].map((node) => ({text:clean(node.textContent), url:absolute(node.querySelector('a[href]')?.getAttribute('href'), 'https://vaad.ar/alertas-de-productos/')})).filter((item, index, all) => item.text.length > 8 && all.findIndex((candidate) => candidate.text === item.text) === index);
+  const extract = (selector) => [...(document.querySelector(selector)?.querySelectorAll('li') || [])].map((node) => ({text:clean(node.textContent), url:absolute(node.querySelector('a[href]')?.getAttribute('href'), 'https://vaad.ar/alertas-de-productos/')})).filter((item, index, all) => item.text.length > 8 && all.findIndex((candidate) => item.url ? candidate.url === item.url : candidate.text === item.text) === index);
   return { alta: extract('.card-altas'), baja: extract('.card-bajas'), general: [] };
 }
 
 async function mergeAlertHistory(currentAlerts) {
   let savedEntries = [];
+  let previousAlerts = {};
+  try {
+    previousAlerts = JSON.parse(await readFile(outputPath, 'utf8')).alerts || {};
+  } catch (error) {
+    if (error?.code !== 'ENOENT') throw error;
+  }
   try {
     const savedState = JSON.parse(await readFile(alertStatePath, 'utf8'));
     savedEntries = Object.values(savedState || {});
@@ -195,7 +201,7 @@ async function mergeAlertHistory(currentAlerts) {
 
   const mergeType = (type) => {
     const seen = new Set();
-    return [...(currentAlerts[type] || []), ...savedEntries.filter((entry) => entry?.type === type)]
+    return [...(currentAlerts[type] || []), ...savedEntries.filter((entry) => entry?.type === type), ...(previousAlerts[type] || [])]
       .map((entry) => ({ text: clean(entry?.text), url: clean(entry?.url) }))
       .filter((entry) => entry.text.length > 8)
       .filter((entry) => {

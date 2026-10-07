@@ -20,15 +20,17 @@ public class MainActivity extends BridgeActivity {
         WindowInsetsControllerCompat controller =
                 WindowCompat.getInsetsController(getWindow(), getWindow().getDecorView());
         controller.setAppearanceLightStatusBars(true);
-        controller.setSystemBarsBehavior(WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE);
-        controller.hide(WindowInsetsCompat.Type.navigationBars());
+        controller.setAppearanceLightNavigationBars(true);
+        controller.show(WindowInsetsCompat.Type.navigationBars());
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             View decorView = getWindow().getDecorView();
             decorView.setSystemUiVisibility(
-                    decorView.getSystemUiVisibility()
-                            | View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR
-                            | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
-                            | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY);
+                    (decorView.getSystemUiVisibility()
+                            & ~(View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+                            | View.SYSTEM_UI_FLAG_IMMERSIVE
+                            | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
+                            | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION))
+                            | View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR);
         }
     }
 
@@ -38,6 +40,7 @@ public class MainActivity extends BridgeActivity {
         registerPlugin(CatalogBackgroundSyncPlugin.class);
         registerPlugin(PushHistoryPlugin.class);
         registerPlugin(ScannerPermissionsPlugin.class);
+        registerPlugin(OfflineNetworkPlugin.class);
         super.onCreate(savedInstanceState);
         getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE);
         // The WebView must be opaque. During an IME resize Android may expose

@@ -1,0 +1,9 @@
+{
+  "name": "iahadut-search-ranking",
+  "private": true,
+  "type": "module",
+  "scripts": {"test": "node --test test/*.test.js", "deploy": "wrangler deploy"},
+  "dependencies": {"jose": "6.2.12"},
+  "devDependencies": {"wrangler": "4.148.0"},
+  "overrides": {"sharp": "0.35.5"}
+}
