@@ -18,7 +18,7 @@ export async function rankingFromReport(report, products, generatedAt = new Date
 }
 
 export function validGlobalRanking(value) {
-  return value?.schemaVersion === 1 && value.source === 'google-analytics' && value.metric === 'catalog_product_search'
+  return value?.schemaVersion === 1 && ['google-analytics', 'app-search'].includes(value.source) && value.metric === 'catalog_product_search'
     && value.windowDays === 28 && Number.isFinite(Date.parse(value.generatedAt)) && Array.isArray(value.products)
     && value.products.length <= 20 && new Set(value.products.map(item=>item.url)).size === value.products.length
     && value.products.every(item => /^https:\/\/vaad\.ar\/producto\//.test(item.url || '') && Number.isSafeInteger(item.searches) && item.searches > 0);

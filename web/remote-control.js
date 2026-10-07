@@ -11,6 +11,8 @@ const forPlatform = control => platformRemoteControl(control, platform, APP_VERS
 
 export const defaultRemoteControl = {
   app_enabled: true,
+  // Versioned key: old builds and their cached control do not activate this backend.
+  live_search_ranking_v1_enabled: true,
   maintenance_message: 'Esta versión de prueba no está disponible temporalmente.',
   minimum_version: APP_VERSION,
   latest_version: APP_VERSION,
@@ -45,6 +47,7 @@ export async function loadRemoteControl(force = false) {
     await remoteModule.fetchAndActivate(remote);
     const values = {
       app_enabled:remoteModule.getBoolean(remote, 'app_enabled'),
+      live_search_ranking_v1_enabled:remoteModule.getBoolean(remote, 'live_search_ranking_v1_enabled'),
       maintenance_message:remoteModule.getString(remote, 'maintenance_message'),
       minimum_version:remoteModule.getString(remote, 'minimum_version'),
       latest_version:remoteModule.getString(remote, 'latest_version'),

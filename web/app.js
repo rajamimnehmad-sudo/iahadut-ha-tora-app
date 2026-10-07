@@ -1,4 +1,5 @@
 import {productSearchKey, validGlobalRanking} from './global-popularity.js';
+import initialGlobalRanking from './data/global-popularity.json';
 import { storeLinks, platformRemoteControl, appleDistributionUrl } from './platform-store.js';
 import { Capacitor, CapacitorHttp, registerPlugin } from '@capacitor/core';
 import { App } from '@capacitor/app';
@@ -18,6 +19,8 @@ import {mergeInboxNotifications, alertExpired} from './alerts-inbox.js';
 import {matchingCategories, navigationScrollKey, matchingBrands, brandName, brandKey} from './category-navigation.js';
 import {brandLogo, brandForLogoPath} from './brand-logos.js';
 import {additionKeys, unreadAdditionCount} from './catalog-unread.js';
+import {appWhatsAppLink} from './whatsapp-links.js';
+import {createLiveSearchClient, createLiveSearchTransport, LIVE_SEARCH_REFRESH_INTERVAL} from './live-search.js';
 import featuredProductsSnapshot from './data/featured-products.json';
 import featuredImageBounds from './data/featured-image-bounds.json';
 import contentSnapshot from './data/content.json';
@@ -289,13 +292,41 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
   let popularity = readJson('iht_popularity', {});
   if (!popularity || typeof popularity !== 'object' || Array.isArray(popularity)) popularity = {};
   let globalRanking = readJson('iht_global_ranking', null);
-  if (!validGlobalRanking(globalRanking)) globalRanking = null;
+  if (!validGlobalRanking(globalRanking)) globalRanking = validGlobalRanking(initialGlobalRanking) ? initialGlobalRanking : null;
   let globalPopularityRequest = null;
+  let liveRankingCheckedAt = 0;
+  const liveSearch = createLiveSearchClient({
+    storage: {getItem:key => localStorage.getItem(key), setItem:(key,value) => localStorage.setItem(key,value)},
+    call: createLiveSearchTransport({getToken:async () => {
+      const firebase = await getFirebaseCatalogApi();
+      if (!firebase) throw new Error('Sesión no disponible');
+      const [{getApps}, {getAuth, getIdToken}] = await Promise.all([import('firebase/app'), import('firebase/auth')]);
+      const user = getAuth(getApps()[0]).currentUser;
+      if (!user) throw new Error('Sesión no disponible');
+      return getIdToken(user);
+    }})
+  });
   async function refreshGlobalRanking() {
-    if (globalPopularityRequest || Date.now() - Number(localStorage.getItem('iht_global_ranking_check') || 0) < 12 * 60 * 60 * 1000) return globalPopularityRequest;
+    if (globalPopularityRequest) return globalPopularityRequest;
+    const useLive = remoteControl.live_search_ranking_v1_enabled === true;
+    if (useLive ? Date.now() - liveRankingCheckedAt < LIVE_SEARCH_REFRESH_INTERVAL
+      : Date.now() - Number(readJson('iht_global_ranking_check', 0)) < 12 * 60 * 60 * 1000) return;
     const url = import.meta.env.DEV ? '/data/global-popularity.json' : 'https://raw.githubusercontent.com/rajamimnehmad-sudo/iahadut-ha-tora-app/main/web/data/global-popularity.json';
     globalPopularityRequest = (async () => {
       try {
+        if (useLive) {
+          const value = await liveSearch.ranking();
+          if (!validGlobalRanking(value) || value.source !== 'app-search') throw new Error('Ranking inválido');
+          liveRankingCheckedAt = Date.now();
+          // Durante el arranque, conservar el ranking medido de Analytics
+          // hasta que haya búsquedas reales en el contador nuevo.
+          if (value.products.length || globalRanking?.source === 'app-search') {
+            globalRanking = value;
+            try { localStorage.setItem('iht_global_ranking', JSON.stringify(value)); } catch (_) {}
+          }
+          if (document.querySelector('.view.active')?.id === 'searchView' && !$('#query').value.trim()) renderSearchCategories();
+          return;
+        }
         const response = await fetch(url, {cache:'no-cache', signal:AbortSignal.timeout(10000)});
         if (!response.ok) throw new Error('Ranking no disponible');
         const value = await response.json();
@@ -305,7 +336,10 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
         }
         localStorage.setItem('iht_global_ranking_check', String(Date.now()));
         if (document.querySelector('.view.active')?.id === 'searchView' && !$('#query').value.trim()) renderSearchCategories();
-      } catch (_) { /* Conservar la copia válida anterior, sin reemplazarla por sugerencias falsas. */ }
+      } catch (_) {
+        if (useLive) liveRankingCheckedAt = Date.now();
+        /* Conservar la copia válida anterior, sin reemplazarla por sugerencias falsas. */
+      }
     })().finally(() => { globalPopularityRequest = null; });
     return globalPopularityRequest;
   }
@@ -443,7 +477,7 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
   // segunda pulsación mientras la primera sigue en curso no dispara otra
   // consulta ni otra precarga en paralelo.
   let syncRequest = null;
-  const CACHE_TTL = 12 * 60 * 60 * 1000;
+  const CACHE_TTL = 3 * 60 * 60 * 1000;
   const INFO_CACHE_VERSION = 36;
   const INITIAL_PRELOAD_KEY = `iht_initial_preload_${INFO_CACHE_VERSION}`;
   const storedInfoCache = readJson('iht_info_cache');
@@ -998,7 +1032,7 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
       const paths = {email:'<rect x="3" y="5" width="18" height="14" rx="2"/><path d="m4 7 8 6 8-6"/>', whatsapp:'<path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/>', map:'<path d="M20 10c0 4.5-8 10-8 10s-8-5.5-8-10a8 8 0 1 1 16 0Z"/><circle cx="12" cy="10" r="2.5"/>'};
       return `<svg class="info-action-icon" viewBox="0 0 24 24" aria-hidden="true">${paths[kind] || paths.email}</svg>`;
     };
-    const actions = (content.actions || []).map((action) => `<a class="info-action ${escapeHtml(action.kind || '')}" href="${escapeHtml(action.href)}">${actionIcon(action.kind)}<span>${escapeHtml(action.label)}</span></a>`).join('');
+    const actions = (content.actions || []).map((action) => `<a class="info-action ${escapeHtml(action.kind || '')}" href="${escapeHtml(appWhatsAppLink(action.href))}">${actionIcon(action.kind)}<span>${escapeHtml(action.label)}</span></a>`).join('');
     if (content.section === 'notes' && content.images?.length) {
       const titles = (content.cards || []).map((card) => card.title);
       const flyers = content.images.map((image, index) => `<button class="note-flyer" type="button" data-expanded-image="${escapeHtml(image.src)}" data-expanded-caption="${escapeHtml(titles[index] || image.alt || 'Nota Kashrut')}"><img class="asset-loading" src="${escapeHtml(image.src)}" alt="${escapeHtml(titles[index] || image.alt || 'Nota Kashrut')}" loading="lazy" onerror="this.closest('.note-flyer').remove()"><span>${escapeHtml(titles[index] || image.alt || 'Nota Kashrut')}</span><small>Ver en pantalla completa</small></button>`).join('');
@@ -1580,13 +1614,13 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
 
   async function syncCatalog(force = false, onProgress = null) {
     if (syncState.running) return;
-    const twelveHours = 12 * 60 * 60 * 1000;
+    const catalogRefreshInterval = 3 * 60 * 60 * 1000;
     const expectedCatalogTotal = categories.reduce((total, category) => total + category.count, 0);
     // This fallback protects a full scrape only. Incremental Firebase syncs
     // validate against catalog_metadata.activeProductCount instead.
     const minimumCatalogTotal = Math.floor(expectedCatalogTotal * 0.97);
     const hasCatalogVersion = Boolean(localStorage.getItem('iht_catalog_version'));
-    if (!force && hasCatalogVersion && syncState.last && Date.now() - Number(syncState.last) < twelveHours) return;
+    if (!force && hasCatalogVersion && syncState.last && Date.now() - Number(syncState.last) < catalogRefreshInterval) return;
     syncState.running = true;
     syncState.error = '';
     syncMessage('Actualizando…', 'busy');
@@ -3002,6 +3036,7 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
   }
 
   function openSearchScreen() {
+    void refreshGlobalRanking();
     searchBrand = '';
     selectedRegion = 'argentina';
     selectedCategory = 'all';
@@ -3664,7 +3699,10 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     // Permitir un primer pintado incluso con caché o una respuesta inmediata.
     window.requestAnimationFrame(() => window.setTimeout(() => {
     if (currentProduct?.url !== product.url || document.querySelector('.view.active')?.id !== 'detailView') return;
-    if (fromSearch) void productSearchKey(product.url).then(product_key => logAnalyticsEvent('catalog_product_search', {product_key})).catch(() => {});
+    if (fromSearch) {
+      void productSearchKey(product.url).then(product_key => logAnalyticsEvent('catalog_product_search', {product_key})).catch(() => {});
+      if (remoteControl.live_search_ranking_v1_enabled === true) void liveSearch.record(product.url).catch(() => {});
+    }
     countPopularity(product.url, 'opens');
     logAnalyticsEvent('product_open', {product_url: product.url, product_name: product.title?.slice(0, 80) || ''});
     const cachedOfficial = productCache[product.url] || null;
@@ -4194,7 +4232,7 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     const update = (!nativeAndroid || updateAvailable)
       ? `<button class="more-row managed-more-row update-more-row${updateAvailable ? ' has-update-new' : ''}" data-app-update><span class="managed-icon" aria-hidden="true">↻</span><span><strong>Actualizar aplicación</strong><small>${updateMessage}</small></span><span class="row-arrow" aria-hidden="true">›</span></button>`
       : '';
-    const developerWhatsApp = `https://wa.me/5491135195674?text=${encodeURIComponent('¡Me gustó la app de Iahadut HaTora! ¿Podemos hacer un proyecto juntos?')}`;
+    const developerWhatsApp = appWhatsAppLink('https://wa.me/5491135195674', {message:'¿Podemos hacer un proyecto juntos?'});
     const developerCredit = `<div class="developer-credit"><span class="app-version">Versión ${escapeHtml(APP_VERSION)}</span><span class="developer-name">Y.R.N Soluciones Software</span><a class="developer-cta" href="https://wa.me/5491135195674" target="_blank" rel="noopener">¿Necesitás una app?</a><a class="developer-whatsapp" href="https://wa.me/5491135195674" target="_blank" rel="noopener" aria-label="Contactar por WhatsApp"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c0 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/></svg></a></div>`;
     const moreInfo = Object.entries(info).filter(([key]) => !['shops', 'catering', 'notes', 'world'].includes(key));
     $('#moreList').innerHTML = moreInfo.map(([key, value]) => `<button class="more-row" data-info="${key}">${infoIcon(key)}<span><strong>${escapeHtml(value[0])}</strong><small>${escapeHtml(value[1])}</small></span><span class="row-arrow" aria-hidden="true">›</span></button>`).join('') + offline + update + rateApp + officialWebsite + developerCredit;
@@ -4918,6 +4956,17 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     const regionButton = event.target.closest('#searchView .region-switch [data-region]');
     if (regionButton && document.activeElement === $('#query')) event.preventDefault();
   });
+  // Includes dynamically loaded official contacts and links inside notifications.
+  const prepareWhatsAppContact = (event) => {
+    const link = event.target.closest('a[href]');
+    if (!link) return;
+    const product = link.closest('#detailView') && currentProduct ? currentProduct.title : '';
+    const href = appWhatsAppLink(link.href, {product});
+    if (href !== link.href) link.href = href;
+  };
+  document.addEventListener('click', prepareWhatsAppContact, true);
+  document.addEventListener('auxclick', prepareWhatsAppContact, true);
+  document.addEventListener('contextmenu', prepareWhatsAppContact, true);
   document.addEventListener('click', (event) => {
     if (event.target.closest('[data-offline-pause]')) {
       // Explicit pause cancels auto-resume; hiding the app does not.
@@ -5256,7 +5305,10 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     window.setTimeout(scheduleAppPreload, 350);
     syncAndPreload(false).finally(scheduleAppPreload);
   });
-  setInterval(() => syncAndPreload(false), 12 * 60 * 60 * 1000);
+  setInterval(() => { if (!document.hidden && navigator.onLine) void syncAndPreload(false); }, 3 * 60 * 60 * 1000);
+  setInterval(() => {
+    if (!document.hidden && navigator.onLine && document.querySelector('.view.active')?.id === 'searchView') void refreshGlobalRanking();
+  }, LIVE_SEARCH_REFRESH_INTERVAL);
   document.addEventListener('visibilitychange', () => {
     if (!document.hidden) { void refreshPushRevocations(); void syncAlertsInbox(document.querySelector('.view.active')?.id === 'alertsView'); syncAndPreload(false); refreshRemoteControl(false); refreshPlayUpdate(); }
   });
