@@ -12,11 +12,33 @@ test('brand queries never suggest unrelated high-count categories',()=>{
  assert.deepEqual(matchingCategories(items,item=>[item.path],'sal'),[{path:['Sales'],count:1}]);
  assert.deepEqual(matchingCategories(items,item=>[item.path],'e'),[]);
 });
+test('broad oil suggestions group at the parent without losing specific searches',()=>{
+ const items=[{url:'a',brand:'Arcor',path:['Aceites','Aceite de oliva']},{url:'b',brand:'Arcor',path:['Aceites','Otros aceites']},{url:'a',brand:'Arcor',path:['Aceites','Aceite de oliva']}];
+ assert.deepEqual(matchingCategories(items,item=>[item.path],'ace'),[{path:['Aceites'],count:2}]);
+ assert.deepEqual(matchingCategories(items,item=>[item.path],'aceite'),[{path:['Aceites'],count:2}]);
+ assert.deepEqual(matchingCategories(items,item=>[item.path],'aceite arcor'),[{path:['Aceites'],count:2}]);
+ assert.deepEqual(matchingCategories(items,item=>[item.path],'aceite oliva'),[{path:['Aceites','Aceite de oliva'],count:1}]);
+ assert.deepEqual(items[1].path,['Aceites','Otros aceites']);
+});
 test('combined product and brand queries still suggest the actual category',()=>{
  const items=[{url:'a',brand:'«Arcor»',path:['Mermeladas']},{url:'b',brand:'«Arcor»',path:['Sales']}];
  assert.deepEqual(matchingCategories(items,item=>[item.path],'mermelada arcor'),[{path:['Mermeladas'],count:1}]);
  assert.deepEqual(matchingCategories(items,item=>[item.path],'arcor'),[]);
  assert.deepEqual(matchingCategories(items,item=>[item.path],'mermelada inexistente'),[]);
+});
+test('all nested categories use the shortest matching path, not an oil-specific exception',()=>{
+ const items=[
+  {url:'a',path:['Bebidas alcohólicas','Cervezas']},
+  {url:'b',path:['Bebidas alcohólicas','Vinos']},
+  {url:'c',path:['Harinas','Harinas de arroz']},
+  {url:'d',path:['Harinas','Harinas de trigo']},
+  {url:'e',path:['Aceites en aerosol']}
+ ];
+ assert.deepEqual(matchingCategories(items,item=>[item.path],'bebidas'),[{path:['Bebidas alcohólicas'],count:2}]);
+ assert.deepEqual(matchingCategories(items,item=>[item.path],'cervezas'),[{path:['Bebidas alcohólicas','Cervezas'],count:1}]);
+ assert.deepEqual(matchingCategories(items,item=>[item.path],'harinas'),[{path:['Harinas'],count:2}]);
+ assert.deepEqual(matchingCategories(items,item=>[item.path],'harina arroz'),[{path:['Harinas','Harinas de arroz'],count:1}]);
+ assert.deepEqual(matchingCategories(items,item=>[item.path],'aceite aerosol'),[{path:['Aceites en aerosol'],count:1}]);
 });
 test('brand suggestions wait for three letters and deduplicate quoted brand names',()=>{
  const items=[{url:'a',brand:'»Arcor»'},{url:'b',brand:'«Arcor»'},{url:'b',brand:'Arcor'},{url:'c',brand:'Noel'}];

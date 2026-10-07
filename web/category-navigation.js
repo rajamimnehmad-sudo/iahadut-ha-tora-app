@@ -12,8 +12,15 @@ export function matchingCategories(items, pathsFor, query, limit = 3) {
     const categoryTokens = tokens.filter(token => matchesCategory(token) || !brandWords.some(word => word.startsWith(token)));
     // Never recommend a category solely because many search results use it.
     if (!categoryTokens.length || !categoryTokens.every(matchesCategory)) continue;
-    const key = JSON.stringify(path);
-    if (!groups.has(key)) groups.set(key, {path, urls:new Set()});
+    // A broad query should open the parent, not repeat all its children.
+    // Keep a child only when the query explicitly needs its words.
+    const depth = path.findIndex((_, index) => {
+      const prefixWords = brandKey(path.slice(0, index + 1).join(' ')).split(' ');
+      return categoryTokens.every(token => prefixWords.some(word => word.startsWith(token) || token === `${word}s` || token === `${word}es`));
+    });
+    const suggestionPath = path.slice(0, depth + 1);
+    const key = JSON.stringify(suggestionPath);
+    if (!groups.has(key)) groups.set(key, {path:suggestionPath, urls:new Set()});
     groups.get(key).urls.add(item.url);
   }
   return [...groups.values()].sort((a,b)=>b.urls.size-a.urls.size || a.path.join(' ').localeCompare(b.path.join(' '),'es')).slice(0,limit).map(({path,urls})=>({path,count:urls.size}));
