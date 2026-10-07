@@ -139,6 +139,7 @@ test('App auto-resume respects visibility, explicit pause, Wi-Fi-only and mobile
   let preference={enabled:true,allowMobile:false};
   let connection={type:'cellular',metered:true};
   Object.assign(f.context,{
+    logAnalyticsEvent(){},
     offlineStarting:false,offlineNextRetryAt:0,offlineWifiWait:false,offlineMobileAllowed:false,
     document:{visibilityState:'visible',addEventListener:()=>{}},
     window:{setInterval:()=>{},addEventListener:()=>{},alert:()=>{}},
