@@ -3,12 +3,15 @@ import {pathToFileURL} from 'node:url';
 import {pushImageUrl} from '../web/push-image.js';
 
 // The catalog pipeline cannot call this sender without an explicit manual gate.
-export function manualPushMessage({title, body, imageUrl = '', topic = 'catalog-updates', eventKey = randomUUID(), sentAt = new Date().toISOString()}) {
+export function manualPushMessage({title, body, imageUrl = '', topic = 'catalog-updates', eventKey = randomUUID(), sentAt = new Date().toISOString(), expiresAfter='none'}) {
   title = String(title || '').trim();
   body = String(body || '').trim();
   if (!title || !body) throw new Error('Ingresá un título y un mensaje.');
   if (imageUrl && !pushImageUrl(imageUrl)) throw new Error('La foto debe tener una URL HTTPS pública.');
   imageUrl = pushImageUrl(imageUrl);
+  const durations={none:0,'24h':86400,'48h':172800,'7d':604800};
+  if (!Object.hasOwn(durations,expiresAfter)) throw new Error('Vencimiento no válido.');
+  const seconds=durations[expiresAfter];
   if (topic !== 'catalog-updates' && !/^iahadut-test-[a-f0-9]{20}$/.test(topic)) throw new Error('El tema de prueba individual no es válido.');
   const message = {
     topic,
@@ -17,6 +20,10 @@ export function manualPushMessage({title, body, imageUrl = '', topic = 'catalog-
     apns:{headers:{'apns-push-type':'alert', 'apns-priority':'10'}, payload:{aps:{sound:'default', 'mutable-content':1}}},
     data:{action:'alerts', type:'manual', eventKey, sentAt, title, body}
   };
+  if (seconds) {
+    message.data.expiresAt=new Date(Date.parse(sentAt)+seconds*1000).toISOString();
+    message.android.ttl=`${seconds}s`;
+  }
   if (imageUrl) {
     message.notification.image = imageUrl;
     message.android.notification.image = imageUrl;
@@ -30,7 +37,7 @@ export function manualPushMessage({title, body, imageUrl = '', topic = 'catalog-
 }
 
 export async function sendManualPush(env = process.env, fetcher = fetch) {
-  const message = manualPushMessage({title:env.PUSH_TITLE, body:env.PUSH_BODY, imageUrl:env.PUSH_IMAGE_URL, topic:env.PUSH_TEST_TOPIC || 'catalog-updates'});
+  const message = manualPushMessage({title:env.PUSH_TITLE, body:env.PUSH_BODY, imageUrl:env.PUSH_IMAGE_URL, topic:env.PUSH_TEST_TOPIC || 'catalog-updates',expiresAfter:env.PUSH_EXPIRES_AFTER || 'none'});
   if (env.MANUAL_PUSH_APPROVED !== '1') throw new Error('El envío requiere una ejecución manual explícita.');
   if (env.PUSH_SEND !== '1') {
     console.log('Vista previa; no se envió ninguna notificación.');
@@ -41,12 +48,13 @@ export async function sendManualPush(env = process.env, fetcher = fetch) {
   if (!env.ALERTS_INGEST_SECRET) throw new Error('Falta la conexión con la bandeja de Alertas.');
   const saved = await fetcher('https://waien-hub.waien-studiodev-3c4.workers.dev/api/alerts', {
     method:'POST', headers:{'content-type':'application/json',Authorization:`Bearer ${env.ALERTS_INGEST_SECRET}`},
-    body:JSON.stringify({eventKey:message.data.eventKey,title:message.data.title,body:message.data.body,imageUrl:message.data.imageUrl || '',topic:message.topic,sentAt:message.data.sentAt}),
+    body:JSON.stringify({eventKey:message.data.eventKey,title:message.data.title,body:message.data.body,imageUrl:message.data.imageUrl || '',topic:message.topic,sentAt:message.data.sentAt,expiresAt:message.data.expiresAt || ''}),
     signal:AbortSignal.timeout(20000)
   });
   if (!saved.ok) throw new Error(`No se pudo guardar en Alertas: HTTP ${saved.status}. No se envió push.`);
   console.log('Aviso guardado en Alertas, independientemente de la preferencia de push.');
   console.log(`Identificador para retirarlo de Alertas: ${message.data.eventKey}`);
+  if(message.data.expiresAt) console.log(`Vencimiento del aviso: ${message.data.expiresAt}`);
   const account = JSON.parse(env.FCM_SERVICE_ACCOUNT_JSON);
   if (account.project_id !== 'iahadut-hatora') throw new Error('La cuenta de servicio no pertenece al proyecto de la app.');
   const now = Math.floor(Date.now() / 1000);

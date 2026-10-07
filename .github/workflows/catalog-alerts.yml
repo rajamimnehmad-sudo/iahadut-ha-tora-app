@@ -2,6 +2,11 @@ name: Actualizar copia del catálogo (sin push)
 
 on:
   workflow_dispatch:
+    inputs:
+      force_refresh:
+        description: Volver a descargar todas las fichas oficiales
+        type: boolean
+        default: false
   schedule:
     - cron: '17 */12 * * *'
 
@@ -26,7 +31,18 @@ jobs:
       - name: Install dependencies
         run: npm ci
       - name: Actualizar catálogo y detalles oficiales
-        run: npm run snapshot && node scripts/publish-catalog-snapshot.mjs
+        env:
+          FORCE_REFRESH: ${{ inputs.force_refresh }}
+        run: |
+          npm run snapshot:catalog
+          npm run snapshot:content
+          if [ "$FORCE_REFRESH" = "true" ]; then
+            npm run snapshot:products -- --refresh
+            node -e "const s=require('./web/data/product-details.json'); if(s.failures?.length) throw new Error('No se publican fichas incompletas: '+s.failures.length+' fallos');"
+          else
+            npm run snapshot:products
+          fi
+          node scripts/publish-catalog-snapshot.mjs
       - name: Guardar catálogo oficial
         if: success() && github.ref == 'refs/heads/main'
         run: |

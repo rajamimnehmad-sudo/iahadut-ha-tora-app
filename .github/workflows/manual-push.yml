@@ -23,6 +23,11 @@ on:
         description: Enviar el aviso (desmarcado solo muestra una vista previa)
         default: false
         type: boolean
+      expires_after:
+        description: Vencimiento del aviso en Alertas
+        type: choice
+        default: none
+        options: [none, 24h, 48h, 7d]
 
 permissions:
   contents: read
@@ -44,6 +49,7 @@ jobs:
           PUSH_BODY: ${{ inputs.body }}
           PUSH_IMAGE_URL: ${{ inputs.image_url }}
           PUSH_TEST_TOPIC: ${{ inputs.test_topic }}
+          PUSH_EXPIRES_AFTER: ${{ inputs.expires_after }}
           FCM_SERVICE_ACCOUNT_JSON: ${{ secrets.FCM_SERVICE_ACCOUNT_JSON }}
           ALERTS_INGEST_SECRET: ${{ secrets.ALERTS_INGEST_SECRET }}
         run: node scripts/send-manual-push.mjs
