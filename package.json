@@ -1,6 +1,6 @@
 {
   "name": "iahadut-ha-tora",
-  "version": "1.0.26",
+  "version": "1.0.48",
   "private": true,
   "description": "Catálogo kosher multiplataforma de Iahadut HaTora",
   "engines": {
@@ -22,6 +22,11 @@
     "cap:sync": "cap sync",
     "cap:android": "cap open android",
     "cap:ios": "cap open ios",
+    "prepare:ios": "node scripts/prepare-ios.mjs",
+    "import:ios:firebase": "node scripts/import-ios-firebase.mjs",
+    "check:ios": "node scripts/check-ios-setup.mjs",
+    "build:ios:simulator": "node scripts/build-ios-simulator.mjs",
+    "test:ios:push": "node scripts/test-ios-push.mjs",
     "cap:android:live": "cap run android --livereload --external",
     "cap:ios:live": "cap run ios --livereload --external"
   },

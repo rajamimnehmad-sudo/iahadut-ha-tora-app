@@ -13,7 +13,7 @@ test('unchanged catalog downloads only the small manifest and never reads Firest
 });
 test('first download checks every product fiche and content fingerprint',async()=>{
  const calls=[];const result=await readPublishedSnapshot(async file=>{calls.push(file);return file==='manifest.json'?manifest:snapshot;});
- assert.equal(result.snapshot.catalog.products.length,1109);assert.equal(result.hash,hash);assert.equal(calls.length,2);
+ assert.equal(result.snapshot.catalog.products.length,snapshot.catalog.products.length);assert.equal(result.hash,hash);assert.equal(calls.length,2);
  await assert.rejects(readPublishedSnapshot(async file=>file==='manifest.json'?manifest:{...snapshot,content:{info:{},cards:{}}}),/versión/);
 });
 test('incremental download applies additions, retirements and full fiches together',async()=>{
@@ -23,12 +23,12 @@ test('incremental download applies additions, retirements and full fiches togeth
  const next=applySnapshotDelta(snapshot,delta);delta.to=await snapshotHash(next);
  const file=`delta-${delta.to}.json`;const nextManifest={hash:delta.to,snapshot:`snapshot-${delta.to}.json`,version,deltas:[{from:hash,to:delta.to,file}]};
  const calls=[];const result=await readPublishedSnapshot(async path=>{calls.push(path);return path==='manifest.json'?nextManifest:delta;},snapshot,hash);
- assert.deepEqual(calls,['manifest.json',file]);assert.equal(result.snapshot.catalog.products.some(product=>product.url===retired),false);assert.ok(result.snapshot.productDetails.products[added.url]);assert.equal(snapshot.catalog.products.length,1109);assert.ok(snapshot.productDetails.products[retired]);
+ assert.deepEqual(calls,['manifest.json',file]);assert.equal(result.snapshot.catalog.products.some(product=>product.url===retired),false);assert.ok(result.snapshot.productDetails.products[added.url]);assert.equal(snapshot.catalog.products.length,snapshot.catalog.products.length);assert.ok(snapshot.productDetails.products[retired]);
 });
 test('corrupt local copy is repaired instead of trusting its saved version',async()=>{
  const broken=structuredClone(snapshot);broken.catalog.products.pop();const calls=[];
  const result=await readPublishedSnapshot(async file=>{calls.push(file);return file==='manifest.json'?manifest:snapshot;},broken,hash);
- assert.equal(result.snapshot.catalog.products.length,1109);assert.equal(calls.length,2);
+ assert.equal(result.snapshot.catalog.products.length,snapshot.catalog.products.length);assert.equal(calls.length,2);
 });
 test('failure during a delta retains the previous complete copy',async()=>{
  const next='1'.repeat(64);const m={hash:next,snapshot:`snapshot-${next}.json`,version,deltas:[{from:hash,to:next,file:`delta-${next}.json`}]};

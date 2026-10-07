@@ -1,0 +1,3532 @@
+{
+  "reviewedAt": "2026-10-05",
+  "source": "Propuesta de categorías revisada con el usuario",
+  "paths": {
+    "https://vaad.ar/producto/aceite-de-coco-marca-chennat/": [
+      "Aceites",
+      "Otros aceites"
+    ],
+    "https://vaad.ar/producto/aceite-de-coco-marca-chennat-2/": [
+      "Aceites",
+      "Otros aceites"
+    ],
+    "https://vaad.ar/producto/aceite-de-coco-virgen-marca-chennat/": [
+      "Aceites",
+      "Otros aceites"
+    ],
+    "https://vaad.ar/producto/aceite-de-girasol-marca-canuelas/": [
+      "Aceites",
+      "Aceite de girasol"
+    ],
+    "https://vaad.ar/producto/aceite-de-girasol-marca-ideal/": [
+      "Aceites",
+      "Aceite de girasol"
+    ],
+    "https://vaad.ar/producto/aceite-de-girasol-marca-lira/": [
+      "Aceites",
+      "Aceite de girasol"
+    ],
+    "https://vaad.ar/producto/aceite-de-girasol-marca-natura/": [
+      "Aceites",
+      "Aceite de girasol"
+    ],
+    "https://vaad.ar/producto/aceite-de-nuez-marca-noyer/": [
+      "Aceites",
+      "Otros aceites"
+    ],
+    "https://vaad.ar/producto/aceite-de-nuez-marca-noyer-2/": [
+      "Aceites",
+      "Otros aceites"
+    ],
+    "https://vaad.ar/producto/aceite-de-oliva-marca-bonoli/": [
+      "Aceites",
+      "Aceite de oliva"
+    ],
+    "https://vaad.ar/producto/aceite-de-oliva-marca-canuelas/": [
+      "Aceites",
+      "Aceite de oliva"
+    ],
+    "https://vaad.ar/producto/aceite-de-oliva-marca-cocinero/": [
+      "Aceites",
+      "Aceite de oliva"
+    ],
+    "https://vaad.ar/producto/aceite-de-oliva-marca-larga-vida-2/": [
+      "Aceites",
+      "Aceite de oliva"
+    ],
+    "https://vaad.ar/producto/aceite-de-oliva-marca-larga-vida/": [
+      "Aceites",
+      "Aceite de oliva"
+    ],
+    "https://vaad.ar/producto/aceite-de-oliva-marca-lira/": [
+      "Aceites",
+      "Aceite de oliva"
+    ],
+    "https://vaad.ar/producto/aceite-de-oliva-marca-natura/": [
+      "Aceites",
+      "Aceite de oliva"
+    ],
+    "https://vaad.ar/producto/aceite-de-oliva-marca-siete-lagos-2/": [
+      "Aceites",
+      "Aceite de oliva"
+    ],
+    "https://vaad.ar/producto/aceite-de-oliva-marca-siete-lagos/": [
+      "Aceites",
+      "Aceite de oliva"
+    ],
+    "https://vaad.ar/producto/aceite-marca-sabores-orientales/": [
+      "Aceites",
+      "Aceites mezcla"
+    ],
+    "https://vaad.ar/producto/aceite-de-sesamo/": [
+      "Aceites",
+      "Otros aceites"
+    ],
+    "https://vaad.ar/producto/aceite-de-sesamo-marca-nutrasem/": [
+      "Aceites",
+      "Otros aceites"
+    ],
+    "https://vaad.ar/producto/aceite-de-soja-y-girasol-marca-cocinero/": [
+      "Aceites",
+      "Aceites mezcla"
+    ],
+    "https://vaad.ar/producto/aceite-en-aerosol-marca-canuelas-2/": [
+      "Aceites",
+      "Aceites en aerosol"
+    ],
+    "https://vaad.ar/producto/aceite-en-aerosol-marca-canuelas/": [
+      "Aceites",
+      "Aceites en aerosol"
+    ],
+    "https://vaad.ar/producto/aceite-en-aerosol-marca-cocinero/": [
+      "Aceites",
+      "Aceites en aerosol"
+    ],
+    "https://vaad.ar/producto/aceite-en-aerosol-marca-natura/": [
+      "Aceites",
+      "Aceites en aerosol"
+    ],
+    "https://vaad.ar/producto/aceitunas-marca-marvavic-6/": [
+      "Aceitunas"
+    ],
+    "https://vaad.ar/producto/aceitunas-marca-marvavic-5/": [
+      "Aceitunas"
+    ],
+    "https://vaad.ar/producto/aceitunas-marca-marvavic-16/": [
+      "Aceitunas"
+    ],
+    "https://vaad.ar/producto/aceitunas-marca-marvavic-4/": [
+      "Aceitunas"
+    ],
+    "https://vaad.ar/producto/aceitunas-marca-marvavic-7/": [
+      "Aceitunas"
+    ],
+    "https://vaad.ar/producto/aceitunas-marca-marvavic-8/": [
+      "Aceitunas"
+    ],
+    "https://vaad.ar/producto/aceitunas-marca-marvavic-3/": [
+      "Aceitunas"
+    ],
+    "https://vaad.ar/producto/aceitunas-marca-marvavic-2/": [
+      "Aceitunas"
+    ],
+    "https://vaad.ar/producto/aceitunas-marca-marvavic/": [
+      "Aceitunas"
+    ],
+    "https://vaad.ar/producto/aceitunas-marca-marvavic-9/": [
+      "Aceitunas"
+    ],
+    "https://vaad.ar/producto/aceitunas-marca-marvavic-10/": [
+      "Aceitunas"
+    ],
+    "https://vaad.ar/producto/aceitunas-marca-marvavic-11/": [
+      "Aceitunas"
+    ],
+    "https://vaad.ar/producto/aceitunas-marca-marvavic-12/": [
+      "Aceitunas"
+    ],
+    "https://vaad.ar/producto/aceitunas-marca-marvavic-13/": [
+      "Aceitunas"
+    ],
+    "https://vaad.ar/producto/aceitunas-marca-marvavic-14/": [
+      "Aceitunas"
+    ],
+    "https://vaad.ar/producto/aceitunas-marca-marvavic-15/": [
+      "Aceitunas"
+    ],
+    "https://vaad.ar/producto/aceitunas-marca-marvavic-22/": [
+      "Aceitunas"
+    ],
+    "https://vaad.ar/producto/aceitunas-marca-marvavic-21/": [
+      "Aceitunas"
+    ],
+    "https://vaad.ar/producto/aceitunas-marca-marvavic-20/": [
+      "Aceitunas"
+    ],
+    "https://vaad.ar/producto/aceitunas-marca-marvavic-17/": [
+      "Aceitunas"
+    ],
+    "https://vaad.ar/producto/aceitunas-marca-marvavic-18/": [
+      "Aceitunas"
+    ],
+    "https://vaad.ar/producto/aceitunas-marca-marvavic-19/": [
+      "Aceitunas"
+    ],
+    "https://vaad.ar/producto/aceitunas-marca-princeton-6/": [
+      "Aceitunas"
+    ],
+    "https://vaad.ar/producto/aceitunas-marca-princeton/": [
+      "Aceitunas"
+    ],
+    "https://vaad.ar/producto/aceitunas-marca-princeton-5/": [
+      "Aceitunas"
+    ],
+    "https://vaad.ar/producto/aceitunas-marca-princeton-4/": [
+      "Aceitunas"
+    ],
+    "https://vaad.ar/producto/aceitunas-marca-princeton-3/": [
+      "Aceitunas"
+    ],
+    "https://vaad.ar/producto/aceitunas-marca-princeton-2/": [
+      "Aceitunas"
+    ],
+    "https://vaad.ar/producto/aceitunas-marca-receta-de-entonces-2/": [
+      "Aceitunas"
+    ],
+    "https://vaad.ar/producto/aceitunas-verdes-descarozadas-marca-nucete/": [
+      "Aceitunas"
+    ],
+    "https://vaad.ar/producto/aceitunas-verdes-marca-nucete/": [
+      "Aceitunas"
+    ],
+    "https://vaad.ar/producto/aceitunas-verdes-premium-marca-nucete/": [
+      "Aceitunas"
+    ],
+    "https://vaad.ar/producto/acelga-congelada-marca-greens/": [
+      "Verduras congeladas"
+    ],
+    "https://vaad.ar/producto/alaga-de-sushi/": [
+      "Algas para sushi"
+    ],
+    "https://vaad.ar/producto/alga-de-sushi-2/": [
+      "Algas para sushi"
+    ],
+    "https://vaad.ar/producto/alga-de-sushi/": [
+      "Algas para sushi"
+    ],
+    "https://vaad.ar/producto/almendras/": [
+      "Frutos secos"
+    ],
+    "https://vaad.ar/producto/anana-marca-carrefour/": [
+      "Frutas en conserva"
+    ],
+    "https://vaad.ar/producto/anana-marca-marolio/": [
+      "Frutas en conserva"
+    ],
+    "https://vaad.ar/producto/arroz-basmati-marca-zeeba/": [
+      "Arroz"
+    ],
+    "https://vaad.ar/producto/arroz-basmati-marca-zeeba-classic/": [
+      "Arroz"
+    ],
+    "https://vaad.ar/producto/arroz-basmati-super-marca-zaffran/": [
+      "Arroz"
+    ],
+    "https://vaad.ar/producto/arroz-marca-dos-hermanos/": [
+      "Arroz"
+    ],
+    "https://vaad.ar/producto/arroz-marca-gallo/": [
+      "Arroz"
+    ],
+    "https://vaad.ar/producto/arroz-marca-lucchetti/": [
+      "Arroz"
+    ],
+    "https://vaad.ar/producto/arroz-marca-molinos-ala/": [
+      "Arroz"
+    ],
+    "https://vaad.ar/producto/arroz-marca-scotti/": [
+      "Arroz"
+    ],
+    "https://vaad.ar/producto/arroz-marca-scotti-2/": [
+      "Arroz"
+    ],
+    "https://vaad.ar/producto/arvejas-congeladas-marca-greens/": [
+      "Verduras congeladas"
+    ],
+    "https://vaad.ar/producto/arvejas-enlatadas-inalpa/": [
+      "Arvejas"
+    ],
+    "https://vaad.ar/producto/arvejas-marca-okey/": [
+      "Arvejas"
+    ],
+    "https://vaad.ar/producto/avellana/": [
+      "Frutos secos"
+    ],
+    "https://vaad.ar/producto/avena-marca-3-arroyos/": [
+      "Avena"
+    ],
+    "https://vaad.ar/producto/avena-marca-granix/": [
+      "Avena"
+    ],
+    "https://vaad.ar/producto/avena-marca-quaker/": [
+      "Avena"
+    ],
+    "https://vaad.ar/producto/azarfan-en-hierbas-marca-el-conquistador/": [
+      "Condimentos"
+    ],
+    "https://vaad.ar/producto/azarfan-marca-el-conquistador/": [
+      "Condimentos"
+    ],
+    "https://vaad.ar/producto/azucar-de-coco-marca-qualicoco/": [
+      "Azúcares"
+    ],
+    "https://vaad.ar/producto/azucar-marca-chango/": [
+      "Azúcares"
+    ],
+    "https://vaad.ar/producto/azucar-marca-ledesma/": [
+      "Azúcares"
+    ],
+    "https://vaad.ar/producto/azucar-mascabo-marca-ledesma/": [
+      "Azúcares"
+    ],
+    "https://vaad.ar/producto/productos-de-dietetica-marca-sabores-orientales/": [
+      "Azúcares"
+    ],
+    "https://vaad.ar/producto/298478/": [
+      "Snacks"
+    ],
+    "https://vaad.ar/producto/barrita-proteica-marca-biigual-sabor-mani/": [
+      "Snacks"
+    ],
+    "https://vaad.ar/producto/barrita-proteica-marca-biigual-sabor-original/": [
+      "Snacks"
+    ],
+    "https://vaad.ar/producto/bebida-alcoholica-marca-beefeater-london/": [
+      "Bebidas alcohólicas",
+      "Gins"
+    ],
+    "https://vaad.ar/producto/bebida-alcoholica-marca-beluga-3/": [
+      "Bebidas alcohólicas",
+      "Vodkas"
+    ],
+    "https://vaad.ar/producto/bebida-alcoholica-marca-beluga-2/": [
+      "Bebidas alcohólicas",
+      "Vodkas"
+    ],
+    "https://vaad.ar/producto/bebida-alcoholica-marca-bombay-saphire/": [
+      "Bebidas alcohólicas",
+      "Gins"
+    ],
+    "https://vaad.ar/producto/bebida-alcoholica-marca-brown-forman/": [
+      "Bebidas alcohólicas",
+      "Tequilas"
+    ],
+    "https://vaad.ar/producto/bebida-alcoholica-marca-brown-forman-4/": [
+      "Bebidas alcohólicas",
+      "Tequilas"
+    ],
+    "https://vaad.ar/producto/bebida-alcoholica-marca-brown-forman-3/": [
+      "Bebidas alcohólicas",
+      "Tequilas"
+    ],
+    "https://vaad.ar/producto/bebida-alcoholica-marca-brown-forman-2/": [
+      "Bebidas alcohólicas",
+      "Tequilas"
+    ],
+    "https://vaad.ar/producto/bebida-alcoholica-marca-cointreau/": [
+      "Bebidas alcohólicas",
+      "Licores"
+    ],
+    "https://vaad.ar/producto/bebida-alcoholica-marca-de-luxe-rested-in-barrel/": [
+      "Bebidas alcohólicas",
+      "Vodkas"
+    ],
+    "https://vaad.ar/producto/bebida-alcoholica-marca-deanston/": [
+      "Bebidas alcohólicas",
+      "Whiskies"
+    ],
+    "https://vaad.ar/producto/bebida-alcoholica-marca-disaronno/": [
+      "Bebidas alcohólicas",
+      "Licores"
+    ],
+    "https://vaad.ar/producto/bebida-alcoholica-marca-distillers-select/": [
+      "Bebidas alcohólicas",
+      "Whiskies"
+    ],
+    "https://vaad.ar/producto/bebida-alcoholica-marca-don-fernando/": [
+      "Bebidas alcohólicas",
+      "Tequilas"
+    ],
+    "https://vaad.ar/producto/bebida-alcoholica-marca-don-q-gold/": [
+      "Bebidas alcohólicas",
+      "Rones"
+    ],
+    "https://vaad.ar/producto/bebida-alcoholica-marca-elite-arak/": [
+      "Bebidas alcohólicas",
+      "Arak y anisados"
+    ],
+    "https://vaad.ar/producto/296166/": [
+      "Bebidas alcohólicas",
+      "Rones"
+    ],
+    "https://vaad.ar/producto/bebida-alcoholica-marca-flor-de-cana/": [
+      "Bebidas alcohólicas",
+      "Rones"
+    ],
+    "https://vaad.ar/producto/bebida-alcoholica-marca-glen-moray-3/": [
+      "Bebidas alcohólicas",
+      "Whiskies"
+    ],
+    "https://vaad.ar/producto/bebida-alcoholica-marca-glen-moray/": [
+      "Bebidas alcohólicas",
+      "Whiskies"
+    ],
+    "https://vaad.ar/producto/bebida-alcoholica-marca-gordons/": [
+      "Bebidas alcohólicas",
+      "Gins"
+    ],
+    "https://vaad.ar/producto/bebida-alcoholica-marca-grey-goose/": [
+      "Bebidas alcohólicas",
+      "Vodkas"
+    ],
+    "https://vaad.ar/producto/bebida-alcoholica-marca-heering/": [
+      "Bebidas alcohólicas",
+      "Licores"
+    ],
+    "https://vaad.ar/producto/bebida-alcoholica-marca-jack-daniels/": [
+      "Bebidas alcohólicas",
+      "Whiskies"
+    ],
+    "https://vaad.ar/producto/297342/": [
+      "Bebidas alcohólicas",
+      "Whiskies"
+    ],
+    "https://vaad.ar/producto/bebida-alcoholica-marca-johnnie-walker-5/": [
+      "Bebidas alcohólicas",
+      "Whiskies"
+    ],
+    "https://vaad.ar/producto/bebida-alcoholica-marca-johnnie-walker-6/": [
+      "Bebidas alcohólicas",
+      "Whiskies"
+    ],
+    "https://vaad.ar/producto/297360/": [
+      "Bebidas alcohólicas",
+      "Whiskies"
+    ],
+    "https://vaad.ar/producto/bebida-alcoholica-marca-johnnie-walker-4/": [
+      "Bebidas alcohólicas",
+      "Whiskies"
+    ],
+    "https://vaad.ar/producto/bebida-alcoholica-marca-johnnie-walker-3/": [
+      "Bebidas alcohólicas",
+      "Whiskies"
+    ],
+    "https://vaad.ar/producto/bebida-alcoholica-marca-johnnie-walker-2/": [
+      "Bebidas alcohólicas",
+      "Whiskies"
+    ],
+    "https://vaad.ar/producto/bebida-alcoholica-marca-johnnie-walker/": [
+      "Bebidas alcohólicas",
+      "Whiskies"
+    ],
+    "https://vaad.ar/producto/bebida-alcoholica-marca-johnnie-walker-7/": [
+      "Bebidas alcohólicas",
+      "Whiskies"
+    ],
+    "https://vaad.ar/producto/bebida-alcoholica-marca-joseph-gold-sons-galilee-winery/": [
+      "Bebidas alcohólicas",
+      "Arak y anisados"
+    ],
+    "https://vaad.ar/producto/bebida-alcoholica-marca-kahlua/": [
+      "Bebidas alcohólicas",
+      "Licores"
+    ],
+    "https://vaad.ar/producto/bebida-alcoholica-marca-kaiuar/": [
+      "Bebidas alcohólicas",
+      "Arak y anisados"
+    ],
+    "https://vaad.ar/producto/bebida-alcoholica-marca-luxardo/": [
+      "Bebidas alcohólicas",
+      "Licores"
+    ],
+    "https://vaad.ar/producto/bebida-alcoholica-marca-patron/": [
+      "Bebidas alcohólicas",
+      "Tequilas"
+    ],
+    "https://vaad.ar/producto/bebida-alcoholica-marca-plymouth-gin/": [
+      "Bebidas alcohólicas",
+      "Gins"
+    ],
+    "https://vaad.ar/producto/bebidas-alcoholica-marca-r-jelinek/": [
+      "Bebidas alcohólicas"
+    ],
+    "https://vaad.ar/producto/bebida-alcoholica-marca-abuelo/": [
+      "Bebidas alcohólicas",
+      "Rones"
+    ],
+    "https://vaad.ar/producto/bebida-alcoholica-marca-abuelo-2/": [
+      "Bebidas alcohólicas",
+      "Rones"
+    ],
+    "https://vaad.ar/producto/bebida-alcoholica-marca-smirnoff/": [
+      "Bebidas alcohólicas",
+      "Vodkas"
+    ],
+    "https://vaad.ar/producto/bebida-alcoholica-marca-smirnoff-2/": [
+      "Bebidas alcohólicas",
+      "Vodkas"
+    ],
+    "https://vaad.ar/producto/bebida-alcoholica-marca-speyburn/": [
+      "Bebidas alcohólicas",
+      "Whiskies"
+    ],
+    "https://vaad.ar/producto/296257/": [
+      "Bebidas alcohólicas",
+      "Vodkas"
+    ],
+    "https://vaad.ar/producto/bebida-alcoholica-marca-tanqueray/": [
+      "Bebidas alcohólicas",
+      "Gins"
+    ],
+    "https://vaad.ar/producto/bebida-alcoholica-marca-van-gogh-blue/": [
+      "Bebidas alcohólicas",
+      "Vodkas"
+    ],
+    "https://vaad.ar/producto/bebida-alcoholica-marca-velho-barreiro/": [
+      "Bebidas alcohólicas"
+    ],
+    "https://vaad.ar/producto/bebida-alcoholica-marca-zachlawi/": [
+      "Bebidas alcohólicas",
+      "Arak y anisados"
+    ],
+    "https://vaad.ar/producto/bebida-alcoholica-marca-zachlawi-3/": [
+      "Bebidas alcohólicas",
+      "Arak y anisados"
+    ],
+    "https://vaad.ar/producto/bebida-alcoholica-marca-zachlawi-2/": [
+      "Bebidas alcohólicas",
+      "Arak y anisados"
+    ],
+    "https://vaad.ar/producto/bebida-alcoholica-marca-zachlawi-6/": [
+      "Bebidas alcohólicas",
+      "Arak y anisados"
+    ],
+    "https://vaad.ar/producto/bebida-alcoholica-marca-zachlawi-5/": [
+      "Bebidas alcohólicas",
+      "Arak y anisados"
+    ],
+    "https://vaad.ar/producto/bebida-alcoholica-marca-zachlawi-4/": [
+      "Bebidas alcohólicas",
+      "Arak y anisados"
+    ],
+    "https://vaad.ar/producto/bebida-alcoholica-marca-el-jimador/": [
+      "Bebidas alcohólicas",
+      "Tequilas"
+    ],
+    "https://vaad.ar/producto/bebida-alcoholica-marca-jose-cuervo/": [
+      "Bebidas alcohólicas",
+      "Tequilas"
+    ],
+    "https://vaad.ar/producto/bebida-alcoholica-marca-skyy/": [
+      "Bebidas alcohólicas",
+      "Vodkas"
+    ],
+    "https://vaad.ar/producto/tequila-marca-ultramark-mi-tierra/": [
+      "Bebidas alcohólicas",
+      "Tequilas"
+    ],
+    "https://vaad.ar/producto/tequila-marca-ultramark-prefiero-2/": [
+      "Bebidas alcohólicas",
+      "Tequilas"
+    ],
+    "https://vaad.ar/producto/tequila-marca-ultramark-prefiero/": [
+      "Bebidas alcohólicas",
+      "Tequilas"
+    ],
+    "https://vaad.ar/producto/298040/": [
+      "Bebidas alcohólicas",
+      "Tequilas"
+    ],
+    "https://vaad.ar/producto/bebida-alcoholica-marca-brokers/": [
+      "Bebidas alcohólicas",
+      "Gins"
+    ],
+    "https://vaad.ar/producto/bebida-alcoholica-marca-chivas-regal/": [
+      "Bebidas alcohólicas",
+      "Whiskies"
+    ],
+    "https://vaad.ar/producto/bebida-alcoholica-ron-marca-barcelo/": [
+      "Bebidas alcohólicas",
+      "Rones"
+    ],
+    "https://vaad.ar/producto/bebida-alcoholica-ron-marca-bacardi/": [
+      "Bebidas alcohólicas",
+      "Rones"
+    ],
+    "https://vaad.ar/producto/bebida-alcoholica-ron-marca-mount-gay-eclipce/": [
+      "Bebidas alcohólicas",
+      "Rones"
+    ],
+    "https://vaad.ar/producto/bebida-alcoholica-ron-marca-myerss/": [
+      "Bebidas alcohólicas",
+      "Rones"
+    ],
+    "https://vaad.ar/producto/bebida-saborizada-perrier/": [
+      "Bebidas saborizadas"
+    ],
+    "https://vaad.ar/producto/brocoli-congelado-marca-greens/": [
+      "Verduras congeladas"
+    ],
+    "https://vaad.ar/producto/brugol-marca-yin-yang/": [
+      "Cuscús y burgol"
+    ],
+    "https://vaad.ar/producto/burgol-marca-egran/": [
+      "Cuscús y burgol"
+    ],
+    "https://vaad.ar/producto/burgol-marca/": [
+      "Cuscús y burgol"
+    ],
+    "https://vaad.ar/producto/cacao-marca-toddy/": [
+      "Cacao"
+    ],
+    "https://vaad.ar/producto/cafe-en-capsulas-marca-bonafide/": [
+      "Café"
+    ],
+    "https://vaad.ar/producto/cafe-en-capsulas-marca-kapselmaker-9/": [
+      "Café"
+    ],
+    "https://vaad.ar/producto/cafe-en-capsulas-marca-kapselmaker-4/": [
+      "Café"
+    ],
+    "https://vaad.ar/producto/cafe-en-capsulas-marca-kapselmaker-2/": [
+      "Café"
+    ],
+    "https://vaad.ar/producto/cafe-en-capsulas-marca-kapselmaker/": [
+      "Café"
+    ],
+    "https://vaad.ar/producto/cafe-en-capsulas-marca-la-virginia/": [
+      "Café"
+    ],
+    "https://vaad.ar/producto/cafe-en-capsulas-marca-morenita/": [
+      "Café"
+    ],
+    "https://vaad.ar/producto/cafe-en-capsulas-marca-nescafe-2/": [
+      "Café"
+    ],
+    "https://vaad.ar/producto/cafe-en-capsulas-marca-nescafe/": [
+      "Café"
+    ],
+    "https://vaad.ar/producto/cafe-en-capsulas-marca-nespresso/": [
+      "Café"
+    ],
+    "https://vaad.ar/producto/cafe-marca-bonafide/": [
+      "Café"
+    ],
+    "https://vaad.ar/producto/cafe-marca-cafe-martinez/": [
+      "Café"
+    ],
+    "https://vaad.ar/producto/cafe-marca-la-virginia/": [
+      "Café"
+    ],
+    "https://vaad.ar/producto/cafe-marca-nescafe/": [
+      "Café"
+    ],
+    "https://vaad.ar/producto/cafe-marca-dolca/": [
+      "Café"
+    ],
+    "https://vaad.ar/producto/castana-de-caju-sabores-orientales-1131136126/": [
+      "Frutos secos"
+    ],
+    "https://vaad.ar/producto/cereales-de-maiz-marca-lasfor/": [
+      "Cereales"
+    ],
+    "https://vaad.ar/producto/cereales-marca-3-arroyos-azucarados/": [
+      "Cereales"
+    ],
+    "https://vaad.ar/producto/copos-de-maiz-marca-3-arroyos-sabor-chocolate/": [
+      "Cereales"
+    ],
+    "https://vaad.ar/producto/cerveza-alemana-marca-50/": [
+      "Bebidas alcohólicas",
+      "Cervezas"
+    ],
+    "https://vaad.ar/producto/cerveza-alemana-marca-craft-beer/": [
+      "Bebidas alcohólicas",
+      "Cervezas"
+    ],
+    "https://vaad.ar/producto/cerveza-alemana-marca-5-0/": [
+      "Bebidas alcohólicas",
+      "Cervezas"
+    ],
+    "https://vaad.ar/producto/cerveza-alemana-marca-5-0-2/": [
+      "Bebidas alcohólicas",
+      "Cervezas"
+    ],
+    "https://vaad.ar/producto/cerveza-alemana-marca-5-0-3/": [
+      "Bebidas alcohólicas",
+      "Cervezas"
+    ],
+    "https://vaad.ar/producto/cerveza-alemana-marca-mecklenburger-3/": [
+      "Bebidas alcohólicas",
+      "Cervezas"
+    ],
+    "https://vaad.ar/producto/cerveza-alemana-marca-mecklenburger/": [
+      "Bebidas alcohólicas",
+      "Cervezas"
+    ],
+    "https://vaad.ar/producto/cerveza-alemana-marca-mecklenburger-6/": [
+      "Bebidas alcohólicas",
+      "Cervezas"
+    ],
+    "https://vaad.ar/producto/cerveza-alemana-marca-mecklenburger-5/": [
+      "Bebidas alcohólicas",
+      "Cervezas"
+    ],
+    "https://vaad.ar/producto/cerveza-alemana-marca-mecklenburger-2/": [
+      "Bebidas alcohólicas",
+      "Cervezas"
+    ],
+    "https://vaad.ar/producto/cerveza-alemana-marca-mecklenburger-4/": [
+      "Bebidas alcohólicas",
+      "Cervezas"
+    ],
+    "https://vaad.ar/producto/cerveza-alemana-marca-ottinger-6/": [
+      "Bebidas alcohólicas",
+      "Cervezas"
+    ],
+    "https://vaad.ar/producto/cerveza-alemana-marca-ottinger-5/": [
+      "Bebidas alcohólicas",
+      "Cervezas"
+    ],
+    "https://vaad.ar/producto/cerveza-alemana-marca-ottinger-2/": [
+      "Bebidas alcohólicas",
+      "Cervezas"
+    ],
+    "https://vaad.ar/producto/cerveza-alemana-marca-ottinger/": [
+      "Bebidas alcohólicas",
+      "Cervezas"
+    ],
+    "https://vaad.ar/producto/cerveza-alemana-marca-ottinger-4/": [
+      "Bebidas alcohólicas",
+      "Cervezas"
+    ],
+    "https://vaad.ar/producto/cerveza-alemana-marca-ottinger-3/": [
+      "Bebidas alcohólicas",
+      "Cervezas"
+    ],
+    "https://vaad.ar/producto/cerveza-alemana-marca-s-t-wendeler/": [
+      "Bebidas alcohólicas",
+      "Cervezas"
+    ],
+    "https://vaad.ar/producto/cerveza-alemana-marca-s-t-wendeler-2/": [
+      "Bebidas alcohólicas",
+      "Cervezas"
+    ],
+    "https://vaad.ar/producto/cerveza-alemana-marca-s-t-wendeler-3/": [
+      "Bebidas alcohólicas",
+      "Cervezas"
+    ],
+    "https://vaad.ar/producto/cerveza-alemana-marca-s-t-wendeler-4/": [
+      "Bebidas alcohólicas",
+      "Cervezas"
+    ],
+    "https://vaad.ar/producto/cerveza-alemana-marca-s-t-wendeler-5/": [
+      "Bebidas alcohólicas",
+      "Cervezas"
+    ],
+    "https://vaad.ar/producto/cerveza-marca-benediktiner-2/": [
+      "Bebidas alcohólicas",
+      "Cervezas"
+    ],
+    "https://vaad.ar/producto/cerveza-marca-benediktiner/": [
+      "Bebidas alcohólicas",
+      "Cervezas"
+    ],
+    "https://vaad.ar/producto/cerveza-marca-benediktiner-3/": [
+      "Bebidas alcohólicas",
+      "Cervezas"
+    ],
+    "https://vaad.ar/producto/298460/": [
+      "Bebidas alcohólicas",
+      "Cervezas"
+    ],
+    "https://vaad.ar/producto/cerveza-marca-bitburger/": [
+      "Bebidas alcohólicas",
+      "Cervezas"
+    ],
+    "https://vaad.ar/producto/cerveza-marca-eschenbacher/": [
+      "Bebidas alcohólicas",
+      "Cervezas"
+    ],
+    "https://vaad.ar/producto/cerveza-marca-flensburger/": [
+      "Bebidas alcohólicas",
+      "Cervezas"
+    ],
+    "https://vaad.ar/producto/cerveza-marca-flensburger-2/": [
+      "Bebidas alcohólicas",
+      "Cervezas"
+    ],
+    "https://vaad.ar/producto/cerveza-marca-flensburger-3/": [
+      "Bebidas alcohólicas",
+      "Cervezas"
+    ],
+    "https://vaad.ar/producto/cerveza-marca-karlsberg/": [
+      "Bebidas alcohólicas",
+      "Cervezas"
+    ],
+    "https://vaad.ar/producto/cerveza-marca-oettinger-2/": [
+      "Bebidas alcohólicas",
+      "Cervezas"
+    ],
+    "https://vaad.ar/producto/cerveza-marca-oettinger/": [
+      "Bebidas alcohólicas",
+      "Cervezas"
+    ],
+    "https://vaad.ar/producto/cerveza-marca-oettinger-5/": [
+      "Bebidas alcohólicas",
+      "Cervezas"
+    ],
+    "https://vaad.ar/producto/cerveza-marca-oettinger-4/": [
+      "Bebidas alcohólicas",
+      "Cervezas"
+    ],
+    "https://vaad.ar/producto/cerveza-marca-oettinger-3/": [
+      "Bebidas alcohólicas",
+      "Cervezas"
+    ],
+    "https://vaad.ar/producto/champignones-laminados-marca-siete-lagos/": [
+      "Champiñones"
+    ],
+    "https://vaad.ar/producto/champinon-congelado-marca-greens/": [
+      "Verduras congeladas"
+    ],
+    "https://vaad.ar/producto/chaucha-congelada-marca-greens/": [
+      "Verduras congeladas"
+    ],
+    "https://vaad.ar/producto/choclo-congelado-marca-greens/": [
+      "Verduras congeladas"
+    ],
+    "https://vaad.ar/producto/choclo-crema-inalpa-lata/": [
+      "Choclo en conserva"
+    ],
+    "https://vaad.ar/producto/choclo-marca-inca/": [
+      "Choclo en conserva"
+    ],
+    "https://vaad.ar/producto/choclo-marca-molto/": [
+      "Choclo en conserva"
+    ],
+    "https://vaad.ar/producto/choclo-marca-okey/": [
+      "Choclo en conserva"
+    ],
+    "https://vaad.ar/producto/ciruela-marca-cimafru/": [
+      "Frutas en conserva"
+    ],
+    "https://vaad.ar/producto/ciruela-marca-sabores-orientales/": [
+      "Frutas secas y deshidratadas"
+    ],
+    "https://vaad.ar/producto/coco-rallado-marca-el-peoncito/": [
+      "Coco rallado"
+    ],
+    "https://vaad.ar/producto/coctel-de-frutas-marca-carrefour/": [
+      "Frutas en conserva"
+    ],
+    "https://vaad.ar/producto/coctel-de-frutas-marca-dia/": [
+      "Frutas en conserva"
+    ],
+    "https://vaad.ar/producto/coctel-de-frutas-marca-la-campagnola/": [
+      "Frutas en conserva"
+    ],
+    "https://vaad.ar/producto/coctel-de-frutas-marca-marolio/": [
+      "Frutas en conserva"
+    ],
+    "https://vaad.ar/producto/coctel-de-frutas-marca-vea/": [
+      "Frutas en conserva"
+    ],
+    "https://vaad.ar/producto/coliflor-congelado-marca-greens/": [
+      "Verduras congeladas"
+    ],
+    "https://vaad.ar/producto/conserva-de-palmitos-marca-julias-farms/": [
+      "Palmitos"
+    ],
+    "https://vaad.ar/producto/corn-flakes-marca-keloggs/": [
+      "Cereales"
+    ],
+    "https://vaad.ar/producto/damasaco-marca-sabores-orientales/": [
+      "Frutas secas y deshidratadas"
+    ],
+    "https://vaad.ar/producto/damascos/": [
+      "Frutas secas y deshidratadas"
+    ],
+    "https://vaad.ar/producto/298020/": [
+      "Dulces de batata y membrillo"
+    ],
+    "https://vaad.ar/producto/durazno-marca-dia/": [
+      "Frutas en conserva"
+    ],
+    "https://vaad.ar/producto/durazno-marca-la-campagnola/": [
+      "Frutas en conserva"
+    ],
+    "https://vaad.ar/producto/durazno-marca-marolio/": [
+      "Frutas en conserva"
+    ],
+    "https://vaad.ar/producto/durazno-marca-okey/": [
+      "Frutas en conserva"
+    ],
+    "https://vaad.ar/producto/edulcorante-en-sobres-marca-dulkre/": [
+      "Edulcorantes"
+    ],
+    "https://vaad.ar/producto/edulcorante-en-sobres-marca-hileret/": [
+      "Edulcorantes"
+    ],
+    "https://vaad.ar/producto/edulcorante-marca-sucaryl/": [
+      "Edulcorantes"
+    ],
+    "https://vaad.ar/producto/edulcorante-marca-chuker/": [
+      "Edulcorantes"
+    ],
+    "https://vaad.ar/producto/edulcorante-marca-dulkre/": [
+      "Edulcorantes"
+    ],
+    "https://vaad.ar/producto/edulcorante-marca-hileret/": [
+      "Edulcorantes"
+    ],
+    "https://vaad.ar/producto/edulcorante-marca-tuy/": [
+      "Edulcorantes"
+    ],
+    "https://vaad.ar/producto/especias-marca-dani-3/": [
+      "Condimentos"
+    ],
+    "https://vaad.ar/producto/especias-marca-dani-2/": [
+      "Condimentos"
+    ],
+    "https://vaad.ar/producto/especias-marca-dani/": [
+      "Condimentos"
+    ],
+    "https://vaad.ar/producto/espinaca-congelada-marca-greens/": [
+      "Verduras congeladas"
+    ],
+    "https://vaad.ar/producto/fideos-marca-308-3/": [
+      "Fideos y pastas secas"
+    ],
+    "https://vaad.ar/producto/fideos-marca-308-7/": [
+      "Fideos y pastas secas"
+    ],
+    "https://vaad.ar/producto/fideos-marca-308-6/": [
+      "Fideos y pastas secas"
+    ],
+    "https://vaad.ar/producto/fideos-marca-308-5/": [
+      "Fideos y pastas secas"
+    ],
+    "https://vaad.ar/producto/fideos-marca-308-4/": [
+      "Fideos y pastas secas"
+    ],
+    "https://vaad.ar/producto/fideos-marca-308-2/": [
+      "Fideos y pastas secas"
+    ],
+    "https://vaad.ar/producto/fideos-marca-308/": [
+      "Fideos y pastas secas"
+    ],
+    "https://vaad.ar/producto/fideos-marca-don-vicente/": [
+      "Fideos y pastas secas"
+    ],
+    "https://vaad.ar/producto/fideos-marca-favorita/": [
+      "Fideos y pastas secas"
+    ],
+    "https://vaad.ar/producto/fideos-marca-lucchetti/": [
+      "Fideos y pastas secas"
+    ],
+    "https://vaad.ar/producto/fideos-marca-matarazzo/": [
+      "Fideos y pastas secas"
+    ],
+    "https://vaad.ar/producto/fideos-marca-felicia-5/": [
+      "Fideos y pastas secas"
+    ],
+    "https://vaad.ar/producto/fideos-marca-felicia-4/": [
+      "Fideos y pastas secas"
+    ],
+    "https://vaad.ar/producto/fideos-marca-felicia-3/": [
+      "Fideos y pastas secas"
+    ],
+    "https://vaad.ar/producto/fideos-marca-felicia-2/": [
+      "Fideos y pastas secas"
+    ],
+    "https://vaad.ar/producto/fideos-marca-felicia/": [
+      "Fideos y pastas secas"
+    ],
+    "https://vaad.ar/producto/gatorade-sabor-berry/": [
+      "Bebidas deportivas"
+    ],
+    "https://vaad.ar/producto/gatorade-sabor-cool-blue/": [
+      "Bebidas deportivas"
+    ],
+    "https://vaad.ar/producto/gatorade-sabor-laranja/": [
+      "Bebidas deportivas"
+    ],
+    "https://vaad.ar/producto/gatorade-sabor-manzana/": [
+      "Bebidas deportivas"
+    ],
+    "https://vaad.ar/producto/gatorade-sabor-naranja/": [
+      "Bebidas deportivas"
+    ],
+    "https://vaad.ar/producto/gatorade-sabor-uva/": [
+      "Bebidas deportivas"
+    ],
+    "https://vaad.ar/producto/gatorade-sabor-zero/": [
+      "Bebidas deportivas"
+    ],
+    "https://vaad.ar/producto/golosina-ring-pop/": [
+      "Caramelos y golosinas"
+    ],
+    "https://vaad.ar/producto/golosina-marca-ring-pop/": [
+      "Caramelos y golosinas"
+    ],
+    "https://vaad.ar/producto/golosina-marca-ring-pop-2/": [
+      "Caramelos y golosinas"
+    ],
+    "https://vaad.ar/producto/golosina-marca-ring-pop-3/": [
+      "Caramelos y golosinas"
+    ],
+    "https://vaad.ar/producto/granola-cereal-mix-marca-3-arroyos/": [
+      "Granolas"
+    ],
+    "https://vaad.ar/producto/harina-de-maiz-marca-maizena/": [
+      "Harinas y sémolas"
+    ],
+    "https://vaad.ar/producto/harina-de-trigo-blando-tipo-00-marca-polselli/": [
+      "Harinas y sémolas"
+    ],
+    "https://vaad.ar/producto/harina-de-trigo-blando-tipo-00-marca-polselli-3/": [
+      "Harinas y sémolas"
+    ],
+    "https://vaad.ar/producto/harina-de-trigo-blando-tipo-00-marca-polselli-2/": [
+      "Harinas y sémolas"
+    ],
+    "https://vaad.ar/producto/harina-de-trigo-blando-tipo-1-marca-polselli/": [
+      "Harinas y sémolas"
+    ],
+    "https://vaad.ar/producto/harina-marca-favorita/": [
+      "Harinas y sémolas"
+    ],
+    "https://vaad.ar/producto/harina-marca-morixe/": [
+      "Harinas y sémolas"
+    ],
+    "https://vaad.ar/producto/harina-marca-pureza/": [
+      "Harinas y sémolas"
+    ],
+    "https://vaad.ar/producto/hoja-de-parra-marca-la-emilia/": [
+      "Hojas de parra"
+    ],
+    "https://vaad.ar/producto/hojas-de-parra-marca-selvan/": [
+      "Hojas de parra"
+    ],
+    "https://vaad.ar/producto/jugo-marca-baggio-2/": [
+      "Jugos"
+    ],
+    "https://vaad.ar/producto/jugo-marca-baggio-10/": [
+      "Jugos"
+    ],
+    "https://vaad.ar/producto/jugo-marca-baggio-3/": [
+      "Jugos"
+    ],
+    "https://vaad.ar/producto/jugo-marca-baggio-9/": [
+      "Jugos"
+    ],
+    "https://vaad.ar/producto/jugo-marca-baggio-8/": [
+      "Jugos"
+    ],
+    "https://vaad.ar/producto/jugo-marca-baggio-6/": [
+      "Jugos"
+    ],
+    "https://vaad.ar/producto/jugo-marca-baggio/": [
+      "Jugos"
+    ],
+    "https://vaad.ar/producto/jugo-marca-baggio-4/": [
+      "Jugos"
+    ],
+    "https://vaad.ar/producto/jugo-marca-baggio-5/": [
+      "Jugos"
+    ],
+    "https://vaad.ar/producto/jugo-marca-baggio-7/": [
+      "Jugos"
+    ],
+    "https://vaad.ar/producto/jugo-marca-clight-6/": [
+      "Jugo en polvo"
+    ],
+    "https://vaad.ar/producto/jugo-marca-clight-4/": [
+      "Jugo en polvo"
+    ],
+    "https://vaad.ar/producto/jugo-marca-clight-3/": [
+      "Jugo en polvo"
+    ],
+    "https://vaad.ar/producto/jugo-marca-clight-5/": [
+      "Jugo en polvo"
+    ],
+    "https://vaad.ar/producto/jugo-marca-clight-2/": [
+      "Jugo en polvo"
+    ],
+    "https://vaad.ar/producto/jugo-marca-clight/": [
+      "Jugo en polvo"
+    ],
+    "https://vaad.ar/producto/jugo-marca-tang-4/": [
+      "Jugo en polvo"
+    ],
+    "https://vaad.ar/producto/jugo-marca-tang/": [
+      "Jugo en polvo"
+    ],
+    "https://vaad.ar/producto/jugo-marca-tang-2/": [
+      "Jugo en polvo"
+    ],
+    "https://vaad.ar/producto/jugo-marca-tang-8/": [
+      "Jugo en polvo"
+    ],
+    "https://vaad.ar/producto/jugo-marca-tang-5/": [
+      "Jugo en polvo"
+    ],
+    "https://vaad.ar/producto/jugo-marca-tang-6/": [
+      "Jugo en polvo"
+    ],
+    "https://vaad.ar/producto/jugo-marca-tang-7/": [
+      "Jugo en polvo"
+    ],
+    "https://vaad.ar/producto/jugo-marca-tang-3/": [
+      "Jugo en polvo"
+    ],
+    "https://vaad.ar/producto/jugo-marca-tang-9/": [
+      "Jugo en polvo"
+    ],
+    "https://vaad.ar/producto/jugo-marca-zummy/": [
+      "Jugos"
+    ],
+    "https://vaad.ar/producto/jugo-marca-zummy-2/": [
+      "Jugos"
+    ],
+    "https://vaad.ar/producto/jugo-marca-zummy-4/": [
+      "Jugos"
+    ],
+    "https://vaad.ar/producto/jugo-marca-zummy-3/": [
+      "Jugos"
+    ],
+    "https://vaad.ar/producto/ketchup-marca-danica/": [
+      "Aderezos",
+      "Ketchup"
+    ],
+    "https://vaad.ar/producto/ketchup-marca-natura/": [
+      "Aderezos",
+      "Ketchup"
+    ],
+    "https://vaad.ar/producto/ketchup-marca-cada-dia/": [
+      "Aderezos",
+      "Ketchup"
+    ],
+    "https://vaad.ar/producto/levadura-marca-calsa/": [
+      "Levaduras"
+    ],
+    "https://vaad.ar/producto/levadura-marca-fleischmann/": [
+      "Levaduras"
+    ],
+    "https://vaad.ar/producto/levadura-marca-levex-2/": [
+      "Levaduras"
+    ],
+    "https://vaad.ar/producto/levadura-marca-levex/": [
+      "Levaduras"
+    ],
+    "https://vaad.ar/producto/levadura-marca-mi-pan/": [
+      "Levaduras"
+    ],
+    "https://vaad.ar/producto/mani-con-piel/": [
+      "Frutos secos"
+    ],
+    "https://vaad.ar/producto/mani-pelado/": [
+      "Frutos secos"
+    ],
+    "https://vaad.ar/producto/mani-pelado-marca-free-chips/": [
+      "Frutos secos"
+    ],
+    "https://vaad.ar/producto/mate-cocido-marca-amanda/": [
+      "Yerba mate"
+    ],
+    "https://vaad.ar/producto/mate-cocido-marca-rosamonte/": [
+      "Yerba mate"
+    ],
+    "https://vaad.ar/producto/mate-cocido-marca-taragui/": [
+      "Yerba mate"
+    ],
+    "https://vaad.ar/producto/mayonesa-marca-danica/": [
+      "Aderezos",
+      "Mayonesas"
+    ],
+    "https://vaad.ar/producto/mayonesa-marca-menoyo/": [
+      "Aderezos",
+      "Mayonesas"
+    ],
+    "https://vaad.ar/producto/mayonesa-marca-natura/": [
+      "Aderezos",
+      "Mayonesas"
+    ],
+    "https://vaad.ar/producto/mayonesa-marca-cada-dia/": [
+      "Aderezos",
+      "Mayonesas"
+    ],
+    "https://vaad.ar/producto/mermelada-blueberry-blackcurrant-marca-mackays/": [
+      "Mermeladas"
+    ],
+    "https://vaad.ar/producto/mermelada-ginger-marca-mackays/": [
+      "Mermeladas"
+    ],
+    "https://vaad.ar/producto/mermelada-marca-prima-frutta/": [
+      "Mermeladas"
+    ],
+    "https://vaad.ar/producto/mermelada-marca-prima-frutta-2/": [
+      "Mermeladas"
+    ],
+    "https://vaad.ar/producto/mermelada-marca-prima-frutta-6/": [
+      "Mermeladas"
+    ],
+    "https://vaad.ar/producto/mermelada-marca-prima-frutta-5/": [
+      "Mermeladas"
+    ],
+    "https://vaad.ar/producto/mermelada-marca-prima-frutta-3/": [
+      "Mermeladas"
+    ],
+    "https://vaad.ar/producto/mermelada-orange-lemon-ginger-marca-mackays/": [
+      "Mermeladas"
+    ],
+    "https://vaad.ar/producto/mermelada-mackays-raspberry/": [
+      "Mermeladas"
+    ],
+    "https://vaad.ar/producto/mermelada-mackays-spiced-ginger/": [
+      "Mermeladas"
+    ],
+    "https://vaad.ar/producto/mermelada-sweet-navelina-orange-marca-mackays/": [
+      "Mermeladas"
+    ],
+    "https://vaad.ar/producto/mermelada-mackays-three-berry/": [
+      "Mermeladas"
+    ],
+    "https://vaad.ar/producto/miel-cremosa-marca-beepure/": [
+      "Miel"
+    ],
+    "https://vaad.ar/producto/miel-de-abejas-marca-el-peoncito/": [
+      "Miel"
+    ],
+    "https://vaad.ar/producto/miel-marca-apicola-mercedes/": [
+      "Miel"
+    ],
+    "https://vaad.ar/producto/miel-marca-apicola-mercedes-2/": [
+      "Miel"
+    ],
+    "https://vaad.ar/producto/miel-multifloral-marca-beepure-2/": [
+      "Miel"
+    ],
+    "https://vaad.ar/producto/miel-multifloral-marca-beepure/": [
+      "Miel"
+    ],
+    "https://vaad.ar/producto/nueces-sabores-orientales-1131136126/": [
+      "Frutos secos"
+    ],
+    "https://vaad.ar/producto/nueces-marca-el-peoncito/": [
+      "Frutos secos"
+    ],
+    "https://vaad.ar/producto/nuez-pecan/": [
+      "Frutos secos"
+    ],
+    "https://vaad.ar/producto/298235/": [
+      "Palmitos"
+    ],
+    "https://vaad.ar/producto/palmitos-en-rodajas-marca-siete-lagos/": [
+      "Palmitos"
+    ],
+    "https://vaad.ar/producto/papas-marca-la/": [
+      "Papas congeladas"
+    ],
+    "https://vaad.ar/producto/papas-marca-carrefour-5/": [
+      "Papas congeladas"
+    ],
+    "https://vaad.ar/producto/papas-marca-carrefour-6/": [
+      "Papas congeladas"
+    ],
+    "https://vaad.ar/producto/papas-marca-carrefour-4/": [
+      "Papas congeladas"
+    ],
+    "https://vaad.ar/producto/papas-marca-carrefour-3/": [
+      "Papas congeladas"
+    ],
+    "https://vaad.ar/producto/papas-marca-carrefour-2/": [
+      "Papas congeladas"
+    ],
+    "https://vaad.ar/producto/papas-marca-carrefour/": [
+      "Papas congeladas"
+    ],
+    "https://vaad.ar/producto/papas-marca-check/": [
+      "Papas congeladas"
+    ],
+    "https://vaad.ar/producto/papas-marca-ciudad-del-lago/": [
+      "Papas congeladas"
+    ],
+    "https://vaad.ar/producto/papas-marca-rango-alto/": [
+      "Papas congeladas"
+    ],
+    "https://vaad.ar/producto/papas-marca-sei-pronto/": [
+      "Papas congeladas"
+    ],
+    "https://vaad.ar/producto/papas-marca-swift/": [
+      "Papas congeladas"
+    ],
+    "https://vaad.ar/producto/pasas-marca-sabores-orientales/": [
+      "Frutas secas y deshidratadas"
+    ],
+    "https://vaad.ar/producto/pasta-de-aceitunas-marca-marvavic/": [
+      "Pasta de aceitunas"
+    ],
+    "https://vaad.ar/producto/pepinos-en-vinagre-marca-receta-de-entonces/": [
+      "Pepinos en conserva"
+    ],
+    "https://vaad.ar/producto/pimenton-espanol-marca-zoraida-3/": [
+      "Condimentos"
+    ],
+    "https://vaad.ar/producto/pimenton-espanol-marca-zoraida/": [
+      "Condimentos"
+    ],
+    "https://vaad.ar/producto/pimenton-espanol-marca-zoraida-2/": [
+      "Condimentos"
+    ],
+    "https://vaad.ar/producto/pistacho-con-cascara/": [
+      "Frutos secos"
+    ],
+    "https://vaad.ar/producto/pochoclos-marca-alwa-2/": [
+      "Pochoclos"
+    ],
+    "https://vaad.ar/producto/pochoclos-marca-alwa/": [
+      "Pochoclos"
+    ],
+    "https://vaad.ar/producto/polenta-marca-carrefour/": [
+      "Polenta"
+    ],
+    "https://vaad.ar/producto/polenta-marca-egran/": [
+      "Polenta"
+    ],
+    "https://vaad.ar/producto/polenta-marca-mimasa/": [
+      "Polenta"
+    ],
+    "https://vaad.ar/producto/polenta-marca-molinos-ala/": [
+      "Polenta"
+    ],
+    "https://vaad.ar/producto/polenta-marca-morixe/": [
+      "Polenta"
+    ],
+    "https://vaad.ar/producto/porotos-marca-okey/": [
+      "Porotos, lentejas y garbanzos"
+    ],
+    "https://vaad.ar/producto/productos-de-dietetica-marca-sabores-orientales-2/": [
+      "Productos de dietética"
+    ],
+    "https://vaad.ar/producto/pure-de-tomate-marolio/": [
+      "Puré de tomate"
+    ],
+    "https://vaad.ar/producto/pure-de-tomate-marca-de-la-huerta/": [
+      "Puré de tomate"
+    ],
+    "https://vaad.ar/producto/pure-de-tomate-marca-caroyense/": [
+      "Puré de tomate"
+    ],
+    "https://vaad.ar/producto/pure-de-tomate-marca-corper/": [
+      "Puré de tomate"
+    ],
+    "https://vaad.ar/producto/pure-de-tomate-marca-dulcor/": [
+      "Puré de tomate"
+    ],
+    "https://vaad.ar/producto/pure-de-tomate-marca-inca/": [
+      "Puré de tomate"
+    ],
+    "https://vaad.ar/producto/pure-de-tomate-marca-knorr/": [
+      "Puré de tomate"
+    ],
+    "https://vaad.ar/producto/pure-de-tomate-marca-la-colina/": [
+      "Puré de tomate"
+    ],
+    "https://vaad.ar/producto/pure-de-tomate-marca-la-joya/": [
+      "Puré de tomate"
+    ],
+    "https://vaad.ar/producto/pure-de-tomate-marca-molto/": [
+      "Puré de tomate"
+    ],
+    "https://vaad.ar/producto/pure-de-tomate-marca-victoria/": [
+      "Puré de tomate"
+    ],
+    "https://vaad.ar/producto/salmon-ahumado-marca-superbe/": [
+      "Pescados ahumados"
+    ],
+    "https://vaad.ar/producto/salsa-de-soja-marca-kikkoman-4/": [
+      "Salsas"
+    ],
+    "https://vaad.ar/producto/salsa-de-soja-marca-kikkoman-2/": [
+      "Salsas"
+    ],
+    "https://vaad.ar/producto/salsa-de-soja-marca-kikkoman-5/": [
+      "Salsas"
+    ],
+    "https://vaad.ar/producto/salsa-de-soja-marca-kikkoman-6/": [
+      "Salsas"
+    ],
+    "https://vaad.ar/producto/salsa-de-soja-marca-kikkoman-7/": [
+      "Salsas"
+    ],
+    "https://vaad.ar/producto/salsa-de-soja-marca-kikkoman/": [
+      "Salsas"
+    ],
+    "https://vaad.ar/producto/salsa-de-soja-marca-yamasa-2/": [
+      "Salsas"
+    ],
+    "https://vaad.ar/producto/salsa-de-soja-marca-yamasa/": [
+      "Salsas"
+    ],
+    "https://vaad.ar/producto/salsa-golf-natura/": [
+      "Aderezos",
+      "Salsa golf"
+    ],
+    "https://vaad.ar/producto/salsa-golf-marca-cada-dia/": [
+      "Aderezos",
+      "Salsa golf"
+    ],
+    "https://vaad.ar/producto/salsa-golf-marca-danica/": [
+      "Aderezos",
+      "Salsa golf"
+    ],
+    "https://vaad.ar/producto/salsa-wasabi-marca-kikkoman/": [
+      "Wasabi"
+    ],
+    "https://vaad.ar/producto/semola-de-trigo-duro-rimacinata-marca-polselli/": [
+      "Harinas y sémolas"
+    ],
+    "https://vaad.ar/producto/te-marca-green-hills/": [
+      "Té"
+    ],
+    "https://vaad.ar/producto/te-marca-inti-zen/": [
+      "Té"
+    ],
+    "https://vaad.ar/producto/te-marca-la-virginia/": [
+      "Té"
+    ],
+    "https://vaad.ar/producto/te-marca-saint-gottard/": [
+      "Té"
+    ],
+    "https://vaad.ar/producto/te-marca-taragui/": [
+      "Té"
+    ],
+    "https://vaad.ar/producto/te-marca-dilmah-29/": [
+      "Té"
+    ],
+    "https://vaad.ar/producto/te-marca-dilmah-27/": [
+      "Té"
+    ],
+    "https://vaad.ar/producto/te-marca-dilmah-28/": [
+      "Té"
+    ],
+    "https://vaad.ar/producto/te-marca-dilmah-4/": [
+      "Té"
+    ],
+    "https://vaad.ar/producto/te-marca-dilmah-17/": [
+      "Té"
+    ],
+    "https://vaad.ar/producto/te-marca-dilmah-10/": [
+      "Té"
+    ],
+    "https://vaad.ar/producto/te-marca-dilmah-11/": [
+      "Té"
+    ],
+    "https://vaad.ar/producto/te-marca-dilmah-12/": [
+      "Té"
+    ],
+    "https://vaad.ar/producto/te-marca-dilmah-14/": [
+      "Té"
+    ],
+    "https://vaad.ar/producto/te-marca-dilmah-15/": [
+      "Té"
+    ],
+    "https://vaad.ar/producto/te-marca-dilmah-16/": [
+      "Té"
+    ],
+    "https://vaad.ar/producto/te-marca-dilmah-18/": [
+      "Té"
+    ],
+    "https://vaad.ar/producto/te-marca-dilmah-13/": [
+      "Té"
+    ],
+    "https://vaad.ar/producto/te-marca-dilmah-26/": [
+      "Té"
+    ],
+    "https://vaad.ar/producto/te-marca-dilmah-19/": [
+      "Té"
+    ],
+    "https://vaad.ar/producto/te-marca-dilmah-20/": [
+      "Té"
+    ],
+    "https://vaad.ar/producto/te-marca-dilmah-21/": [
+      "Té"
+    ],
+    "https://vaad.ar/producto/te-marca-dilmah-22/": [
+      "Té"
+    ],
+    "https://vaad.ar/producto/te-marca-dilmah-23/": [
+      "Té"
+    ],
+    "https://vaad.ar/producto/te-marca-dilmah-24/": [
+      "Té"
+    ],
+    "https://vaad.ar/producto/te-marca-dilmah-25/": [
+      "Té"
+    ],
+    "https://vaad.ar/producto/te-marca-dilmah-31/": [
+      "Té"
+    ],
+    "https://vaad.ar/producto/te-marca-dilmah-9/": [
+      "Té"
+    ],
+    "https://vaad.ar/producto/te-marca-dilmah/": [
+      "Té"
+    ],
+    "https://vaad.ar/producto/te-marca-dilmah-2/": [
+      "Té"
+    ],
+    "https://vaad.ar/producto/te-marca-dilmah-3/": [
+      "Té"
+    ],
+    "https://vaad.ar/producto/te-marca-dilmah-5/": [
+      "Té"
+    ],
+    "https://vaad.ar/producto/te-marca-dilmah-6/": [
+      "Té"
+    ],
+    "https://vaad.ar/producto/te-marca-dilmah-7/": [
+      "Té"
+    ],
+    "https://vaad.ar/producto/te-marca-dilmah-8/": [
+      "Té"
+    ],
+    "https://vaad.ar/producto/te-marca-dilmah-32/": [
+      "Té"
+    ],
+    "https://vaad.ar/producto/te-marca-dilmah-30/": [
+      "Té"
+    ],
+    "https://vaad.ar/producto/tomate-seco-marca-sabores-orientales/": [
+      "Tomates secos"
+    ],
+    "https://vaad.ar/producto/tomates-marca-victoria/": [
+      "Tomates en conserva"
+    ],
+    "https://vaad.ar/producto/trigo-burgol-marca-sytari/": [
+      "Cuscús y burgol"
+    ],
+    "https://vaad.ar/producto/vinagre-marca-casalta/": [
+      "Vinagres"
+    ],
+    "https://vaad.ar/producto/vinagre-marca-menoyo/": [
+      "Vinagres"
+    ],
+    "https://vaad.ar/producto/vinagre-marca-receta-de-entonces/": [
+      "Vinagres"
+    ],
+    "https://vaad.ar/producto/wasabi-en-polvo/": [
+      "Wasabi"
+    ],
+    "https://vaad.ar/producto/yerba-marca-amanda/": [
+      "Yerba mate"
+    ],
+    "https://vaad.ar/producto/yerba-marca-cruz-de-malta/": [
+      "Yerba mate"
+    ],
+    "https://vaad.ar/producto/yerba-marca-rosamonte/": [
+      "Yerba mate"
+    ],
+    "https://vaad.ar/producto/yerba-marca-taragui/": [
+      "Yerba mate"
+    ],
+    "https://vaad.ar/producto/aceite-de-maiz-marca-arcor/": [
+      "Aceites",
+      "Otros aceites"
+    ],
+    "https://vaad.ar/producto/aceite-de-oliva-marca-mesquida-4/": [
+      "Aceites",
+      "Aceite de oliva"
+    ],
+    "https://vaad.ar/producto/aceite-de-oliva-marca-mesquida-3/": [
+      "Aceites",
+      "Aceite de oliva"
+    ],
+    "https://vaad.ar/producto/aceite-de-oliva-marca-mesquida-2/": [
+      "Aceites",
+      "Aceite de oliva"
+    ],
+    "https://vaad.ar/producto/aceite-de-oliva-marca-mesquida/": [
+      "Aceites",
+      "Aceite de oliva"
+    ],
+    "https://vaad.ar/producto/aceite-de-oregano-marca-rr/": [
+      "Aceites",
+      "Otros aceites"
+    ],
+    "https://vaad.ar/producto/arvejas-marca-arcor/": [
+      "Arvejas"
+    ],
+    "https://vaad.ar/producto/arvejas-marca-la-campagnola/": [
+      "Arvejas"
+    ],
+    "https://vaad.ar/producto/arvejas-marca-noel/": [
+      "Arvejas"
+    ],
+    "https://vaad.ar/producto/barrita-marca-alnuna-sabor-almond-bar/": [
+      "Snacks"
+    ],
+    "https://vaad.ar/producto/barrita-marca-alnuna-sabor-cacao-bar/": [
+      "Snacks"
+    ],
+    "https://vaad.ar/producto/barrita-full-arandanos-y-almendras/": [
+      "Snacks"
+    ],
+    "https://vaad.ar/producto/barrita-full-sabor-cacao-y-mani/": [
+      "Snacks"
+    ],
+    "https://vaad.ar/producto/barrita-marca-lyv-almendras-pasas-y-miel/": [
+      "Snacks"
+    ],
+    "https://vaad.ar/producto/barrita-marca-lyv-caju-semillas-de-zapallo-y-sal-marina/": [
+      "Snacks"
+    ],
+    "https://vaad.ar/producto/barrita-marca-lyv-mani-quinoa-y-chocolate-amargo/": [
+      "Snacks"
+    ],
+    "https://vaad.ar/producto/barrita-marca-mudra-armonia/": [
+      "Snacks"
+    ],
+    "https://vaad.ar/producto/barrita-marca-mudra-bienestar/": [
+      "Snacks"
+    ],
+    "https://vaad.ar/producto/barrita-marca-mudra-energia/": [
+      "Snacks"
+    ],
+    "https://vaad.ar/producto/barrita-marca-vitalgy-arandanos/": [
+      "Snacks"
+    ],
+    "https://vaad.ar/producto/barrita-marca-vitalgy-cacao/": [
+      "Snacks"
+    ],
+    "https://vaad.ar/producto/barrita-marca-vitalgy-caju/": [
+      "Snacks"
+    ],
+    "https://vaad.ar/producto/barrita-marca-vitalgy-chocolate/": [
+      "Snacks"
+    ],
+    "https://vaad.ar/producto/barrita-marca-vitalgy-manzana/": [
+      "Snacks"
+    ],
+    "https://vaad.ar/producto/barrita-marca-wake-up/": [
+      "Snacks"
+    ],
+    "https://vaad.ar/producto/barrita-marca-wiki/": [
+      "Snacks"
+    ],
+    "https://vaad.ar/producto/barrita-proteica-marca-wik/": [
+      "Snacks"
+    ],
+    "https://vaad.ar/producto/barrita-marca-vitalgy/": [
+      "Snacks"
+    ],
+    "https://vaad.ar/producto/barrita-marca-vitalgy-3/": [
+      "Snacks"
+    ],
+    "https://vaad.ar/producto/barrita-marca-vitalgy-2/": [
+      "Snacks"
+    ],
+    "https://vaad.ar/producto/barrita-marca-vitalgy-proteina/": [
+      "Snacks"
+    ],
+    "https://vaad.ar/producto/bebida-alcoholica-marca-pardalis/": [
+      "Bebidas alcohólicas",
+      "Licores"
+    ],
+    "https://vaad.ar/producto/bebida-de-avena-marca-amande/": [
+      "Bebidas vegetales"
+    ],
+    "https://vaad.ar/producto/cascara-de-limon-deshidratada-marca-el-parque-2/": [
+      "Frutas secas y deshidratadas"
+    ],
+    "https://vaad.ar/producto/cascara-de-limon-deshidratada-marca-el-parque/": [
+      "Frutas secas y deshidratadas"
+    ],
+    "https://vaad.ar/producto/cascara-de-mandarina-deshidratada-marca-el-parque/": [
+      "Frutas secas y deshidratadas"
+    ],
+    "https://vaad.ar/producto/cascara-de-naranja-deshidratada-marca-del-parque/": [
+      "Frutas secas y deshidratadas"
+    ],
+    "https://vaad.ar/producto/cerveza-double-bock-marca-barba-roja/": [
+      "Bebidas alcohólicas",
+      "Cervezas"
+    ],
+    "https://vaad.ar/producto/cerveza-ipa-marca-barba-roja/": [
+      "Bebidas alcohólicas",
+      "Cervezas"
+    ],
+    "https://vaad.ar/producto/cerveza-lager-marca-barba-roja/": [
+      "Bebidas alcohólicas",
+      "Cervezas"
+    ],
+    "https://vaad.ar/producto/cerveza-lager-sin-alcohol-marca-barba-roja/": [
+      "Cervezas sin alcohol"
+    ],
+    "https://vaad.ar/producto/cerveza-marca-almirante-donn-bouchard/": [
+      "Bebidas alcohólicas",
+      "Cervezas"
+    ],
+    "https://vaad.ar/producto/cerveza-marca-almirante-donn-drumond/": [
+      "Bebidas alcohólicas",
+      "Cervezas"
+    ],
+    "https://vaad.ar/producto/cerveza-marca-almirante-donn-grandville/": [
+      "Bebidas alcohólicas",
+      "Cervezas"
+    ],
+    "https://vaad.ar/producto/cerveza-marca-almirante-donn-nother/": [
+      "Bebidas alcohólicas",
+      "Cervezas"
+    ],
+    "https://vaad.ar/producto/cerveza-marca-almirante-donn-rosales/": [
+      "Bebidas alcohólicas",
+      "Cervezas"
+    ],
+    "https://vaad.ar/producto/cerveza-marca-almirante-donn-russel/": [
+      "Bebidas alcohólicas",
+      "Cervezas"
+    ],
+    "https://vaad.ar/producto/cerveza-marca-almirante-donn-spiro/": [
+      "Bebidas alcohólicas",
+      "Cervezas"
+    ],
+    "https://vaad.ar/producto/cerveza-marca-buller/": [
+      "Bebidas alcohólicas",
+      "Cervezas"
+    ],
+    "https://vaad.ar/producto/cerveza-marca-buller-2/": [
+      "Bebidas alcohólicas",
+      "Cervezas"
+    ],
+    "https://vaad.ar/producto/cerveza-marca-buller-9/": [
+      "Bebidas alcohólicas",
+      "Cervezas"
+    ],
+    "https://vaad.ar/producto/cerveza-marca-buller-10/": [
+      "Bebidas alcohólicas",
+      "Cervezas"
+    ],
+    "https://vaad.ar/producto/cerveza-marca-buller-8/": [
+      "Bebidas alcohólicas",
+      "Cervezas"
+    ],
+    "https://vaad.ar/producto/cerveza-marca-buller-7/": [
+      "Bebidas alcohólicas",
+      "Cervezas"
+    ],
+    "https://vaad.ar/producto/cerveza-marca-buller-6/": [
+      "Bebidas alcohólicas",
+      "Cervezas"
+    ],
+    "https://vaad.ar/producto/cerveza-marca-buller-5/": [
+      "Bebidas alcohólicas",
+      "Cervezas"
+    ],
+    "https://vaad.ar/producto/cerveza-marca-buller-4/": [
+      "Bebidas alcohólicas",
+      "Cervezas"
+    ],
+    "https://vaad.ar/producto/cerveza-marca-buller-3/": [
+      "Bebidas alcohólicas",
+      "Cervezas"
+    ],
+    "https://vaad.ar/producto/cerveza-noche-azul-marca-barba-roja/": [
+      "Bebidas alcohólicas",
+      "Cervezas"
+    ],
+    "https://vaad.ar/producto/cerveza-pale-ale-marca-barba-roja/": [
+      "Bebidas alcohólicas",
+      "Cervezas"
+    ],
+    "https://vaad.ar/producto/chimichurri-marca-buckingham-5/": [
+      "Chimichurri"
+    ],
+    "https://vaad.ar/producto/chimichurri-marca-buckingham-4/": [
+      "Chimichurri"
+    ],
+    "https://vaad.ar/producto/chimichurri-marca-buckingham-3/": [
+      "Chimichurri"
+    ],
+    "https://vaad.ar/producto/chimichurri-marca-buckingham-2/": [
+      "Chimichurri"
+    ],
+    "https://vaad.ar/producto/chimichurri-marca-buckingham/": [
+      "Chimichurri"
+    ],
+    "https://vaad.ar/producto/chimichurri-marca-buckinhgam/": [
+      "Chimichurri"
+    ],
+    "https://vaad.ar/producto/choclo-marca-la-campagnola/": [
+      "Choclo en conserva"
+    ],
+    "https://vaad.ar/producto/choclo-cremoso-marca-noel/": [
+      "Choclo en conserva"
+    ],
+    "https://vaad.ar/producto/choclo-marca-arcor/": [
+      "Choclo en conserva"
+    ],
+    "https://vaad.ar/producto/choclo-entero-marca-la-campgnola/": [
+      "Choclo en conserva"
+    ],
+    "https://vaad.ar/producto/choclo-entero-marca-noel/": [
+      "Choclo en conserva"
+    ],
+    "https://vaad.ar/producto/coctel-de-frutas-marca-arcor/": [
+      "Frutas en conserva"
+    ],
+    "https://vaad.ar/producto/condimento-marca-la-parmesana-pimienta-blanca-molida/": [
+      "Condimentos"
+    ],
+    "https://vaad.ar/producto/condimento-marca-la-parmesana-ajo-en-polvo/": [
+      "Condimentos"
+    ],
+    "https://vaad.ar/producto/condimento-marca-la-parmesana-arroz/": [
+      "Condimentos"
+    ],
+    "https://vaad.ar/producto/condimento-marca-la-parmesana-canela-molida/": [
+      "Condimentos"
+    ],
+    "https://vaad.ar/producto/condimento-marca-la-parmesana-carnes/": [
+      "Condimentos"
+    ],
+    "https://vaad.ar/producto/condimento-marca-la-parmesana-cebolla-en-polvo/": [
+      "Condimentos"
+    ],
+    "https://vaad.ar/producto/condimento-marca-la-parmesana-curcuma-molida/": [
+      "Condimentos"
+    ],
+    "https://vaad.ar/producto/condimento-marca-la-parmesana-curry/": [
+      "Condimentos"
+    ],
+    "https://vaad.ar/producto/condimento-marca-la-parmesana-empanadas/": [
+      "Condimentos"
+    ],
+    "https://vaad.ar/producto/condimento-marca-la-parmesana-guiso-y-tuco/": [
+      "Condimentos"
+    ],
+    "https://vaad.ar/producto/condimento-marca-la-parmesana-hamburguesas/": [
+      "Condimentos"
+    ],
+    "https://vaad.ar/producto/condimento-marca-la-parmesana-humo-en-polvo/": [
+      "Condimentos"
+    ],
+    "https://vaad.ar/producto/condimento-marca-la-parmesana-jengibre-molido/": [
+      "Condimentos"
+    ],
+    "https://vaad.ar/producto/condimento-marca-la-parmesana-milanesas/": [
+      "Condimentos"
+    ],
+    "https://vaad.ar/producto/condimento-marca-la-parmesana-nuez-moscada-molida/": [
+      "Condimentos"
+    ],
+    "https://vaad.ar/producto/condimento-marca-la-parmesana-pescados/": [
+      "Condimentos"
+    ],
+    "https://vaad.ar/producto/condimento-marca-la-parmesana-pimenton-ahumado/": [
+      "Condimentos"
+    ],
+    "https://vaad.ar/producto/condimento-marca-la-parmesana-pimienta-negra-molida/": [
+      "Condimentos"
+    ],
+    "https://vaad.ar/producto/condimento-marca-la-parmesana-pollo/": [
+      "Condimentos"
+    ],
+    "https://vaad.ar/producto/condimento-marca-la-parmesana-tacos-2/": [
+      "Condimentos"
+    ],
+    "https://vaad.ar/producto/condimento-marca-la-parmesana-tacos/": [
+      "Condimentos"
+    ],
+    "https://vaad.ar/producto/dulce-de-batata-marca-arcor/": [
+      "Dulces de batata y membrillo"
+    ],
+    "https://vaad.ar/producto/dulce-de-batata-marca-la-campagnola/": [
+      "Dulces de batata y membrillo"
+    ],
+    "https://vaad.ar/producto/dulce-de-batata-marca-noel-2/": [
+      "Dulces de batata y membrillo"
+    ],
+    "https://vaad.ar/producto/dulce-de-batata-marca-noel/": [
+      "Dulces de batata y membrillo"
+    ],
+    "https://vaad.ar/producto/dulce-de-batata-con-chocolate-marca-arcor/": [
+      "Dulces de batata y membrillo"
+    ],
+    "https://vaad.ar/producto/durazno-marca-arcor/": [
+      "Frutas en conserva"
+    ],
+    "https://vaad.ar/producto/especia-marca-buckingham-21/": [
+      "Condimentos"
+    ],
+    "https://vaad.ar/producto/especia-marca-buckingham-22/": [
+      "Condimentos"
+    ],
+    "https://vaad.ar/producto/especia-marca-buckingham-20/": [
+      "Condimentos"
+    ],
+    "https://vaad.ar/producto/especia-marca-buckingham-19/": [
+      "Condimentos"
+    ],
+    "https://vaad.ar/producto/especia-marca-buckingham-18/": [
+      "Condimentos"
+    ],
+    "https://vaad.ar/producto/especia-marca-buckingham-17/": [
+      "Condimentos"
+    ],
+    "https://vaad.ar/producto/especia-marca-buckingham-16/": [
+      "Condimentos"
+    ],
+    "https://vaad.ar/producto/especia-marca-buckingham-14/": [
+      "Condimentos"
+    ],
+    "https://vaad.ar/producto/especia-marca-buckingham-15/": [
+      "Condimentos"
+    ],
+    "https://vaad.ar/producto/especia-marca-buckingham-4/": [
+      "Condimentos"
+    ],
+    "https://vaad.ar/producto/especia-marca-buckingham-3/": [
+      "Condimentos"
+    ],
+    "https://vaad.ar/producto/especia-marca-buckingham-5/": [
+      "Condimentos"
+    ],
+    "https://vaad.ar/producto/especia-marca-buckingham-2/": [
+      "Condimentos"
+    ],
+    "https://vaad.ar/producto/especia-marca-buckingham/": [
+      "Condimentos"
+    ],
+    "https://vaad.ar/producto/especia-marca-buckingham-6/": [
+      "Condimentos"
+    ],
+    "https://vaad.ar/producto/especia-marca-buckingham-7/": [
+      "Condimentos"
+    ],
+    "https://vaad.ar/producto/especia-marca-buckingham-8/": [
+      "Condimentos"
+    ],
+    "https://vaad.ar/producto/especia-marca-buckingham-9/": [
+      "Condimentos"
+    ],
+    "https://vaad.ar/producto/especia-marca-buckingham-10/": [
+      "Condimentos"
+    ],
+    "https://vaad.ar/producto/especia-marca-buckingham-11/": [
+      "Condimentos"
+    ],
+    "https://vaad.ar/producto/especia-marca-buckingham-12/": [
+      "Condimentos"
+    ],
+    "https://vaad.ar/producto/especia-marca-buckingham-13/": [
+      "Condimentos"
+    ],
+    "https://vaad.ar/producto/adobo-para-pizza-marca-buckingham/": [
+      "Condimentos"
+    ],
+    "https://vaad.ar/producto/especias-marca-buckingham/": [
+      "Condimentos"
+    ],
+    "https://vaad.ar/producto/especias-marca-la-parmesana-nuez-moscada/": [
+      "Condimentos"
+    ],
+    "https://vaad.ar/producto/especias-marca-la-parmesana-pimenton-extra-dulce/": [
+      "Condimentos"
+    ],
+    "https://vaad.ar/producto/especias-marca-la-parmesana-aji-molido/": [
+      "Condimentos"
+    ],
+    "https://vaad.ar/producto/especias-marca-la-parmesana-chimichurri/": [
+      "Condimentos"
+    ],
+    "https://vaad.ar/producto/especias-marca-la-parmesana-comino-molido/": [
+      "Condimentos"
+    ],
+    "https://vaad.ar/producto/especias-marca-la-parmesana-hongos-secos/": [
+      "Condimentos"
+    ],
+    "https://vaad.ar/producto/especias-marca-la-parmesana-laurel/": [
+      "Condimentos"
+    ],
+    "https://vaad.ar/producto/especias-marca-la-parmesana-laurel-molido/": [
+      "Condimentos"
+    ],
+    "https://vaad.ar/producto/especias-marca-la-parmesana-oregano/": [
+      "Condimentos"
+    ],
+    "https://vaad.ar/producto/especias-marca-la-parmesana-pimenton-ahumado/": [
+      "Condimentos"
+    ],
+    "https://vaad.ar/producto/especias-marca-la-parmesana-pimienta-blanca-en-grano/": [
+      "Condimentos"
+    ],
+    "https://vaad.ar/producto/especias-marca-la-parmesana-pimienta-blanca-molida/": [
+      "Condimentos"
+    ],
+    "https://vaad.ar/producto/especias-marca-la-parmesana-pimienta-negra-en-grano/": [
+      "Condimentos"
+    ],
+    "https://vaad.ar/producto/especias-marca-la-parmesana-pizzadobo/": [
+      "Condimentos"
+    ],
+    "https://vaad.ar/producto/espinaca-deshidratada-en-polvo-marca-agrocomercial-vagnoni/": [
+      "Vegetales deshidratados"
+    ],
+    "https://vaad.ar/producto/espinaca-en-escamas-marca-agrocomercial-vagnoni/": [
+      "Vegetales deshidratados"
+    ],
+    "https://vaad.ar/producto/extracto-de-tomate-marca-la-campagnola/": [
+      "Extracto de tomate"
+    ],
+    "https://vaad.ar/producto/fecula-de-mandioca-marca-mk-foods/": [
+      "Almidones y féculas"
+    ],
+    "https://vaad.ar/producto/fecula-de-papa-marca-mk-foods/": [
+      "Almidones y féculas"
+    ],
+    "https://vaad.ar/producto/fruta-congelada-durazno-marca-del-parque/": [
+      "Frutas congeladas"
+    ],
+    "https://vaad.ar/producto/fruta-congelada-frambuesa-marca-el-parque/": [
+      "Frutas congeladas"
+    ],
+    "https://vaad.ar/producto/fruta-congelada-frutilla-marca-del-parque/": [
+      "Frutas congeladas"
+    ],
+    "https://vaad.ar/producto/fruta-congelado-mango-marca-del-parque/": [
+      "Frutas congeladas"
+    ],
+    "https://vaad.ar/producto/fruta-congelada-marca-el-parque-anana/": [
+      "Frutas congeladas"
+    ],
+    "https://vaad.ar/producto/fruta-congelada-marca-el-parque-arandanos/": [
+      "Frutas congeladas"
+    ],
+    "https://vaad.ar/producto/fruta-congelada-mix-de-invierno-marca-del-parque/": [
+      "Frutas congeladas"
+    ],
+    "https://vaad.ar/producto/fruta-congelada-mix-de-verano-marca-del-parque/": [
+      "Frutas congeladas"
+    ],
+    "https://vaad.ar/producto/fruta-congelado-mix-del-bosque-marca-del-parque/": [
+      "Frutas congeladas"
+    ],
+    "https://vaad.ar/producto/fruta-congelada-moras-marca-del-parque/": [
+      "Frutas congeladas"
+    ],
+    "https://vaad.ar/producto/fruta-liofilizada-marca-pomona-foods-frambuesa/": [
+      "Frutas secas y deshidratadas"
+    ],
+    "https://vaad.ar/producto/fruta-liofilizada-marca-pomona-foods-anana/": [
+      "Frutas secas y deshidratadas"
+    ],
+    "https://vaad.ar/producto/fruta-liofilizada-marca-pomona-foods-arandanos/": [
+      "Frutas secas y deshidratadas"
+    ],
+    "https://vaad.ar/producto/fruta-liofilizada-marca-pomona-foods-banana/": [
+      "Frutas secas y deshidratadas"
+    ],
+    "https://vaad.ar/producto/fruta-liofilizada-marca-pomona-foods-frutilla/": [
+      "Frutas secas y deshidratadas"
+    ],
+    "https://vaad.ar/producto/fruta-liofilizada-marca-pomona-foods-mango/": [
+      "Frutas secas y deshidratadas"
+    ],
+    "https://vaad.ar/producto/fruta-liofilizada-marca-pomona-foods-naranja/": [
+      "Frutas secas y deshidratadas"
+    ],
+    "https://vaad.ar/producto/fruta-liofilizada-marca-pomona-foods-remolacha/": [
+      "Vegetales deshidratados"
+    ],
+    "https://vaad.ar/producto/galletas-de-arroz-marca-rodez/": [
+      "Galletitas y tostadas"
+    ],
+    "https://vaad.ar/producto/298662/": [
+      "Porotos, lentejas y garbanzos"
+    ],
+    "https://vaad.ar/producto/garbanzos-marca-la-campagnola/": [
+      "Porotos, lentejas y garbanzos"
+    ],
+    "https://vaad.ar/producto/granola-marca-mudra-equilibrio/": [
+      "Granolas"
+    ],
+    "https://vaad.ar/producto/granola-marca-mudra-fuerza-vital/": [
+      "Granolas"
+    ],
+    "https://vaad.ar/producto/harina-de-almendras-peladas-marca-mk-foods/": [
+      "Harinas y sémolas"
+    ],
+    "https://vaad.ar/producto/harina-de-coco-marca-mk-foods/": [
+      "Harinas y sémolas"
+    ],
+    "https://vaad.ar/producto/hibiscus-deshidratado-marca-el-parque/": [
+      "Condimentos"
+    ],
+    "https://vaad.ar/producto/hierbas-marca-la-parmesana-albahaca/": [
+      "Condimentos"
+    ],
+    "https://vaad.ar/producto/hierbas-marca-la-parmesana-estragon/": [
+      "Condimentos"
+    ],
+    "https://vaad.ar/producto/hierbas-marca-la-parmesana-romero/": [
+      "Condimentos"
+    ],
+    "https://vaad.ar/producto/hierbas-marca-la-parmesana-salvia/": [
+      "Condimentos"
+    ],
+    "https://vaad.ar/producto/hierbas-marca-la-parmesana-tomillo/": [
+      "Condimentos"
+    ],
+    "https://vaad.ar/producto/jardinera-marca-arcor/": [
+      "Jardinera en conserva"
+    ],
+    "https://vaad.ar/producto/jardinera-marca-la-campagnola/": [
+      "Jardinera en conserva"
+    ],
+    "https://vaad.ar/producto/jugo-marca-pura-frutta-arandanos-y-manzana/": [
+      "Jugos"
+    ],
+    "https://vaad.ar/producto/jugo-marca-pura-frutta-blend-detox/": [
+      "Jugos"
+    ],
+    "https://vaad.ar/producto/jugo-marca-pura-frutta-green-detox/": [
+      "Jugos"
+    ],
+    "https://vaad.ar/producto/jugo-marca-pura-frutta/": [
+      "Jugos"
+    ],
+    "https://vaad.ar/producto/jugo-marca-pura-frutta-manzana-organico/": [
+      "Jugos"
+    ],
+    "https://vaad.ar/producto/jugo-marca-pura-frutta-manzana-roja/": [
+      "Jugos"
+    ],
+    "https://vaad.ar/producto/jugo-marca-pura-frutta-manzana-roja-2/": [
+      "Jugos"
+    ],
+    "https://vaad.ar/producto/jugo-marca-pura-frutta-manzana-verde/": [
+      "Jugos"
+    ],
+    "https://vaad.ar/producto/jugo-marca-pura-frutta-manzana-y-frutilla/": [
+      "Jugos"
+    ],
+    "https://vaad.ar/producto/jugo-marca-pura-frutta-manzana-y-kiwi/": [
+      "Jugos"
+    ],
+    "https://vaad.ar/producto/jugo-marca-pura-frutta-multifruta/": [
+      "Jugos"
+    ],
+    "https://vaad.ar/producto/jugo-marca-pura-frutta-naranja/": [
+      "Jugos"
+    ],
+    "https://vaad.ar/producto/jugo-marca-pura-frutta-naranja-2/": [
+      "Jugos"
+    ],
+    "https://vaad.ar/producto/jugo-marca-pura-frutta-pera/": [
+      "Jugos"
+    ],
+    "https://vaad.ar/producto/jugo-marca-pura-frutta-pera-2/": [
+      "Jugos"
+    ],
+    "https://vaad.ar/producto/jugo-marca-pura-fruttamanzana-hissabel/": [
+      "Jugos"
+    ],
+    "https://vaad.ar/producto/kale-deshidratada-en-polvo-marca-agrocomercial-vagnoni/": [
+      "Vegetales deshidratados"
+    ],
+    "https://vaad.ar/producto/kale-en-escamas-marca-agrocomercial-vagnoni/": [
+      "Vegetales deshidratados"
+    ],
+    "https://vaad.ar/producto/kombucha-marca-karu-sabor-berries/": [
+      "Kombucha"
+    ],
+    "https://vaad.ar/producto/kombucha-marca-karu-sabor-hibiscus/": [
+      "Kombucha"
+    ],
+    "https://vaad.ar/producto/kombucha-marca-karu-sabor-mango/": [
+      "Kombucha"
+    ],
+    "https://vaad.ar/producto/kombucha-marca-karu-sabor-maracuya/": [
+      "Kombucha"
+    ],
+    "https://vaad.ar/producto/kombucha-marca-karu-sabor-frambuesa/": [
+      "Kombucha"
+    ],
+    "https://vaad.ar/producto/leche-de-almendras-marca-amande-sabor-coco-y-almendras/": [
+      "Bebidas vegetales"
+    ],
+    "https://vaad.ar/producto/leche-de-almendras-marca-amande-sabor-original/": [
+      "Bebidas vegetales"
+    ],
+    "https://vaad.ar/producto/lentejas-marca-arcor/": [
+      "Porotos, lentejas y garbanzos"
+    ],
+    "https://vaad.ar/producto/lentejas-marca-la-campagnola/": [
+      "Porotos, lentejas y garbanzos"
+    ],
+    "https://vaad.ar/producto/malta-liquida-sin-alcohol-marca-barba-roja/": [
+      "Malta sin alcohol"
+    ],
+    "https://vaad.ar/producto/mani-japones-marca-free-chips/": [
+      "Maní japonés"
+    ],
+    "https://vaad.ar/producto/manteca-marca-sozoe-veganteca/": [
+      "Mantecas vegetales / parve"
+    ],
+    "https://vaad.ar/producto/mantequilla-de-mani-marca-byour-food-4/": [
+      "Pastas y mantequillas de frutos secos"
+    ],
+    "https://vaad.ar/producto/mantequilla-de-mani-marca-byour-food-3/": [
+      "Pastas y mantequillas de frutos secos"
+    ],
+    "https://vaad.ar/producto/mantequilla-de-mani-marca-byour-food-2/": [
+      "Pastas y mantequillas de frutos secos"
+    ],
+    "https://vaad.ar/producto/mantequilla-de-mani-marca-byour-food/": [
+      "Pastas y mantequillas de frutos secos"
+    ],
+    "https://vaad.ar/producto/mermelada-blend-de-frutas-durazno-mango-marca-arcor/": [
+      "Mermeladas"
+    ],
+    "https://vaad.ar/producto/mermelada-de-damasco-bc-marca-la-campagnola/": [
+      "Mermeladas"
+    ],
+    "https://vaad.ar/producto/mermelada-de-damasco-con-trozos-de-fruta-marca-arcor/": [
+      "Mermeladas"
+    ],
+    "https://vaad.ar/producto/mermelada-de-damasco-light-marca-noel/": [
+      "Mermeladas"
+    ],
+    "https://vaad.ar/producto/mermelado-de-damasco-marca-arcor/": [
+      "Mermeladas"
+    ],
+    "https://vaad.ar/producto/mermelada-de-damasco-marca-noel/": [
+      "Mermeladas"
+    ],
+    "https://vaad.ar/producto/mermelada-de-durazno-bc-marca-la-campagnola/": [
+      "Mermeladas"
+    ],
+    "https://vaad.ar/producto/mermelada-de-durazno-con-trozos-de-fruta-marca-arcor/": [
+      "Mermeladas"
+    ],
+    "https://vaad.ar/producto/mermelada-de-durazno-light-marca-noel/": [
+      "Mermeladas"
+    ],
+    "https://vaad.ar/producto/mermelada-de-durazno-marca-arcor/": [
+      "Mermeladas"
+    ],
+    "https://vaad.ar/producto/mermelada-de-durzno-marca-noel/": [
+      "Mermeladas"
+    ],
+    "https://vaad.ar/producto/mermelada-de-durazno-marca-noel/": [
+      "Mermeladas"
+    ],
+    "https://vaad.ar/producto/mermelada-de-membrillo-bc-marca-la-campagnola/": [
+      "Mermeladas"
+    ],
+    "https://vaad.ar/producto/mermelada-de-naraja-bc-marca-la-campagnola/": [
+      "Mermeladas"
+    ],
+    "https://vaad.ar/producto/mermelada-de-naranja-con-trozos-de-fruta-marca-arcor/": [
+      "Mermeladas"
+    ],
+    "https://vaad.ar/producto/mermelada-de-naranja-light-maca-noel/": [
+      "Mermeladas"
+    ],
+    "https://vaad.ar/producto/mermelada-de-naranja-marca-arcor/": [
+      "Mermeladas"
+    ],
+    "https://vaad.ar/producto/mermelada-de-naranja-marca-noel/": [
+      "Mermeladas"
+    ],
+    "https://vaad.ar/producto/mermelada-marca-blason-sabor-arandanos/": [
+      "Mermeladas"
+    ],
+    "https://vaad.ar/producto/mermelada-marca-blason-sabor-arandanos-2/": [
+      "Mermeladas"
+    ],
+    "https://vaad.ar/producto/mermelada-marca-blason-sabor-ciruela/": [
+      "Mermeladas"
+    ],
+    "https://vaad.ar/producto/mermelada-marca-blason-sabor-durazno/": [
+      "Mermeladas"
+    ],
+    "https://vaad.ar/producto/mermelada-marca-blason-sabor-frutilla/": [
+      "Mermeladas"
+    ],
+    "https://vaad.ar/producto/miel-pura-marca-api-frank/": [
+      "Miel"
+    ],
+    "https://vaad.ar/producto/papas-congeladas-marca-finca-balcarce-bastones-2/": [
+      "Papas congeladas"
+    ],
+    "https://vaad.ar/producto/papas-congeladas-marca-finca-balcarce-bastones/": [
+      "Papas congeladas"
+    ],
+    "https://vaad.ar/producto/papas-congeladas-marca-finca-balcarce-cubos/": [
+      "Papas congeladas"
+    ],
+    "https://vaad.ar/producto/papas-congeladas-marca-finca-balcarce/": [
+      "Papas congeladas"
+    ],
+    "https://vaad.ar/producto/papas-super-congeladas-marca-finca-balcarce-baston/": [
+      "Papas congeladas"
+    ],
+    "https://vaad.ar/producto/papas-super-congeladas-marca-finca-balcarce-cubos/": [
+      "Papas congeladas"
+    ],
+    "https://vaad.ar/producto/pasta-de-almendra-marca-monda/": [
+      "Pastas y mantequillas de frutos secos"
+    ],
+    "https://vaad.ar/producto/pasta-de-almendras-marca-hierbabuena/": [
+      "Pastas y mantequillas de frutos secos"
+    ],
+    "https://vaad.ar/producto/pasta-de-avellana-marca-monda/": [
+      "Pastas y mantequillas de frutos secos"
+    ],
+    "https://vaad.ar/producto/pasta-de-caju-marca-monda/": [
+      "Pastas y mantequillas de frutos secos"
+    ],
+    "https://vaad.ar/producto/pasta-de-caju-pecan-y-coco-marca-monda/": [
+      "Pastas y mantequillas de frutos secos"
+    ],
+    "https://vaad.ar/producto/pasta-de-mani-marca-monda/": [
+      "Pastas y mantequillas de frutos secos"
+    ],
+    "https://vaad.ar/producto/pasta-de-pecan-marca-monda/": [
+      "Pastas y mantequillas de frutos secos"
+    ],
+    "https://vaad.ar/producto/pasta-de-pistacho-marca-monda/": [
+      "Pastas y mantequillas de frutos secos"
+    ],
+    "https://vaad.ar/producto/pasta-de-sesamo-marca-monda/": [
+      "Tahini y pastas de semillas"
+    ],
+    "https://vaad.ar/producto/pasta-untable-de-almendras-marca-ancestral/": [
+      "Pastas y mantequillas de frutos secos"
+    ],
+    "https://vaad.ar/producto/pasta-untable-de-almendras-y-coco-marca-ancestral/": [
+      "Pastas y mantequillas de frutos secos"
+    ],
+    "https://vaad.ar/producto/pasta-untable-de-avellanas-marca-ancestral/": [
+      "Pastas y mantequillas de frutos secos"
+    ],
+    "https://vaad.ar/producto/pasta-untable-de-castanas-de-caju-marca-ancestral/": [
+      "Pastas y mantequillas de frutos secos"
+    ],
+    "https://vaad.ar/producto/pasta-untable-de-mani-marca-ancestral/": [
+      "Pastas y mantequillas de frutos secos"
+    ],
+    "https://vaad.ar/producto/pasta-untable-de-mani-y-coco-marca-ancestral/": [
+      "Pastas y mantequillas de frutos secos"
+    ],
+    "https://vaad.ar/producto/pasta-untable-de-nuez-pecan-marca-ancestral/": [
+      "Pastas y mantequillas de frutos secos"
+    ],
+    "https://vaad.ar/producto/pasta-untable-de-pistachos-marca-ancestral/": [
+      "Pastas y mantequillas de frutos secos"
+    ],
+    "https://vaad.ar/producto/perejil-en-escamas-marca-agrocomercial-vagnoni/": [
+      "Condimentos"
+    ],
+    "https://vaad.ar/producto/pistacho-pelado-natural-marca-la-simona/": [
+      "Frutos secos"
+    ],
+    "https://vaad.ar/producto/polenta-marca-arcor/": [
+      "Polenta"
+    ],
+    "https://vaad.ar/producto/polvo-de-limon-marca-del-parque/": [
+      "Frutas secas y deshidratadas"
+    ],
+    "https://vaad.ar/producto/polvo-de-mandarina-marca-del-parque/": [
+      "Frutas secas y deshidratadas"
+    ],
+    "https://vaad.ar/producto/porotos-alubia-marca-la-campagnola/": [
+      "Porotos, lentejas y garbanzos"
+    ],
+    "https://vaad.ar/producto/pulpa-de-acai-marca-del-parque/": [
+      "Pulpas de fruta"
+    ],
+    "https://vaad.ar/producto/pulpa-de-guayaba-marca-del-parque/": [
+      "Pulpas de fruta"
+    ],
+    "https://vaad.ar/producto/pure-de-tomate-marca-arcor/": [
+      "Puré de tomate"
+    ],
+    "https://vaad.ar/producto/pure-de-tomate-marca-la-campagnola-2/": [
+      "Puré de tomate"
+    ],
+    "https://vaad.ar/producto/pure-de-tomate-marca-la-campagnola/": [
+      "Puré de tomate"
+    ],
+    "https://vaad.ar/producto/pure-de-tomate-marca-noel/": [
+      "Puré de tomate"
+    ],
+    "https://vaad.ar/producto/reposteria-marca-la-parmesana-azucar-impalpable/": [
+      "Azúcares"
+    ],
+    "https://vaad.ar/producto/reposteria-marca-la-parmesana-bicarbonato-de-sodio/": [
+      "Bicarbonato y polvo de hornear"
+    ],
+    "https://vaad.ar/producto/reposteria-marca-la-parmesana-cacao-amargo/": [
+      "Cacao"
+    ],
+    "https://vaad.ar/producto/reposteria-marca-la-parmesana-canela-molida/": [
+      "Condimentos"
+    ],
+    "https://vaad.ar/producto/reposteria-marca-la-parmesana-coco-rallado/": [
+      "Coco rallado"
+    ],
+    "https://vaad.ar/producto/reposteria-marca-la-parmesana-esencia-de-limon/": [
+      "Esencias"
+    ],
+    "https://vaad.ar/producto/reposteria-marca-la-parmesana-esencia-de-almendra/": [
+      "Esencias"
+    ],
+    "https://vaad.ar/producto/reposteria-marca-la-parmesana-esencia-de-azahar/": [
+      "Esencias"
+    ],
+    "https://vaad.ar/producto/reposteria-marca-la-parmesana-esencia-de-frutilla/": [
+      "Esencias"
+    ],
+    "https://vaad.ar/producto/reposteria-marca-la-parmesana-esencia-de-vainilla/": [
+      "Esencias"
+    ],
+    "https://vaad.ar/producto/reposteria-marca-la-parmesana-granas-celestes/": [
+      "Granas y decoración"
+    ],
+    "https://vaad.ar/producto/reposteria-marca-la-parmesana-granas-marrones/": [
+      "Granas y decoración"
+    ],
+    "https://vaad.ar/producto/reposteria-marca-la-parmesana-granas-multicolor/": [
+      "Granas y decoración"
+    ],
+    "https://vaad.ar/producto/reposteria-marca-la-parmesana-granas-rosas/": [
+      "Granas y decoración"
+    ],
+    "https://vaad.ar/producto/reposteria-marca-la-parmesana-granas-verdes/": [
+      "Granas y decoración"
+    ],
+    "https://vaad.ar/producto/reposteria-marca-la-parmesana-polvo-para-hornear/": [
+      "Bicarbonato y polvo de hornear"
+    ],
+    "https://vaad.ar/producto/sal-marca-buckingham-32/": [
+      "Sales"
+    ],
+    "https://vaad.ar/producto/sal-marca-buckingham-9/": [
+      "Sales"
+    ],
+    "https://vaad.ar/producto/sal-marca-buckingham-33/": [
+      "Sales"
+    ],
+    "https://vaad.ar/producto/sal-marca-buckingham-34/": [
+      "Sales"
+    ],
+    "https://vaad.ar/producto/sal-marca-buckingham-6/": [
+      "Sales"
+    ],
+    "https://vaad.ar/producto/sal-marca-buckingham-5/": [
+      "Sales"
+    ],
+    "https://vaad.ar/producto/sal-marca-buckingham-4/": [
+      "Sales"
+    ],
+    "https://vaad.ar/producto/sal-marca-buckingham-3/": [
+      "Sales"
+    ],
+    "https://vaad.ar/producto/sal-marca-buckingham-2/": [
+      "Sales"
+    ],
+    "https://vaad.ar/producto/sal-marca-buckingham/": [
+      "Sales"
+    ],
+    "https://vaad.ar/producto/sal-marca-buckingham-30/": [
+      "Sales"
+    ],
+    "https://vaad.ar/producto/sal-marca-buckingham-11/": [
+      "Sales"
+    ],
+    "https://vaad.ar/producto/sal-marca-buckingham-12/": [
+      "Sales"
+    ],
+    "https://vaad.ar/producto/sal-marca-buckingham-13/": [
+      "Sales"
+    ],
+    "https://vaad.ar/producto/sal-marca-buckingham-14/": [
+      "Sales"
+    ],
+    "https://vaad.ar/producto/sal-marca-buckingham-10/": [
+      "Sales"
+    ],
+    "https://vaad.ar/producto/sal-marca-buckingham-7/": [
+      "Sales"
+    ],
+    "https://vaad.ar/producto/sal-marca-buckingham-15/": [
+      "Sales"
+    ],
+    "https://vaad.ar/producto/sal-marca-buckingham-17/": [
+      "Sales"
+    ],
+    "https://vaad.ar/producto/sal-marca-buckingham-18/": [
+      "Sales"
+    ],
+    "https://vaad.ar/producto/sal-marca-buckingham-19/": [
+      "Sales"
+    ],
+    "https://vaad.ar/producto/sal-marca-buckingham-20/": [
+      "Sales"
+    ],
+    "https://vaad.ar/producto/sal-marca-buckingham-21/": [
+      "Sales"
+    ],
+    "https://vaad.ar/producto/sal-marca-buckingham-22/": [
+      "Sales"
+    ],
+    "https://vaad.ar/producto/sal-marca-buckingham-24/": [
+      "Sales"
+    ],
+    "https://vaad.ar/producto/sal-marca-buckingham-29/": [
+      "Sales"
+    ],
+    "https://vaad.ar/producto/sal-marca-buckingham-31/": [
+      "Sales"
+    ],
+    "https://vaad.ar/producto/sal-marca-buckingham-28/": [
+      "Sales"
+    ],
+    "https://vaad.ar/producto/sal-marca-buckingham-27/": [
+      "Sales"
+    ],
+    "https://vaad.ar/producto/sal-marca-buckingham-26/": [
+      "Sales"
+    ],
+    "https://vaad.ar/producto/sal-marca-buckingham-25/": [
+      "Sales"
+    ],
+    "https://vaad.ar/producto/sal-marina-marca-buckingham/": [
+      "Sales"
+    ],
+    "https://vaad.ar/producto/sales-marca-buffalo-rib-rib-picante/": [
+      "Sales"
+    ],
+    "https://vaad.ar/producto/sales-marca-buffalo-rib-rub/": [
+      "Sales"
+    ],
+    "https://vaad.ar/producto/sales-marca-buffalo-aji-cayena-y-habanero/": [
+      "Sales"
+    ],
+    "https://vaad.ar/producto/sales-marca-buffalo-merken/": [
+      "Sales"
+    ],
+    "https://vaad.ar/producto/sales-marca-buffalo-paprika/": [
+      "Sales"
+    ],
+    "https://vaad.ar/producto/sales-marca-buffalo-steak-rub/": [
+      "Sales"
+    ],
+    "https://vaad.ar/producto/sales-marca-la-parmesana-ajo-y-cebolla/": [
+      "Sales"
+    ],
+    "https://vaad.ar/producto/sales-marca-la-parmesana-cebolla-y-curry/": [
+      "Sales"
+    ],
+    "https://vaad.ar/producto/sales-marca-la-parmesana-cebolla-y-morron/": [
+      "Sales"
+    ],
+    "https://vaad.ar/producto/sales-marca-la-parmesana-mix-de-especias/": [
+      "Sales"
+    ],
+    "https://vaad.ar/producto/sales-marca-la-parmesana-mostaza-negra-y-ajo/": [
+      "Sales"
+    ],
+    "https://vaad.ar/producto/sales-marca-la-parmesana-mostaza-y-romero/": [
+      "Sales"
+    ],
+    "https://vaad.ar/producto/sales-marca-la-parmesana-oregano-ahumado-romero-y-salvia/": [
+      "Sales"
+    ],
+    "https://vaad.ar/producto/sales-marca-la-parmesana-paprika-ahumada-y-oregano/": [
+      "Sales"
+    ],
+    "https://vaad.ar/producto/sales-marca-la-parmesana-parmesano-y-albahaca/": [
+      "Sales"
+    ],
+    "https://vaad.ar/producto/sales-marca-la-parmesana-pimenton-ahumado-y-ajo-de-cayena/": [
+      "Sales"
+    ],
+    "https://vaad.ar/producto/salsa-basilico-marca-la-campagnola/": [
+      "Salsas"
+    ],
+    "https://vaad.ar/producto/salsa-de-oliva-marca-la-campagnola/": [
+      "Salsas"
+    ],
+    "https://vaad.ar/producto/salsa-de-soja-marca-la-parmesana/": [
+      "Salsas"
+    ],
+    "https://vaad.ar/producto/salsa-de-soja-marca-la-parmesana-reducida-en-sodio/": [
+      "Salsas"
+    ],
+    "https://vaad.ar/producto/sazonador-marca-buffalo-cayena-y-habanero/": [
+      "Condimentos"
+    ],
+    "https://vaad.ar/producto/sazonador-marca-buffalo-mezcla-de-esencias/": [
+      "Condimentos"
+    ],
+    "https://vaad.ar/producto/sazonador-marca-buffalo-paprika/": [
+      "Condimentos"
+    ],
+    "https://vaad.ar/producto/sazonador-marca-buffalo-steak-rub/": [
+      "Condimentos"
+    ],
+    "https://vaad.ar/producto/sazonador-marca-la-parmesana-ajo-y-cebolla/": [
+      "Condimentos"
+    ],
+    "https://vaad.ar/producto/sazonador-marca-la-parmesana-barbacoa/": [
+      "Condimentos"
+    ],
+    "https://vaad.ar/producto/sazonador-marca-la-parmesana-criolla/": [
+      "Condimentos"
+    ],
+    "https://vaad.ar/producto/sazonador-marca-la-parmesana-finas-hierbas/": [
+      "Condimentos"
+    ],
+    "https://vaad.ar/producto/sazonador-marca-la-parmesana-mostaza-romero-y-miel/": [
+      "Condimentos"
+    ],
+    "https://vaad.ar/producto/sazonador-marca-la-parmesana-oregano-y-limon/": [
+      "Condimentos"
+    ],
+    "https://vaad.ar/producto/sazonador-marca-la-parmesana-pimenton-humado/": [
+      "Condimentos"
+    ],
+    "https://vaad.ar/producto/tofu-organico-marca-sozoe/": [
+      "Tofu y proteínas de soja"
+    ],
+    "https://vaad.ar/producto/tofu-organico-marca-sozoe-2/": [
+      "Tofu y proteínas de soja"
+    ],
+    "https://vaad.ar/producto/turron-de-almendras-marca-la-simona/": [
+      "Turrones"
+    ],
+    "https://vaad.ar/producto/turron-de-almendras-y-pistacho-marca-la-simona/": [
+      "Turrones"
+    ],
+    "https://vaad.ar/producto/turron-marca-la-simona-almendras/": [
+      "Turrones"
+    ],
+    "https://vaad.ar/producto/turron-marca-la-simona-mani/": [
+      "Turrones"
+    ],
+    "https://vaad.ar/producto/vegetales-deshidratados-marca-la-parmesana-ajo-en-escamas/": [
+      "Condimentos"
+    ],
+    "https://vaad.ar/producto/vegetales-deshidratados-marca-la-parmesana-ajo-en-polvo/": [
+      "Condimentos"
+    ],
+    "https://vaad.ar/producto/vegetales-deshidratados-marca-la-parmesana-ajo-granulado/": [
+      "Condimentos"
+    ],
+    "https://vaad.ar/producto/vegetales-deshidratados-marca-la-parmesana-cebolla-de-verdeo/": [
+      "Condimentos"
+    ],
+    "https://vaad.ar/producto/vegetales-deshidratados-marca-la-parmesana-cebolla-en-escamas/": [
+      "Condimentos"
+    ],
+    "https://vaad.ar/producto/vegetales-deshidratados-marca-la-parmesana-cebolla-en-polvo/": [
+      "Condimentos"
+    ],
+    "https://vaad.ar/producto/vegetales-deshidratados-marca-la-parmesana-ciboulette/": [
+      "Condimentos"
+    ],
+    "https://vaad.ar/producto/vegetales-deshidratados-marca-la-parmesana-juliana/": [
+      "Vegetales deshidratados"
+    ],
+    "https://vaad.ar/producto/vegetales-deshidratados-marca-la-parmesana-morron/": [
+      "Vegetales deshidratados"
+    ],
+    "https://vaad.ar/producto/vegetales-deshidratados-marca-la-parmesana-perejil/": [
+      "Condimentos"
+    ],
+    "https://vaad.ar/producto/vegetales-deshidratados-marca-la-parmesana-provenzal/": [
+      "Condimentos"
+    ],
+    "https://vaad.ar/producto/vegetales-deshidratados-marca-la-parmesana-puerro/": [
+      "Vegetales deshidratados"
+    ],
+    "https://vaad.ar/producto/vegetales-deshidratados-marca-la-parmesana-tomates/": [
+      "Tomates secos"
+    ],
+    "https://vaad.ar/producto/yogurt-marca-sozoe-vegurt-frutilla/": [
+      "Yogures vegetales / parve"
+    ],
+    "https://vaad.ar/producto/yogurt-marca-sozoe-vegurt-frutos-rojos/": [
+      "Yogures vegetales / parve"
+    ],
+    "https://vaad.ar/producto/yogurt-marca-sozoe-vegurt-natural/": [
+      "Yogures vegetales / parve"
+    ],
+    "https://vaad.ar/producto/almendras-marca-sabores-orientales/": [
+      "Frutos secos"
+    ],
+    "https://vaad.ar/producto/atun-marca-mar-caribe/": [
+      "Atún y pescados en conserva"
+    ],
+    "https://vaad.ar/producto/atun-marca-mare-pronto/": [
+      "Atún y pescados en conserva"
+    ],
+    "https://vaad.ar/producto/avellanas-marca-sabores-orientales/": [
+      "Frutos secos"
+    ],
+    "https://vaad.ar/producto/bresaola/": [
+      "Carnes y fiambres"
+    ],
+    "https://vaad.ar/producto/caju-marca-sabores-orientales/": [
+      "Frutos secos"
+    ],
+    "https://vaad.ar/producto/chorizo-aleman/": [
+      "Chorizos y salchichas"
+    ],
+    "https://vaad.ar/producto/chorizo-parrillero/": [
+      "Chorizos y salchichas"
+    ],
+    "https://vaad.ar/producto/datiles-medjool-marca-sabores-orientales/": [
+      "Frutas secas y deshidratadas"
+    ],
+    "https://vaad.ar/producto/dulce-de-leche-marca-caranegra/": [
+      "Dulce de leche"
+    ],
+    "https://vaad.ar/producto/dulce-de-membrillo-marca-blason/": [
+      "Dulces de batata y membrillo"
+    ],
+    "https://vaad.ar/producto/fiambre-mortadela-pistacho/": [
+      "Carnes y fiambres"
+    ],
+    "https://vaad.ar/producto/fiambre-mortadelita-alemana/": [
+      "Carnes y fiambres"
+    ],
+    "https://vaad.ar/producto/pastron-ahumado/": [
+      "Carnes y fiambres"
+    ],
+    "https://vaad.ar/producto/pastron-cocido-2/": [
+      "Carnes y fiambres"
+    ],
+    "https://vaad.ar/producto/fiambre-salchichon-primavera/": [
+      "Carnes y fiambres"
+    ],
+    "https://vaad.ar/producto/fruta-liofilizada-marca-sabores-orientales/": [
+      "Frutas secas y deshidratadas"
+    ],
+    "https://vaad.ar/producto/frutas-desecadas-marca-sabores-orientales/": [
+      "Frutas secas y deshidratadas"
+    ],
+    "https://vaad.ar/producto/galletita-marca-santa-maria/": [
+      "Galletitas y tostadas"
+    ],
+    "https://vaad.ar/producto/hamburguesas-marca-union-ganadera/": [
+      "Hamburguesas"
+    ],
+    "https://vaad.ar/producto/harina-espelta-marca-sabores-orientales/": [
+      "Harinas y sémolas"
+    ],
+    "https://vaad.ar/producto/harina-integral-marca-sabores-orientales/": [
+      "Harinas y sémolas"
+    ],
+    "https://vaad.ar/producto/jugo-de-uva-marca-el-secreto/": [
+      "Jugo de uva"
+    ],
+    "https://vaad.ar/producto/mani-marca-sabores-orientales/": [
+      "Pastas y mantequillas de frutos secos"
+    ],
+    "https://vaad.ar/producto/matambrito/": [
+      "Carnes y fiambres"
+    ],
+    "https://vaad.ar/producto/matambrito-2/": [
+      "Carnes y fiambres"
+    ],
+    "https://vaad.ar/producto/mix-frutos-marca-sabores-orientales/": [
+      "Frutos secos"
+    ],
+    "https://vaad.ar/producto/nuez-pecan-marca-sabores-orientales/": [
+      "Frutos secos"
+    ],
+    "https://vaad.ar/producto/nuez-marca-sabores-orientales/": [
+      "Frutos secos"
+    ],
+    "https://vaad.ar/producto/obleas-marca-santa-maria/": [
+      "Obleas"
+    ],
+    "https://vaad.ar/producto/pan-de-miga/": [
+      "Panes"
+    ],
+    "https://vaad.ar/producto/pan-marca-la-saltena/": [
+      "Panes"
+    ],
+    "https://vaad.ar/producto/pan-revanado-clasico-y-salvado-marca-deli/": [
+      "Panes"
+    ],
+    "https://vaad.ar/producto/papas-fritas-marca-free-chips/": [
+      "Papas"
+    ],
+    "https://vaad.ar/producto/papas-pay-marca-free-chips/": [
+      "Papas"
+    ],
+    "https://vaad.ar/producto/pasta-de-avellana-marca-sabores-orientales/": [
+      "Pastas y mantequillas de frutos secos"
+    ],
+    "https://vaad.ar/producto/pasta-pistacho-marca-sabores-orientales/": [
+      "Pastas y mantequillas de frutos secos"
+    ],
+    "https://vaad.ar/producto/pasta-de-pistacho-marca-sabores-orientales/": [
+      "Pastas y mantequillas de frutos secos"
+    ],
+    "https://vaad.ar/producto/pastas-dulces-marca-sabores-orientales/": [
+      "Pastas dulces"
+    ],
+    "https://vaad.ar/producto/pastillas-marca-dorins/": [
+      "Caramelos y golosinas"
+    ],
+    "https://vaad.ar/producto/pistacho-marca-sabores-orientales/": [
+      "Pastas y mantequillas de frutos secos"
+    ],
+    "https://vaad.ar/producto/pita-chips-marca-almadre-3/": [
+      "Snacks"
+    ],
+    "https://vaad.ar/producto/pita-chips-marca-almadre-2/": [
+      "Snacks"
+    ],
+    "https://vaad.ar/producto/pita-chips-marca-almadre/": [
+      "Snacks"
+    ],
+    "https://vaad.ar/producto/queso-barra-tybo-de-la-marca-lacteos-ferrari/": [
+      "Quesos"
+    ],
+    "https://vaad.ar/producto/queso-brie-marca-cabana-piedras-blancas-2/": [
+      "Quesos"
+    ],
+    "https://vaad.ar/producto/queso-brie-marca-cabana-piedras-blancas/": [
+      "Quesos"
+    ],
+    "https://vaad.ar/producto/queso-camembert-marca-cabana-piedras-blancas-2/": [
+      "Quesos"
+    ],
+    "https://vaad.ar/producto/queso-camembert-marca-cabana-piedras-blancas/": [
+      "Quesos"
+    ],
+    "https://vaad.ar/producto/queso-cremoso-artesanal-de-la-marca-lacteos-ferrari/": [
+      "Quesos"
+    ],
+    "https://vaad.ar/producto/queso-cremoso-marca-la-piana/": [
+      "Quesos"
+    ],
+    "https://vaad.ar/producto/queso-mini-brie-marca-cabana-piedras-blancas/": [
+      "Quesos"
+    ],
+    "https://vaad.ar/producto/queso-mozzarella/": [
+      "Quesos"
+    ],
+    "https://vaad.ar/producto/queso-ricota-marca-la-piana/": [
+      "Quesos"
+    ],
+    "https://vaad.ar/producto/queso-sardo-marca-ferrari/": [
+      "Quesos"
+    ],
+    "https://vaad.ar/producto/queso-sardo-marca-la-piana/": [
+      "Quesos"
+    ],
+    "https://vaad.ar/producto/queso-feteado/": [
+      "Quesos"
+    ],
+    "https://vaad.ar/producto/queso-de-barra/": [
+      "Quesos"
+    ],
+    "https://vaad.ar/producto/queso-vacheroleau-marca-cabana-piedras-blancas/": [
+      "Quesos"
+    ],
+    "https://vaad.ar/producto/salchichas/": [
+      "Chorizos y salchichas"
+    ],
+    "https://vaad.ar/producto/salmon-ahumado/": [
+      "Pescados ahumados"
+    ],
+    "https://vaad.ar/producto/snacks-marca-almadre/": [
+      "Snacks"
+    ],
+    "https://vaad.ar/producto/snacks-marca-almadre-2/": [
+      "Snacks"
+    ],
+    "https://vaad.ar/producto/snacks-marca-almadre-3/": [
+      "Snacks"
+    ],
+    "https://vaad.ar/producto/things-marca-almadre/": [
+      "Snacks"
+    ],
+    "https://vaad.ar/producto/thins-marca-almadre/": [
+      "Snacks"
+    ],
+    "https://vaad.ar/producto/thins-marca-almadre-3/": [
+      "Snacks"
+    ],
+    "https://vaad.ar/producto/thins-marca-almadre-2/": [
+      "Snacks"
+    ],
+    "https://vaad.ar/producto/vino-blanco-semiespumante-rashbi/": [
+      "Bebidas alcohólicas",
+      "Espumantes"
+    ],
+    "https://vaad.ar/producto/vino-cabernet-wild-goat/": [
+      "Bebidas alcohólicas",
+      "Vinos"
+    ],
+    "https://vaad.ar/producto/vino-cabernet-sauvignon-marca-el-secreto/": [
+      "Bebidas alcohólicas",
+      "Vinos"
+    ],
+    "https://vaad.ar/producto/vino-cabernet-sauvignon-wild-goat/": [
+      "Bebidas alcohólicas",
+      "Vinos"
+    ],
+    "https://vaad.ar/producto/vino-malbec-el-secreto-2/": [
+      "Bebidas alcohólicas",
+      "Vinos"
+    ],
+    "https://vaad.ar/producto/vino-malbec-wild-goat/": [
+      "Bebidas alcohólicas",
+      "Vinos"
+    ],
+    "https://vaad.ar/producto/vino-malbec-el-secreto/": [
+      "Bebidas alcohólicas",
+      "Vinos"
+    ],
+    "https://vaad.ar/producto/vino-merlot-wild-goat/": [
+      "Bebidas alcohólicas",
+      "Vinos"
+    ],
+    "https://vaad.ar/producto/vino-tinto-dulce-marca-el-secreto/": [
+      "Bebidas alcohólicas",
+      "Vinos"
+    ],
+    "https://vaad.ar/producto/vino-tinto-dulce-maljus/": [
+      "Bebidas alcohólicas",
+      "Vinos"
+    ],
+    "https://vaad.ar/producto/5-pimientas-dani/": [
+      "Condimentos"
+    ],
+    "https://vaad.ar/producto/aceite-de-girasol-marca-rio-de-la-plata/": [
+      "Aceites",
+      "Aceite de girasol"
+    ],
+    "https://vaad.ar/producto/aceite-de-oliva-extra-virgen-el-emigrante/": [
+      "Aceites",
+      "Aceite de oliva"
+    ],
+    "https://vaad.ar/producto/aceite-de-oliva-marca-monte-cudine/": [
+      "Aceites",
+      "Aceite de oliva"
+    ],
+    "https://vaad.ar/producto/aceite-de-oliva-marca-rio-de-la-plata/": [
+      "Aceites",
+      "Aceite de oliva"
+    ],
+    "https://vaad.ar/producto/aceitunas-marca-el-emigrante-3/": [
+      "Aceitunas"
+    ],
+    "https://vaad.ar/producto/aceitunas-marca-el-emigrante-2/": [
+      "Aceitunas"
+    ],
+    "https://vaad.ar/producto/aceitunas-marca-el-emigrante-4/": [
+      "Aceitunas"
+    ],
+    "https://vaad.ar/producto/aceitunas-marca-el-emigrante/": [
+      "Aceitunas"
+    ],
+    "https://vaad.ar/producto/aceitunas-marca-el-emigrante-5/": [
+      "Aceitunas"
+    ],
+    "https://vaad.ar/producto/aceitunas-negras-marca-rio-de-la-plata/": [
+      "Aceitunas"
+    ],
+    "https://vaad.ar/producto/aceitunas-verdes-marca-rio-de-la-plata/": [
+      "Aceitunas"
+    ],
+    "https://vaad.ar/producto/aceitunas-verdes-marca-rio-de-la-plata-3/": [
+      "Aceitunas"
+    ],
+    "https://vaad.ar/producto/aceitunas-verdes-marca-rio-de-la-plata-2/": [
+      "Aceitunas"
+    ],
+    "https://vaad.ar/producto/ajo-deshidratado-granulado-mccormick/": [
+      "Condimentos"
+    ],
+    "https://vaad.ar/producto/ajo-molido-dani/": [
+      "Condimentos"
+    ],
+    "https://vaad.ar/producto/alcaparras-emigrante/": [
+      "Alcaparras"
+    ],
+    "https://vaad.ar/producto/almendras-marca-rio-de-la-plata/": [
+      "Frutos secos"
+    ],
+    "https://vaad.ar/producto/almidon-de-maiz-marca-monte-cudine/": [
+      "Almidones y féculas"
+    ],
+    "https://vaad.ar/producto/arroz-carnaroli-risotto-ou/": [
+      "Arroz"
+    ],
+    "https://vaad.ar/producto/arroz-marca-monte-cudine/": [
+      "Arroz"
+    ],
+    "https://vaad.ar/producto/arroz-marca-monte-cudine-2/": [
+      "Arroz"
+    ],
+    "https://vaad.ar/producto/arroz-marca-monte-cudine-3/": [
+      "Arroz"
+    ],
+    "https://vaad.ar/producto/arroz-marca-monte-cudine-4/": [
+      "Arroz"
+    ],
+    "https://vaad.ar/producto/arvejas-marca-rio-de-la-plata/": [
+      "Arvejas"
+    ],
+    "https://vaad.ar/producto/azafran-marca-monte-cudine/": [
+      "Condimentos"
+    ],
+    "https://vaad.ar/producto/azucar-impalpable-marca-rio-de-la-plata/": [
+      "Azúcares"
+    ],
+    "https://vaad.ar/producto/bamba-osem/": [
+      "Snacks"
+    ],
+    "https://vaad.ar/producto/bebida-arroz-almendra-parve-the-bridge/": [
+      "Bebidas vegetales"
+    ],
+    "https://vaad.ar/producto/bebida-arroz-coco-parve-marca-the-bridge/": [
+      "Bebidas vegetales"
+    ],
+    "https://vaad.ar/producto/bebida-avena-cacao-parve-the-bridge/": [
+      "Bebidas vegetales"
+    ],
+    "https://vaad.ar/producto/bebida-de-avena-parve-marca-the-bridge/": [
+      "Bebidas vegetales"
+    ],
+    "https://vaad.ar/producto/canela-molida-mccormick/": [
+      "Condimentos"
+    ],
+    "https://vaad.ar/producto/castanas-de-caju-marca-rio-de-la-plata/": [
+      "Frutos secos"
+    ],
+    "https://vaad.ar/producto/clavo-de-olor-dani-en-grano/": [
+      "Condimentos"
+    ],
+    "https://vaad.ar/producto/condifran-marca-monte-cudine/": [
+      "Condimentos"
+    ],
+    "https://vaad.ar/producto/barbacoa-condimento-molinillo-dani/": [
+      "Condimentos"
+    ],
+    "https://vaad.ar/producto/especias-marca-la-manchega-10/": [
+      "Condimentos"
+    ],
+    "https://vaad.ar/producto/condimento-marca-la-manchega-8/": [
+      "Condimentos"
+    ],
+    "https://vaad.ar/producto/condimento-marca-la-manchega-7/": [
+      "Condimentos"
+    ],
+    "https://vaad.ar/producto/condimento-marca-la-manchega-6/": [
+      "Condimentos"
+    ],
+    "https://vaad.ar/producto/condimento-marca-la-manchega-5/": [
+      "Condimentos"
+    ],
+    "https://vaad.ar/producto/especias-marca-la-manchega-13/": [
+      "Condimentos"
+    ],
+    "https://vaad.ar/producto/condimento-marca-la-manchega-4/": [
+      "Condimentos"
+    ],
+    "https://vaad.ar/producto/condimento-marca-la-manchega-3/": [
+      "Condimentos"
+    ],
+    "https://vaad.ar/producto/condimento-marca-la-manchega-2/": [
+      "Condimentos"
+    ],
+    "https://vaad.ar/producto/condimento-marca-la-manchega/": [
+      "Condimentos"
+    ],
+    "https://vaad.ar/producto/especias-marca-la-manchega-14/": [
+      "Condimentos"
+    ],
+    "https://vaad.ar/producto/consome-caldo-en-polvo-para-sopa-osem/": [
+      "Sopas y caldos"
+    ],
+    "https://vaad.ar/producto/corn-flakes/": [
+      "Cereales"
+    ],
+    "https://vaad.ar/producto/couscous-express/": [
+      "Cuscús y burgol"
+    ],
+    "https://vaad.ar/producto/couscous-ptitim-osem/": [
+      "Cuscús y burgol"
+    ],
+    "https://vaad.ar/producto/crema-de-choclo-marca-rio-de-la-plata/": [
+      "Choclo en conserva"
+    ],
+    "https://vaad.ar/producto/curry-en-polvo-mccormick/": [
+      "Condimentos"
+    ],
+    "https://vaad.ar/producto/datiles-deshidratados/": [
+      "Frutas secas y deshidratadas"
+    ],
+    "https://vaad.ar/producto/diente-de-ajo-marca-el-emigrante/": [
+      "Condimentos"
+    ],
+    "https://vaad.ar/producto/durazno-marca-rio-de-la-plata/": [
+      "Frutas en conserva"
+    ],
+    "https://vaad.ar/producto/edulcorante-genser-50-sobres/": [
+      "Edulcorantes"
+    ],
+    "https://vaad.ar/producto/especias-marca-la-manchega-9/": [
+      "Condimentos"
+    ],
+    "https://vaad.ar/producto/especias-marca-la-manchega-19/": [
+      "Condimentos"
+    ],
+    "https://vaad.ar/producto/especias-marca-la-manchega-11/": [
+      "Condimentos"
+    ],
+    "https://vaad.ar/producto/especias-marca-la-manchega-12/": [
+      "Condimentos"
+    ],
+    "https://vaad.ar/producto/especias-marca-la-manchega-15/": [
+      "Condimentos"
+    ],
+    "https://vaad.ar/producto/especias-marca-la-manchega-16/": [
+      "Condimentos"
+    ],
+    "https://vaad.ar/producto/especias-marca-la-manchega-17/": [
+      "Condimentos"
+    ],
+    "https://vaad.ar/producto/especias-marca-la-manchega-18/": [
+      "Condimentos"
+    ],
+    "https://vaad.ar/producto/especias-marca-la-manchega-20/": [
+      "Condimentos"
+    ],
+    "https://vaad.ar/producto/especias-marca-la-manchega-21/": [
+      "Condimentos"
+    ],
+    "https://vaad.ar/producto/especias-marca-la-manchega-22/": [
+      "Condimentos"
+    ],
+    "https://vaad.ar/producto/especias-marca-la-manchega-23/": [
+      "Condimentos"
+    ],
+    "https://vaad.ar/producto/especias-marca-la-manchega-24/": [
+      "Condimentos"
+    ],
+    "https://vaad.ar/producto/especias-marca-la-manchega-25/": [
+      "Condimentos"
+    ],
+    "https://vaad.ar/producto/especias-marca-la-manchega-26/": [
+      "Condimentos"
+    ],
+    "https://vaad.ar/producto/especias-marca-la-manchega-27/": [
+      "Condimentos"
+    ],
+    "https://vaad.ar/producto/especias-marca-la-manchega-8/": [
+      "Condimentos"
+    ],
+    "https://vaad.ar/producto/especias-marca-la-manchega-7/": [
+      "Condimentos"
+    ],
+    "https://vaad.ar/producto/especias-marca-la-manchega-6/": [
+      "Condimentos"
+    ],
+    "https://vaad.ar/producto/especias-marca-la-manchega-5/": [
+      "Condimentos"
+    ],
+    "https://vaad.ar/producto/especias-marca-la-manchega-4/": [
+      "Condimentos"
+    ],
+    "https://vaad.ar/producto/especias-marca-la-manchega-3/": [
+      "Condimentos"
+    ],
+    "https://vaad.ar/producto/especias-marca-la-manchega/": [
+      "Condimentos"
+    ],
+    "https://vaad.ar/producto/especias-marca-la-manchega-2/": [
+      "Condimentos"
+    ],
+    "https://vaad.ar/producto/especias-marca-monte-cudine-26/": [
+      "Condimentos"
+    ],
+    "https://vaad.ar/producto/especias-marca-monte-cudine-4/": [
+      "Condimentos"
+    ],
+    "https://vaad.ar/producto/especias-marca-monte-cudine-25/": [
+      "Condimentos"
+    ],
+    "https://vaad.ar/producto/especias-marca-monte-cudine-14/": [
+      "Condimentos"
+    ],
+    "https://vaad.ar/producto/especias-marca-monte-cudine-13/": [
+      "Condimentos"
+    ],
+    "https://vaad.ar/producto/especias-marca-monte-cudine-12/": [
+      "Condimentos"
+    ],
+    "https://vaad.ar/producto/especias-marca-monte-cudine-11/": [
+      "Condimentos"
+    ],
+    "https://vaad.ar/producto/especias-marca-monte-cudine-3/": [
+      "Condimentos"
+    ],
+    "https://vaad.ar/producto/especias-marca-monte-cudine-10/": [
+      "Condimentos"
+    ],
+    "https://vaad.ar/producto/especias-marca-monte-cudine-9/": [
+      "Condimentos"
+    ],
+    "https://vaad.ar/producto/especias-marca-monte-cudine-8/": [
+      "Condimentos"
+    ],
+    "https://vaad.ar/producto/especias-marca-monte-cudine-7/": [
+      "Condimentos"
+    ],
+    "https://vaad.ar/producto/especias-marca-monte-cudine-6/": [
+      "Condimentos"
+    ],
+    "https://vaad.ar/producto/especias-marca-monte-cudine-5/": [
+      "Condimentos"
+    ],
+    "https://vaad.ar/producto/especias-marca-monte-cudine-27/": [
+      "Condimentos"
+    ],
+    "https://vaad.ar/producto/especias-marca-monte-cudine-2/": [
+      "Condimentos"
+    ],
+    "https://vaad.ar/producto/especias-marca-monte-cudine/": [
+      "Condimentos"
+    ],
+    "https://vaad.ar/producto/especias-marca-monte-cudine-24/": [
+      "Condimentos"
+    ],
+    "https://vaad.ar/producto/especias-marca-monte-cudine-15/": [
+      "Condimentos"
+    ],
+    "https://vaad.ar/producto/especias-marca-monte-cudine-16/": [
+      "Condimentos"
+    ],
+    "https://vaad.ar/producto/especias-marca-monte-cudine-17/": [
+      "Condimentos"
+    ],
+    "https://vaad.ar/producto/especias-marca-monte-cudine-23/": [
+      "Condimentos"
+    ],
+    "https://vaad.ar/producto/especias-marca-monte-cudine-18/": [
+      "Condimentos"
+    ],
+    "https://vaad.ar/producto/especias-marca-monte-cudine-19/": [
+      "Condimentos"
+    ],
+    "https://vaad.ar/producto/especias-marca-monte-cudine-20/": [
+      "Condimentos"
+    ],
+    "https://vaad.ar/producto/especias-marca-monte-cudine-21/": [
+      "Condimentos"
+    ],
+    "https://vaad.ar/producto/especias-marca-monte-cudine-22/": [
+      "Condimentos"
+    ],
+    "https://vaad.ar/producto/fideos-de-arroz-tagliatelle/": [
+      "Pastas sin gluten y de legumbres"
+    ],
+    "https://vaad.ar/producto/fideos-de-arroz-vermicelli/": [
+      "Pastas sin gluten y de legumbres"
+    ],
+    "https://vaad.ar/producto/fideos-de-arroz-vermicelli-2/": [
+      "Pastas sin gluten y de legumbres"
+    ],
+    "https://vaad.ar/producto/girasol-pelado-marca-la-selva/": [
+      "Semillas"
+    ],
+    "https://vaad.ar/producto/jengibre-dani-molido/": [
+      "Condimentos"
+    ],
+    "https://vaad.ar/producto/jugo-de-uva-marca-kedem/": [
+      "Jugo de uva"
+    ],
+    "https://vaad.ar/producto/nectar-de-coco-pina-jumex/": [
+      "Jugos"
+    ],
+    "https://vaad.ar/producto/jugo-jumex-pina/": [
+      "Jugos"
+    ],
+    "https://vaad.ar/producto/levadura-kosher-saf-instant/": [
+      "Levaduras"
+    ],
+    "https://vaad.ar/producto/lino-marca-la-selva/": [
+      "Semillas"
+    ],
+    "https://vaad.ar/producto/mani-marca-rio-de-la-plata/": [
+      "Frutos secos"
+    ],
+    "https://vaad.ar/producto/mani-pelado-marca-rio-de-la-plata/": [
+      "Frutos secos"
+    ],
+    "https://vaad.ar/producto/mayonesa-light-marca-menoyo/": [
+      "Aderezos",
+      "Mayonesas"
+    ],
+    "https://vaad.ar/producto/mayonesa-marca-heinz/": [
+      "Aderezos",
+      "Mayonesas"
+    ],
+    "https://vaad.ar/producto/mayonesa-marca-menoyo-2/": [
+      "Aderezos",
+      "Mayonesas"
+    ],
+    "https://vaad.ar/producto/mezcla-de-proteina-de-soja-con-lino-y-girasol-marca-la-selva/": [
+      "Tofu y proteínas de soja"
+    ],
+    "https://vaad.ar/producto/miel-marca-beea/": [
+      "Miel"
+    ],
+    "https://vaad.ar/producto/mix-fibra-marca-rio-de-la-plata/": [
+      "Productos de dietética"
+    ],
+    "https://vaad.ar/producto/mix-para-carnes-marca-la-manchega/": [
+      "Condimentos"
+    ],
+    "https://vaad.ar/producto/mix-para-ensaladas-marca-la-manchega/": [
+      "Condimentos"
+    ],
+    "https://vaad.ar/producto/mostaza-marca-frenchs-amarilla/": [
+      "Aderezos",
+      "Mostaza"
+    ],
+    "https://vaad.ar/producto/nescafe-gold-tostado-molido-puro/": [
+      "Café"
+    ],
+    "https://vaad.ar/producto/nuez-moscada-dani-molida/": [
+      "Condimentos"
+    ],
+    "https://vaad.ar/producto/pasta-de-arroz-integral-cosecha-dorada/": [
+      "Pastas sin gluten y de legumbres"
+    ],
+    "https://vaad.ar/producto/pasta-de-arroz-integral-spaghetti-cosecha-dorada/": [
+      "Pastas sin gluten y de legumbres"
+    ],
+    "https://vaad.ar/producto/pasta-de-arvejas-sedanini-cosecha-dorada/": [
+      "Pastas sin gluten y de legumbres"
+    ],
+    "https://vaad.ar/producto/pasta-de-chia-fusilli-cosecha-dorada/": [
+      "Pastas sin gluten y de legumbres"
+    ],
+    "https://vaad.ar/producto/pasta-de-chia-spaghetti-cosecha-dorada/": [
+      "Pastas sin gluten y de legumbres"
+    ],
+    "https://vaad.ar/producto/pasta-de-datiles/": [
+      "Pastas dulces"
+    ],
+    "https://vaad.ar/producto/pasta-de-lentejas-rojas-coditos-cosecha-dorada/": [
+      "Pastas sin gluten y de legumbres"
+    ],
+    "https://vaad.ar/producto/pasta-de-maiz-fusilli-cosecha-dorada/": [
+      "Pastas sin gluten y de legumbres"
+    ],
+    "https://vaad.ar/producto/pasta-de-maiz-spaghetti-cosecha-dorada/": [
+      "Pastas sin gluten y de legumbres"
+    ],
+    "https://vaad.ar/producto/pasta-de-quinoa-fusilli-cosecha-dorada/": [
+      "Pastas sin gluten y de legumbres"
+    ],
+    "https://vaad.ar/producto/pasta-de-quinoa-spaghetti-cosecha-dorada/": [
+      "Pastas sin gluten y de legumbres"
+    ],
+    "https://vaad.ar/producto/molinillo-dani-pimienta-blanca/": [
+      "Condimentos"
+    ],
+    "https://vaad.ar/producto/pimienta-marca-monte-cudine/": [
+      "Condimentos"
+    ],
+    "https://vaad.ar/producto/pimienta-marca-monte-cudine-2/": [
+      "Condimentos"
+    ],
+    "https://vaad.ar/producto/pimienta-negra-marca-monte-cudine/": [
+      "Condimentos"
+    ],
+    "https://vaad.ar/producto/pimienta-negra-molinillo-dani/": [
+      "Condimentos"
+    ],
+    "https://vaad.ar/producto/polenta-marca-rio-de-la-plata/": [
+      "Polenta"
+    ],
+    "https://vaad.ar/producto/porotos-de-manteca-marca-rio-de-la-plata/": [
+      "Porotos, lentejas y garbanzos"
+    ],
+    "https://vaad.ar/producto/proteina-de-soja-marca-la-selva/": [
+      "Tofu y proteínas de soja"
+    ],
+    "https://vaad.ar/producto/pure-de-papa-marca-rio-de-la-plata/": [
+      "Papas"
+    ],
+    "https://vaad.ar/producto/sal-genser-66-menos-sodio/": [
+      "Sales"
+    ],
+    "https://vaad.ar/producto/sal-marca-monte-cudine/": [
+      "Sales"
+    ],
+    "https://vaad.ar/producto/sal-marca-monte-cudine-2/": [
+      "Sales"
+    ],
+    "https://vaad.ar/producto/sal-marca-monte-cudine-3/": [
+      "Sales"
+    ],
+    "https://vaad.ar/producto/sal-marca-monte-cudine-4/": [
+      "Sales"
+    ],
+    "https://vaad.ar/producto/sal-marca-monte-cudine-5/": [
+      "Sales"
+    ],
+    "https://vaad.ar/producto/sal-marina-con-finas-hierbas-molinillo-dani/": [
+      "Sales"
+    ],
+    "https://vaad.ar/producto/salsa-barbacoa-ahumada-marca-kraft/": [
+      "Aderezos",
+      "Salsa barbacoa"
+    ],
+    "https://vaad.ar/producto/salsa-de-soja-soya-marca-kikkoman/": [
+      "Salsas"
+    ],
+    "https://vaad.ar/producto/salsa-teriyaki-marca-kikkoman/": [
+      "Salsas"
+    ],
+    "https://vaad.ar/producto/semillas-de-chia-marca-la-selva/": [
+      "Semillas"
+    ],
+    "https://vaad.ar/producto/sesamo-marca-la-selva/": [
+      "Semillas"
+    ],
+    "https://vaad.ar/producto/mandalaj-osem-shkedei-marak-crutones/": [
+      "Sopas y caldos"
+    ],
+    "https://vaad.ar/producto/tahini-pasta-de-sesamo-tjina-marca-prince/": [
+      "Tahini y pastas de semillas"
+    ],
+    "https://vaad.ar/producto/te-marca-la-selva-2/": [
+      "Té"
+    ],
+    "https://vaad.ar/producto/te-marca-la-selva-8/": [
+      "Té"
+    ],
+    "https://vaad.ar/producto/te-marca-la-selva-3/": [
+      "Té"
+    ],
+    "https://vaad.ar/producto/te-marca-la-selva-7/": [
+      "Té"
+    ],
+    "https://vaad.ar/producto/te-marca-la-selva-9/": [
+      "Té"
+    ],
+    "https://vaad.ar/producto/te-marca-la-selva-10/": [
+      "Té"
+    ],
+    "https://vaad.ar/producto/te-marca-la-selva-11/": [
+      "Té"
+    ],
+    "https://vaad.ar/producto/te-marca-la-selva-4/": [
+      "Té"
+    ],
+    "https://vaad.ar/producto/te-marca-la-selva-6/": [
+      "Té"
+    ],
+    "https://vaad.ar/producto/te-marca-la-selva/": [
+      "Té"
+    ],
+    "https://vaad.ar/producto/te-marca-la-selva-12/": [
+      "Té"
+    ],
+    "https://vaad.ar/producto/tomate-perita-entero-marca-rio-de-la-plata/": [
+      "Tomates en conserva"
+    ],
+    "https://vaad.ar/producto/vinagre-blanco-heinz/": [
+      "Vinagres"
+    ],
+    "https://vaad.ar/producto/vino-marca-baron-herzog/": [
+      "Bebidas alcohólicas",
+      "Vinos"
+    ],
+    "https://vaad.ar/producto/vino-marca-bartenura/": [
+      "Bebidas alcohólicas",
+      "Vinos"
+    ],
+    "https://vaad.ar/producto/vino-marca-bartenura-2/": [
+      "Bebidas alcohólicas",
+      "Vinos"
+    ],
+    "https://vaad.ar/producto/vino-marca-kedem/": [
+      "Bebidas alcohólicas",
+      "Vinos"
+    ],
+    "https://vaad.ar/producto/vino-marca-kedem-2/": [
+      "Bebidas alcohólicas",
+      "Vinos"
+    ],
+    "https://vaad.ar/producto/vino-marca-kedem-3/": [
+      "Bebidas alcohólicas",
+      "Vinos"
+    ],
+    "https://vaad.ar/producto/vino-marca-kedem-4/": [
+      "Bebidas alcohólicas",
+      "Vinos"
+    ],
+    "https://vaad.ar/producto/vino-marca-kedem-5/": [
+      "Bebidas alcohólicas",
+      "Vinos"
+    ],
+    "https://vaad.ar/producto/vino-marca-kedem-6/": [
+      "Bebidas alcohólicas",
+      "Vinos"
+    ],
+    "https://vaad.ar/producto/vino-marca-kedem-7/": [
+      "Bebidas alcohólicas",
+      "Vinos"
+    ],
+    "https://vaad.ar/producto/vino-marca-kedem-kal/": [
+      "Bebidas alcohólicas",
+      "Vinos"
+    ],
+    "https://vaad.ar/producto/vino-marca-rashi/": [
+      "Bebidas alcohólicas",
+      "Vinos"
+    ],
+    "https://vaad.ar/producto/yerba-marca-la-selva/": [
+      "Yerba mate"
+    ],
+    "https://vaad.ar/producto/yerba-marca-la-selva-2/": [
+      "Yerba mate"
+    ],
+    "https://vaad.ar/producto/yerba-marca-la-selva-3/": [
+      "Yerba mate"
+    ],
+    "https://vaad.ar/producto/yerba-marca-la-selva-4/": [
+      "Yerba mate"
+    ]
+  }
+}

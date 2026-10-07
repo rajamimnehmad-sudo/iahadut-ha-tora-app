@@ -1,0 +1,13 @@
+{
+  "name": "iahadut-search-ranking",
+  "main": "src/index.js",
+  "account_id": "cdd5f6099c511ee37e2e79e4bd7c8528",
+  "compatibility_date": "2026-10-06",
+  "workers_dev": true,
+  "preview_urls": false,
+  "observability": {"enabled": false},
+  "vars": {"FIREBASE_PROJECT": "iahadut-hatora"},
+  "triggers": {"crons": ["*/15 * * * *"]},
+  "ratelimits": [{"name": "SEARCH_LIMIT", "namespace_id": "10415", "simple": {"limit": 30, "period": 60}}],
+  "d1_databases": [{"binding": "DB", "database_name": "iahadut-search-ranking", "database_id": "d93bd78b-8158-46e3-992a-a6cd2dd54184", "migrations_dir": "migrations"}]
+}

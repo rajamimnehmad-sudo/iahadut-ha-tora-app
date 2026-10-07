@@ -51,4 +51,15 @@ public class PushHistoryStoreTest {
         PushHistoryStore.preferences(context).edit().putBoolean("enabled", false).commit();
         assertFalse(PushHistoryStore.isEnabled(context.getApplicationContext()));
     }
+    @Test public void inboxIdentitySurvivesDisablingAndTokenRotation() {
+        String first = PushHistoryStore.inboxTopic(context);
+        assertTrue(first.matches("iahadut-test-[a-f0-9]{20}"));
+        PushHistoryStore.preferences(context).edit().putBoolean("enabled",false).remove("test_topic").commit();
+        assertEquals(first,PushHistoryStore.inboxTopic(context.getApplicationContext()));
+    }
+    @Test public void existingTestDestinationMigratesWithoutChangingIt() {
+        String previous = "iahadut-test-552db89ef08fff79938a";
+        PushHistoryStore.preferences(context).edit().putString("test_topic",previous).commit();
+        assertEquals(previous,PushHistoryStore.inboxTopic(context));
+    }
 }

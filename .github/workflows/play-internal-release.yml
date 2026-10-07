@@ -93,20 +93,23 @@ jobs:
             -d '{}' \
             "https://androidpublisher.googleapis.com/androidpublisher/v3/applications/$PACKAGE_NAME/edits")
           edit_id=$(jq -r '.id' <<<"$response")
-          upload=$(curl --fail-with-body --silent --show-error -X POST \
+          if ! upload=$(curl --fail-with-body --silent --show-error -X POST \
             -H "Authorization: Bearer $ACCESS_TOKEN" \
             -H 'Content-Type: application/octet-stream' \
             --data-binary "@$AAB_PATH" \
-            "https://androidpublisher.googleapis.com/upload/androidpublisher/v3/applications/$PACKAGE_NAME/edits/$edit_id/bundles?uploadType=media")
+            "https://androidpublisher.googleapis.com/upload/androidpublisher/v3/applications/$PACKAGE_NAME/edits/$edit_id/bundles?uploadType=media"); then
+            jq '{error:.error}' <<<"$upload"
+            exit 1
+          fi
           version_code=$(jq -r '.versionCode' <<<"$upload")
           test "$version_code" = "$VERSION_CODE"
-          jq -n --arg version "$version_code" --arg name "$RELEASE_VERSION" '{track:"internal",releases:[{name:$name,versionCodes:[$version],status:"completed",releaseNotes:[{language:"es-419",text:"Mejoras del catálogo, fichas sin conexión y avisos manuales."}]}]}' > "$RUNNER_TEMP/track.json"
+          jq -n --arg version "$version_code" --arg name "$RELEASE_VERSION" '{track:"internal",releases:[{name:$name,versionCodes:[$version],status:"completed",releaseNotes:[{language:"es-419",text:"Correcciones y mejoras."}]}]}' > "$RUNNER_TEMP/track.json"
           curl --fail-with-body --silent --show-error -X PUT \
             -H "Authorization: Bearer $ACCESS_TOKEN" \
             -H 'Content-Type: application/json' \
             --data-binary "@$RUNNER_TEMP/track.json" \
-            "https://androidpublisher.googleapis.com/androidpublisher/v3/applications/$PACKAGE_NAME/edits/$edit_id/tracks/internal" >/dev/null
+            "https://androidpublisher.googleapis.com/androidpublisher/v3/applications/$PACKAGE_NAME/edits/$edit_id/tracks/internal"
           curl --fail-with-body --silent --show-error -X POST \
             -H "Authorization: Bearer $ACCESS_TOKEN" \
-            "https://androidpublisher.googleapis.com/androidpublisher/v3/applications/$PACKAGE_NAME/edits/$edit_id:commit" >/dev/null
+            "https://androidpublisher.googleapis.com/androidpublisher/v3/applications/$PACKAGE_NAME/edits/$edit_id:commit"
           echo "Versión $version_code publicada en la pista internal."
