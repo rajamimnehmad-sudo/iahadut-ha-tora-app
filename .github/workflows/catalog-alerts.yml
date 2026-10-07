@@ -8,7 +8,7 @@ on:
         type: boolean
         default: false
   schedule:
-    - cron: '17 */12 * * *'
+    - cron: '17 */3 * * *'
 
 concurrency:
   group: catalog-alerts
