@@ -4,6 +4,10 @@ import {readFileSync} from 'node:fs';
 import vm from 'node:vm';
 import {webcrypto} from 'node:crypto';
 const source = readFileSync(new URL('../web/app.js', import.meta.url), 'utf8');
+test('support-code button is removed without removing private device identity',()=>{
+ assert.equal(source.includes('data-copy-support'),false);
+ assert.ok(source.includes('await PushHistory.getTestTopic()'));
+});
 const registration = source.slice(source.indexOf('  async function pushTestTopicForToken('), source.indexOf('  async function refreshPlayUpdate('));
 const setup = source.slice(source.indexOf('  function setupPushNotifications('), source.indexOf('  function renderMore()')).replaceAll("await import('@capacitor-firebase/messaging')", '({FirebaseMessaging:NativeMessaging})');
 function harness(permission = 'granted', platform = 'android') {

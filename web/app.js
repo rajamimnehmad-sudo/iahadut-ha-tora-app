@@ -14,7 +14,9 @@ import { mergeAlertHistory } from './alert-history.js';
 import { categoryInformation } from './category-info.js';
 import {collectOfflineImages, createOfflineDownload, offlineNetworkMayDownload} from './offline-download.js';
 import {pushImageUrl} from './push-image.js';
-import {mergeInboxNotifications} from './alerts-inbox.js';
+import {mergeInboxNotifications, alertExpired} from './alerts-inbox.js';
+import {matchingCategories, navigationScrollKey, matchingBrands, brandName, brandKey} from './category-navigation.js';
+import {brandLogo} from './brand-logos.js';
 import featuredProductsSnapshot from './data/featured-products.json';
 import featuredImageBounds from './data/featured-image-bounds.json';
 import contentSnapshot from './data/content.json';
@@ -69,6 +71,12 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
   'use strict';
 
   const $ = (selector) => document.querySelector(selector);
+  // A vector close icon stays centered and legible regardless of font size.
+  document.querySelectorAll('.sheet-close, .image-close, #closeScan').forEach(button => {
+    button.classList.add('overlay-close-control');
+    button.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="m6 6 12 12M18 6 6 18"/></svg>';
+    if (!button.getAttribute('aria-label')) button.setAttribute('aria-label', 'Cerrar escáner');
+  });
   const viewTitleSlot = $('#viewTitleSlot');
   const viewHeaderOrigins = new Map();
   document.querySelectorAll('.view > .detail-head').forEach((header) => {
@@ -353,6 +361,9 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
   let kosherToastTimer = 0;
   let searchTimer = 0;
   let activeCategoryPath = [];
+  let taxonomyReturnView = 'categoryDirectoryView';
+  let activeScrollKey = 'homeView';
+  const viewScrollPositions = new Map();
   const RESULT_BATCH_SIZE = 48;
   let visibleProducts = [];
   let visibleProductCursor = 0;
@@ -2007,6 +2018,7 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
   }
 
   function openCategoryDirectoryFromHome() {
+    taxonomyReturnView = 'categoryDirectoryView';
     renderCategoryDirectory();
     showView('categoryDirectoryView');
   }
@@ -2368,7 +2380,9 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     }).join('');
   }
 
-  function openTaxonomyPath(path) {
+  function openTaxonomyPath(path, {restoreScroll = false} = {}) {
+    const origin = document.querySelector('.view.active')?.id;
+    if (!['subcategoryDirectoryView','categoryProductsView'].includes(origin)) taxonomyReturnView = origin === 'searchView' ? 'searchView' : 'categoryDirectoryView';
     activeCategoryPath = path;
     const children = categoryDirectory(path);
     const name = path.at(-1);
@@ -2381,7 +2395,7 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
       const directItems = productsAtPath(path).filter(product => productCategoryPaths(product).some(candidate => candidate.length === path.length && path.every((part, index) => candidate[index] === part))).sort((a, b) => a.title.localeCompare(b.title, 'es'));
       $('#subcategoryDirectProductList').hidden = !directItems.length;
       renderProductCollection($('#subcategoryDirectProductList'), directItems);
-      showView('subcategoryDirectoryView');
+      showView('subcategoryDirectoryView', {restoreScroll});
       return;
     }
     const items = productsAtPath(path).sort((a, b) => a.title.localeCompare(b.title, 'es'));
@@ -2389,7 +2403,7 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     $('#categoryProductsTitle').textContent = displayName;
     $('#categoryProductsMeta').textContent = `${items.length.toLocaleString('es-AR')} ${items.length === 1 ? 'producto' : 'productos'}`;
     renderProductCollection($('#categoryProductList'), items, `<div class="empty-state"><svg class="empty-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7.5h16M6 7.5v11h12v-11M9 7.5V5h6v2.5M9 11v4M15 11v4"/></svg><strong>Todavía no hay productos en esta categoría</strong><span>La sección queda lista para mostrar nuevos aderezos cuando sean publicados en el catálogo oficial.</span></div>`);
-    showView('categoryProductsView');
+    showView('categoryProductsView', {restoreScroll});
   }
 
   function renderSearchCategories() {
@@ -2445,7 +2459,7 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
 
   // Allow small typing mistakes, including swapped adjacent letters.
   function searchWordMatches(query, word) {
-    if (word.includes(query)) return true;
+    if (word.startsWith(query)) return true;
     if (query.length < 4 || /\d/.test(query + word)) return false;
     const limit = query.length >= 7 ? 2 : 1;
     if (Math.abs(query.length - word.length) > limit) return false;
@@ -2463,7 +2477,7 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
 
   function filtered(query) {
     const term = normalize(query);
-    const searchTokens = term.split(/\s+/).filter((token) => token.length > 1 && !['de', 'del', 'la', 'el', 'los', 'las', 'un', 'una', 'marca'].includes(token));
+    const searchTokens = term.split(/[^a-z0-9]+/).filter((token) => token && !['de', 'del', 'la', 'el', 'los', 'las', 'un', 'una', 'marca'].includes(token));
     const searchableProducts = products;
     return searchableProducts.map((product) => {
       const isUruguay = product.cat === 'uruguay' || product.category === 'uruguay';
@@ -2475,8 +2489,9 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
       const sourceCategory = categoryFor(product.cat);
       const titleText = normalize(`${product.title} ${product.brand || ''}`);
       const text = normalize(`${titleText} ${product.barcode || ''} ${product.description || ''} ${taxonomyText} ${sourceCategory?.name || ''} ${sourceCategory?.desc || ''}`);
-      const identityWords = titleText.split(/[^a-z0-9]+/).filter(Boolean);
-      const matchesSearch = !term || text.includes(term) || searchTokens.length > 0 && searchTokens.every((token) => text.includes(token) || identityWords.some((word) => searchWordMatches(token, word)));
+      const identityWords = titleText.split(/[^a-z0-9]+/).filter(word => word && word !== 'marca');
+      const searchableWords = text.split(/[^a-z0-9]+/).filter(word => word && word !== 'marca');
+      const matchesSearch = !term || searchTokens.length > 0 && searchTokens.every(token => searchableWords.some(word => word.startsWith(token)) || identityWords.some(word => searchWordMatches(token, word)));
       if (!(matchesRegion && matchesCategory && matchesFavorite && matchesSearch)) return null;
       if (!term) return {product, relevance:0};
       const titleTokens = new Set(titleText.split(/[^a-z0-9]+/).filter(Boolean));
@@ -2552,12 +2567,40 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     scope.hidden = false;
   }
 
+  let searchBrand = '';
   function renderResults(query = '') {
-    const result = filtered(query);
+    if (brandKey(query) !== brandKey(searchBrand)) searchBrand = '';
+    const result = searchBrand ? filtered('').filter(product => brandKey(brandName(product)) === brandKey(searchBrand)) : filtered(query);
     const title = favoriteOnly ? 'Guardados' : query ? 'Resultados' : selectedCategory !== 'all' ? categoryFor(selectedCategory).name : selectedRegion === 'all' ? 'Todos los productos' : selectedRegion === 'uruguay' ? 'Uruguay' : 'Argentina';
-    $('#resultsTitle').textContent = title;
+    $('#resultsTitle').textContent = searchBrand ? `Marca ${searchBrand}` : title;
     $('#resultsMeta').textContent = `${result.length.toLocaleString('es-AR')} ${result.length === 1 ? 'producto' : 'productos'} en esta vista`;
     renderSearchScope();
+    let categoryLinks = $('#searchCategoryMatches');
+    if (!categoryLinks) {
+      categoryLinks = document.createElement('div');
+      categoryLinks.id = 'searchCategoryMatches';
+      categoryLinks.className = 'search-category-matches';
+      $('#productList').before(categoryLinks);
+    }
+    // One or two letters should show products, not a wall of unrelated paths.
+    const suggested = normalize(query).length >= 3 && !favoriteOnly ? matchingCategories(result, productCategoryPaths, query) : [];
+    categoryLinks.hidden = !suggested.length;
+    categoryLinks.innerHTML = suggested.length ? `<span class="search-category-caption">Encontralo también en categorías</span>${suggested.map(({path})=>`<button class="search-category-match" type="button" data-taxonomy-path="${encodeURIComponent(JSON.stringify(path))}">${taxonomyIcon(path.at(-1))}<span>${escapeHtml(path.map(categoryDisplayName).join(' › '))}</span><span aria-hidden="true">›</span></button>`).join('')}` : '';
+    let brandLinks = $('#searchBrandMatches');
+    if (!brandLinks) {
+      brandLinks = document.createElement('div');
+      brandLinks.id = 'searchBrandMatches';
+      brandLinks.className = 'search-brand-matches';
+      categoryLinks.before(brandLinks);
+    }
+    // Filter before limiting: logo-less matches must not occupy suggestion slots.
+    const brands = !favoriteOnly && !searchBrand ? matchingBrands(filtered('').filter(product => brandLogo(brandName(product))), query) : [];
+    brandLinks.hidden = !brands.length;
+    brandLinks.innerHTML = brands.map(({name,count}) => {
+      const logo = brandLogo(name);
+      const initials = name.split(/\s+/).slice(0,2).map(word=>word[0]).join('').toUpperCase();
+      return `<button class="search-brand-match" type="button" data-search-brand="${escapeHtml(name)}" aria-label="Ver ${count} productos de ${escapeHtml(name)}"><span class="search-brand-circle"><span class="search-brand-initials" aria-hidden="true">${escapeHtml(initials)}</span>${logo ? `<img src="${escapeHtml(logo)}" alt="" onerror="this.hidden=true">` : ''}</span><strong>${escapeHtml(name)}</strong></button>`;
+    }).join('');
     $('#results').hidden = false;
     $('#searchCategories').hidden = true;
     $('#recentSearches').hidden = true;
@@ -2600,7 +2643,7 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
 
   function setSearchHomeHidden(hidden) {
     const topbar = $('.topbar');
-    if (!topbar || !window.matchMedia('(max-width: 700px)').matches) return;
+    if (!topbar) return;
     if (hidden) topbar.setAttribute('hidden', '');
     else topbar.removeAttribute('hidden');
   }
@@ -2613,7 +2656,7 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
   }
 
   function updateSearchDockSpace() {
-    if (!window.matchMedia('(max-width: 700px)').matches || !document.body.classList.contains('search-open')) return;
+    if (!document.body.classList.contains('search-open')) return;
     const searchView = $('#searchView');
     const dock = $('.bottom-nav.search-mode');
     if (!searchView || !dock) return;
@@ -2640,7 +2683,11 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     track.style.setProperty('--trusted-brands-delay', `${-elapsed}s`);
   }
 
-  function showView(viewId, {preserveSearch = false} = {}) {
+  function showView(viewId, {preserveSearch = false, restoreScroll = false} = {}) {
+    const appShell = document.querySelector('.app');
+    viewScrollPositions.set(activeScrollKey, {window:Number(window.scrollY)||0, app:Number(appShell?.scrollTop)||0, results:Number($('#results')?.scrollTop)||0});
+    activeScrollKey = navigationScrollKey(viewId, activeCategoryPath);
+    const savedPosition = restoreScroll ? viewScrollPositions.get(activeScrollKey) : null;
     if (viewId === 'homeView' && !$('#homeView').classList.contains('active')) resumeBrandMarquee();
     document.body.dataset.activeView = viewId;
     if (viewId !== 'searchView') {
@@ -2664,12 +2711,20 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     // En el teléfono desplaza la ventana; en la vista de escritorio de Vite,
     // el desplazamiento vive dentro del marco que simula el dispositivo.
     window.scrollTo(0,0);
-    const appShell = document.querySelector('.app');
     if (appShell) appShell.scrollTop = 0;
-    window.requestAnimationFrame(updateHeaderScrollState);
+    window.requestAnimationFrame(() => {
+      if (savedPosition) {
+        window.scrollTo(0, savedPosition.window);
+        if (appShell) appShell.scrollTop = savedPosition.app;
+        if ($('#results')) $('#results').scrollTop = savedPosition.results;
+      }
+      updateHeaderScrollState();
+    });
   }
 
   function renderPushNotifications() {
+    pushNotifications=pushNotifications.filter(item=>!alertExpired(item));
+    if(!pushNotifications.length)setPushNotificationBadge(false);
     const list = $('#pushNotificationList');
     if (!list) return;
     renderNotificationPermission();
@@ -2680,25 +2735,6 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
       const link = playUrl ? `<button class="push-notification-link" data-push-link="${escapeHtml(playUrl)}" type="button">Abrir en ${distributionLinks.label} <span aria-hidden="true">›</span></button>` : '';
       return `<article class="push-notification-item"><div><strong>${escapeHtml(item.title || 'Novedad del catálogo')}</strong><p>${escapeHtml(item.body || 'Hay una actualización disponible.')}</p>${image}<small>${escapeHtml(item.time || '')}</small>${link}</div></article>`;
     }).join('') : '<div class="empty-state"><strong>No hay notificaciones</strong><span>Cuando llegue un aviso nuevo, aparecerá acá.</span></div>';
-    const clearButton = $('#clearPushNotifications');
-    if (clearButton) clearButton.hidden = pushNotifications.length === 0;
-  }
-
-  async function clearPushNotifications() {
-    await pushHistoryRequest;
-    if (Capacitor.isNativePlatform()) {
-      try {
-        await PushHistory.clearHistory();
-        const {FirebaseMessaging} = await import('@capacitor-firebase/messaging');
-        await FirebaseMessaging.removeAllDeliveredNotifications();
-      } catch (_) { return; }
-    }
-    const dismissed = JSON.parse(localStorage.getItem('iht_alerts_dismissed') || '[]');
-    localStorage.setItem('iht_alerts_dismissed',JSON.stringify([...new Set([...dismissed,...pushNotifications.map(item=>item.eventKey || item.id)])]));
-    pushNotifications = [];
-    localStorage.removeItem('iht_push_notifications');
-    setPushNotificationBadge(false);
-    renderPushNotifications();
   }
 
   function renderRetiredShortcut(items = alertCache?.items) {
@@ -2753,7 +2789,7 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
       const result = await FirebaseMessaging.getDeliveredNotifications();
       const withdrawn = [];
       for (const notification of result?.notifications || []) {
-        if (notificationIsRevoked(notification, revokedPushes)) {
+        if (notificationIsRevoked(notification, revokedPushes) || alertExpired(notification)) {
           withdrawn.push(notification);
           continue;
         }
@@ -2813,7 +2849,7 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
       const {FirebaseMessaging} = await import('@capacitor-firebase/messaging');
       if (['android', 'ios'].includes(Capacitor.getPlatform())) {
         const result = await PushHistory.getHistory({markRead, revoked:revokedPushes});
-        pushNotifications = reconcilePushHistory(pushNotifications, result.notifications || [], revokedPushes);
+        pushNotifications = reconcilePushHistory(pushNotifications, result.notifications || [], revokedPushes).filter(item=>!alertExpired(item));
         localStorage.setItem('iht_push_notifications', JSON.stringify(pushNotifications));
         for (const notification of result.notifications || []) persistPushNotification(notification, !markRead && notification.unread === true);
       }
@@ -2877,7 +2913,7 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
 
   function restoreSearchScreen() {
     const searchForm = $('#searchForm');
-    const mobileSearchDock = window.matchMedia('(max-width: 700px)').matches ? $('.bottom-nav') : null;
+    const mobileSearchDock = $('.bottom-nav');
     if (mobileSearchDock && !document.body.classList.contains('search-open')) rememberSearchViewportBaseline();
     // Aplicar el estado antes de mover el formulario evita un frame intermedio
     // del home mientras Android redimensiona el WebView por el teclado.
@@ -2893,7 +2929,7 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
       mobileSearchDock.classList.toggle('has-query', Boolean($('#query').value.trim()));
       updateSearchDockSpace();
     }
-    showView('searchView', {preserveSearch:true});
+    showView('searchView', {preserveSearch:true, restoreScroll:true});
     updateSearchScanAction(Boolean($('#query').value.trim()));
     $('#clear').hidden = !$('#query').value;
     $('#query').blur();
@@ -2917,13 +2953,14 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
   }
 
   function openSearchScreen() {
+    searchBrand = '';
     selectedRegion = 'argentina';
     selectedCategory = 'all';
     favoriteOnly = false;
     window.clearTimeout(searchFocusTimer);
     const searchForm = $('#searchForm');
     searchForm.hidden = false;
-    const mobileSearchDock = window.matchMedia('(max-width: 700px)').matches ? $('.bottom-nav') : null;
+    const mobileSearchDock = $('.bottom-nav');
     if (mobileSearchDock && !document.body.classList.contains('search-open')) rememberSearchViewportBaseline();
     // El estado visual cambia antes del reparenting para evitar un frame
     // intermedio del home en WebView móvil.
@@ -2983,6 +3020,10 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
   }
 
   function updateSearchScanAction(hasText) {
+    if (!hasText) {
+      searchBrand = '';
+      window.clearTimeout(searchTimer);
+    }
     const button = $('#searchScan');
     if (!button) return;
     button.classList.toggle('is-clear', hasText);
@@ -3601,8 +3642,7 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
 
   function returnFromDetail() {
     if (previousView === 'searchView') restoreSearchScreen();
-    else showView(previousView);
-    window.requestAnimationFrame(() => window.scrollTo(0, previousScrollTop));
+    else showView(previousView, {restoreScroll:true});
   }
 
   function renderAlertPreview() {
@@ -3853,12 +3893,14 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
       eventKey: notificationEventKey(notification),
       imageUrl: pushImageUrl(data.imageUrl || notification?.image || data['gcm.n.image']),
       sentAt: data.sentAt || notification?.receivedAt || new Date().toISOString(),
+      expiresAt: data.expiresAt || notification?.expiresAt || '',
       title: clean(notification?.title || data.title || data['gcm.n.title'] || fallbackTitle),
       body: clean(notification?.body || data.body || data.text || data['gcm.n.body'] || 'Hay una actualización disponible.'),
       time: new Date(notification?.receivedAt || data.sentAt || Date.now()).toLocaleString('es-AR', {hour12:false}),
       url: notificationPlayStoreUrl(notification)
     };
     if (notificationIsRevoked(item, revokedPushes)) return null;
+    if (alertExpired(item)) return null;
     try { if(JSON.parse(localStorage.getItem('iht_alerts_dismissed') || '[]').includes(item.eventKey || item.id)) return null; } catch (_) { /* Keep new messages if a local preference was damaged. */ }
     const existing=pushNotifications.findIndex(stored=>pushNotificationKey(stored)===pushNotificationKey(item));
     if (existing<0) {
@@ -4105,8 +4147,7 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     const developerWhatsApp = `https://wa.me/5491135195674?text=${encodeURIComponent('¡Me gustó la app de Iahadut HaTora! ¿Podemos hacer un proyecto juntos?')}`;
     const developerCredit = `<div class="developer-credit"><span class="app-version">Versión ${escapeHtml(APP_VERSION)}</span><span class="developer-name">Y.R.N Soluciones Software</span><a class="developer-cta" href="https://wa.me/5491135195674" target="_blank" rel="noopener">¿Necesitás una app?</a><a class="developer-whatsapp" href="https://wa.me/5491135195674" target="_blank" rel="noopener" aria-label="Contactar por WhatsApp"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c0 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/></svg></a></div>`;
     const moreInfo = Object.entries(info).filter(([key]) => !['shops', 'catering', 'notes', 'world'].includes(key));
-    const support = Capacitor.getPlatform()==='android' ? '<button class="more-row" data-copy-support><span class="more-row-leading-icon" aria-hidden="true">⌘</span><span><strong>Copiar código de soporte</strong></span><span class="row-arrow" aria-hidden="true">›</span></button>' : '';
-    $('#moreList').innerHTML = moreInfo.map(([key, value]) => `<button class="more-row" data-info="${key}">${infoIcon(key)}<span><strong>${escapeHtml(value[0])}</strong><small>${escapeHtml(value[1])}</small></span><span class="row-arrow" aria-hidden="true">›</span></button>`).join('') + offline + update + rateApp + officialWebsite + support + developerCredit;
+    $('#moreList').innerHTML = moreInfo.map(([key, value]) => `<button class="more-row" data-info="${key}">${infoIcon(key)}<span><strong>${escapeHtml(value[0])}</strong><small>${escapeHtml(value[1])}</small></span><span class="row-arrow" aria-hidden="true">›</span></button>`).join('') + offline + update + rateApp + officialWebsite + developerCredit;
     document.querySelectorAll('.developer-name').forEach((node) => {
       node.innerHTML = `<img src="${developerLogoAssetUrl}" alt="waien studio" width="520" height="290" loading="lazy" decoding="async"><span class="developer-label"><strong>Waien</strong> Studio</span>`;
     });
@@ -4777,8 +4818,9 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
 
   function goBackTaxonomy() {
     const parent = activeCategoryPath.slice(0, -1);
-    if (parent.length) openTaxonomyPath(parent);
-    else { renderCategoryDirectory(); showView('categoryDirectoryView'); }
+    if (parent.length) openTaxonomyPath(parent, {restoreScroll:true});
+    else if (taxonomyReturnView === 'searchView') restoreSearchScreen();
+    else { renderCategoryDirectory(); showView('categoryDirectoryView', {restoreScroll:true}); }
   }
 
   function goBackReader() {
@@ -4859,6 +4901,16 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     if (scanAlternative) { closeScanner(); openDetail(scanAlternative.dataset.scanAlternative); return; }
     const loadMoreButton = event.target.closest('[data-load-more-products]');
     if (loadMoreButton) { appendProductBatch(); return; }
+    const brandButton = event.target.closest('[data-search-brand]');
+    if (brandButton) {
+      window.clearTimeout(searchTimer);
+      searchBrand = brandButton.dataset.searchBrand;
+      $('#query').value = searchBrand;
+      updateSearchScanAction(true);
+      $('.bottom-nav').classList.add('has-query');
+      renderResults(searchBrand);
+      return;
+    }
     const exploreCategories = event.target.closest('[data-explore-categories]');
     if (exploreCategories) { openCategoryDirectoryFromHome(); return; }
     const taxonomyButton = event.target.closest('[data-taxonomy-path]');
@@ -4899,14 +4951,9 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     const savedButton = event.target.closest('[data-saved]'); if (savedButton) { openSavedScreen(); return; }
     const clearHistoryButton = event.target.closest('[data-clear-history]'); if (clearHistoryButton) { if (!recent.length || window.confirm('¿Borrar el historial de búsquedas?')) { recent = []; localStorage.removeItem('iht_recent'); renderMore(); renderSearchCategories(); } }
     const notificationButton = event.target.closest('[data-enable-notifications]');
-    if(event.target.closest('[data-copy-support]')) {
-      void (async()=>{try{const {topic}=await PushHistory.getTestTopic();localStorage.setItem('iht_alerts_test_topic',topic);try{await navigator.clipboard.writeText(topic);window.alert('Código copiado. Podés enviarlo a soporte para vincular tu teléfono.');}catch{window.prompt('Tu código de soporte:',topic);}}catch{window.alert('No se pudo obtener el código. Intentá nuevamente.');}})();return;
-    }
     if (notificationButton) { setupPushNotifications(true).then(() => { renderPushNotifications(); renderMore(); }); return; }
     const disableNotificationButton = event.target.closest('[data-disable-notifications]');
     if (disableNotificationButton) { disablePushNotifications(); return; }
-    const clearPushButton = event.target.closest('[data-clear-push-notifications]');
-    if (clearPushButton) { clearPushNotifications(); return; }
     const openAlertsButton = event.target.closest('[data-open-alerts]');
     if (openAlertsButton) { showView('alertsView'); return; }
     const openPlayStoreButton = event.target.closest('[data-open-play-store]');
@@ -4967,6 +5014,7 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     if (hasText) window.clearInterval(homePlaceholderTimer); else startHomePlaceholders();
   });
   $('#query').addEventListener('input', () => {
+    searchBrand = '';
     const hasText = Boolean($('#query').value.trim());
     $('.bottom-nav').classList.toggle('has-query', hasText);
     updateSearchScanAction(hasText);
@@ -5131,6 +5179,12 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
   // A withdrawal is not another push: refresh while the inbox is on screen.
   // No polling while hidden, offline, or browsing other sections.
   setInterval(() => {
+    if (!document.hidden && pushNotifications.some(item=>alertExpired(item))) {
+      pushNotifications=pushNotifications.filter(item=>!alertExpired(item));
+      localStorage.setItem('iht_push_notifications',JSON.stringify(pushNotifications));
+      if(!pushNotifications.length)setPushNotificationBadge(false);
+      if(document.querySelector('.view.active')?.id==='alertsView')renderPushNotifications();
+    }
     if (!document.hidden && navigator.onLine) {
       void syncAlertsInbox(document.querySelector('.view.active')?.id === 'alertsView');
       if(document.querySelector('.view.active')?.id === 'alertsView') void restorePushHistory(true);

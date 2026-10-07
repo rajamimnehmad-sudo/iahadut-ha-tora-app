@@ -2,6 +2,20 @@
   "appId": "ar.vaad.catalogo.app",
   "appName": "Iahadut HaTora",
   "webDir": "dist",
+  "experimental": {
+    "ios": {
+      "spm": {
+        "swiftToolsVersion": "6.1",
+        "packageTraits": {
+          "@capacitor-firebase/analytics": ["AnalyticsWithoutAdIdSupport"]
+        },
+        "packageOptions": {
+          "@capacitor-firebase/analytics": { "symlink": true },
+          "@capacitor-firebase/messaging": { "symlink": true }
+        }
+      }
+    }
+  },
   "plugins": {
     "FirebaseMessaging": {
       "presentationOptions": ["badge", "sound", "alert"]
