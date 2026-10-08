@@ -3,30 +3,38 @@
   "source": "google-analytics",
   "metric": "catalog_product_search",
   "windowDays": 28,
-  "generatedAt": "2026-10-07T19:05:21.719Z",
+  "generatedAt": "2026-10-08T06:40:41.267Z",
   "products": [
     {
-      "url": "https://vaad.ar/producto/pure-de-tomate-marca-la-campagnola/",
-      "searches": 6
+      "url": "https://vaad.ar/producto/pure-de-tomate-marca-arcor/",
+      "searches": 7
     },
     {
       "url": "https://vaad.ar/producto/pastillas-marca-dorins/",
-      "searches": 5
+      "searches": 6
     },
     {
-      "url": "https://vaad.ar/producto/pure-de-tomate-marca-arcor/",
-      "searches": 5
+      "url": "https://vaad.ar/producto/pure-de-tomate-marca-la-campagnola/",
+      "searches": 6
     },
     {
       "url": "https://vaad.ar/producto/pure-de-tomate-marolio/",
       "searches": 5
     },
     {
-      "url": "https://vaad.ar/producto/salsa-de-oliva-marca-la-campagnola/",
-      "searches": 4
+      "url": "https://vaad.ar/producto/alga-de-sushi-2/",
+      "searches": 3
     },
     {
-      "url": "https://vaad.ar/producto/alga-de-sushi-2/",
+      "url": "https://vaad.ar/producto/barrita-full-arandanos-y-almendras/",
+      "searches": 3
+    },
+    {
+      "url": "https://vaad.ar/producto/manteca-marca-sozoe-veganteca/",
+      "searches": 3
+    },
+    {
+      "url": "https://vaad.ar/producto/mermelada-de-damasco-con-trozos-de-fruta-marca-arcor/",
       "searches": 3
     },
     {
@@ -34,11 +42,19 @@
       "searches": 3
     },
     {
+      "url": "https://vaad.ar/producto/salsa-de-oliva-marca-la-campagnola/",
+      "searches": 3
+    },
+    {
+      "url": "https://vaad.ar/producto/acelga-congelada-marca-greens/",
+      "searches": 2
+    },
+    {
       "url": "https://vaad.ar/producto/atun-marca-mar-caribe/",
       "searches": 2
     },
     {
-      "url": "https://vaad.ar/producto/barrita-full-arandanos-y-almendras/",
+      "url": "https://vaad.ar/producto/atun-marca-mare-pronto/",
       "searches": 2
     },
     {
@@ -50,39 +66,23 @@
       "searches": 2
     },
     {
+      "url": "https://vaad.ar/producto/bebida-alcoholica-marca-pardalis/",
+      "searches": 2
+    },
+    {
+      "url": "https://vaad.ar/producto/brocoli-congelado-marca-greens/",
+      "searches": 2
+    },
+    {
       "url": "https://vaad.ar/producto/condimento-marca-la-parmesana-milanesas/",
       "searches": 2
     },
     {
+      "url": "https://vaad.ar/producto/dulce-de-batata-marca-arcor/",
+      "searches": 2
+    },
+    {
       "url": "https://vaad.ar/producto/golosina-ring-pop/",
-      "searches": 2
-    },
-    {
-      "url": "https://vaad.ar/producto/manteca-marca-sozoe-veganteca/",
-      "searches": 2
-    },
-    {
-      "url": "https://vaad.ar/producto/mayonesa-light-marca-menoyo/",
-      "searches": 2
-    },
-    {
-      "url": "https://vaad.ar/producto/mermelada-blend-de-frutas-durazno-mango-marca-arcor/",
-      "searches": 2
-    },
-    {
-      "url": "https://vaad.ar/producto/mermelada-de-damasco-con-trozos-de-fruta-marca-arcor/",
-      "searches": 2
-    },
-    {
-      "url": "https://vaad.ar/producto/mermelada-de-naranja-con-trozos-de-fruta-marca-arcor/",
-      "searches": 2
-    },
-    {
-      "url": "https://vaad.ar/producto/pan-de-miga/",
-      "searches": 2
-    },
-    {
-      "url": "https://vaad.ar/producto/pan-marca-la-saltena/",
       "searches": 2
     }
   ]
