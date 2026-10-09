@@ -11,3 +11,7 @@ Conserva las entregas anteriores, incluida la cápsula Actualizar ahora con fluj
 Pendientes: QA física completa de descarga/reinicio sin conexión, cámara/escáner, APNs, eventos reales de analítica/Vistos y flujo Google Play con una versión superior disponible. Cuatro fuentes Free Chips ausentes/404; información solicitada por Apple y recuperación independiente de cuentas, clave del Hub y código/archivos. Demo pública conserva frontend 1.0.48. No se declara respaldo completo por metadata.
 
 Fuente de 117 respaldada en GitHub, PR #11. Informe: `2026-10-09-internal-117-delivery.json`.
+
+## Cambio posterior a la entrega 117
+
+Desplegable de avisos: corregidas las etiquetas superpuestas Leer la nota/Ocultar la nota. Ahora solo se ve la etiqueta correspondiente, con flecha alineada que cambia de dirección y área táctil de 44 px. Se conserva details/summary nativo para teclado y accesibilidad. Probado abrir/cerrar en navegador; estilos compartidos sincronizados con npm run prepare:mobile. Preparado localmente para Android/iPhone, no incluido en los artefactos ya publicados de 117 y no instalado en teléfonos. Requiere próximo paquete. No se enviaron ni editaron avisos para probar; vista previa local independiente.
