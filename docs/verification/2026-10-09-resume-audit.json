@@ -50,6 +50,14 @@
     {
       "item": "Coincidencias en el otro país al final de la búsqueda",
       "evidence": "Aviso Coincidencias en Argentina/Uruguay movido después del listado de productos; selector conserva lugar previo. Alcance aclarado por el usuario."
+    },
+    {
+      "item": "Copia central de datos y apertura de fichas",
+      "evidence": "09/10 17:49 UTC: 1117 productos y 1117 fichas completas, hash público validado. Caché inmediata, solicitudes deduplicadas, texto independiente de imagen y recuperación central cubiertos por pruebas. No se midieron tiempos físicos ni se distribuyó la preparación visual."
+    },
+    {
+      "item": "Espaciado final",
+      "evidence": "Línea inferior del último resultado eliminada; 18 px antes de coincidencias. Iconos 3D con columnas de 40/52 px reservadas; no superposición en vista móvil verificada."
     }
   ],
   "pending": [

@@ -5763,3 +5763,20 @@ html[data-platform="ios"][data-ios-edge-to-edge="true"] body:not(.search-open) .
     width: 40px !important; height: 40px !important; flex-basis: 40px;
   }
 }
+
+/* Give the final result and the other-country notice separate breathing room. */
+#searchView #productList > .product:last-child { border-bottom: 0 !important; }
+#searchView #productList + .search-region-matches { margin: 18px 20px 24px; }
+
+/* Reserve the full image width so 3D icons cannot overlap their labels. */
+#homeView .useful-grid .link-row[data-info] {
+  grid-template-columns: 52px minmax(0, 1fr) 14px !important; gap: 10px !important;
+}
+@media (max-width: 700px) {
+  #homeView .useful-grid .link-row[data-info] {
+    grid-template-columns: 40px minmax(0, 1fr) 12px !important; gap: 8px !important; padding: 10px !important;
+  }
+  #homeView .useful-grid .link-row img.info-icon-3d {
+    width: 40px !important; height: 40px !important; flex-basis: 40px;
+  }
+}
