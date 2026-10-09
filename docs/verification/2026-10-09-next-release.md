@@ -32,3 +32,8 @@ Verificación posterior: S22 conectado informa versionCode=111 y versionName=1.0
 - Fichas: restaurar el recuadro blanco de la foto también para los productos con PNG transparente; conservar transparencia del archivo y objeto completo.
 
 - Catering: reforzar ligeramente bordes y sombras del plateado, conservando tamaño y material.
+
+- Enlace de actualización: azul oscuro aprobado por el usuario; texto/flecha y aparición condicional sin cambios.
+- Atrás: sustituir glifo tipográfico por SVG de 24 px, quitar fondo circular gris y escala al presionar, conservar área táctil de 44 px y foco de teclado. Títulos de cabecera de 16 px, centrados sin desplazamiento vertical.
+- Marcas: usuario confirma el 09/10/2026 que el arrastre ya funciona bien en Samsung S22; no cambiar esa lógica.
+- Comparación física: S22 111 y iPhone USB detectados; QuickTime no pudo completar captura de pantalla del iPhone. No afirmar comparación visual física completa hasta obtenerla.

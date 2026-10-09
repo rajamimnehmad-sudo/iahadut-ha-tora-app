@@ -5872,3 +5872,13 @@ html[data-platform="ios"][data-ios-edge-to-edge="true"] body:not(.search-open) .
 
 /* Preserve silver material while separating the cloche from its yellow card. */
 #homeView .useful-grid .link-row[data-info="catering"] img.info-icon.info-icon-3d { filter: contrast(1.18) brightness(.95) drop-shadow(0 1px 0.5px rgb(67 58 34 / 20%)); }
+
+/* The update invitation is a recognizable dark blue link. */
+#homeView .home-app-update button { color: #245b87; }
+#homeView .home-app-update button:hover, #homeView .home-app-update button:active { color: #183f60; }
+#homeView .home-app-update button:focus-visible { outline-color: #245b87; }
+/* Shared back controls use the same vector size on iOS and Android. */
+.back { -webkit-appearance: none; appearance: none; -webkit-tap-highlight-color: transparent; border-radius: 10px; }
+.back:active, .back:hover, .back:focus:not(:focus-visible) { background: transparent !important; box-shadow: none !important; transform: none !important; outline: none; }
+.back svg { display: block; width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 2.3; stroke-linecap: round; stroke-linejoin: round; }
+#appHero .detail-head > strong { font-size: 16px !important; line-height: 1.2; font-weight: 650; transform: none !important; }
