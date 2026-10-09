@@ -124,9 +124,31 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
       marker?.parentNode?.insertBefore(mounted, marker.nextSibling);
     }
     const nextHeader = document.querySelector(`#${viewId} > .detail-head`);
-    if (nextHeader && viewTitleSlot) viewTitleSlot.appendChild(nextHeader);
+    if (nextHeader && viewTitleSlot) {
+      viewTitleSlot.appendChild(nextHeader);
+      updateReturnHeader(viewId, nextHeader);
+    }
     document.body.classList.toggle('has-view-title', Boolean(nextHeader));
   };
+  function updateReturnHeader(viewId, header = viewTitleSlot?.querySelector('.detail-head')) {
+    if (!header) return;
+    let destination;
+    if (['categoryDirectoryView', 'savedView', 'timelineView'].includes(viewId)) destination = 'Inicio';
+    else if (['subcategoryDirectoryView', 'categoryProductsView'].includes(viewId)) {
+      destination = activeCategoryPath.length > 1
+        ? categoryDisplayName(activeCategoryPath.at(-2))
+        : taxonomyReturnView === 'searchView' ? 'la búsqueda' : 'categorías';
+    } else if (viewId === 'readerView') {
+      const target = readerHistory.at(-1);
+      destination = target?.type === 'info' ? info[target.key]?.[0]
+        : ({homeView:'Inicio', moreView:'Más', searchView:'la búsqueda', categoryDirectoryView:'categorías', subcategoryDirectoryView:categoryDisplayName(activeCategoryPath.at(-1)), categoryProductsView:categoryDisplayName(activeCategoryPath.at(-1)), detailView:'la ficha del producto', savedView:'Guardados', alertsView:'Alertas', timelineView:'Últimos cambios'})[target?.id];
+      destination ||= 'Más';
+    }
+    if (!destination) return;
+    const label = `Volver a ${destination}`;
+    header.querySelector('strong').textContent = label;
+    header.querySelector('.back')?.setAttribute('aria-label', label);
+  }
   let searchFormHome;
   let searchPlaceholderTimer;
   let homePlaceholderTimer;
@@ -4310,11 +4332,11 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     }
     currentInfoKey = key;
     showView('readerView');
-    $('#readerTop').textContent = value[0];
+    updateReturnHeader('readerView');
     $('#readerContent').innerHTML = '<div class="content-skeleton" aria-hidden="true"><i></i><i></i><i></i></div>';
     const renderInfo = (content) => {
       window.__ihtInfoCards = content.cards || [];
-      $('#readerTop').textContent = value[0];
+      updateReturnHeader('readerView');
       $('#readerContent').innerHTML = infoContentMarkup(content);
     };
     if (infoCache[key]) {
@@ -4339,7 +4361,7 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     readerHistory = [{type:'view', id:document.querySelector('.view.active')?.id || 'homeView'}];
     currentInfoKey = '__catalog';
     showView('readerView');
-    $('#readerTop').textContent = 'Catálogo';
+    updateReturnHeader('readerView');
     const renderDate = (date, note = 'Fecha publicada por Iahadut HaTora.') => {
       const totalLabel = totalCount().toLocaleString('es-AR');
       const currentMessage = syncState.running
