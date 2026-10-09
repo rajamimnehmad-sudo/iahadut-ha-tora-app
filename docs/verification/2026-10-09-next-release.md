@@ -10,4 +10,6 @@ Cambios posteriores preparados para el próximo paquete, sin necesidad de volver
 
 Recursos web sincronizados con ambas plataformas; no incluidos en los binarios ya publicados de 111. No se incrementa versión por esta sincronización.
 
-Validaciones pendientes: confirmar actualización de Play en S22; probar gestos, carrusel iPhone, descarga sin conexión y Vistos en dispositivos; resolver cuatro fotos oficiales Free Chips que devuelven 404; completar información y video físico solicitados por Apple; verificar recuperación independiente de cuentas, clave del Hub y código. No se afirma que la sincronización de metadata sea un respaldo de código.
+Validaciones pendientes: probar gestos, carrusel iPhone, descarga sin conexión y Vistos en dispositivos; resolver cuatro fotos oficiales Free Chips que devuelven 404; completar información y video físico solicitados por Apple; verificar recuperación independiente de cuentas, clave del Hub y código. No se afirma que la sincronización de metadata sea un respaldo de código.
+
+Verificación posterior: S22 conectado informa versionCode=111 y versionName=1.0.53; instalación de la actualización confirmada. Hub muestra 204 dispositivos Android activos instalados en el informe del 4/10/2026, distinto de 724 usuarios acumulados de Analytics.
