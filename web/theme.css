@@ -3948,7 +3948,7 @@ body.app-scrolled .app-hero .detail-head {
 }
 .detail-description { white-space: pre-line; }
 .detail-content > img[data-expanded-image] { object-fit: contain; object-position: center; }
-.detail-content > img[data-transparent-product-photo],
+.detail-content > img[data-transparent-product-photo] { background: #fff; }
 .product img[data-transparent-product-photo],
 .popular-search-card img[data-transparent-product-photo] { background: transparent; }
 .catalog-news-link {
@@ -5869,3 +5869,6 @@ html[data-platform="ios"][data-ios-edge-to-edge="true"] body:not(.search-open) .
 /* Keep the arrow beside the actual text block, rather than at the outer edge. */
 #homeView .home-app-update button { width: fit-content !important; margin-inline: auto; }
 #homeView .home-app-update button > span { width: auto !important; max-width: 23ch; flex: 0 1 auto; }
+
+/* Preserve silver material while separating the cloche from its yellow card. */
+#homeView .useful-grid .link-row[data-info="catering"] img.info-icon.info-icon-3d { filter: contrast(1.18) brightness(.95) drop-shadow(0 1px 0.5px rgb(67 58 34 / 20%)); }

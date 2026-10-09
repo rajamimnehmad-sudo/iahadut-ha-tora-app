@@ -28,3 +28,7 @@ Verificación posterior: S22 conectado informa versionCode=111 y versionName=1.0
 - Última revisión: cuatro dibujos de igual tamaño visible (aprox. 40 px de lado mayor); se eliminó la reducción de WhatsApp. Flecha a 8 px del bloque compacto de texto.
 
 - Ajuste solicitado después: reducir WhatsApp aproximadamente un 9 %, conservando los otros tres iconos.
+
+- Fichas: restaurar el recuadro blanco de la foto también para los productos con PNG transparente; conservar transparencia del archivo y objeto completo.
+
+- Catering: reforzar ligeramente bordes y sombras del plateado, conservando tamaño y material.
