@@ -54,7 +54,7 @@ test('Ready requires durable files, completed manifest, and matching catalog',as
   const urls=['https://vaad.ar/a.jpg','https://vaad.ar/b.png'];
   assert.equal(service.check(urls,'v1').ready,false);
   await service.download(urls,'v1',{products:[{name:'a'}]});
-  assert.equal(service.check(urls,'v1').ready,true);
+  assert.equal(service.check(urls,'v1').ready,true);assert.equal(service.check(urls,'v1').completed,urls.length);assert.equal(service.check(urls,'v1').total,urls.length);
   assert.equal(service.check([...urls,'https://vaad.ar/c.png'],'v1').ready,false);
   assert.equal(downloads.every(item=>item.directory==='DATA'),true);
   const reopened=context.createOfflineDownload();await reopened.init();
@@ -71,7 +71,7 @@ test('Interrupted download never marks ready and retry reuses completed files',a
   const urls=['https://vaad.ar/a.jpg','https://vaad.ar/b.png'];await service.download(urls,'v1',{});
   assert.equal(service.check(urls,'v1').ready,false);assert.ok(states.at(-1).error);assert.equal(states.at(-1).busy,false);
   f.setFail('');await service.download(urls,'v1',{});
-  assert.equal(service.check(urls,'v1').ready,true);
+  assert.equal(service.check(urls,'v1').ready,true);assert.equal(service.check(urls,'v1').completed,urls.length);assert.equal(service.check(urls,'v1').total,urls.length);
   assert.equal(f.downloads.filter(item=>item.url===urls[0]).length,1);
 });
 test('Pause leaves files intact and resume finishes without redownloading',async()=>{
@@ -85,7 +85,7 @@ test('Pause leaves files intact and resume finishes without redownloading',async
   assert.equal(service.check(urls,'v1').ready,false);
   assert.ok(f.downloads.length<urls.length);
   await service.download(urls,'v1',{});
-  assert.equal(service.check(urls,'v1').ready,true);
+  assert.equal(service.check(urls,'v1').ready,true);assert.equal(service.check(urls,'v1').completed,urls.length);assert.equal(service.check(urls,'v1').total,urls.length);
   assert.equal(f.downloads.length,urls.length);
 });
 test('Wi-Fi-only policy stops downloads before requesting files on cellular',async()=>{
@@ -200,7 +200,7 @@ test('App auto-resume respects visibility, explicit pause, Wi-Fi-only and mobile
   Object.assign(f.context,{
     logAnalyticsEvent(){},
     offlineStarting:false,offlineNextRetryAt:0,offlineNextUpdateCheckAt:0,offlineWifiWait:false,offlineMobileAllowed:false,
-    document:{visibilityState:'visible',addEventListener:()=>{}},
+    document:{visibilityState:'visible',addEventListener:()=>{},querySelector:()=>null},
     window:{setInterval:()=>{},addEventListener:()=>{},alert:()=>{}},
     offlineAssets:()=>['https://vaad.ar/a.png'],offlineVersion:()=> 'v1',
     products:[],productCache:{},infoCache:{},cardCache:{},
@@ -253,4 +253,38 @@ test('Automatic offline updates survive completion and reopening; explicit pause
  await reopened.setResumePreference({enabled:false,allowMobile:false,autoUpdate:false});
  const paused=f.context.createOfflineDownload();await paused.init();
  assert.equal(paused.getResumePreference().autoUpdate,false);
+});
+
+test('native pause acknowledgement finishes without waiting for polling and rejects stale running status',async()=>{
+ const f=fixture();let staleResolve;let pending=false;let pauses=0;
+ const running={busy:true,paused:false,percent:12,manifest:{images:{},resume:{enabled:true,autoUpdate:true}}};
+ const bridge={start:async()=>{},status:()=>pending?new Promise(resolve=>{staleResolve=resolve;}):Promise.resolve(running),pause:async()=>{pauses++;}};
+ const service=f.context.createOfflineDownload(()=>{},bridge);
+ await service.download(['https://vaad.ar/a.jpg'],'v1',{});
+ pending=true;const stale=service.refresh();
+ await service.pause();
+ assert.equal(service.check([], 'v1').busy,false);
+ assert.equal(service.check([], 'v1').paused,true);
+ assert.equal(service.check([], 'v1').pausing,false);
+ staleResolve(running);await stale;
+ assert.equal(service.check([], 'v1').paused,true);
+ assert.equal(service.getResumePreference().enabled,false);
+ await service.pause();assert.equal(pauses,1);
+});
+
+test('unresponsive native pause exits Pausando with a retryable error',async()=>{
+ const f=fixture();f.context.setTimeout=(fn,ms)=>setTimeout(fn,ms===10000?15:ms);
+ const service=f.context.createOfflineDownload(()=>{},{start:async()=>{},status:async()=>({busy:true,paused:false,manifest:{images:{}}}),pause:()=>new Promise(()=>{})});
+ await service.download(['https://vaad.ar/a.jpg'],'v1',{});
+ await service.pause();const state=service.check([], 'v1');
+ assert.equal(state.pausing,false);assert.equal(state.paused,false);assert.match(state.error,/No se pudo pausar/);
+});
+
+test('pause during native start is retained and applied after start acknowledges',async()=>{
+ const f=fixture();let started;let pauses=0;
+ const service=f.context.createOfflineDownload(()=>{},{start:()=>new Promise(resolve=>{started=resolve;}),pause:async()=>{pauses++;},status:async()=>({busy:true,paused:false,manifest:{images:{}}})});
+ const download=service.download(['https://vaad.ar/a.jpg'],'v1',{});
+ await service.pause();assert.equal(service.check([], 'v1').pausing,true);
+ started();await download;
+ assert.equal(pauses,1);assert.equal(service.check([], 'v1').busy,false);assert.equal(service.check([], 'v1').paused,true);assert.equal(service.check([], 'v1').pausing,false);
 });

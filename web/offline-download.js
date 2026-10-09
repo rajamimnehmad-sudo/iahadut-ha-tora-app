@@ -86,7 +86,8 @@ export function createOfflineDownload(onChange = () => {}, background = null) {
   const check = (urls, version) => {
     checkedTarget = {urls, version};
     const ready = manifest.signature === signature(urls, version) && urls.every(url => manifest.images[url]);
-    state = {...state, ready, hasDownload:Boolean(manifest.signature) || Object.keys(manifest.images).length > 0};
+    state = {...state, ready, completed:urls.filter(url => manifest.images[url]).length, total:urls.length,
+      hasDownload:Boolean(manifest.signature) || Object.keys(manifest.images).length > 0};
     return state;
   };
   const localUrl = url => manifest.images[url]?.uri || url;
@@ -110,12 +111,18 @@ export function createOfflineDownload(onChange = () => {}, background = null) {
   };
   let refreshing = false;
   let generation = 0;
+  let command = '';
+  let pendingPause = false;
+  const bridgeCall = promise => new Promise((resolve, reject) => {
+    const timer = setTimeout(() => reject(new Error('La descarga no respondió')), 10000);
+    Promise.resolve(promise).then(value => {clearTimeout(timer);resolve(value);}, error => {clearTimeout(timer);reject(error);});
+  });
   const refresh = async () => {
-    if (!background || refreshing || state.clearing) return state;
+    if (!background || refreshing || command || state.clearing) return state;
     const startedGeneration = generation;
     refreshing = true;
     try {
-      const result = await background.status();
+      const result = await bridgeCall(background.status());
       if (generation !== startedGeneration) return state;
       if (result.manifest?.images) {
         manifest = result.manifest;
@@ -132,11 +139,28 @@ export function createOfflineDownload(onChange = () => {}, background = null) {
     return state;
   };
   const pause = async () => {
+    if (command === 'starting') {
+      pendingPause = true;
+      emit({paused:true,pausing:true});
+      return;
+    }
+    if (command || state.clearing || (state.paused && !busy)) return;
     paused = true;
+    generation++;
+    emit({paused:true,pausing:true,error:''});
     if (background) {
-      try {await background.pause(); await refresh();}
-      catch (_) {emit({error:'No se pudo pausar · Reintentar'});}
-    } else emit({paused:true});
+      command = 'pausing';
+      try {
+        await bridgeCall(background.pause());
+        manifest.resume = {enabled:false,autoUpdate:false,allowMobile:getResumePreference().allowMobile};
+        busy = false;
+        emit({busy:false,paused:true,pausing:false,waiting:false,error:''});
+      } catch (_) {paused = false;emit({paused:false,pausing:false,error:'No se pudo pausar · Reintentar'});}
+      finally {command = '';}
+    } else {
+      await setResumePreference({enabled:false,autoUpdate:false,allowMobile:getResumePreference().allowMobile});
+      emit({paused:true,pausing:busy});
+    }
   };
   const clear = async () => {
     if (busy || state.clearing) return false;
@@ -161,14 +185,20 @@ export function createOfflineDownload(onChange = () => {}, background = null) {
     } catch (_) { emit({clearing:false,error:'No se pudo borrar la descarga · Reintentar'}); return false; }
   };
   const download = async (urls, version, snapshot, canContinue = async () => true, wifiOnly = true) => {
-    if (busy || state.clearing) return;
+    if (busy || command || state.clearing) return;
     if (background) {
+      command = 'starting';
+      generation++;
       busy = true;
-      emit({busy:true, paused:false, waiting:false, error:''});
+      paused = false;
+      emit({busy:true, paused:false, pausing:false, waiting:false, error:''});
       try {
-        await background.start({urls, signature:signature(urls, version), snapshot, wifiOnly});
-        await refresh();
-      } catch (_) {busy = false; emit({busy:false, error:'No se pudo iniciar la descarga · Reintentar'});}
+        await bridgeCall(background.start({urls, signature:signature(urls, version), snapshot, wifiOnly}));
+        command = '';
+        if (pendingPause) {pendingPause = false;await pause();}
+        else await refresh();
+      } catch (_) {busy = false;pendingPause = false;emit({busy:false,paused:false,pausing:false,error:'No se pudo iniciar la descarga · Reintentar'});}
+      finally {command = '';}
       return;
     }
     busy = true;
@@ -226,7 +256,7 @@ export function createOfflineDownload(onChange = () => {}, background = null) {
     } catch (_) {
       // Let workers finish before enabling retry; preserve completed downloads.
       emit({error:'Descarga incompleta. Revisá la conexión y el espacio disponible; tocá para reintentar.'});
-    } finally {busy = false; emit({busy:false});}
+    } finally {busy = false; emit({busy:false,pausing:false});}
   };
   return {init, check, download, localUrl, remoteUrl, readSnapshot, pause, clear, refresh, getResumePreference, setResumePreference};
 }

@@ -604,6 +604,7 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
       return;
     }
     offlineStarting = true;
+    if (document.querySelector('.view.active')?.id === 'moreView') renderMore({offlineOnly:true});
     try {
       const connection = await offlineConnection();
       const wifi = connection.type === 'wifi' && !connection.metered;
@@ -646,7 +647,10 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
       await offlineDownload.setResumePreference({enabled:false, allowMobile:false}).catch(() => {});
       logAnalyticsEvent('offline_download', {outcome:'error', automatic:automatic ? 1 : 0});
       window.alert('No se pudo guardar el estado de la descarga. Tocá para reintentar.');
-    } finally {offlineStarting = false;}
+    } finally {
+      offlineStarting = false;
+      if (document.querySelector('.view.active')?.id === 'moreView') renderMore({offlineOnly:true});
+    }
   }
   const resumeOfflineWhenOpen = async () => {
     if (document.visibilityState !== 'visible') return;
@@ -4093,15 +4097,28 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
   }
 
   function renderMore({offlineOnly = false} = {}) {
-    const offlineState = offlineDownload.check(offlineAssets(), offlineVersion());
+    const offlineState = {...offlineDownload.check(offlineAssets(), offlineVersion())};
+    if (offlineStarting && !offlineState.busy && !offlineState.paused && !offlineState.ready) Object.assign(offlineState, {busy:true, preparing:true});
     const offlineTitle = offlineState.ready ? 'Listo para usar offline' : 'Usar sin conexión';
-    const offlineStatus = offlineWifiWait || offlineState.waiting ? 'Esperando conexión permitida' : offlineState.paused ? (offlineState.busy ? 'Pausando…' : 'Descarga pausada') : offlineState.busy ? `Descargando · ${offlineState.percent}%` : offlineState.error ? 'Descarga incompleta · Reintentar' : offlineState.ready ? '' : offlineState.hasDownload ? 'Actualizar descarga' : 'Descarga aproximada: 399 MB';
-    const offline = `<div class="offline-download-item"><button class="more-row offline-download-row" data-offline-download ${offlineState.busy || offlineState.clearing || offlineState.ready ? 'disabled' : ''}><span class="more-row-leading-icon offline-storage-icon" aria-hidden="true"><svg viewBox="0 0 24 24">${offlineState.ready ? '<path d="M4 8h16v12H4zM3 4h18v4H3zM10 12h4"/>' : '<path d="M12 3v12m-4-4 4 4 4-4M4 16v4h16v-4"/>'}</svg></span><span><strong>${offlineTitle}</strong>${offlineStatus ? `<small>${offlineStatus}</small>` : ''}${offlineState.busy || offlineState.paused || offlineWifiWait ? `<span class="offline-download-progress" role="progressbar" aria-label="Descarga offline" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${offlineState.percent}"><span style="width:${offlineState.percent}%"></span></span>` : ''}</span></button>${offlineState.busy || offlineWifiWait ? `<button class="offline-pause-button" data-offline-pause ${offlineState.paused && offlineState.busy ? 'disabled' : ''}>${offlineWifiWait ? 'Cancelar' : 'Pausar'}</button>` : offlineState.paused ? '<button class="offline-pause-button" data-offline-download>Reanudar</button>' : ''}${offlineState.hasDownload && !offlineState.busy ? `<div class="offline-download-actions"><button class="offline-delete-button" type="button" data-offline-delete ${offlineState.clearing ? 'disabled' : ''}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13M10 11v5M14 11v5"/></svg>${offlineState.clearing ? 'Borrando…' : 'Borrar descarga'}</button></div>` : ''}</div>`;
+    const offlineStatus = offlineState.preparing ? 'Preparando descarga…' : offlineWifiWait || offlineState.waiting ? 'Esperando conexión permitida' : offlineState.pausing ? 'Pausando…' : offlineState.paused ? 'Descarga pausada' : offlineState.busy ? (offlineState.total ? `Descargando · ${offlineState.completed.toLocaleString('es-AR')} de ${offlineState.total.toLocaleString('es-AR')} fotos` : `Descargando · ${offlineState.percent}%`) : offlineState.error ? 'Descarga incompleta · Reintentar' : offlineState.ready ? '' : offlineState.hasDownload ? 'Actualizar descarga' : 'Descarga aproximada: 399 MB';
+    const offline = `<div class="offline-download-item"><button class="more-row offline-download-row" data-offline-download ${offlineState.busy || offlineState.clearing || offlineState.ready ? 'disabled' : ''}><span class="more-row-leading-icon offline-storage-icon" aria-hidden="true"><svg viewBox="0 0 24 24">${offlineState.ready ? '<path d="M4 8h16v12H4zM3 4h18v4H3zM10 12h4"/>' : '<path d="M12 3v12m-4-4 4 4 4-4M4 16v4h16v-4"/>'}</svg></span><span><strong>${offlineTitle}</strong>${offlineStatus ? `<small>${offlineStatus}</small>` : ''}${offlineState.busy || offlineState.paused || offlineWifiWait ? `<span class="offline-download-progress" role="progressbar" aria-label="Descarga offline" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${offlineState.percent}"><span style="width:${offlineState.percent}%"></span></span>` : ''}</span></button>${offlineState.busy || offlineWifiWait ? `<button class="offline-pause-button" data-offline-pause ${offlineState.preparing || offlineState.pausing ? 'disabled' : ''}>${offlineWifiWait ? 'Cancelar' : 'Pausar'}</button>` : offlineState.paused ? '<button class="offline-pause-button" data-offline-download>Reanudar</button>' : ''}${offlineState.hasDownload && !offlineState.busy ? `<div class="offline-download-actions"><button class="offline-delete-button" type="button" aria-label="${offlineState.clearing ? 'Borrando descarga' : 'Borrar descarga'}" title="Borrar descarga" data-offline-delete ${offlineState.clearing ? 'disabled' : ''}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13M10 11v5M14 11v5"/></svg></button></div>` : ''}</div>`;
     // Progress changes only this row. Recreating the entire More screen
     // reloads the lazy Waien logo and interrupts focus/scroll on every image.
     const offlineItem = $('#moreList .offline-download-item');
     if (offlineOnly && offlineItem) {
-      offlineItem.outerHTML = offline;
+      const template = document.createElement('div');
+      template.innerHTML = offline;
+      const next = template.firstElementChild;
+      for (const selector of ['.offline-download-row', '.offline-pause-button', '.offline-download-actions']) {
+        const current = offlineItem.querySelector(selector);
+        const replacement = next.querySelector(selector);
+        if (current && replacement) {
+          for (const attribute of [...current.attributes]) if (!replacement.hasAttribute(attribute.name)) current.removeAttribute(attribute.name);
+          for (const attribute of [...replacement.attributes]) current.setAttribute(attribute.name, attribute.value);
+          if (current.innerHTML !== replacement.innerHTML) current.innerHTML = replacement.innerHTML;
+        } else if (replacement) offlineItem.append(replacement);
+        else if (current) current.remove();
+      }
       return;
     }
     const officialWebsite = `<a class="more-row official-site-row" href="https://vaad.ar/" target="_blank" rel="noopener"><span class="more-row-leading-icon" aria-hidden="true">↗</span><span><strong>Sitio web oficial</strong></span><span class="row-arrow" aria-hidden="true">›</span></a>`;
@@ -4882,9 +4899,8 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     }
     if (event.target.closest('[data-offline-pause]')) {
       // Explicit pause cancels auto-resume; hiding the app does not.
-      void offlineDownload.setResumePreference({enabled:false, allowMobile:offlineMobileAllowed, autoUpdate:false}).catch(() => {});
       setOfflineWifiWait(false);
-      offlineDownload.pause();
+      void offlineDownload.pause();
       logAnalyticsEvent('offline_download', {outcome:'paused', automatic:0});
       return;
     }

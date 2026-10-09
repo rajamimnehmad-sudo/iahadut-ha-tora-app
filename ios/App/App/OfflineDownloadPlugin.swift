@@ -2,6 +2,7 @@ import Capacitor
 import Foundation
 import CryptoKit
 import ImageIO
+import Network
 
 @objc(OfflineDownloadPlugin)
 public final class OfflineDownloadPlugin: CAPPlugin, CAPBridgedPlugin {
@@ -17,7 +18,14 @@ public final class OfflineDownloadPlugin: CAPPlugin, CAPBridgedPlugin {
                   let signature = call.getString("signature"), let snapshot = call.getObject("snapshot") else {
                 throw NSError(domain: "OfflineDownload", code: 1, userInfo: [NSLocalizedDescriptionKey: "Descarga inválida"])
             }
-            manager.job = ["id": UUID().uuidString, "urls": urls, "signature": signature,
+            // Repeated starts for the same content must keep the queued tasks.
+            // A foreground status check can arrive before iOS schedules them.
+            let sameContent = manager.job["signature"] as? String == signature
+                && manager.job["urls"] as? [String] == urls
+                && manager.job["wifiOnly"] as? Bool == (call.getBool("wifiOnly") ?? true)
+                && (manager.job["error"] as? String ?? "").isEmpty
+            let jobID = sameContent ? (manager.job["id"] as? String ?? UUID().uuidString) : UUID().uuidString
+            manager.job = ["id": jobID, "urls": urls, "signature": signature,
                            "wifiOnly": call.getBool("wifiOnly") ?? true, "paused": false, "error": ""]
             try manager.write("catalog.json", snapshot)
             try manager.saveJob()
@@ -33,9 +41,7 @@ public final class OfflineDownloadPlugin: CAPPlugin, CAPBridgedPlugin {
             let previousID = manager.job["id"] as? String ?? ""
             manager.job = ["id": UUID().uuidString, "paused": true]
             try manager.saveJob()
-            manager.session.getAllTasks { tasks in
-                tasks.filter { !previousID.isEmpty && $0.taskDescription?.hasPrefix(previousID + "|") == true }.forEach { $0.cancel() }
-            }
+            manager.cancelTransfers(previousID)
             if FileManager.default.fileExists(atPath: manager.folder.path) { try FileManager.default.removeItem(at: manager.folder) }
             manager.manifest = ["images": [:], "signature": ""]
             manager.job = [:]
@@ -44,12 +50,14 @@ public final class OfflineDownloadPlugin: CAPPlugin, CAPBridgedPlugin {
     }
     @objc func pause(_ call: CAPPluginCall) {
         OfflineImageTransfers.shared.perform(call) { manager in
+            let previousID = manager.job["id"] as? String ?? ""
+            manager.job["id"] = UUID().uuidString
             manager.job["paused"] = true
             try manager.saveJob()
             let preference = manager.manifest["resume"] as? [String: Any] ?? [:]
             manager.manifest["resume"] = ["enabled": false, "autoUpdate": false, "allowMobile": preference["allowMobile"] as? Bool ?? false]
             try manager.saveManifest()
-            manager.session.getAllTasks { tasks in tasks.forEach { $0.cancel() } }
+            manager.cancelTransfers(previousID)
             return [:]
         }
     }
@@ -73,6 +81,10 @@ final class OfflineImageTransfers: NSObject, URLSessionDownloadDelegate {
     var job: [String: Any] = [:]
     var completion: (() -> Void)?
     var pumping = false
+    var foreground = false
+    let networkMonitor = NWPathMonitor()
+    var path: NWPath?
+    var diagnosticsPending = false
     lazy var session: URLSession = {
         let config = URLSessionConfiguration.background(withIdentifier: Self.identifier)
         config.isDiscretionary = false
@@ -85,10 +97,32 @@ final class OfflineImageTransfers: NSObject, URLSessionDownloadDelegate {
         operations.underlyingQueue = queue
         return URLSession(configuration: config, delegate: self, delegateQueue: operations)
     }()
+    func cancelTransfers(_ id: String) {
+        guard !id.isEmpty else { return }
+        session.getAllTasks { tasks in
+            tasks.filter { $0.taskDescription?.hasPrefix(id + "|") == true }.forEach { $0.cancel() }
+        }
+    }
+    func setForeground(_ active: Bool) {
+        queue.async {
+            self.foreground = active
+            // Keep the same background session and job across scene changes.
+            // Tasks created while visible remain eligible to continue when iOS
+            // suspends the app; recreating them in background makes them discretionary.
+            self.pump()
+            self.recordDiagnostics()
+        }
+    }
     override init() {
         super.init()
         manifest = read("manifest.json") ?? manifest
         job = read("job.json") ?? [:]
+        networkMonitor.pathUpdateHandler = { [weak self] path in
+            guard let self else { return }
+            self.path = path
+            if path.status == .satisfied { self.pump() }
+        }
+        networkMonitor.start(queue: queue)
     }
     func read(_ name: String) -> [String: Any]? {
         guard let data = try? Data(contentsOf: folder.appendingPathComponent(name)) else { return nil }
@@ -112,7 +146,7 @@ final class OfflineImageTransfers: NSObject, URLSessionDownloadDelegate {
         return size > 0
     }
     func status(_ call: CAPPluginCall) {
-        session.getAllTasks { tasks in self.queue.async {
+        queue.async {
             let urls = self.job["urls"] as? [String] ?? []
             var images = self.manifest["images"] as? [String: [String: Any]] ?? [:]
             for (url, item) in images {
@@ -124,9 +158,39 @@ final class OfflineImageTransfers: NSObject, URLSessionDownloadDelegate {
             let ready = !urls.isEmpty && done == urls.count && self.manifest["signature"] as? String == self.job["signature"] as? String
             let paused = self.job["paused"] as? Bool ?? false
             let error = self.job["error"] as? String ?? ""
-            let busy = !paused && error.isEmpty && !ready && !urls.isEmpty && tasks.contains { $0.taskDescription?.hasPrefix((self.job["id"] as? String ?? "") + "|") == true && $0.state != .completed && $0.state != .canceling }
+            // Pending work is busy even while URLSession schedules its first
+            // tasks. Otherwise the JS auto-resume loop starts a new job.
+            let busy = !paused && error.isEmpty && !ready && !urls.isEmpty
+            let wifiOnly = self.job["wifiOnly"] as? Bool ?? true
+            let waiting = busy && self.path.map { $0.status != .satisfied || (wifiOnly && ($0.isExpensive || $0.isConstrained)) } == true
+            if busy { self.pump() }
+            self.recordDiagnostics()
             call.resolve(["manifest": self.manifest, "busy": busy, "paused": paused, "ready": ready,
+                          "waiting": waiting,
                           "percent": urls.isEmpty ? 0 : min(ready ? 100 : 99, done * 100 / urls.count), "error": error])
+        }
+    }
+    func recordDiagnostics() {
+        guard !diagnosticsPending else { return }
+        diagnosticsPending = true
+        session.getAllTasks { tasks in self.queue.async {
+            self.diagnosticsPending = false
+            let id = self.job["id"] as? String ?? ""
+            let current = tasks.filter { $0.taskDescription?.hasPrefix(id + "|") == true }
+            try? self.write("diagnostics.json", [
+                "at": Date().timeIntervalSince1970,
+                "tasks": current.count,
+                "running": current.filter { $0.state == .running }.count,
+                "suspended": current.filter { $0.state == .suspended }.count,
+                "receivedBytes": current.reduce(Int64(0)) { $0 + $1.countOfBytesReceived },
+                "savedImages": (self.manifest["images"] as? [String: Any])?.count ?? 0,
+                "networkAvailable": self.path?.status == .satisfied,
+                "metered": self.path?.isExpensive ?? false,
+                "constrained": self.path?.isConstrained ?? false,
+                "scheduling": self.pumping,
+                "foreground": self.foreground,
+                "paused": self.job["paused"] as? Bool ?? false
+            ])
         } }
     }
     func pump() {
@@ -134,9 +198,8 @@ final class OfflineImageTransfers: NSObject, URLSessionDownloadDelegate {
               let id = job["id"] as? String, let urls = job["urls"] as? [String] else { return }
         pumping = true
         session.getAllTasks { tasks in self.queue.async {
-            self.pumping = false
-            guard self.job["id"] as? String == id else { self.pump(); return }
-            guard !(self.job["paused"] as? Bool ?? false), (self.job["error"] as? String ?? "").isEmpty else { return }
+            guard self.job["id"] as? String == id else { self.pumping = false; self.pump(); return }
+            guard !(self.job["paused"] as? Bool ?? false), (self.job["error"] as? String ?? "").isEmpty else { self.pumping = false; return }
             let images = self.manifest["images"] as? [String: [String: Any]] ?? [:]
             let active = tasks.filter { $0.taskDescription?.hasPrefix(id + "|") == true && $0.state != .completed && $0.state != .canceling }
             tasks.filter { $0.taskDescription?.hasPrefix(id + "|") != true }.forEach { $0.cancel() }
@@ -146,25 +209,46 @@ final class OfflineImageTransfers: NSObject, URLSessionDownloadDelegate {
                 self.manifest["signature"] = self.job["signature"]
                 self.manifest["resume"] = ["enabled": false, "autoUpdate": true, "allowMobile": !(self.job["wifiOnly"] as? Bool ?? true)]
                 do { try self.saveManifest() } catch { self.fail() }
+                self.pumping = false
                 return
             }
-            for value in pending.prefix(max(0, 3 - active.count)) {
+            // Hand the remaining queue to the background session now. Adding
+            // three more files on each wake makes progress depend on iOS's
+            // background resume rate limiter. URLSession controls concurrency.
+            let scheduled = pending
+            self.enqueue(scheduled, offset: 0, id: id)
+        } }
+    }
+    func enqueue(_ pending: [String], offset: Int, id: String) {
+        guard job["id"] as? String == id, !(job["paused"] as? Bool ?? false),
+              (job["error"] as? String ?? "").isEmpty else { pumping = false; pump(); return }
+        let end = min(offset + 8, pending.count)
+        // Yield the state queue between small scheduling batches so pause and
+        // status are handled promptly even for thousands of image tasks.
+        if offset < end {
+            for value in pending[offset..<end] {
                 guard let url = URL(string: value) else { continue }
                 var request = URLRequest(url: url)
-                let wifiOnly = self.job["wifiOnly"] as? Bool ?? true
+                let wifiOnly = job["wifiOnly"] as? Bool ?? true
                 request.allowsCellularAccess = !wifiOnly
                 request.allowsExpensiveNetworkAccess = !wifiOnly
                 request.allowsConstrainedNetworkAccess = !wifiOnly
-                let task = self.session.downloadTask(with: request)
+                let task = session.downloadTask(with: request)
                 task.taskDescription = id + "|" + value
                 task.resume()
             }
-        } }
+        }
+        if end < pending.count {
+            queue.async { self.enqueue(pending, offset: end, id: id) }
+        } else { pumping = false; recordDiagnostics() }
     }
     func fail() {
+        let previousID = job["id"] as? String ?? ""
+        job["id"] = UUID().uuidString
         job["error"] = "Descarga incompleta · Reintentar"
         try? saveJob()
-        session.getAllTasks { $0.forEach { $0.cancel() } }
+        cancelTransfers(previousID)
+        recordDiagnostics()
     }
     func urlSession(_ session: URLSession, downloadTask: URLSessionDownloadTask, didFinishDownloadingTo location: URL) {
         guard let description = downloadTask.taskDescription,
@@ -186,6 +270,7 @@ final class OfflineImageTransfers: NSObject, URLSessionDownloadDelegate {
             images[value] = ["path": "offline-catalog/" + name]
             manifest["images"] = images
             try saveManifest()
+            if images.count % 25 == 0 { recordDiagnostics() }
         } catch { fail() }
     }
     func urlSession(_ session: URLSession, task: URLSessionTask, didCompleteWithError error: Error?) {

@@ -5347,12 +5347,17 @@ body.app-scrolled #appHero {
 .offline-download-progress > span { display: block; height: 100%; background: #297555; transition: width .2s linear; }
 .offline-download-item { position: relative; }
 .offline-storage-icon svg { width: 23px; height: 23px; fill: none; stroke: currentColor; stroke-width: 1.65; stroke-linecap: round; stroke-linejoin: round; }
-.offline-download-actions { display: flex; justify-content: flex-end; padding: 0 12px 10px; }
-.offline-delete-button { display: inline-flex; align-items: center; gap: 7px; min-height: 44px; padding: 8px 12px; border: 1px solid #d7e2dc; border-radius: 10px; background: #fff; color: #52665b; font: inherit; font-size: 13px; cursor: pointer; }
+.offline-download-actions { position: absolute; right: 4px; top: 50%; transform: translateY(-50%); display: flex; padding: 0; }
+.offline-delete-button { display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; padding: 0; border: 0; border-radius: 50%; background: transparent; color: #52665b; cursor: pointer; }
+.offline-delete-button:active { background: #e6eee9; }
+.offline-delete-button:focus-visible { outline: 2px solid #2f7a59; outline-offset: 2px; }
+.offline-download-item:has(.offline-download-actions) .offline-download-row { padding-right: 52px; }
 .offline-delete-button svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
 .offline-delete-button:disabled { opacity: .6; cursor: default; }
 .offline-download-item:has(.offline-pause-button) .offline-download-row { padding-right: 100px; }
 .offline-pause-button { position: absolute; right: 8px; top: 50%; transform: translateY(-50%); min-height: 44px; padding: 8px 12px; border: 1px solid #a6c4b5; border-radius: 12px; background: transparent; color: #205d46; font: inherit; font-size: 12px; cursor: pointer; }
+.offline-download-item:has(.offline-download-actions) .offline-pause-button { right: 52px; }
+.offline-download-item:has(.offline-download-actions):has(.offline-pause-button) .offline-download-row { padding-right: 144px; }
 .offline-network-dialog { max-width: 340px; width: calc(100% - 40px); padding: 24px; border: 0; border-radius: 24px; background: #fff; color: #1d4335; font-family: inherit; }
 .offline-network-dialog::backdrop { background: #102d2366; }
 .offline-network-dialog h2 { font-size: 21px; margin: 0 0 12px; }
