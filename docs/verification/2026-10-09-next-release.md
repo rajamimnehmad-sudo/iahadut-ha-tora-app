@@ -9,3 +9,7 @@ La auditoría previa comprobó 198 pruebas de app, 12 Android, 6 servidor, 60 Hu
 Pendientes documentados: QA física completa de descarga/reinicio sin conexión, cámara/escáner, APNs y eventos reales de analítica/Vistos; cuatro fuentes Free Chips ausentes/404; información solicitada por Apple y recuperación independiente de cuentas, clave del Hub y código/archivos. La demo web pública todavía usa frontend 1.0.48. No se afirma recuperación completa por metadata.
 
 Fuente final respaldada en GitHub, PR #11. Informe de entrega: `2026-10-09-internal-115-delivery.json`; auditoría: `2026-10-09-full-audit.json`.
+
+## Pendiente posterior a 115: actualización desde Inicio
+
+La cápsula Actualizar ahora comparte data-app-update con Más → Actualizar. Android intenta el flujo flexible de Google Play dentro de la app y permite completar la instalación cuando la descarga finaliza. Conserva la tienda como alternativa si Google no permite iniciar el flujo. iOS conserva su enlace de distribución. 201 pruebas aprobadas y prepare:mobile completado; recursos web sincronizados. Requiere nueva entrega: no está en el paquete 115 ya publicado ni instalado. No se incrementó la versión ni se publicó otro paquete. Verificación física requiere instalar este cliente desde Play y ofrecer un versionCode superior.

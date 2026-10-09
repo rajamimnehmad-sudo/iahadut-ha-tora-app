@@ -4061,7 +4061,7 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     const update = $('#homeAppUpdate');
     if (!update) return;
     const button = update.querySelector('button');
-    if (button) button.setAttribute('aria-label', `Abrir la actualización de la aplicación en ${distributionLinks.label}`);
+    if (button) button.setAttribute('aria-label', Capacitor.getPlatform() === 'android' ? 'Actualizar la aplicación' : `Abrir la actualización de la aplicación en ${distributionLinks.label}`);
     // Local visual preview only; release builds keep the real update check.
     if (import.meta.env.DEV && new URLSearchParams(location.search).get('preview') === 'app-update') {
       update.hidden = false;
