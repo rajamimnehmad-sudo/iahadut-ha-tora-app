@@ -1,3 +1,6 @@
+import {createNoticeViews,observeNoticeViews} from './notice-views.js';
+import {centeredCarouselOffset} from './carousel-layout.js';
+import {enableBrandMarqueeDrag} from './brand-marquee.js';
 import {createDetailRecovery} from './detail-recovery.js';
 import {createUsageAnalytics} from './usage-analytics.js';
 import {productSearchKey, validGlobalRanking} from './global-popularity.js';
@@ -322,16 +325,23 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
   if (!validGlobalRanking(globalRanking)) globalRanking = validGlobalRanking(initialGlobalRanking) ? initialGlobalRanking : null;
   let globalPopularityRequest = null;
   let liveRankingCheckedAt = 0;
-  const liveSearch = createLiveSearchClient({
-    storage: {getItem:key => localStorage.getItem(key), setItem:(key,value) => localStorage.setItem(key,value)},
-    call: createLiveSearchTransport({getToken:async () => {
+  async function appSessionToken() {
       const firebase = await getFirebaseCatalogApi();
       if (!firebase) throw new Error('Sesión no disponible');
       const [{getApps}, {getAuth, getIdToken}] = await Promise.all([import('firebase/app'), import('firebase/auth')]);
       const user = getAuth(getApps()[0]).currentUser;
       if (!user) throw new Error('Sesión no disponible');
       return getIdToken(user);
-    }})
+  }
+  const recordNoticeSeen=createNoticeViews({storage:localStorage,online:()=>navigator.onLine,call:async eventKey=>{
+    const token=await appSessionToken();
+    const response=await fetch('https://iahadut-search-ranking.iahadut-search-ranking.workers.dev/notice-view',{method:'POST',headers:{'Content-Type':'application/json',Authorization:`Bearer ${token}`},body:JSON.stringify({eventKey}),signal:AbortSignal.timeout(10000)});
+    if(!response.ok)throw Error('No se pudo registrar la vista');return response.json();
+  }});
+  let stopNoticeViewObserver;
+  const liveSearch = createLiveSearchClient({
+    storage: {getItem:key => localStorage.getItem(key), setItem:(key,value) => localStorage.setItem(key,value)},
+    call: createLiveSearchTransport({getToken:appSessionToken})
   });
   async function refreshGlobalRanking() {
     if (globalPopularityRequest) return globalPopularityRequest;
@@ -2042,10 +2052,8 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     // Dejamos una previsualización lateral de la tarjeta anterior y siguiente.
     // El ancho acompaña el viewport de forma continua: no cambia de golpe al
     // cruzar un umbral que altere la cantidad estimada de tarjetas visibles.
-    const peekRatio = 0.18;
     const cardWidth = Math.max(92, Math.min(128, available * 0.28));
-    const peekWidth = cardWidth * peekRatio;
-    track.dataset.carouselEdgeOffset = String(peekWidth + gap);
+    track.dataset.carouselEdgeOffset = String(centeredCarouselOffset(available, cardWidth, gap));
     track.dataset.carouselViewportWidth = String(available);
     track.style.paddingInline = '0px';
     track.style.setProperty('--recent-card-width', `${cardWidth}px`);
@@ -2668,6 +2676,7 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
   window.visualViewport?.addEventListener('resize', scheduleSearchDockSpace, {passive:true});
 
   const brandMarqueeStartedAt = performance.now();
+  let brandMarqueeOffsetMs = 0;
   // Los logos son locales y pequeños. Preparar también los que aún están
   // fuera de pantalla para no dejar huecos al avanzar la franja.
   document.querySelectorAll('.trusted-brands-group img').forEach(image => { image.loading = 'eager'; });
@@ -2685,23 +2694,15 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     image.replaceWith(button);
     button.append(image);
   });
-  let brandPointerStart = null;
-  let suppressBrandClickUntil = 0;
-  document.querySelector('.trusted-brands-track')?.addEventListener('pointerdown', event => {
-    brandPointerStart = {x:event.clientX, y:event.clientY, id:event.pointerId};
-  }, {passive:true});
-  const finishBrandGesture = event => {
-    if (!brandPointerStart || event.pointerId !== brandPointerStart.id) return;
-    if (event.type === 'pointercancel' || Math.hypot(event.clientX-brandPointerStart.x, event.clientY-brandPointerStart.y) > 10) suppressBrandClickUntil = performance.now()+500;
-    brandPointerStart = null;
-  };
-  window.addEventListener('pointerup', finishBrandGesture, {passive:true});
-  window.addEventListener('pointercancel', finishBrandGesture, {passive:true});
+  const brandMarqueeDrag = enableBrandMarqueeDrag({
+    track:document.querySelector('.trusted-brands-track'), events:window,
+    phaseChanged:time => { brandMarqueeOffsetMs = time - (performance.now() - brandMarqueeStartedAt); }
+  });
 
   function resumeBrandMarquee() {
     const track = document.querySelector('.trusted-brands-track');
     if (!track) return;
-    const elapsed = Math.max(0, performance.now() - brandMarqueeStartedAt) / 1000;
+    const elapsed = (((performance.now() - brandMarqueeStartedAt + brandMarqueeOffsetMs) % 130000 + 130000) % 130000) / 1000;
     track.style.setProperty('--trusted-brands-delay', `${-elapsed}s`);
   }
 
@@ -2759,8 +2760,10 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
       const link = playUrl ? `<button class="push-notification-link" data-push-link="${escapeHtml(playUrl)}" type="button">Abrir en ${distributionLinks.label} <span aria-hidden="true">›</span></button>` : '';
       const text = `<p>${escapeHtml(item.body || 'Hay una actualización disponible.')}</p>`;
       const note = photo && item.bodyDisplay==='collapsed' ? `<details class="push-note"><summary><span class="push-note-closed">Leer la nota</span><span class="push-note-open">Ocultar la nota</span></summary>${text}</details>` : text;
-      return `<article class="push-notification-item"><div><strong>${escapeHtml(item.title || 'Novedad del catálogo')}</strong>${image}${note}<small>${escapeHtml(item.time || '')}</small>${link}</div></article>`;
+      return `<article class="push-notification-item" data-notice-key="${escapeHtml(item.eventKey || '')}"><div><strong>${escapeHtml(item.title || 'Novedad del catálogo')}</strong>${image}${note}<small>${escapeHtml(item.time || '')}</small>${link}</div></article>`;
     }).join('') : '<div class="empty-state"><strong>No hay notificaciones</strong><span>Cuando llegue un aviso nuevo, aparecerá acá.</span></div>';
+    stopNoticeViewObserver?.();
+    if(typeof IntersectionObserver!=='undefined') stopNoticeViewObserver=observeNoticeViews({list,visible:()=>document.querySelector('.view.active')?.id==='alertsView' && document.visibilityState==='visible',record:recordNoticeSeen});
   }
 
   function renderRetiredShortcut(items = alertCache?.items) {
@@ -5041,7 +5044,7 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     const brandButton = event.target.closest('[data-search-brand]');
     if (brandButton) {
       if (brandButton.classList.contains('trusted-brand-link')) {
-        if (performance.now() < suppressBrandClickUntil && event.detail !== 0) return;
+        if (brandMarqueeDrag.suppressClick() && event.detail !== 0) return;
         openSearchScreen();
         window.clearTimeout(searchFocusTimer);
         $('#query').blur();

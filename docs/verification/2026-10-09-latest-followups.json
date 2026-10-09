@@ -1,0 +1,28 @@
+{
+  "serviceButtons": "Original card layout retained; 3D storefront, cloche, flyer and WhatsApp; 36px icon slots and stronger flyer contrast.",
+  "noticeViews": {
+    "backendVersion": "785a8f01-aa96-4e74-b62c-2feb8dfcf4e8",
+    "migration": "0002 applied",
+    "hubVersion": "64c9e550-3c48-40ab-8ce4-f9774fb31cff",
+    "compatibleClient": "Prepared locally, not distributed",
+    "physicalValidation": "pending"
+  },
+  "ranking": {
+    "liveGeneratedAt": "2026-10-09T18:00:19.000Z",
+    "liveClientBrowser": "Matched six leading products",
+    "legacyAnalyticsGeneratedAt": "2026-10-09T06:45:59.266Z",
+    "legacyCadenceHours": 12,
+    "newCadenceMinutes": 15
+  },
+  "iosCable": {
+    "version": "1.0.52 (110)",
+    "os": "16.7.16",
+    "localInstall": "success",
+    "physicalFunctions": "pending"
+  },
+  "productPhotoReview": {
+    "transparentReviewedPhotos": 15,
+    "unavailableOfficialPhotos": 4
+  },
+  "realDevices": "Separate Current Device Installs metric published; actual source unavailable; do not substitute Analytics users."
+}
