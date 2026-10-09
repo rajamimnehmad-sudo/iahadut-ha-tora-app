@@ -9,5 +9,6 @@
   "downloads": [
     "manifest.json",
     "snapshot-5c29b1d98f74ab1f0b9b7b67d6d933906867a393641dad246a53386dfd859161.json"
-  ]
+  ],
+  "superseded_by": "2026-10-09-full-audit.json"
 }

@@ -87,5 +87,6 @@
     "analytics": "https://github.com/rajamimnehmad-sudo/iahadut-ha-tora-app/pull/8",
     "image_review": "output/product-photo-review/productos-con-cortes.jpg",
     "apple_draft": "docs/verification/2026-10-09-app-review-response-draft.txt"
-  }
+  },
+  "superseded_by": "2026-10-09-full-audit.json"
 }

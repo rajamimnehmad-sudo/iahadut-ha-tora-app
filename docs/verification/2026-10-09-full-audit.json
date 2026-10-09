@@ -377,5 +377,29 @@
     "Recuperación independiente de cuentas, clave de cifrado del Hub y código/archivos aún sin prueba completa"
   ],
   "no_new_notices_sent": true,
-  "no_testflight_or_production_submission": true
+  "no_testflight_or_production_submission": true,
+  "delivery_after_audit": {
+    "version": "1.0.54",
+    "build": 112,
+    "android_internal": "published",
+    "android_workflow": "https://github.com/rajamimnehmad-sudo/iahadut-ha-tora-app/actions/runs/37980987915",
+    "s22_installed_observed": "1.0.54 (112), ADB lastUpdateTime 2026-10-09 16:38:10",
+    "iphone_installed": "1.0.54 (112), ios-deploy InstallComplete and Xcode installed apps confirm",
+    "native_builds": "passed; Android signed APK verified; iOS Debug signed",
+    "shared_packaged_files": 111,
+    "resource_differences": 0,
+    "github_branch": "codex/internal-112-audited-mobile",
+    "github_commit": "80cdc79",
+    "android_production": "1.0.48 (106) unchanged",
+    "apple_submission": "no new submission of 112; Xcode records prior build 110 upload today",
+    "verified_at": "2026-10-09T19:39:57.754724+00:00"
+  },
+  "physical_checks": {
+    "iphone_112_home": "Xcode screenshot obtained after user opened app; all four cards legible with one arrow; featured carousel three cards with balanced side peeks; update invitation absent when no update is available",
+    "brand_drag": "User confirmed iPhone and Samsung S22 during previous version tests",
+    "cached_fiche_web": "Palmito reopened while CDP network offline, complete description 236 characters and loaded transparent photo; zero product page requests; network restored",
+    "white_frame_rule": "global for every direct product fiche image; tested transparent Palmito and Barba Roja plus existing default frame rule",
+    "screenshot": "output/full-audit/iphone-112-home-physical.png"
+  },
+  "updated_at": "2026-10-09T19:39:31.705713+00:00"
 }

@@ -1,39 +1,13 @@
-# Próxima actualización después de 1.0.53 (111)
+# Entrega 1.0.54 (112) · 9 de octubre de 2026
 
-La entrega 111 está cerrada: publicada en prueba interna de Google Play y instalada por USB en iPhone. Producción continúa en 1.0.48 (106).
+Publicada en prueba interna de Google Play y confirmada instalada en el S22; compilada, firmada e instalada por USB en el iPhone. Producción Android sigue en 1.0.48 (106). La 112 no se subió a Apple.
 
-Cambios posteriores preparados para el próximo paquete, sin necesidad de volver a pedirlos:
-- Servicios de catering: quitar el pañuelo verde, conservar bandeja y campana 3D.
-- Tiendas certificadas: sello simple con check verde oscuro, legible en tamaño pequeño.
-- Notas Kashrut: flyer con trazos verdes más oscuros y gruesos, mayor contraste.
-- Conservar distribución, textos y tamaño de botones existentes.
+Incluye todos los ajustes posteriores a 111: distribución original de los cuatro accesos con iconos 3D claros, catering sin pañuelo y con contraste, tienda simplificada, flyer Kashrut, WhatsApp ligeramente reducido y texto adaptable sin superposición; enlace azul de actualización con flecha junto al texto; reglas globales de marco blanco e imagen completa en las fichas; cabeceras y botones de volver corregidos. Conserva el círculo azul de avisos, coincidencias del otro país al final, barra de filtro a lo ancho, carrusel centrado y marcas arrastrables.
 
-Recursos web sincronizados con ambas plataformas; no incluidos en los binarios ya publicados de 111. No se incrementa versión por esta sincronización.
+La presentación remota se publicó por PR #10: 113 categorías, 15 fotos transparentes y 35 recursos referenciados comprobados por bytes/hash. La copia central contiene 1.117 productos y 1.117 fichas completas con clasificación que sobrevive actualizaciones. El ranking y el Hub se actualizaron y verificaron. Estos datos cambian sin otro paquete en clientes compatibles; estilos, iconos de servicios definidos en HTML y lógica nativa requieren paquete.
 
-Validaciones pendientes: probar gestos, carrusel iPhone, descarga sin conexión y Vistos en dispositivos; resolver cuatro fotos oficiales Free Chips que devuelven 404; completar información y video físico solicitados por Apple; verificar recuperación independiente de cuentas, clave del Hub y código. No se afirma que la sincronización de metadata sea un respaldo de código.
+Verificación: 198 pruebas de la app, 12 Android, 6 servidor y 60 Hub aprobadas; 156 pruebas y CI de la publicación remota aprobados. Android AAB/APK firmados e iOS Debug compilados. Los 111 archivos web de los dos paquetes son idénticos. Captura física iPhone 112 confirma tarjetas legibles y carrusel centrado. El usuario confirmó arrastre de marcas en ambos equipos. Palmito guardado se abrió en la prueba web sin red con texto y foto, sin pedir su página al servidor.
 
-Verificación posterior: S22 conectado informa versionCode=111 y versionName=1.0.53; instalación de la actualización confirmada. Hub muestra 204 dispositivos Android activos instalados en el informe del 4/10/2026, distinto de 724 usuarios acumulados de Analytics.
+Queda pendiente la prueba física completa de descarga y reinicio sin conexión, escáner/cámara, APNs y eventos DebugView/Vistos. Las cuatro fuentes Free Chips siguen devolviendo 404 y no se reincorporaron desde la copia antigua. También faltan información/video físico con iOS actual solicitado por Apple y recuperación independiente de cuentas, clave del Hub y código/archivos. No se afirma que metadata sea un respaldo.
 
-- Actualización: texto «Actualizar la aplicación para obtener las últimas funciones» arriba del buscador, sin fondo, con una flecha a la derecha. Vista previa local `?preview=app-update`; disponibilidad real sin cambios.
-- Tienda: conservar tamaño original, simplificar el dibujo y reforzar contraste; el usuario rechazó agrandarlo.
-
-- Separación: añadir 6 px entre iconos 3D y texto en las cuatro tarjetas.
-
-- Proporción de tarjetas: dos columnas reales, 14 px de separación, textos equilibrados y flecha anclada abajo a la derecha, sin aumentar iconos ni letra.
-
-- Ajuste óptico: catering ligeramente mayor y WhatsApp menor para igualar peso visual; no cambiar tarjetas ni letra.
-
-- Corrección final: igualar tamaño visible de los cuatro dibujos compensando margen transparente de WhatsApp; flecha próxima al bloque del texto de actualización.
-
-- Última revisión: cuatro dibujos de igual tamaño visible (aprox. 40 px de lado mayor); se eliminó la reducción de WhatsApp. Flecha a 8 px del bloque compacto de texto.
-
-- Ajuste solicitado después: reducir WhatsApp aproximadamente un 9 %, conservando los otros tres iconos.
-
-- Fichas: restaurar el recuadro blanco de la foto también para los productos con PNG transparente; conservar transparencia del archivo y objeto completo.
-
-- Catering: reforzar ligeramente bordes y sombras del plateado, conservando tamaño y material.
-
-- Enlace de actualización: azul oscuro aprobado por el usuario; texto/flecha y aparición condicional sin cambios.
-- Atrás: sustituir glifo tipográfico por SVG de 24 px, quitar fondo circular gris y escala al presionar, conservar área táctil de 44 px y foco de teclado. Títulos de cabecera de 16 px, centrados sin desplazamiento vertical.
-- Marcas: usuario confirma el 09/10/2026 que el arrastre ya funciona bien en Samsung S22; no cambiar esa lógica.
-- Comparación física: S22 111 y iPhone USB detectados; QuickTime no pudo completar captura de pantalla del iPhone. No afirmar comparación visual física completa hasta obtenerla.
+Informe vigente: `2026-10-09-full-audit.json`.
