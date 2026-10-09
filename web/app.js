@@ -1,3 +1,4 @@
+import {createUsageAnalytics} from './usage-analytics.js';
 import {productSearchKey, validGlobalRanking} from './global-popularity.js';
 import initialGlobalRanking from './data/global-popularity.json';
 import { storeLinks, platformRemoteControl, appleDistributionUrl } from './platform-store.js';
@@ -365,9 +366,14 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     }
     return firebaseReadyPromise;
   }
-  let firebaseAnalytics = null;
-  if (Capacitor.isNativePlatform()) import('@capacitor-firebase/analytics').then(({FirebaseAnalytics}) => { firebaseAnalytics = FirebaseAnalytics; }).catch(() => {});
-  const logAnalyticsEvent = (name, params) => { try { firebaseAnalytics?.logEvent({name, params})?.catch(() => {}); } catch (_) {} };
+  const usageAnalytics = createUsageAnalytics({enabled:Capacitor.isNativePlatform() && import.meta.env.PROD});
+  const logAnalyticsEvent = usageAnalytics.track;
+  if (Capacitor.isNativePlatform() && import.meta.env.PROD) {
+    import('@capacitor-firebase/analytics').then(({FirebaseAnalytics}) => {
+      usageAnalytics.connect(event => FirebaseAnalytics.logEvent(event));
+    }).catch(() => {});
+  }
+  usageAnalytics.screen('homeView');
   const countPopularity = (key, type) => {
     const entry = popularity[key] || {searches: 0, opens: 0};
     entry[type] = (entry[type] || 0) + 1;
@@ -554,8 +560,9 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
       }
       if (!automatic && !wifi && connection.type !== 'ethernet') {
         const choice = await chooseOfflineNetwork(connection);
-        if (choice === 'cancel') return;
+        if (choice === 'cancel') { logAnalyticsEvent('offline_download', {outcome:'cancelled', automatic:0}); return; }
         if (choice === 'wifi') {
+          logAnalyticsEvent('offline_download', {outcome:'wait_wifi', automatic:0});
           await offlineDownload.setResumePreference({enabled:true, allowMobile:false});
           setOfflineWifiWait(true);
           return;
@@ -565,6 +572,7 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
       } else if (!automatic) offlineMobileAllowed = false;
       await offlineDownload.setResumePreference({enabled:true, allowMobile:offlineMobileAllowed});
       setOfflineWifiWait(false);
+      logAnalyticsEvent('offline_download', {outcome:'start', automatic:automatic ? 1 : 0});
       await offlineDownload.download(offlineAssets(), offlineVersion(), {products, productCache, infoCache, cardCache}, async () => {
         if (document.visibilityState !== 'visible') return false;
         if (!offlineDownload.getResumePreference().enabled) return false;
@@ -575,11 +583,13 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
         return false;
       });
       const result = offlineDownload.check(offlineAssets(), offlineVersion());
+      logAnalyticsEvent('offline_download', {outcome:result.ready ? 'ready' : result.error ? 'error' : 'paused', automatic:automatic ? 1 : 0});
       if (result.ready) await offlineDownload.setResumePreference({enabled:false, allowMobile:offlineMobileAllowed});
       // A failed file must not trigger a tight automatic retry loop.
       offlineNextRetryAt = result.error ? Date.now() + 60000 : 0;
     } catch (_) {
       await offlineDownload.setResumePreference({enabled:false, allowMobile:false}).catch(() => {});
+      logAnalyticsEvent('offline_download', {outcome:'error', automatic:automatic ? 1 : 0});
       window.alert('No se pudo guardar el estado de la descarga. Tocá para reintentar.');
     } finally {offlineStarting = false;}
   }
@@ -2773,6 +2783,7 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     const savedPosition = restoreScroll ? viewScrollPositions.get(activeScrollKey) : null;
     if (viewId === 'homeView' && !$('#homeView').classList.contains('active')) resumeBrandMarquee();
     document.body.dataset.activeView = viewId;
+    usageAnalytics.screen(viewId);
     if (viewId !== 'searchView') {
       document.body.classList.remove('search-open');
       setSearchHomeHidden(false);
@@ -3204,16 +3215,18 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     const value = clean(input.value);
     if (!value) return;
     countPopularity(`query:${normalize(value)}`, 'searches');
-    logAnalyticsEvent('catalog_search', {query: value.slice(0, 80)});
+    // Never transmit the free text a person enters in the search box.
     recent = [value, ...recent.filter((item) => normalize(item) !== normalize(value))].slice(0,5);
     localStorage.setItem('iht_recent', JSON.stringify(recent));
     if (fromHome) { showView('searchView'); $('#query').value = value; }
     favoriteOnly = false; selectedCategory = 'all'; renderResults(value); renderSearchCategories();
+    logAnalyticsEvent('catalog_search', {query_length:value.length, result_count:filtered(value).length, region:selectedRegion});
   }
 
   function toggleFavorite(url) {
     favorites.has(url) ? favorites.delete(url) : favorites.add(url);
     save();
+    logAnalyticsEvent(favorites.has(url) ? 'product_save' : 'product_unsave', {screen:document.querySelector('.view.active')?.id, saved_count:favorites.size});
     renderSavedButtonCount();
     if (currentProduct && currentProduct.url === url) {
       const detailSave = $('#detailSave');
@@ -3516,6 +3529,7 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
   async function shareCurrentProduct() {
     if (!currentProduct || shareBusy) return;
     shareBusy = true;
+    logAnalyticsEvent('product_share', {outcome:'attempt'});
     const button = $('#detailShare');
     if (button) {
       button.disabled = true;
@@ -3540,6 +3554,7 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
           .replace(/^-+|-+$/g, '')
           .slice(0, 56) || 'producto';
         await shareImageWithAndroid(imageBlob, `iahadut-${safeName}.jpg`, title, text);
+        logAnalyticsEvent('product_share', {outcome:'sheet_returned'});
         showShareNotice('Foto y ficha listas para compartir');
       } else if (navigator.share) {
         // Los navegadores que admiten archivos reciben la misma tarjeta visual;
@@ -3554,16 +3569,20 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
         const shareData = {title, text, url};
         if (navigator.canShare?.({files: [imageFile]})) shareData.files = [imageFile];
         await navigator.share(shareData);
+        logAnalyticsEvent('product_share', {outcome:'sheet_returned'});
         showShareNotice(shareData.files ? 'Foto y ficha listas para compartir' : 'Ficha lista para compartir');
       } else {
         try {
           await navigator.clipboard.writeText(`${title}\n${url}`);
+          logAnalyticsEvent('product_share', {outcome:'copied'});
           showShareNotice('Enlace copiado');
         } catch (_) {
+          logAnalyticsEvent('product_share', {outcome:'error'});
           showShareNotice('Copiá el enlace de la ficha para compartirla', 'bad');
         }
       }
     } catch (error) {
+      logAnalyticsEvent('product_share', {outcome:error?.name === 'AbortError' ? 'cancelled' : 'error'});
       if (error?.name !== 'AbortError') showShareNotice('No pudimos preparar la imagen para compartir', 'bad');
       else preparingNotice.remove();
     } finally {
@@ -3704,7 +3723,7 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
       if (remoteControl.live_search_ranking_v1_enabled === true) void liveSearch.record(product.url).catch(() => {});
     }
     countPopularity(product.url, 'opens');
-    logAnalyticsEvent('product_open', {product_url: product.url, product_name: product.title?.slice(0, 80) || ''});
+    logAnalyticsEvent('product_open', {source:options.fromScan ? 'scanner' : fromSearch ? 'search' : previousView === 'savedView' ? 'saved' : 'catalog', retry:options.retry ? 1 : 0});
     const cachedOfficial = productCache[product.url] || null;
     if (cachedOfficial) renderDetail(product, cachedOfficial);
     if (options.fromScan) showKosherToast(product);
@@ -4171,6 +4190,7 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
   async function disablePushNotifications() {
     if (pushPhase === 'deactivating') return;
     pushPhase = 'deactivating';
+    logAnalyticsEvent('notification_setting', {outcome:'disabled'});
     localStorage.setItem('iht_push_enabled', '0');
     localStorage.setItem('iht_push_status', 'disabled');
     pushGeneration += 1;
@@ -4326,6 +4346,7 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
   function openCategoryInfo(key, opener) {
     const info = categoryInformation[key];
     if (!info) return;
+    logAnalyticsEvent('content_open', {kind:'category'});
     categoryInfoOpener = opener;
     $('#categoryInfoTitle').textContent = info.title;
     $('#categoryInfoText').innerHTML = info.paragraphs.map(text => `<p>${escapeHtml(text)}</p>`).join('');
@@ -4560,6 +4581,7 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
   }
 
   async function openScanner() {
+    logAnalyticsEvent('scanner_open');
     if (!Capacitor.isNativePlatform()) {
       openWebScanner();
       return;
@@ -4568,6 +4590,7 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
       if (Capacitor.getPlatform() === 'android') {
         const permission = await ScannerPermissions.requestCamera();
         if (!permission.granted) {
+          logAnalyticsEvent('scanner_result', {outcome:'permission_denied'});
           openWebScanner('La cámara no tiene permiso. Podés habilitarla en Ajustes o ingresar el EAN o UPC.', false);
           return;
         }
@@ -4592,9 +4615,11 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
         android:{scanningLibrary:CapacitorBarcodeScannerAndroidScanningLibrary.MLKIT}
       });
       if (result?.ScanResult) await resolveBarcode(result.ScanResult);
+      else logAnalyticsEvent('scanner_result', {outcome:'cancelled'});
     } catch (error) {
       const cancellation = `${error?.code || ''} ${error?.message || error || ''}`;
-      if (/0006|cancel(?:led|ado|aci[oó]n)?/i.test(cancellation)) return;
+      if (/0006|cancel(?:led|ado|aci[oó]n)?/i.test(cancellation)) { logAnalyticsEvent('scanner_result', {outcome:'cancelled'}); return; }
+      logAnalyticsEvent('scanner_result', {outcome:'error'});
       // Si Android rechaza el permiso o el lector nativo no puede iniciarse,
       // no mostramos una segunda pantalla de error: volvemos a la vista que
       // estaba usando la persona y dejamos el ingreso manual en Catálogo.
@@ -4874,17 +4899,20 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     // internal codes). Only query the catalog / Open Food Facts for a complete,
     // checksum-valid GTIN so a short read cannot be mistaken for a product.
     if (!validGtin(code)) {
+      logAnalyticsEvent('scanner_result', {outcome:'invalid'});
       showInvalidBarcode(code);
       return;
     }
     stopCamera();
     const exactMatches = findProductsByBarcode(code);
     if (exactMatches.length === 1) {
+      logAnalyticsEvent('scanner_result', {outcome:'exact'});
       closeScanner();
       openDetail(exactMatches[0].url, {fromScan:true});
       return;
     }
     if (exactMatches.length > 1) {
+      logAnalyticsEvent('scanner_result', {outcome:'multiple'});
       showScanResult(code, null, null, exactMatches);
       return;
     }
@@ -4896,11 +4924,13 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     // variants remain explicit so a scan can never open the wrong product.
     const matchedProduct = identityMatches.length === 1 ? identityMatches[0].product : findProductByIdentity(identity);
     if (matchedProduct) {
+      logAnalyticsEvent('scanner_result', {outcome:'identified'});
       rememberBarcodeAssociation(code, matchedProduct, identity);
       closeScanner();
       openDetail(matchedProduct.url, {fromScan:true});
       return;
     }
+    logAnalyticsEvent('scanner_result', {outcome:identityMatches.length ? 'multiple' : 'not_found'});
     showScanResult(code, null, identity, [], identityMatches);
   }
 
@@ -4960,6 +4990,7 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
   const prepareWhatsAppContact = (event) => {
     const link = event.target.closest('a[href]');
     if (!link) return;
+    if (event.type === 'click' && /^https:\/\/(?:wa\.me|api\.whatsapp\.com)\//.test(link.href)) logAnalyticsEvent('contact_open', {screen:document.querySelector('.view.active')?.id});
     const product = link.closest('#detailView') && currentProduct ? currentProduct.title : '';
     const href = appWhatsAppLink(link.href, {product});
     if (href !== link.href) link.href = href;
@@ -4973,6 +5004,7 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
       void offlineDownload.setResumePreference({enabled:false, allowMobile:offlineMobileAllowed}).catch(() => {});
       setOfflineWifiWait(false);
       offlineDownload.pause();
+      logAnalyticsEvent('offline_download', {outcome:'paused', automatic:0});
       return;
     }
     if (event.target.closest('[data-offline-download]')) {
@@ -5012,6 +5044,7 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
         favoriteOnly = false;
       }
       window.clearTimeout(searchTimer);
+      logAnalyticsEvent('catalog_filter', {kind:'brand'});
       searchBrand = brandButton.dataset.searchBrand;
       $('#query').value = searchBrand;
       updateSearchScanAction(true);
@@ -5022,11 +5055,12 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     const exploreCategories = event.target.closest('[data-explore-categories]');
     if (exploreCategories) { openCategoryDirectoryFromHome(); return; }
     const taxonomyButton = event.target.closest('[data-taxonomy-path]');
-    if (taxonomyButton) { openTaxonomyPath(JSON.parse(decodeURIComponent(taxonomyButton.dataset.taxonomyPath))); return; }
+    if (taxonomyButton) { logAnalyticsEvent('catalog_filter', {kind:'category'}); openTaxonomyPath(JSON.parse(decodeURIComponent(taxonomyButton.dataset.taxonomyPath))); return; }
     const regionButton = event.target.closest('[data-region]');
     if (regionButton) {
       const keepSearchFocus = document.activeElement === $('#query');
       selectedRegion = regionButton.dataset.region;
+      logAnalyticsEvent('catalog_filter', {kind:'region', region:selectedRegion});
       if (regionButton.closest('.region-switch')) {
         favoriteOnly = false;
         selectedCategory = selectedRegion === 'uruguay' ? 'uruguay' : 'all';
@@ -5050,26 +5084,30 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     if (allChangesButton) { timelineKind = 'all'; renderCatalogTimeline(undefined, '', timelineKind); return; }
     const timelineButton = event.target.closest('[data-open-timeline]');
     if (timelineButton) { timelineKind = timelineButton.dataset.openTimeline === 'alta' ? 'alta' : 'all'; showView('timelineView'); return; }
-    const categoryButton = event.target.closest('[data-category]'); if (categoryButton) { selectedCategory = categoryButton.dataset.category; favoriteOnly = false; showView('searchView'); renderResults(''); }
+    const categoryButton = event.target.closest('[data-category]'); if (categoryButton) { logAnalyticsEvent('catalog_filter', {kind:'category'}); selectedCategory = categoryButton.dataset.category; favoriteOnly = false; showView('searchView'); renderResults(''); }
     const productButton = event.target.closest('[data-product]'); if (productButton && !event.target.closest('[data-favorite]')) openDetail(productButton.dataset.product, {fromSearch:Boolean(productButton.closest('#productList'))});
     const favoriteButton = event.target.closest('[data-favorite]'); if (favoriteButton) { event.stopPropagation(); toggleFavorite(favoriteButton.dataset.favorite); }
     const recentButton = event.target.closest('[data-recent]'); if (recentButton) { $('#query').value = recentButton.dataset.recent; renderResults(recentButton.dataset.recent); }
-    const infoButton = event.target.closest('[data-info]'); if (infoButton) openInfo(infoButton.dataset.info);
+    const infoButton = event.target.closest('[data-info]'); if (infoButton) { logAnalyticsEvent('content_open', {kind:'info'}); openInfo(infoButton.dataset.info); }
     const categoryInfoButton = event.target.closest('[data-category-info]'); if (categoryInfoButton) { openCategoryInfo(categoryInfoButton.dataset.categoryInfo, categoryInfoButton); return; }
     const savedButton = event.target.closest('[data-saved]'); if (savedButton) { openSavedScreen(); return; }
     const clearHistoryButton = event.target.closest('[data-clear-history]'); if (clearHistoryButton) { if (!recent.length || window.confirm('¿Borrar el historial de búsquedas?')) { recent = []; localStorage.removeItem('iht_recent'); renderMore(); renderSearchCategories(); } }
     const notificationButton = event.target.closest('[data-enable-notifications]');
-    if (notificationButton) { setupPushNotifications(true).then(() => { renderPushNotifications(); renderMore(); }); return; }
+    if (notificationButton) {
+      logAnalyticsEvent('notification_setting', {outcome:'request'});
+      setupPushNotifications(true).then(status => { logAnalyticsEvent('notification_setting', {outcome:status}); renderPushNotifications(); renderMore(); }); return;
+    }
     const disableNotificationButton = event.target.closest('[data-disable-notifications]');
     if (disableNotificationButton) { disablePushNotifications(); return; }
     const openAlertsButton = event.target.closest('[data-open-alerts]');
     if (openAlertsButton) { showView('alertsView'); return; }
     const openPlayStoreButton = event.target.closest('[data-open-play-store]');
-    if (openPlayStoreButton) { openExternal(remoteControl.update_url || appInstallUrl); return; }
+    if (openPlayStoreButton) { logAnalyticsEvent('store_open', {purpose:'store'}); openExternal(remoteControl.update_url || appInstallUrl); return; }
     const rateAppButton = event.target.closest('[data-rate-app]');
-    if (rateAppButton) { event.preventDefault(); openExternal(distributionLinks.rate); return; }
+    if (rateAppButton) { logAnalyticsEvent('store_open', {purpose:'rate'}); event.preventDefault(); openExternal(distributionLinks.rate); return; }
     const updateButton = event.target.closest('[data-app-update]');
     if (updateButton) {
+      logAnalyticsEvent('store_open', {purpose:'update'});
       if (playUpdateState.downloaded) {
         PlayStoreUpdates.complete().then(() => { window.alert('La actualización se instalará al reiniciar la aplicación.'); refreshPlayUpdate(); }).catch(() => openExternal(remoteControl.update_url));
         return;
@@ -5085,7 +5123,13 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
       return;
     }
     const infoSyncButton = event.target.closest('[data-info-sync]');
-    if (infoSyncButton) { if (!syncRequest) syncAndPreload(true).catch(() => {}); return; }
+    if (infoSyncButton) {
+      if (!syncRequest) {
+        logAnalyticsEvent('catalog_refresh', {outcome:'attempt'});
+        syncAndPreload(true).then(() => logAnalyticsEvent('catalog_refresh', {outcome:syncState.error ? 'error' : 'finished'})).catch(() => logAnalyticsEvent('catalog_refresh', {outcome:'error'}));
+      }
+      return;
+    }
     const copyValueButton = event.target.closest('[data-copy-value]');
     if (copyValueButton) {
       const text = copyValueButton.dataset.copyValue || '';
@@ -5105,9 +5149,10 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     const cardButton = event.target.closest('[data-info-card]');
     const photo = event.target.closest('.info-photo');
     const expandedImage = event.target.closest('[data-expanded-image]');
-    if (expandedImage) { event.preventDefault(); openImage(expandedImage.dataset.expandedImage, expandedImage.dataset.expandedCaption || 'Nota Kashrut'); return; }
-    if (cardButton && window.__ihtInfoCards) { event.preventDefault(); event.stopPropagation(); openInfoCard(window.__ihtInfoCards[Number(cardButton.dataset.infoCard)]); return; }
-    if (photo) { event.preventDefault(); event.stopPropagation(); openImage(photo.currentSrc || photo.src, photo.alt || ''); }
+    if (expandedImage) {
+      logAnalyticsEvent('content_open', {kind:'image'}); event.preventDefault(); openImage(expandedImage.dataset.expandedImage, expandedImage.dataset.expandedCaption || 'Nota Kashrut'); return; }
+    if (cardButton && window.__ihtInfoCards) { logAnalyticsEvent('content_open', {kind:'card'}); event.preventDefault(); event.stopPropagation(); openInfoCard(window.__ihtInfoCards[Number(cardButton.dataset.infoCard)]); return; }
+    if (photo) { logAnalyticsEvent('content_open', {kind:'image'}); event.preventDefault(); event.stopPropagation(); openImage(photo.currentSrc || photo.src, photo.alt || ''); }
   });
   const dismissKeyboard = (input) => { input?.blur(); window.scrollTo({top: 0, behavior: 'smooth'}); };
   $('#homeForm').onsubmit = (event) => { event.preventDefault(); dismissKeyboard($('#homeQuery')); doSearch($('#homeQuery'), true); };

@@ -22,7 +22,7 @@ function harness(permission = 'granted', platform = 'android') {
     unsubscribeFromTopic:async() => {}, deleteToken:async() => {}
   };
   const context = vm.createContext({
-    TextEncoder, crypto:webcrypto, console, setTimeout, clearTimeout,
+    logAnalyticsEvent(){}, TextEncoder, crypto:webcrypto, console, setTimeout, clearTimeout,
     localStorage:{getItem:key => storage.get(key) ?? null,setItem:(key,value) => storage.set(key,value),removeItem:key => storage.delete(key)},
     Capacitor:{isNativePlatform:() => true,getPlatform:() => platform},
     NativeMessaging:messaging,
