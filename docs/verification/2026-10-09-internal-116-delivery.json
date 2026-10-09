@@ -1,0 +1,41 @@
+{
+  "version": "1.0.58",
+  "build": 116,
+  "source_commit": "9413cf45c65c8cb2b51c69bbd6b302473b7a4f1d",
+  "source_branch": "codex/internal-112-audited-mobile",
+  "tag": "internal-116-in-app-update",
+  "artifact_checks": {
+    "aab": {
+      "path": "/Users/yejielnehmad/Developer/iaadut/release-artifacts/iahadut-1.0.58-116.aab",
+      "bytes": 85694388,
+      "sha256": "df9d6a762c421257e9ffa092ba445638337d399ab7cab24fb7f51e4a9737254d"
+    },
+    "apk": {
+      "path": "/Users/yejielnehmad/Developer/iaadut/release-artifacts/iahadut-1.0.58-116.apk",
+      "bytes": 103529777,
+      "sha256": "d367ea936d135c923733fb9e2a29d5d8eeb5550bf5371c18bc65e542f18f9896"
+    }
+  },
+  "ios_bundle_version_verified": true,
+  "shared_web_files": 111,
+  "web_resource_differences": 0,
+  "verified_at": "2026-10-09T21:03:15.207467+00:00",
+  "release_url": "https://github.com/rajamimnehmad-sudo/iahadut-ha-tora-app/releases/tag/internal-116-in-app-update",
+  "aab_api_url": "https://api.github.com/repos/rajamimnehmad-sudo/iahadut-ha-tora-app/releases/assets/626172683",
+  "iphone_usb_install": "confirmed: ios-deploy InstallComplete; signed bundle 116 verified",
+  "production_android": "1.0.48 (106) unchanged",
+  "apple_116_submission": false,
+  "app_tests": {
+    "passed": 201,
+    "failed": 0
+  },
+  "update_state_cases": 3,
+  "changes_since_115": [
+    "Home capsule uses Android in-app update flow; iOS store link"
+  ],
+  "android_internal_state": "published",
+  "android_workflow_result": "success",
+  "s22_installed_116": "not confirmed; disconnected, update offered through internal Google Play",
+  "updated_at": "2026-10-09T21:05:20.485934+00:00",
+  "release_asset_digests_verified": true
+}

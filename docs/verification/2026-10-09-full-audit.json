@@ -406,7 +406,7 @@
     "s22_screenshot": "output/full-audit/s22-112-home-physical.png",
     "home_comparison": "passed on both connected physical devices; complete offline/camera/APNs/analytics validation remains open"
   },
-  "updated_at": "2026-10-09T20:59:08.886706+00:00",
+  "updated_at": "2026-10-09T21:05:20.485934+00:00",
   "public_demo": {
     "url": "https://rajamimnehmad-sudo.github.io/iahadut-ha-tora-app/",
     "http": 200,
@@ -423,45 +423,44 @@
     "deployment_state": "public demo remains 1.0.48; latest app UI is local and distributed as internal mobile 112, not deployed to public Pages"
   },
   "delivery_after_buttons": {
-    "version": "1.0.57",
-    "build": 115,
-    "source_commit": "3e25d8f353f0d599f8cbb770b6e84236bbe6d884",
+    "version": "1.0.58",
+    "build": 116,
+    "source_commit": "9413cf45c65c8cb2b51c69bbd6b302473b7a4f1d",
     "source_branch": "codex/internal-112-audited-mobile",
-    "tag": "internal-115-contextual-back",
+    "tag": "internal-116-in-app-update",
     "artifact_checks": {
       "aab": {
-        "path": "/Users/yejielnehmad/Developer/iaadut/release-artifacts/iahadut-1.0.57-115.aab",
-        "bytes": 85694383,
-        "sha256": "f47ea9d289e112ccdbbe1a6d8efd7d164ecf7f922baadfbc5e7a335061f21613"
+        "path": "/Users/yejielnehmad/Developer/iaadut/release-artifacts/iahadut-1.0.58-116.aab",
+        "bytes": 85694388,
+        "sha256": "df9d6a762c421257e9ffa092ba445638337d399ab7cab24fb7f51e4a9737254d"
       },
       "apk": {
-        "path": "/Users/yejielnehmad/Developer/iaadut/release-artifacts/iahadut-1.0.57-115.apk",
+        "path": "/Users/yejielnehmad/Developer/iaadut/release-artifacts/iahadut-1.0.58-116.apk",
         "bytes": 103529777,
-        "sha256": "b4488b34204bd85d9bdb280a71b10a576f7b5c81bc00ea27bfb51a6ef0e0a4cc"
+        "sha256": "d367ea936d135c923733fb9e2a29d5d8eeb5550bf5371c18bc65e542f18f9896"
       }
     },
     "ios_bundle_version_verified": true,
     "shared_web_files": 111,
     "web_resource_differences": 0,
-    "verified_at": "2026-10-09T20:57:15.762674+00:00",
-    "release_url": "https://github.com/rajamimnehmad-sudo/iahadut-ha-tora-app/releases/tag/internal-115-contextual-back",
-    "aab_api_url": "https://api.github.com/repos/rajamimnehmad-sudo/iahadut-ha-tora-app/releases/assets/626159565",
-    "iphone_usb_install": "confirmed: ios-deploy InstallComplete; signed bundle version 115 verified",
-    "s22_connection": "USB disconnected; delivery through Google Play internal",
+    "verified_at": "2026-10-09T21:03:15.207467+00:00",
+    "release_url": "https://github.com/rajamimnehmad-sudo/iahadut-ha-tora-app/releases/tag/internal-116-in-app-update",
+    "aab_api_url": "https://api.github.com/repos/rajamimnehmad-sudo/iahadut-ha-tora-app/releases/assets/626172683",
+    "iphone_usb_install": "confirmed: ios-deploy InstallComplete; signed bundle 116 verified",
     "production_android": "1.0.48 (106) unchanged",
-    "apple_115_submission": false,
-    "changes_since_114": [
-      "contextual back labels and a single page title in categories, subcategories, saved products, timeline and information"
-    ],
+    "apple_116_submission": false,
     "app_tests": {
       "passed": 201,
       "failed": 0
     },
-    "contextual_navigation_cases": 10,
+    "update_state_cases": 3,
+    "changes_since_115": [
+      "Home capsule uses Android in-app update flow; iOS store link"
+    ],
     "android_internal_state": "published",
     "android_workflow_result": "success",
-    "s22_installed_115": "not confirmed; disconnected, update offered through internal Google Play",
-    "updated_at": "2026-10-09T20:59:08.886706+00:00",
+    "s22_installed_116": "not confirmed; disconnected, update offered through internal Google Play",
+    "updated_at": "2026-10-09T21:05:20.485934+00:00",
     "release_asset_digests_verified": true
   }
 }
