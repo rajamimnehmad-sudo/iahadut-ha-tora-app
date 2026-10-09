@@ -56,7 +56,7 @@ public final class OfflineDownloadPlugin extends Plugin {
                 if(!info.getState().isFinished()) {busy=true;waiting |= info.getState()!=WorkInfo.State.RUNNING;}
             }
             for(Iterator<String> it=images.keys();it.hasNext();) {String url=it.next();JSONObject item=images.getJSONObject(url);
-                if(OfflineDownloadStore.present(getContext(),item)) item.put("uri",new File(getContext().getFilesDir(),item.getString("path")).toURI().toString());
+                if(OfflineDownloadStore.present(getContext(),item)) item.put("uri",android.net.Uri.fromFile(new File(getContext().getFilesDir(),item.getString("path"))).toString());
                 else it.remove();
             }
             return new JSObject().put("manifest",manifest).put("busy",busy).put("waiting",waiting)

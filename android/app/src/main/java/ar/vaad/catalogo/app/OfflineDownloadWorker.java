@@ -9,21 +9,22 @@ import java.net.*;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 
-/** Small resumable batches: no foreground service or extra Play permission. */
-public final class OfflineDownloadWorker extends Worker {
+/** Time-bounded resumable transfers: no foreground service or extra Play permission. */
+public class OfflineDownloadWorker extends Worker {
     public OfflineDownloadWorker(@NonNull Context c,@NonNull WorkerParameters p){super(c,p);}
     @NonNull @Override public Result doWork(){
-        Context c=getApplicationContext();String id=getInputData().getString("job");long deadline=System.currentTimeMillis()+240000;int downloaded=0;
+        Context c=getApplicationContext();String id=getInputData().getString("job");long deadline=System.currentTimeMillis()+240000;
         try {
             JSONObject job; synchronized(OfflineDownloadStore.class){job=OfflineDownloadStore.read(c,"job.json");}
             JSONArray urls=job.getJSONArray("urls");
+            IOException lastImageFailure=null;
             for(int i=0;i<urls.length();i++){
                 String url=urls.getString(i);
                 synchronized(OfflineDownloadStore.class){
                     if(!active(c,id))return Result.success();
                     if(OfflineDownloadStore.present(c,OfflineDownloadStore.manifest(c).getJSONObject("images").optJSONObject(url)))continue;
                 }
-                if(downloaded>=25||System.currentTimeMillis()>=deadline){
+                if(System.currentTimeMillis()>=deadline){
                     synchronized(OfflineDownloadStore.class){if(active(c,id))OfflineDownloadStore.enqueue(c,job,ExistingWorkPolicy.APPEND_OR_REPLACE);}
                     return Result.success();
                 }
@@ -36,9 +37,13 @@ public final class OfflineDownloadWorker extends Worker {
                         manifest.getJSONObject("images").put(url,new JSONObject().put("path","offline-catalog/"+name));
                         OfflineDownloadStore.write(c,"manifest.json",manifest);
                     }
+                } catch(IOException imageFailure){
+                    if(!active(c,id)) return Result.success();
+                    // One unavailable photo must not prevent the remaining catalog from downloading.
+                    lastImageFailure=imageFailure;
                 } finally {temporary.delete();}
-                downloaded++;
             }
+            if(lastImageFailure!=null) throw lastImageFailure;
             synchronized(OfflineDownloadStore.class){if(active(c,id)){
                 JSONObject manifest=OfflineDownloadStore.manifest(c);manifest.put("signature",job.getString("signature"));
                 manifest.put("resume",new JSONObject().put("enabled",false).put("autoUpdate",true).put("allowMobile",!job.optBoolean("wifiOnly",true)));
@@ -46,19 +51,23 @@ public final class OfflineDownloadWorker extends Worker {
             }}
             return Result.success();
         }catch(Exception error){
+            // WorkManager reschedules interrupted constraints itself. Never mark those as failed.
+            if(isStopped()) return Result.success();
+            if(shouldRetry(error,getRunAttemptCount())) return Result.retry();
             synchronized(OfflineDownloadStore.class){try{if(active(c,id)){
                 JSONObject job=OfflineDownloadStore.read(c,"job.json");job.put("error","Descarga incompleta · Reintentar");OfflineDownloadStore.write(c,"job.json",job);
             }}catch(Exception ignored){}}
             return Result.failure();
         }
     }
+    static boolean shouldRetry(Exception error,int attempt){return error instanceof IOException && attempt<3;}
     private boolean active(Context c,String id)throws Exception {JSONObject job=OfflineDownloadStore.read(c,"job.json");return !isStopped()&&id!=null&&id.equals(job.optString("id"))&&!job.optBoolean("paused");}
     static String fileName(String url)throws Exception {
         byte[] hash=MessageDigest.getInstance("SHA-256").digest(url.getBytes(StandardCharsets.UTF_8));StringBuilder s=new StringBuilder();for(byte b:hash)s.append(String.format("%02x",b));
         String path=new URL(url).getPath();java.util.regex.Matcher m=java.util.regex.Pattern.compile("\\.(jpe?g|png|webp|gif|svg)$",java.util.regex.Pattern.CASE_INSENSITIVE).matcher(path);
         return s+"."+(m.find()?m.group(1).toLowerCase(java.util.Locale.ROOT):"jpg");
     }
-    private void download(String value,File target)throws Exception {
+    void download(String value,File target)throws Exception {
         OfflineDownloadStore.validateUrl(value);URL current=new URL(value);HttpURLConnection connection=null;
         for(int redirect=0;redirect<=5;redirect++){
             connection=(HttpURLConnection)current.openConnection();

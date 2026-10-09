@@ -1,0 +1,32 @@
+{
+  "issue": "S22 photos unavailable until offline download was deleted",
+  "diagnosis": "Android File.toURI emits file:/ paths unsupported by Capacitor convertFileSrc, which accepts file:// paths",
+  "fix": "Android emits Uri.fromFile; shared client normalizes legacy file:/ paths and retries original remote image on local cache error without a retry loop",
+  "verification": {
+    "sharedTestsPassed": 171,
+    "mobileResourcesSynced": [
+      "android",
+      "ios"
+    ],
+    "physicalS22Verified": false,
+    "androidDebugBuild": "passed",
+    "androidUnitTests": {
+      "tests": 11,
+      "failures": 0,
+      "errors": 0
+    }
+  },
+  "delivery": "preparing internal 109 (1.0.51); not yet published",
+  "hub": "delegated to Jave; synchronization not verified here",
+  "androidBackground": {
+    "changes": [
+      "continue until the existing four-minute time limit instead of stopping every 25 photos",
+      "retry IO failures at most three times with WorkManager backoff",
+      "system-interrupted workers preserve the download instead of reporting a terminal failure",
+      "unavailable individual photos do not block the other photos; incomplete downloads remain incomplete and are retried"
+    ],
+    "physicalVerification": false,
+    "foregroundServiceAdded": false,
+    "extraPermissionsAdded": false
+  }
+}

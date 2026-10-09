@@ -288,3 +288,20 @@ test('pause during native start is retained and applied after start acknowledges
  started();await download;
  assert.equal(pauses,1);assert.equal(service.check([], 'v1').busy,false);assert.equal(service.check([], 'v1').paused,true);assert.equal(service.check([], 'v1').pausing,false);
 });
+
+test('Android single-slash file URIs become WebView URLs and failed cached photos recover remotely', async () => {
+  const f=fixture();
+  // Match Capacitor's actual native conversion, which only accepts file://.
+  f.context.Capacitor.convertFileSrc=uri=>uri.startsWith('file://') ? uri.replace('file://','https://localhost/_capacitor_file_') : uri;
+  const url='https://vaad.ar/photo.jpg';
+  const bridge={status:async()=>({manifest:{images:{[url]:{path:'offline-catalog/photo.jpg',uri:'file:/data/user/0/app/files/offline-catalog/photo.jpg'}}}})};
+  const service=f.context.createOfflineDownload(()=>{},bridge);
+  await service.refresh();
+  const cached='https://localhost/_capacitor_file_/data/user/0/app/files/offline-catalog/photo.jpg';
+  assert.equal(service.localUrl(url),cached);
+  assert.equal(service.rejectLocalUrl(cached),url);
+  assert.equal(service.localUrl(url),url);
+  await service.refresh();
+  assert.equal(service.localUrl(url),url,'status refresh must not loop back to a broken local photo');
+  assert.equal(service.rejectLocalUrl(url),null,'remote failure should use the regular image error handler');
+});

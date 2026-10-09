@@ -672,6 +672,15 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
       }
     });
   }
+  // Recover before per-image handlers hide the photo or replace it with a placeholder.
+  document.addEventListener('error', event => {
+    const image = event.target;
+    if (image?.tagName !== 'IMG') return;
+    const original = offlineDownload.rejectLocalUrl(image.getAttribute('src'));
+    if (!original) return;
+    event.stopImmediatePropagation();
+    image.setAttribute('src', original);
+  }, true);
   new MutationObserver(useOfflineImages).observe(document.body, {childList:true, subtree:true, attributes:true, attributeFilter:['src']});
   useOfflineImages();
   const alertUrl = 'https://vaad.ar/alertas-de-productos/';

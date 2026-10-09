@@ -43,6 +43,8 @@ export function createOfflineDownload(onChange = () => {}, background = null) {
   const manifestPath = `${folder}/manifest.json`;
   const cacheName = 'iht-offline-images-v1';
   let manifest = {images:{}, signature:''};
+  const failedLocalImages = new Map();
+  const nativeImageUrl = uri => Capacitor.convertFileSrc(uri.replace(/^file:\/(?!\/)/, 'file:///'));
   let busy = false;
   let paused = false;
   let writes = Promise.resolve();
@@ -71,7 +73,7 @@ export function createOfflineDownload(onChange = () => {}, background = null) {
         // Rebuild URLs from durable relative paths, not yesterday's container.
         const {uri} = await Filesystem.getUri({path:folder, directory:Directory.Data});
         for (const item of Object.values(manifest.images)) {
-          item.uri = Capacitor.convertFileSrc(`${uri.replace(/\/$/, '')}/${item.path.slice(folder.length + 1)}`);
+          item.uri = nativeImageUrl(`${uri.replace(/\/$/, '')}/${item.path.slice(folder.length + 1)}`);
         }
       } else {
         const cache = await caches.open(cacheName);
@@ -90,7 +92,16 @@ export function createOfflineDownload(onChange = () => {}, background = null) {
       hasDownload:Boolean(manifest.signature) || Object.keys(manifest.images).length > 0};
     return state;
   };
-  const localUrl = url => manifest.images[url]?.uri || url;
+  const localUrl = url => {
+    const uri = manifest.images[url]?.uri;
+    return uri && failedLocalImages.get(url) !== uri ? uri : url;
+  };
+  const rejectLocalUrl = uri => {
+    const entry = Object.entries(manifest.images).find(([,item]) => item.uri === uri);
+    if (!entry || entry[0] === uri) return null;
+    failedLocalImages.set(entry[0], uri);
+    return entry[0];
+  };
   const remoteUrl = uri => Object.entries(manifest.images).find(([,item]) => item.uri === uri)?.[0] || uri;
   const getResumePreference = () => ({
     enabled:manifest.resume?.enabled ?? (!manifest.signature && Object.keys(manifest.images).length > 0),
@@ -126,7 +137,7 @@ export function createOfflineDownload(onChange = () => {}, background = null) {
       if (generation !== startedGeneration) return state;
       if (result.manifest?.images) {
         manifest = result.manifest;
-        for (const item of Object.values(manifest.images)) if (item.uri?.startsWith('file:')) item.uri = Capacitor.convertFileSrc(item.uri);
+        for (const item of Object.values(manifest.images)) if (item.uri?.startsWith('file:')) item.uri = nativeImageUrl(item.uri);
       }
       const {manifest:ignored, ...status} = result;
       // Native ready refers to its last job. The UI may now have newer content.
@@ -258,5 +269,5 @@ export function createOfflineDownload(onChange = () => {}, background = null) {
       emit({error:'Descarga incompleta. Revisá la conexión y el espacio disponible; tocá para reintentar.'});
     } finally {busy = false; emit({busy:false,pausing:false});}
   };
-  return {init, check, download, localUrl, remoteUrl, readSnapshot, pause, clear, refresh, getResumePreference, setResumePreference};
+  return {init, check, download, localUrl, rejectLocalUrl, remoteUrl, readSnapshot, pause, clear, refresh, getResumePreference, setResumePreference};
 }

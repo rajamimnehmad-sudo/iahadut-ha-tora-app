@@ -9,6 +9,7 @@ import org.junit.runner.RunWith;
 import org.robolectric.*;
 import org.robolectric.annotation.Config;
 import java.io.*;
+import java.net.SocketTimeoutException;
 import java.util.concurrent.Executors;
 
 @RunWith(RobolectricTestRunner.class) @Config(sdk=35)
@@ -43,6 +44,38 @@ public class OfflineDownloadWorkerTest {
         assertEquals(ListenableWorker.Result.success(),worker("test-generation").doWork());
         assertEquals("test-generation",OfflineDownloadStore.read(context,"job.json").getString("id"));
         assertFalse(OfflineDownloadStore.manifest(context).has("signature"));
+    }
+    public static class NetworkFixtureWorker extends OfflineDownloadWorker {
+        static boolean failFirst; static int secondRequests;
+        public NetworkFixtureWorker(Context c,WorkerParameters p){super(c,p);}
+        @Override void download(String value,File target)throws Exception {
+            if(value.endsWith("cache.jpg")&&failFirst)throw new SocketTimeoutException();
+            if(value.endsWith("second.jpg"))secondRequests++;
+            try(FileOutputStream out=new FileOutputStream(target)){out.write(new byte[]{1,2,3});}
+        }
+    }
+    @Test public void unavailablePhotoDoesNotBlockOtherPhotosAndRetryReusesCompletedFiles()throws Exception {
+        String second="https://vaad.ar/second.jpg";
+        job.put("urls",new JSONArray().put(url).put(second));
+        OfflineDownloadStore.write(context,"job.json",job);
+        NetworkFixtureWorker.failFirst=true;NetworkFixtureWorker.secondRequests=0;
+        NetworkFixtureWorker first=TestWorkerBuilder.from(context,NetworkFixtureWorker.class,Executors.newSingleThreadExecutor())
+            .setInputData(new Data.Builder().putString("job","test-generation").build()).build();
+        assertEquals(ListenableWorker.Result.retry(),first.doWork());
+        assertTrue(OfflineDownloadStore.present(context,OfflineDownloadStore.manifest(context).getJSONObject("images").getJSONObject(second)));
+        assertFalse(OfflineDownloadStore.manifest(context).has("signature"));
+        NetworkFixtureWorker.failFirst=false;
+        NetworkFixtureWorker retry=TestWorkerBuilder.from(context,NetworkFixtureWorker.class,Executors.newSingleThreadExecutor())
+            .setInputData(new Data.Builder().putString("job","test-generation").build()).build();
+        assertEquals(ListenableWorker.Result.success(),retry.doWork());
+        assertEquals(1,NetworkFixtureWorker.secondRequests);
+        assertEquals("current",OfflineDownloadStore.manifest(context).getString("signature"));
+    }
+    @Test public void temporaryNetworkErrorsRetryWithinABoundedBudget(){
+        assertTrue(OfflineDownloadWorker.shouldRetry(new SocketTimeoutException(),0));
+        assertTrue(OfflineDownloadWorker.shouldRetry(new IOException("connection lost"),2));
+        assertFalse(OfflineDownloadWorker.shouldRetry(new IOException("connection lost"),3));
+        assertFalse(OfflineDownloadWorker.shouldRetry(new IllegalArgumentException(),0));
     }
     @Test public void cachePathsCannotEscapeApplicationStorage()throws Exception {
         assertFalse(OfflineDownloadStore.present(context,new JSONObject().put("path","../outside.jpg")));
