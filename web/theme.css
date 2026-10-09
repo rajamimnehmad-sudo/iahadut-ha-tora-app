@@ -5839,3 +5839,16 @@ html[data-platform="ios"][data-ios-edge-to-edge="true"] body:not(.search-open) .
 
 /* New flyer artwork has its own stronger ink contrast. */
 #homeView .useful-grid .link-row[data-info="notes"] img.info-icon-3d { filter: none; }
+
+/* Next release: text update invitation above search. */
+#homeView .home-app-update { margin: 0 20px; padding: 0; background: transparent; border: 0; box-shadow: none; }
+#homeView .home-app-update button { justify-content: center; min-height: 44px; max-width: 100%; padding: 8px 4px; border: 0; border-radius: 0; background: transparent; color: #245b45; font-size: 12px; font-weight: 600; box-shadow: none; text-align: center; }
+#homeView .home-app-update button span { font-size: inherit; line-height: 1.45; text-decoration: underline; text-underline-offset: 3px; text-wrap: balance; }
+#homeView .home-app-update button:hover, #homeView .home-app-update button:active { background: transparent; color: #163e2d; transform: none; }
+#homeView .home-app-update button:focus-visible { outline: 2px solid #245b45; outline-offset: 2px; }
+
+#homeView .home-app-update button { gap: 8px; }
+#homeView .home-app-update button .app-update-arrow { width: 17px; height: 17px; flex: 0 0 17px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+
+/* Keep the enlarged artwork clear of its label without resizing it. */
+#homeView .useful-grid .link-row > span:nth-child(2) { padding-left: 6px !important; }

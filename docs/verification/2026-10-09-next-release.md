@@ -13,3 +13,8 @@ Recursos web sincronizados con ambas plataformas; no incluidos en los binarios y
 Validaciones pendientes: probar gestos, carrusel iPhone, descarga sin conexión y Vistos en dispositivos; resolver cuatro fotos oficiales Free Chips que devuelven 404; completar información y video físico solicitados por Apple; verificar recuperación independiente de cuentas, clave del Hub y código. No se afirma que la sincronización de metadata sea un respaldo de código.
 
 Verificación posterior: S22 conectado informa versionCode=111 y versionName=1.0.53; instalación de la actualización confirmada. Hub muestra 204 dispositivos Android activos instalados en el informe del 4/10/2026, distinto de 724 usuarios acumulados de Analytics.
+
+- Actualización: texto «Actualizar la aplicación para obtener las últimas funciones» arriba del buscador, sin fondo, con una flecha a la derecha. Vista previa local `?preview=app-update`; disponibilidad real sin cambios.
+- Tienda: conservar tamaño original, simplificar el dibujo y reforzar contraste; el usuario rechazó agrandarlo.
+
+- Separación: añadir 6 px entre iconos 3D y texto en las cuatro tarjetas.
