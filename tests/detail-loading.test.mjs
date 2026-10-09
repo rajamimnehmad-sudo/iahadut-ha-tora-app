@@ -77,3 +77,20 @@ test('Concurrent fiche requests share the same download and a failure allows ret
   assert.equal((await ctx.fetchProductContent({url:'a'})).description,'Ficha');
   assert.equal(requests,2);
 });
+
+test('Failed open automatically uses the recovered central fiche',async()=>{
+ const h=harness();h.ctx.navigator.onLine=true;
+ h.ctx.fetchProductContent=async()=>{throw Error('missing fiche');};
+ let recoveries=0;h.ctx.recoverProductContent=async url=>{recoveries++;assert.equal(url,'a');return {description:'Ficha central'};};
+ h.ctx.openDetail('a');h.paint();await new Promise(resolve=>setImmediate(resolve));
+ assert.equal(recoveries,1);assert.equal(h.rendered.at(-1)[1].description,'Ficha central');
+});
+test('Recovery does not replace another fiche opened while sync is pending',async()=>{
+ const h=harness();h.ctx.navigator.onLine=true;
+ h.ctx.fetchProductContent=async()=>{throw Error('missing fiche');};
+ let finish;h.ctx.recoverProductContent=()=>new Promise(resolve=>{finish=resolve;});
+ h.ctx.openDetail('a');h.paint();await new Promise(resolve=>setImmediate(resolve));
+ h.ctx.productCache.b={description:'B'};h.ctx.openDetail('b');h.paint();
+ finish({description:'Old A'});await new Promise(resolve=>setImmediate(resolve));
+ assert.equal(h.rendered.at(-1)[0],'b');assert.equal(h.rendered.at(-1)[1].description,'B');
+});

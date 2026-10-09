@@ -1,0 +1,23 @@
+{
+  "behavior": "When opening a fiche fails online, sync the central static copy and show the recovered official fiche automatically",
+  "platforms": [
+    "Android",
+    "iPhone",
+    "Android tablets",
+    "iPad"
+  ],
+  "safety": {
+    "sharedInFlightSync": true,
+    "minimumRecoverySyncIntervalSeconds": 60,
+    "offlineNetworkRequests": false,
+    "preservesCachedCatalogOnFailure": true,
+    "doesNotReplaceAnotherOpenFiche": true
+  },
+  "verification": {
+    "sharedTestsPassed": 176,
+    "mobileResourcesSynced": true,
+    "physicalDevicesVerified": false
+  },
+  "delivery": "prepared for internal 1.0.52 (110) and physical iPhone installation",
+  "hub": "delegated to Jave; metadata synchronization not verified"
+}

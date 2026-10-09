@@ -1,3 +1,4 @@
+import {createDetailRecovery} from './detail-recovery.js';
 import {createUsageAnalytics} from './usage-analytics.js';
 import {productSearchKey, validGlobalRanking} from './global-popularity.js';
 import initialGlobalRanking from './data/global-popularity.json';
@@ -3576,6 +3577,11 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     }, 2800);
   }
 
+  const recoverProductContent = createDetailRecovery({
+    online:() => navigator.onLine,
+    sync:() => syncRequest || syncCatalogFromPublishedFiles(),
+    read:url => productCache[url]
+  });
   function openDetail(url, options = {}) {
     const product = products.find((item) => item.url === url); if (!product) return;
     const fromSearch = options.fromSearch && !options.retry && document.querySelector('.view.active')?.id === 'searchView' && $('#query').value.trim();
@@ -3614,9 +3620,17 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     fetchProductContent(product).then((official) => {
       window.clearTimeout(slowNotice);
       if (currentProduct?.url === product.url) renderDetail(product, official);
-    }).catch(() => {
+    }).catch(async () => {
       window.clearTimeout(slowNotice);
-      if (currentProduct?.url === product.url) renderDetail(product, {loadFailed:true});
+      const stillOpen = () => currentProduct?.url === product.url && document.querySelector('.view.active')?.id === 'detailView';
+      if (!stillOpen()) return;
+      if (navigator.onLine) renderDetail(product, {loading:true});
+      try {
+        const official = await recoverProductContent(product.url);
+        if (stillOpen()) renderDetail(products.find(item => item.url === product.url) || product, official);
+      } catch (_) {
+        if (stillOpen()) renderDetail(product, {loadFailed:true});
+      }
     });
     }, 0));
   }

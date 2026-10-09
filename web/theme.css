@@ -5632,13 +5632,15 @@ html[data-platform="ios"][data-ios-edge-to-edge="true"] body:not(.search-open) .
 }
 
 /* Shared app actions: compact, quiet controls on every platform. */
-.home-app-update { justify-content: flex-end; padding: 0; border: 0; border-radius: 0; background: transparent; box-shadow: none; }
+.home-app-update { justify-content: center; margin: 0 20px; padding: 0; border: 0; border-radius: 0; background: transparent; box-shadow: none; }
 .home-app-update-copy { gap: 0; }
 .home-app-update-icon { display: none; }
 .home-app-update-copy strong { color: #245b45; font-size: 12px; font-weight: 600; }
 .home-app-update-copy small { color: #61756a; font-size: 10px; }
-.home-app-update button { min-height: 44px; padding: 8px 14px; border: 1px solid #c9ded1; border-radius: 10px; background: #f5faf6; color: #245b45; font-size: 12px; font-weight: 600; box-shadow: none; }
-.home-app-update button:active { background: #e4f0e8; transform: none; }
+.home-app-update button { justify-content: center; gap: 6px; min-height: 44px; padding: 4px 8px; border: 0; border-radius: 0; background: transparent; color: #245b45; font-size: 13px; font-weight: 600; box-shadow: none; }
+.home-app-update button span { font-size: inherit; font-weight: inherit; line-height: 1.4; text-decoration: underline; text-underline-offset: 3px; }
+.home-app-update button svg { width: 15px; height: 15px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.home-app-update button:active { background: transparent; color: #2f7a59; transform: none; }
 
 
 /* Same share control as product sheets; only its header layout differs. */
