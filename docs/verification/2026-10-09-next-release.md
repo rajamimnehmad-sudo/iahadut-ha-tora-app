@@ -20,3 +20,5 @@ Verificación posterior: S22 conectado informa versionCode=111 y versionName=1.0
 - Separación: añadir 6 px entre iconos 3D y texto en las cuatro tarjetas.
 
 - Proporción de tarjetas: dos columnas reales, 14 px de separación, textos equilibrados y flecha anclada abajo a la derecha, sin aumentar iconos ni letra.
+
+- Ajuste óptico: catering ligeramente mayor y WhatsApp menor para igualar peso visual; no cambiar tarjetas ni letra.

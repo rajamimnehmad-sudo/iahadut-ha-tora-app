@@ -5859,3 +5859,7 @@ html[data-platform="ios"][data-ios-edge-to-edge="true"] body:not(.search-open) .
 #homeView .useful-grid .link-row.whatsapp-tile { position: relative; grid-template-columns: 36px minmax(0,1fr) !important; column-gap: 14px !important; }
 #homeView .useful-grid .link-row > span:nth-child(2) { padding-left: 0 !important; padding-right: 0 !important; text-wrap: balance; }
 #homeView .useful-grid .link-row > span:last-child { position: absolute !important; top: auto !important; bottom: 12px !important; right: 12px !important; transform: none !important; }
+
+/* Match perceived icon size: the wide cloche needs more scale than the round logo. */
+#homeView .useful-grid .link-row[data-info="catering"] img.info-icon.info-icon-3d { transform: scale(1.42); }
+#homeView .useful-grid .link-row.whatsapp-tile img.info-icon.info-icon-3d { transform: scale(1.15); }
