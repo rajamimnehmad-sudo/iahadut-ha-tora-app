@@ -46,3 +46,9 @@ test('no push is sent when durable inbox cannot store the notice',async()=>{
   await assert.rejects(sendManualPush({PUSH_TITLE:'Arcor',PUSH_BODY:'Texto',PUSH_SEND:'1',MANUAL_PUSH_APPROVED:'1',ALERTS_INGEST_SECRET:'test',FCM_SERVICE_ACCOUNT_JSON:'{}'},async(url)=>{calls.push(url);return new Response('{}',{status:503});}),/guardar en Alertas/);
   assert.equal(calls.length,1);assert.match(calls[0],/\/api\/alerts$/);
 });
+test('collapsed note remains collapsed after inbox refresh without losing its text',()=>{
+ const notice={eventKey:'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',title:'Nota',body:'Contenido completo',imageUrl:'https://example.com/photo.jpg',bodyDisplay:'collapsed',topic:'catalog-updates',sentAt:new Date().toISOString()};
+ const rows=mergeInboxNotifications([], [notice]);
+ assert.equal(rows[0].bodyDisplay,'collapsed');
+ assert.equal(rows[0].body,'Contenido completo');
+});

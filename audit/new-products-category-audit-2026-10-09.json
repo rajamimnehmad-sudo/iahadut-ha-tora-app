@@ -1,0 +1,196 @@
+{
+  "auditedAt": "2026-10-09T03:20:05.193Z",
+  "sourceSnapshot": "https://raw.githubusercontent.com/rajamimnehmad-sudo/iahadut-ha-tora-app/main/web/data/published/snapshot-5d2a5f655a08f374fff4090a167435250d815d32f1f423995078c62d383faf3b.json",
+  "total": 1117,
+  "previouslyReviewed": 1109,
+  "newProducts": [
+    {
+      "barcode": "",
+      "brand": "«Juan Valdes»",
+      "cat": "gondola",
+      "description": "Cafe clasico / vanicanela / avellana / deulce de leche / chocolate\n\nProducto importado bajo certificación Kosher OU\n\nDEBE LLEVAR EL LOGO «OU» EN EL ENVASE",
+      "image": "https://vaad.ar/wp-content/uploads/2026/10/cafe-300x300.jpg",
+      "title": "Café marca «Juan Valdes»",
+      "url": "https://vaad.ar/producto/cafe-marca-juan-valdes/",
+      "reviewed": false,
+      "before": [
+        "Frutos secos y deshidratados",
+        "Frutos secos"
+      ],
+      "after": [
+        "Café"
+      ],
+      "sourceVerification": {
+        "status": 200,
+        "title": "Productos",
+        "containsProductPage": true
+      }
+    },
+    {
+      "barcode": "",
+      "brand": "«Dunorte»",
+      "cat": "gondola",
+      "description": "Cajú tostado y salado, producto importado de Brasil bajo certificación Kosher\n\nDisponibles en las tiendas New Garden",
+      "image": "https://vaad.ar/wp-content/uploads/2026/10/caju-300x300.png",
+      "title": "Caju tostado marca «Dunorte»",
+      "url": "https://vaad.ar/producto/caju-tostado-marca-dunorte/",
+      "reviewed": false,
+      "before": [
+        "Frutos secos y deshidratados",
+        "Frutos secos"
+      ],
+      "after": [
+        "Frutos secos"
+      ],
+      "sourceVerification": {
+        "status": 200,
+        "title": "Productos",
+        "containsProductPage": true
+      }
+    },
+    {
+      "barcode": "",
+      "brand": "«La Molisana»",
+      "cat": "gondola",
+      "description": "Producto importado bajo certificación Kosher OU\n\nDEBE LLEVAR EL LOGO «OU» EN EL ENVASE",
+      "image": "https://vaad.ar/wp-content/uploads/2026/10/fideos-importados-4-300x300.jpg",
+      "title": "Fideos marca «La Molisana»",
+      "url": "https://vaad.ar/producto/fideos-marca-la-molisana-2/",
+      "reviewed": false,
+      "before": [
+        "Pastas",
+        "Pastas secas"
+      ],
+      "after": [
+        "Fideos y pastas secas"
+      ],
+      "sourceVerification": {
+        "status": 200,
+        "title": "Productos",
+        "containsProductPage": true
+      }
+    },
+    {
+      "barcode": "",
+      "brand": "«La Molisana»",
+      "cat": "gondola",
+      "description": "Producto importado bajo certificación Kosher OU\n\nDEBE LLEVAR EL LOGO «OU» EN EL ENVASE",
+      "image": "https://vaad.ar/wp-content/uploads/2026/10/fideos-importados-3-300x300.jpg",
+      "title": "Fideos marca «La Molisana»",
+      "url": "https://vaad.ar/producto/fideos-marca-la-molisana-3/",
+      "reviewed": false,
+      "before": [
+        "Pastas",
+        "Pastas secas"
+      ],
+      "after": [
+        "Fideos y pastas secas"
+      ],
+      "sourceVerification": {
+        "status": 200,
+        "title": "Productos",
+        "containsProductPage": true
+      }
+    },
+    {
+      "barcode": "",
+      "brand": "«La Molisana»",
+      "cat": "gondola",
+      "description": "Producto importado bajo certificación Kosher OU\n\nDEBE LLEVAR EL LOGO «OU» EN EL ENVASE",
+      "image": "https://vaad.ar/wp-content/uploads/2026/10/fideos-importados-1-300x300.jpg",
+      "title": "Fideos marca «La Molisana»",
+      "url": "https://vaad.ar/producto/fideos-marca-la-molisana/",
+      "reviewed": false,
+      "before": [
+        "Pastas",
+        "Pastas secas"
+      ],
+      "after": [
+        "Fideos y pastas secas"
+      ],
+      "sourceVerification": {
+        "status": 200,
+        "title": "Productos",
+        "containsProductPage": true
+      }
+    },
+    {
+      "barcode": "",
+      "brand": "«La Molisana»",
+      "cat": "gondola",
+      "description": "Producto importado bajo certificación Kosher OU\n\nDEBE LLEVAR EL LOGO «OU» EN EL ENVASE",
+      "image": "https://vaad.ar/wp-content/uploads/2026/10/fideos-importados-2-300x300.jpg",
+      "title": "Lasagne All’uovo 220 marca «La Molisana»",
+      "url": "https://vaad.ar/producto/lasagne-alluovo-220-marca-la-molisana/",
+      "reviewed": false,
+      "before": [
+        "Frutas y vegetales",
+        "Vegetales"
+      ],
+      "after": [
+        "Fideos y pastas secas"
+      ],
+      "sourceVerification": {
+        "status": 200,
+        "title": "Productos",
+        "containsProductPage": true
+      }
+    },
+    {
+      "barcode": "",
+      "brand": "French’s",
+      "cat": "gondola",
+      "description": "Producto importado bajo certificaión Kosher\n\nDEBE LLEVAR EL LOGO «OU» EN EL ENVASE\n\nEn general todas las mostazas requieren certifiacion Kosher de Rabinato porque se elaboran con mosto de uva",
+      "image": "https://vaad.ar/wp-content/uploads/2026/10/MOSTAZA-300x300.jpg",
+      "title": "Mostaza marca French’s",
+      "url": "https://vaad.ar/producto/mostaza-marca-frenchs/",
+      "reviewed": false,
+      "before": [
+        "Aderezos",
+        "Mostaza"
+      ],
+      "after": [
+        "Aderezos",
+        "Mostaza"
+      ],
+      "sourceVerification": {
+        "status": 200,
+        "title": "Productos",
+        "containsProductPage": true
+      }
+    },
+    {
+      "barcode": "",
+      "brand": "«Setton»",
+      "cat": "gondola",
+      "description": "Pistachos sabor jalapeño\n\nProducto importado bajo certificación Kosher OK\n\nDEBE LLEVAR EL LOGO «OK» EN ENVASE\n\nDisponibles en las tiendas New Garden",
+      "image": "https://vaad.ar/wp-content/uploads/2026/10/pistacho-1-300x300.jpg",
+      "title": "Pistacho Jalapeño marca «Setton»",
+      "url": "https://vaad.ar/producto/pistacho-jalapeno-marca-setton/",
+      "reviewed": false,
+      "before": [
+        "Frutos secos y deshidratados",
+        "Frutos secos"
+      ],
+      "after": [
+        "Frutos secos"
+      ],
+      "sourceVerification": {
+        "status": 200,
+        "title": "Productos",
+        "containsProductPage": true
+      }
+    }
+  ],
+  "preservedReviewed": true,
+  "classificationPolicy": "Reviewed URL precedence; unreviewed products use title, not certification text, ingredients or flavours",
+  "scope": "Audited all 8 additions against the published catalog; original 1109 assignments checked for preservation, not manually re-reviewed",
+  "published": false,
+  "verification": {
+    "targeted_tests_passed": 15,
+    "prepare_mobile": "passed",
+    "diff_check": "passed",
+    "native_build_this_turn": false
+  },
+  "hub_metadata_sync": "delegated to Jave; save not verified"
+}

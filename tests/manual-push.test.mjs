@@ -63,3 +63,10 @@ test('malformed or stale remote records cannot restore a removed alert', async (
     assert.deepEqual(await loadRevokedPushes(storage, async () => ({ok:true, json:async () => document})), ['notice-1']);
   }
 });
+test('collapsed photo note retains complete text for old apps and rejects unknown modes',()=>{
+  const message=manualPushMessage({title:'Prueba',body:'Texto completo para versiones anteriores',imageUrl:'https://example.com/photo.jpg',bodyDisplay:'collapsed',topic:'iahadut-test-aaaaaaaaaaaaaaaaaaaa'});
+  assert.equal(message.notification.body,'Texto completo para versiones anteriores');
+  assert.equal(message.data.body,message.notification.body);
+  assert.equal(message.data.bodyDisplay,'collapsed');
+  assert.throws(()=>manualPushMessage({title:'Prueba',body:'Texto',bodyDisplay:'hidden'}));
+});

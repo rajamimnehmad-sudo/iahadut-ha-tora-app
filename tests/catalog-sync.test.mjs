@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import vm from 'node:vm';
+import {validCategoryPath} from '../web/catalog-categories.js';
 import {readFileSync} from 'node:fs';
 const source=readFileSync(new URL('../web/app.js',import.meta.url),'utf8');
 const functions=source.slice(source.indexOf('  function localProductFromFirestore('),source.indexOf('  function catalogCategoryKey('));
@@ -10,6 +11,7 @@ function harness({localVersion=version,local=['one','retired','two'],active=['on
  const docs=items=>({docs:items.map(url=>({data:()=>({sourceUrl:url,title:url,retiredAt:version,catalogGeneratedAt:version,detailsJson:details[url]})}))});
  const api={doc:(_db,collection)=>({collection}),getDoc:async ref=>{const value=ref.collection==='catalog_content'?content:(++reads===1?metadata:confirmed);return {exists:()=>true,data:()=>value};},collection:(_db,name)=>name,where:()=>({}),query:collection=>collection,getDocs:async collection=>{calls.push(collection);return docs(collection==='catalog_products'?active:archive);}};
  const context=vm.createContext({
+  validCategoryPath,
   clean:value=>String(value||'').trim(),canonicalBarcode:()=>'',getFirebaseCatalogApi:async()=>({db:{},api}),
   products:local.map(url=>({url,title:url})),productCache:Object.fromEntries(local.map(url=>[url,{text:'cached'}])),seed:[],
   localStorage:{getItem:key=>storage.get(key),setItem:(key,value)=>storage.set(key,value)},syncState:{},syncMessage(){},recentProducts:[],INFO_CACHE_VERSION:1,infoCache:{old:{text:'guardado'}},cardCache:{old:{}},save(){},renderHome(){},renderSearchCategories(){},document:{querySelector:()=>null}
@@ -49,4 +51,11 @@ test('catalog and central sections become available together after confirmation'
 });
 test('unconfirmed central sections never overwrite saved content',async()=>{
  const h=harness({metadata:{version,activeProductCount:2,contentVersion:version},confirmed:{version:'2026-10-03T00:00:00Z',activeProductCount:2},content:{version,contentJson:JSON.stringify({info:{shops:{}},cards:{}})}});await assert.rejects(h.run());assert.equal(h.context.infoCache.old.text,'guardado');assert.equal(h.storage.get('iht_central_content_version'),undefined);
+});
+
+test('central category paths survive the alternate sync format and malformed data preserves the previous path',()=>{
+ const h=harness();
+ const run=code=>vm.runInContext(code,h.context);
+ assert.deepEqual(Array.from(run(`localProductFromFirestore({sourceUrl:'one',title:'One',categoryPathJson:'["Nueva categoría","Subcategoría"]'}).categoryPath`)),['Nueva categoría','Subcategoría']);
+ assert.deepEqual(Array.from(run(`localProductFromFirestore({sourceUrl:'one',title:'One',categoryPathJson:'broken'},{categoryPath:['Guardada']}).categoryPath`)),['Guardada']);
 });

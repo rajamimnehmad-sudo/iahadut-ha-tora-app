@@ -12,7 +12,10 @@ import { catalogSnapshotNeedsRepair } from './catalog-cache.js';
 import {normalizedSnapshot, snapshotHash, readPublishedSnapshot} from './published-catalog.js';
 import catalogSnapshot from './data/catalog.json';
 import { productText } from './product-text.js';
-import { catalogCategoryPath } from './catalog-categories.js';
+import { catalogCategoryPath, validCategoryPath } from './catalog-categories.js';
+import {correctDisplayText} from './text-corrections.js';
+import {browserCatalogPresentation} from './catalog-presentation-browser.js';
+import bundledPresentation from './data/catalog-presentation.json';
 import { mergeAlertHistory } from './alert-history.js';
 import { categoryInformation } from './category-info.js';
 import {collectOfflineImages, createOfflineDownload, offlineNetworkMayDownload, offlineContentRevision} from './offline-download.js';
@@ -133,7 +136,8 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
   const searchPlaceholders = ['Buscá un producto', 'Probá con una marca', 'Encontrá una categoría', 'Escaneá un código'];
   const clean = (value) => String(value || '').replace(/\s+/g, ' ').trim();
   const normalize = (value) => clean(value).normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
-  const escapeHtml = (value) => String(value || '').replace(/[&<>"']/g, (char) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[char]));
+  let presentationTextCorrections = bundledPresentation.textCorrections;
+  const escapeHtml = (value) => correctDisplayText(value || '', presentationTextCorrections).replace(/[&<>"']/g, (char) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[char]));
   const productFallbackImage = 'assets/product-placeholder.svg';
   const developerLogoAssetUrl = new URL('./assets/waien-studio-logo.png', import.meta.url).href;
   // Resolver el sello desde el módulo evita que una ruta relativa cambie
@@ -410,6 +414,9 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
   let previousView = 'homeView';
   let previousScrollTop = 0;
   let currentInfoKey = '';
+  const tabletLayout = window.matchMedia('(min-width: 701px) and (min-height: 600px)');
+  const moreListHome = $('#moreList').parentElement;
+  const shareAppHome = $('#shareAppWhatsApp').parentElement;
   let shareBusy = false;
   const shareImageCache = new Map();
   const shareImageTasks = new Map();
@@ -438,6 +445,28 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
   let remoteControl = platformRemoteControl({...defaultRemoteControl, configured:false, checkedAt:0}, Capacitor.getPlatform(), APP_VERSION, import.meta.env.VITE_IOS_STORE_URL);
   let playUpdateState = {available:false, downloaded:false, flexibleAllowed:false, checked:false};
   let remoteTaxonomyRules = [];
+  const catalogPresentation = browserCatalogPresentation(bundledPresentation, () => refreshCatalogPresentationViews());
+  function managedCategoryInfo(key) {
+    return catalogPresentation.current().categoryInformation?.[key] || categoryInformation[key];
+  }
+  function refreshCatalogPresentationViews() {
+    presentationTextCorrections = catalogPresentation.current().textCorrections || bundledPresentation.textCorrections;
+    const texts = catalogPresentation.current().texts || {};
+    const targets = {homeTitle:'.home-intro h1', welcomeTitle:'.tablet-welcome h2', welcomeDescription:'.tablet-welcome p', catalogTitle:'#searchView .page-head h1', featuredTitle:'.recent-products-section h2', usefulTitle:'.useful-section h2'};
+    for (const [key, selector] of Object.entries(targets)) {
+      const node = document.querySelector(selector);
+      if (node && texts[key]) node.textContent = texts[key];
+    }
+    renderHome();
+    renderSearchCategories();
+    const view = document.querySelector('.view.active')?.id;
+    if (view === 'categoryDirectoryView') renderCategoryDirectory();
+    else if (['subcategoryDirectoryView','categoryProductsView'].includes(view)) openTaxonomyPath([...activeCategoryPath], {restoreScroll:true});
+    if (view === 'searchView' && $('#query').value) renderResults($('#query').value);
+  }
+  function refreshCatalogPresentation(force = false) {
+    return navigator.onLine ? catalogPresentation.refresh(force).catch(() => false) : Promise.resolve(false);
+  }
   let pushListenersReady = false;
   let pushSetupRequest = null;
   let pushRegistrationQueue = Promise.resolve();
@@ -520,7 +549,7 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
   let offlineObservedError = '';
   let offlineMobileAllowed = false;
   const offlineDownload = createOfflineDownload(() => {
-    if (document.querySelector('.view.active')?.id === 'moreView') renderMore({offlineOnly:true});
+    if (moreOptionsVisible()) renderMore({offlineOnly:true});
     useOfflineImages();
   }, Capacitor.isNativePlatform() ? OfflineDownload : null);
   await offlineDownload.init();
@@ -543,7 +572,7 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
   function setOfflineWifiWait(value) {
     offlineWifiWait = value;
     try { localStorage.setItem('iht_offline_wifi_wait', JSON.stringify(value)); } catch (_) {}
-    if (document.querySelector('.view.active')?.id === 'moreView') renderMore();
+    if (moreOptionsVisible()) renderMore();
   }
   async function offlineConnection() {
     if (!navigator.onLine) return {type:'none'};
@@ -604,7 +633,7 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
       return;
     }
     offlineStarting = true;
-    if (document.querySelector('.view.active')?.id === 'moreView') renderMore({offlineOnly:true});
+    if (moreOptionsVisible()) renderMore({offlineOnly:true});
     try {
       const connection = await offlineConnection();
       const wifi = connection.type === 'wifi' && !connection.metered;
@@ -649,7 +678,7 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
       window.alert('No se pudo guardar el estado de la descarga. Tocá para reintentar.');
     } finally {
       offlineStarting = false;
-      if (document.querySelector('.view.active')?.id === 'moreView') renderMore({offlineOnly:true});
+      if (moreOptionsVisible()) renderMore({offlineOnly:true});
     }
   }
   const resumeOfflineWhenOpen = async () => {
@@ -1483,6 +1512,7 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
 
   function syncAndPreload(force = false) {
     void refreshGlobalRanking();
+    void refreshCatalogPresentation(force);
     if (syncRequest) return syncRequest;
     document.querySelectorAll('#syncStatus, [data-info-sync]').forEach((button) => {
       button.disabled = true;
@@ -1544,7 +1574,7 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     save();
     syncMessage(`${products.length.toLocaleString('es-AR')} productos · actualizado`, 'ok');
     renderHome();
-    if (document.querySelector('.view.active')?.id === 'searchView') renderSearchCategories();
+    refreshCatalogPresentationViews();
     return true;
   }
 
@@ -1557,6 +1587,7 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
       title,
       brand:clean(data?.brand),
       cat:clean(data?.category || 'gondola'),
+      ...(validCategoryPath(data?.categoryPath) ? {categoryPath:[...data.categoryPath]} : (() => {try {const path=JSON.parse(data?.categoryPathJson || 'null');return validCategoryPath(path) ? {categoryPath:path} : validCategoryPath(previous?.categoryPath) ? {categoryPath:[...previous.categoryPath]} : {};}catch{return validCategoryPath(previous?.categoryPath) ? {categoryPath:[...previous.categoryPath]} : {};}})()),
       image:clean(data?.imageUrl),
       barcode:canonicalBarcode(data?.barcode),
       description:clean(data?.description) || previous?.description || '',
@@ -1835,7 +1866,8 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     if (sourceNote) sourceNote.innerHTML = '<span aria-hidden="true">✓</span> Fuente oficial';
     const catalogByUrl = new Map(products.map((product) => [product.url, product]));
     // Explicit selection and order, independent of catalog additions or sync.
-    const items = featuredProductsSnapshot.products.map((product) => catalogByUrl.get(product.url)).filter(Boolean)
+    const featuredUrls = catalogPresentation.current().featuredProducts || featuredProductsSnapshot.products.map(product => product.url);
+    const items = featuredUrls.map(url => catalogByUrl.get(url)).filter(Boolean)
       .map((product) => ({...product, image:featuredProductImage(product)}));
     const itemsKey = items.map((product) => `${product.url}|${product.image || ''}`).join('\n');
     if (itemsKey === renderedHomeItemsKey) {
@@ -1856,7 +1888,7 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     delete recentTrack.dataset.carouselPositioned;
     recentTrack.style.removeProperty('transform');
     recentTrack.parentElement?.scrollTo({left: 0, behavior: 'auto'});
-    recentTrack.innerHTML = items.map((product) => `<button class="recent-product" data-product="${escapeHtml(product.url)}" aria-label="Ver ${escapeHtml(product.title)}"><span class="recent-product-media"><img class="asset-loading" ${featuredImageLayout(product.image)} src="${escapeHtml(product.image || productFallbackImage)}" alt="${escapeHtml(product.title)}" loading="eager" onload="this.classList.remove('asset-loading','asset-error');this.classList.add('asset-ready')" onerror="this.onerror=null;this.removeAttribute('data-featured-normalized');this.removeAttribute('style');this.src='${productFallbackImage}';this.classList.add('asset-loading');this.classList.remove('asset-ready','asset-error')">${uruguayBadge(product, 'product-region-badge recent-region-badge')}</span></button>`).join('');
+    recentTrack.innerHTML = items.map((product) => `<button class="recent-product" data-product="${escapeHtml(product.url)}" aria-label="Ver ${escapeHtml(product.title)}"><span class="recent-product-media"><img class="asset-loading" ${featuredImageLayout(product.image)} src="${escapeHtml(product.image || productFallbackImage)}" alt="${escapeHtml(product.title)}" loading="eager" onload="this.classList.remove('asset-loading','asset-error');this.classList.add('asset-ready')" onerror="this.onerror=null;this.removeAttribute('data-featured-normalized');this.removeAttribute('style');this.src='${productFallbackImage}';this.classList.add('asset-loading');this.classList.remove('asset-ready','asset-error')">${uruguayBadge(product, 'product-region-badge recent-region-badge')}</span><span class="tablet-featured-copy"><small>${escapeHtml(brandName(product))}</small><strong>${escapeHtml(product.title.replace(/\s+marca\b.*$/i, '').trim())}</strong></span></button>`).join('');
     if (items.length > 1) {
       // Tres copias permiten iniciar en el centro y desplazarse en ambas
       // direcciones. El scroll se recentra en silencio cuando cruza una
@@ -1896,6 +1928,11 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
       recentCarouselOffset = metrics.carouselStart;
     } else {
       recentCarouselOffset = viewport.scrollLeft;
+    }
+    if (tabletLayout.matches) {
+      track.dataset.carouselAutoplay = 'false';
+      viewport.classList.remove('is-autoplaying');
+      return;
     }
     track.dataset.carouselAutoplay = 'true';
     viewport.classList.add('is-autoplaying');
@@ -1996,6 +2033,15 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     const styles = window.getComputedStyle(track);
     const gap = parseFloat(styles.columnGap || styles.gap) || 0;
     const available = Math.max(0, viewport.clientWidth);
+    if (tabletLayout.matches) {
+      const columns = Math.max(2, Math.min(5, Math.floor((available + gap) / 160)));
+      const cardWidth = (available - gap * (columns - 1)) / columns;
+      track.dataset.carouselEdgeOffset = '0';
+      track.dataset.carouselViewportWidth = String(available);
+      track.style.paddingInline = '0px';
+      track.style.setProperty('--recent-card-width', `${cardWidth}px`);
+      return;
+    }
     // Dejamos una previsualización lateral de la tarjeta anterior y siguiente.
     // El ancho acompaña el viewport de forma continua: no cambia de golpe al
     // cruzar un umbral que altere la cantidad estimada de tarjetas visibles.
@@ -2208,6 +2254,8 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
   }
 
   function taxonomyIcon(name) {
+    const managed = catalogPresentation.icon(name);
+    if (managed) return `<span class="taxonomy-photo" aria-hidden="true" style="background-image:url('${escapeHtml(managed.url)}');background-size:${managed.size};background-position:${managed.position}"></span>`;
     const key = normalize(name);
     const dryFood = /^frutos secos y (?:deshidratados|frutas secas)$/.test(key)
       ? '<path d="M10 3C4 5 2 12 5 17c5 1 10-5 5-14ZM9 6 6 14"/><ellipse cx="17" cy="15" rx="3" ry="4" transform="rotate(25 17 15)"/><path d="m17 13-1 3M19 7c-2 0-3 1-3 3"/>'
@@ -2274,10 +2322,12 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
   }
 
   function taxonomyTone(name) {
+    if (catalogPresentation.icon(name)) return 'tone-photo';
     return `tone-${[...normalize(name)].reduce((sum, char) => sum + char.charCodeAt(0), 0) % 5}`;
   }
 
   function categoryDisplayName(name) {
+    if (catalogPresentation.current().categories[name]?.label) return catalogPresentation.current().categories[name].label;
     return ({
       'Autorizados en góndolas': 'Productos autorizados',
       'Cereales, granos y semillas': 'Cereales y granos',
@@ -2290,7 +2340,7 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
   function taxonomyRows(rows, parentPath) {
     return rows.map(([name, items]) => {
       const path = [...parentPath, name];
-      return `<button class="alphabetical-category-row" type="button" data-taxonomy-path="${encodeURIComponent(JSON.stringify(path))}"><span class="alphabetical-category-icon ${taxonomyTone(name)}">${taxonomyIcon(name)}</span><span><strong>${escapeHtml(categoryDisplayName(name))}</strong><small>${items.length.toLocaleString('es-AR')} ${items.length === 1 ? 'producto' : 'productos'}</small></span><span class="row-arrow" aria-hidden="true">›</span></button>`;
+      return `<button class="alphabetical-category-row" type="button" data-taxonomy-path="${encodeURIComponent(JSON.stringify(path))}"><span class="alphabetical-category-icon ${taxonomyTone(name)}">${taxonomyIcon(name)}</span><span><strong>${escapeHtml(categoryDisplayName(name))}</strong><small>${items.length.toLocaleString('es-AR')} ${items.length === 1 ? 'producto' : 'productos'}${catalogPresentation.current().categories[name]?.description ? ' · '+escapeHtml(catalogPresentation.current().categories[name].description) : ''}</small></span><span class="row-arrow" aria-hidden="true">›</span></button>`;
     }).join('');
   }
 
@@ -2334,8 +2384,7 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
   }
 
   function cleanDisplayText(value) {
-    return clean(String(value || '')
-      .replace(/certifiacion/gi, 'certificación')
+    return clean(correctDisplayText(value || '', presentationTextCorrections)
       .replace(/[→➜➝➞⟶›▶►]+/g, ' ')
       .replace(/»([^»]+)»/g, '«$1»'));
   }
@@ -2540,7 +2589,7 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     brandLinks.innerHTML = brands.map(({name,count}) => {
       const logo = brandLogo(name);
       const initials = name.split(/\s+/).slice(0,2).map(word=>word[0]).join('').toUpperCase();
-      return `<button class="search-brand-match" type="button" data-search-brand="${escapeHtml(name)}" aria-label="Ver ${count} productos de ${escapeHtml(name)}"><span class="search-brand-circle"><span class="search-brand-initials" aria-hidden="true">${escapeHtml(initials)}</span>${logo ? `<img src="${escapeHtml(logo)}" alt="" onerror="this.hidden=true">` : ''}</span><strong>${escapeHtml(name)}</strong></button>`;
+      return `<button class="search-brand-match" type="button" data-search-brand="${escapeHtml(name)}" aria-label="Ver ${count} productos de ${escapeHtml(name)}"><span class="search-brand-circle"><span class="search-brand-initials" aria-hidden="true">${escapeHtml(initials)}</span>${logo ? `<img src="${escapeHtml(logo)}" alt="" onerror="this.hidden=true; const note=this.parentElement.querySelector('details'); if(note)note.open=true">` : ''}</span><strong>${escapeHtml(name)}</strong></button>`;
     }).join('');
     $('#results').hidden = false;
     $('#searchCategories').hidden = true;
@@ -2665,6 +2714,7 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     }
     document.querySelectorAll('.view').forEach((view) => view.classList.toggle('active', view.id === viewId));
     mountViewTitle(viewId);
+    updateTabletResourceSelection();
     document.querySelectorAll('.nav').forEach((button) => button.classList.toggle('active', button.dataset.view === viewId));
     if (viewId === 'searchView' && !preserveSearch) { renderSearchCategories(); $('#results').hidden = true; $('#searchCategories').hidden = false; $('#recentSearches').hidden = false; }
     if (viewId === 'timelineView') renderCatalogTimeline(undefined, '', timelineKind);
@@ -2699,9 +2749,11 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     list.innerHTML = pushNotifications.length ? pushNotifications.map((item) => {
       const playUrl = trustedPlayStoreUrl(item.url);
       const photo = pushImageUrl(item.imageUrl);
-      const image = photo ? `<img class="push-notification-image" src="${escapeHtml(photo)}" alt="Foto del aviso" loading="lazy" referrerpolicy="no-referrer" onerror="this.hidden=true">` : '';
+      const image = photo ? `<img class="push-notification-image" src="${escapeHtml(photo)}" alt="Foto del aviso" loading="lazy" referrerpolicy="no-referrer" onerror="this.hidden=true; const note=this.parentElement.querySelector('details'); if(note)note.open=true">` : '';
       const link = playUrl ? `<button class="push-notification-link" data-push-link="${escapeHtml(playUrl)}" type="button">Abrir en ${distributionLinks.label} <span aria-hidden="true">›</span></button>` : '';
-      return `<article class="push-notification-item"><div><strong>${escapeHtml(item.title || 'Novedad del catálogo')}</strong><p>${escapeHtml(item.body || 'Hay una actualización disponible.')}</p>${image}<small>${escapeHtml(item.time || '')}</small>${link}</div></article>`;
+      const text = `<p>${escapeHtml(item.body || 'Hay una actualización disponible.')}</p>`;
+      const note = photo && item.bodyDisplay==='collapsed' ? `<details class="push-note"><summary><span class="push-note-closed">Leer la nota</span><span class="push-note-open">Ocultar la nota</span></summary>${text}</details>` : text;
+      return `<article class="push-notification-item"><div><strong>${escapeHtml(item.title || 'Novedad del catálogo')}</strong>${image}${note}<small>${escapeHtml(item.time || '')}</small>${link}</div></article>`;
     }).join('') : '<div class="empty-state"><strong>No hay notificaciones</strong><span>Cuando llegue un aviso nuevo, aparecerá acá.</span></div>';
   }
 
@@ -3531,7 +3583,7 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     }
     const retry = $('#detailRetry');
     const statusLabel = detailContent.querySelector('.label');
-    if (categoryInformation[product.cat] && statusLabel) {
+    if (managedCategoryInfo(product.cat) && statusLabel) {
       const statusButton = document.createElement('button');
       statusButton.type = 'button';
       statusButton.className = `${statusLabel.className} category-info-trigger`;
@@ -3887,6 +3939,7 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     const item = {
       id: clean(notification?.id || data.messageId || data['google.message_id']) || `notice:${clean(notification?.title || data.title)}|${clean(notification?.body || data.body)}|${clean(data.sentAt || notification?.receivedAt)}`,
       eventKey: notificationEventKey(notification),
+      bodyDisplay: data.bodyDisplay==='collapsed'?'collapsed':'expanded',
       imageUrl: pushImageUrl(data.imageUrl || notification?.image || data['gcm.n.image']),
       sentAt: data.sentAt || notification?.receivedAt || new Date().toISOString(),
       expiresAt: data.expiresAt || notification?.expiresAt || '',
@@ -3955,7 +4008,7 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
       playUpdateState = {...playUpdateState, checked:true};
     }
     renderHomeAppUpdate();
-    if (document.querySelector('.view.active')?.id === 'moreView') renderMore();
+    if (moreOptionsVisible()) renderMore();
     return playUpdateState;
   }
 
@@ -3994,7 +4047,7 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     const decision = updateAccessOverlay(remoteControl);
     renderHome(); renderSearchCategories();
     renderHomeAppUpdate();
-    if (document.querySelector('.view.active')?.id === 'moreView') renderMore();
+    if (moreOptionsVisible()) renderMore();
     return decision;
   }
 
@@ -4118,6 +4171,33 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     return Promise.race([operation,new Promise((_,reject)=>{timer=setTimeout(()=>reject(new Error('La conexión de notificaciones no respondió. Reintentá con conexión.')),milliseconds);})]).finally(()=>clearTimeout(timer));
   }
 
+  function moreOptionsVisible() {
+    return tabletLayout.matches || document.querySelector('.view.active')?.id === 'moreView';
+  }
+
+  function updateTabletResources() {
+    const sidebar = $('#tabletResources');
+    (tabletLayout.matches ? sidebar : moreListHome).append($('#moreList'));
+    (tabletLayout.matches ? sidebar : shareAppHome).append($('#shareAppWhatsApp'));
+    if (tabletLayout.matches) {
+      renderMore();
+      if (document.querySelector('.view.active')?.id === 'moreView') returnHome();
+    }
+    updateTabletResourceSelection();
+    if (recentCarouselTimer) { window.clearInterval(recentCarouselTimer); recentCarouselTimer = null; }
+    startRecentCarousel();
+  }
+
+  function updateTabletResourceSelection() {
+    const reading = document.body.dataset.activeView === 'readerView';
+    document.querySelectorAll('#tabletResources [data-info]').forEach(button => {
+      const selected = reading && button.dataset.info === currentInfoKey;
+      button.classList.toggle('active', selected);
+      if (selected) button.setAttribute('aria-current', 'page');
+      else button.removeAttribute('aria-current');
+    });
+  }
+
   function renderMore({offlineOnly = false} = {}) {
     const offlineState = {...offlineDownload.check(offlineAssets(), offlineVersion())};
     if (offlineStarting && !offlineState.busy && !offlineState.paused && !offlineState.ready) Object.assign(offlineState, {busy:true, preparing:true});
@@ -4191,6 +4271,7 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
       });
     });
     infoNoticeKeys.forEach((key) => updateInfoNotice(key));
+    updateTabletResourceSelection();
   }
 
   async function openInfo(key, options = {}) {
@@ -4256,7 +4337,7 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
 
   let categoryInfoOpener = null;
   function openCategoryInfo(key, opener) {
-    const info = categoryInformation[key];
+    const info = managedCategoryInfo(key);
     if (!info) return;
     logAnalyticsEvent('content_open', {kind:'category'});
     categoryInfoOpener = opener;
@@ -5009,6 +5090,16 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     const productButton = event.target.closest('[data-product]'); if (productButton && !event.target.closest('[data-favorite]')) openDetail(productButton.dataset.product, {fromSearch:Boolean(productButton.closest('#productList'))});
     const favoriteButton = event.target.closest('[data-favorite]'); if (favoriteButton) { event.stopPropagation(); toggleFavorite(favoriteButton.dataset.favorite); }
     const recentButton = event.target.closest('[data-recent]'); if (recentButton) { $('#query').value = recentButton.dataset.recent; renderResults(recentButton.dataset.recent); }
+    const featuredButton = event.target.closest('[data-featured-step]');
+    if (featuredButton) {
+      const viewport = $('#recentProducts').parentElement;
+      const metrics = recentCarouselMetrics(viewport);
+      if (metrics) {
+        viewport.scrollTo({left: viewport.scrollLeft + Number(featuredButton.dataset.featuredStep) * metrics.step, behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth'});
+        scheduleRecentCarouselNormalize(viewport, 720);
+      }
+      return;
+    }
     const infoButton = event.target.closest('[data-info]'); if (infoButton) { logAnalyticsEvent('content_open', {kind:'info'}); openInfo(infoButton.dataset.info); }
     const categoryInfoButton = event.target.closest('[data-category-info]'); if (categoryInfoButton) { openCategoryInfo(categoryInfoButton.dataset.categoryInfo, categoryInfoButton); return; }
     const savedButton = event.target.closest('[data-saved]'); if (savedButton) { openSavedScreen(); return; }
@@ -5240,6 +5331,8 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
   $('#accessUpdate').onclick = () => openExternal(remoteControl.update_url);
   $('#headerNotifications')?.setAttribute('aria-label', 'Abrir Alertas');
   $('#headerNotifications')?.setAttribute('title', 'Alertas');
+  tabletLayout.addEventListener('change', updateTabletResources);
+  updateTabletResources();
   renderHome(); renderSearchCategories(); infoNoticeKeys.forEach((key) => updateInfoNotice(key));
   window.setTimeout(resumeOfflineWhenOpen, 0);
   refreshAlertBadge();
@@ -5247,6 +5340,9 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
   // La interfaz queda disponible de inmediato. La precarga completa continúa
   // en segundo plano y comunica su estado en la barra superior.
   preloadInitialProductImages();
+  await catalogPresentation.init();
+  void refreshCatalogPresentation();
+  setInterval(() => {if (!document.hidden && navigator.onLine) void refreshCatalogPresentation();}, 15 * 60 * 1000);
   // El ranking global se consulta como copia estática; nunca usa Firestore por usuario.
   const remoteControlReady = refreshRemoteControl(false);
   void refreshPushRevocations();
