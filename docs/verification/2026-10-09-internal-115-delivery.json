@@ -1,0 +1,42 @@
+{
+  "version": "1.0.57",
+  "build": 115,
+  "source_commit": "3e25d8f353f0d599f8cbb770b6e84236bbe6d884",
+  "source_branch": "codex/internal-112-audited-mobile",
+  "tag": "internal-115-contextual-back",
+  "artifact_checks": {
+    "aab": {
+      "path": "/Users/yejielnehmad/Developer/iaadut/release-artifacts/iahadut-1.0.57-115.aab",
+      "bytes": 85694383,
+      "sha256": "f47ea9d289e112ccdbbe1a6d8efd7d164ecf7f922baadfbc5e7a335061f21613"
+    },
+    "apk": {
+      "path": "/Users/yejielnehmad/Developer/iaadut/release-artifacts/iahadut-1.0.57-115.apk",
+      "bytes": 103529777,
+      "sha256": "b4488b34204bd85d9bdb280a71b10a576f7b5c81bc00ea27bfb51a6ef0e0a4cc"
+    }
+  },
+  "ios_bundle_version_verified": true,
+  "shared_web_files": 111,
+  "web_resource_differences": 0,
+  "verified_at": "2026-10-09T20:57:15.762674+00:00",
+  "release_url": "https://github.com/rajamimnehmad-sudo/iahadut-ha-tora-app/releases/tag/internal-115-contextual-back",
+  "aab_api_url": "https://api.github.com/repos/rajamimnehmad-sudo/iahadut-ha-tora-app/releases/assets/626159565",
+  "iphone_usb_install": "confirmed: ios-deploy InstallComplete; signed bundle version 115 verified",
+  "s22_connection": "USB disconnected; delivery through Google Play internal",
+  "production_android": "1.0.48 (106) unchanged",
+  "apple_115_submission": false,
+  "changes_since_114": [
+    "contextual back labels and a single page title in categories, subcategories, saved products, timeline and information"
+  ],
+  "app_tests": {
+    "passed": 201,
+    "failed": 0
+  },
+  "contextual_navigation_cases": 10,
+  "android_internal_state": "published",
+  "android_workflow_result": "success",
+  "s22_installed_115": "not confirmed; disconnected, update offered through internal Google Play",
+  "updated_at": "2026-10-09T20:59:08.886706+00:00",
+  "release_asset_digests_verified": true
+}
