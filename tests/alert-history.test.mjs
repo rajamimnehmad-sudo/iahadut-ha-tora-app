@@ -9,7 +9,7 @@ const app = readFileSync(new URL('../web/app.js', import.meta.url), 'utf8');
 test('A truncated 40-item cache recovers all baseline additions and August dates', () => {
   const result = mergeAlertHistory({alta:baseline.alta.slice(0,40)}, baseline);
   assert.equal(result.alta.length, baseline.alta.length);
-  assert.equal(result.baja.length, 2);
+  assert.equal(result.baja.length, baseline.baja.length);
   assert.ok(result.alta.some(item => item.text.includes('27/08/2026')));
 });
 test('New batches preserve unlimited history, deduplicate URLs and retain removals separately', () => {
@@ -41,7 +41,7 @@ test('The snapshot generator also preserves previous batches absent from the liv
   vm.runInContext(generator.slice(start,end),context);
   const result = await context.mergeAlertHistory({alta:baseline.alta.slice(0,30),baja:[]});
   assert.equal(result.alta.length,baseline.alta.length);
-  assert.equal(result.baja.length,2);
+  assert.equal(result.baja.length,baseline.baja.length);
 });
 test('The actual timeline renders August dates as well as the latest batches', () => {
   const start = app.indexOf('  function realAlertItems(');
