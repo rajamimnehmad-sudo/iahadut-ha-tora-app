@@ -21,6 +21,7 @@ import { categoryInformation } from './category-info.js';
 import {collectOfflineImages, createOfflineDownload, offlineNetworkMayDownload, offlineContentRevision} from './offline-download.js';
 import {pushImageUrl} from './push-image.js';
 import {mergeInboxNotifications, alertExpired} from './alerts-inbox.js';
+import {pushBody} from './push-text.js';
 import {matchingCategories, navigationScrollKey, matchingBrands, brandName, brandKey} from './category-navigation.js';
 import {brandLogo, brandForLogoPath} from './brand-logos.js';
 import {additionKeys, unreadAdditionCount} from './catalog-unread.js';
@@ -1928,11 +1929,6 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
       recentCarouselOffset = metrics.carouselStart;
     } else {
       recentCarouselOffset = viewport.scrollLeft;
-    }
-    if (tabletLayout.matches) {
-      track.dataset.carouselAutoplay = 'false';
-      viewport.classList.remove('is-autoplaying');
-      return;
     }
     track.dataset.carouselAutoplay = 'true';
     viewport.classList.add('is-autoplaying');
@@ -3944,7 +3940,7 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
       sentAt: data.sentAt || notification?.receivedAt || new Date().toISOString(),
       expiresAt: data.expiresAt || notification?.expiresAt || '',
       title: clean(notification?.title || data.title || data['gcm.n.title'] || fallbackTitle),
-      body: clean(notification?.body || data.body || data.text || data['gcm.n.body'] || 'Hay una actualización disponible.'),
+      body: pushBody(notification),
       time: new Date(notification?.receivedAt || data.sentAt || Date.now()).toLocaleString('es-AR', {hour12:false}),
       url: notificationPlayStoreUrl(notification)
     };

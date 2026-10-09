@@ -4,6 +4,7 @@ import {readFileSync} from 'node:fs';
 import vm from 'node:vm';
 import {notificationEventKey, notificationIsRevoked, reconcilePushHistory} from '../web/push-revocations.js';
 import {pushImageUrl} from '../web/push-image.js';
+import {pushBody} from '../web/push-text.js';
 import {alertExpired} from '../web/alerts-inbox.js';
 const source = readFileSync(new URL('../web/app.js',import.meta.url),'utf8');
 
@@ -15,7 +16,7 @@ test('Android tray tags and nested event keys both identify withdrawn notificati
   }
 });
 test('A restored Android tray notification cannot be persisted or mark alerts unread after withdrawal',()=>{
-  const context={clean:value=>String(value||'').trim(),notificationEventKey,notificationIsRevoked,pushImageUrl,alertExpired,
+  const context={clean:value=>String(value||'').trim(),notificationEventKey,notificationIsRevoked,pushImageUrl,pushBody,alertExpired,
     notificationPlayStoreUrl:()=>'',revokedPushes:['withdrawn'],pushNotifications:[],
     pushNotificationKey:item=>item.eventKey||item.id,localStorage:{setItem(){}},
     setPushNotificationBadge(){throw Error('A withdrawn message must not light the bell');},
