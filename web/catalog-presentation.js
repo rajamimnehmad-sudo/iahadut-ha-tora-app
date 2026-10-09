@@ -29,6 +29,8 @@ export function validatePresentation(value) {
   if (value.featuredProducts != null && (!Array.isArray(value.featuredProducts) || value.featuredProducts.length > 30 || new Set(value.featuredProducts).size !== value.featuredProducts.length || !value.featuredProducts.every(url => safeUrl(url) && url.startsWith('https://vaad.ar/producto/')))) throw Error('Destacados inválidos');
   const corrections = Object.entries(value.textCorrections || {});
   if (corrections.length > 256 || corrections.some(([from,to]) => !safeText(from,60) || !safeText(to,100))) throw Error('Correcciones de texto inválidas');
+  const photos = Object.entries(value.productImages || {});
+  if (photos.length > 4096 || photos.some(([url, key]) => !safeUrl(url) || !url.startsWith('https://vaad.ar/producto/') || !value.assets[key])) throw Error('Foto de producto inválida');
   return value;
 }
 export function iconBackground(icon) {
@@ -47,6 +49,7 @@ export function createPresentationSync({bundled, bundledUrls, readState, writeSt
   async function prepare(candidate) {
     const nextUrls = {};
     const referenced = new Set(Object.values(candidate.categories).map(c => c.icon?.asset).filter(Boolean));
+    Object.values(candidate.productImages || {}).forEach(key => referenced.add(key));
     for (const key of referenced) {
       if (bundledUrls[key]) { nextUrls[key] = bundledUrls[key]; continue; }
       const asset = candidate.assets[key];
@@ -79,7 +82,7 @@ export function createPresentationSync({bundled, bundledUrls, readState, writeSt
     })().finally(() => {running = null;});
     return running;
   }
-  return {init, refresh, current:() => current, icon:name => {
+  return {init, refresh, current:() => current, photo:url => urls[current.productImages?.[url]] || null, icon:name => {
     const icon = current.categories[name]?.icon;
     return icon && urls[icon.asset] ? {...iconBackground(icon), url:urls[icon.asset]} : null;
   }};

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "revision": "2026-10-09T16:21:55.480Z",
+  "revision": "2026-10-09T17:43:40.974544+00:00",
   "assets": {
     "348ea39f5d2aa51bee3a198950f29398bba850d0ec0c93a2c2fc66e37b9aa5cf": {
       "url": "https://raw.githubusercontent.com/rajamimnehmad-sudo/iahadut-ha-tora-app/main/web/public/category-icons/348ea39f5d2aa51bee3a198950f29398bba850d0ec0c93a2c2fc66e37b9aa5cf.png",
@@ -96,6 +96,91 @@
       "url": "https://raw.githubusercontent.com/rajamimnehmad-sudo/iahadut-ha-tora-app/main/web/public/category-icons/c8ee1ada02aa512c2bfa5bb120204bbbf3fac1ea241a997d628faf16be1b3bd4.png",
       "sha256": "c8ee1ada02aa512c2bfa5bb120204bbbf3fac1ea241a997d628faf16be1b3bd4",
       "bytes": 1696203
+    },
+    "8eabe4818d6a3cbdc4c4f722bdf8c7d7103d5ce3c5db960528b2e8c4ea2ee119": {
+      "sha256": "8eabe4818d6a3cbdc4c4f722bdf8c7d7103d5ce3c5db960528b2e8c4ea2ee119",
+      "url": "https://raw.githubusercontent.com/rajamimnehmad-sudo/iahadut-ha-tora-app/main/web/public/category-icons/8eabe4818d6a3cbdc4c4f722bdf8c7d7103d5ce3c5db960528b2e8c4ea2ee119.png",
+      "bytes": 2018199
+    },
+    "5afdf56761a76485d73e167df84c73312f437838f3ba01bd7ff7e95f93581ff1": {
+      "sha256": "5afdf56761a76485d73e167df84c73312f437838f3ba01bd7ff7e95f93581ff1",
+      "url": "https://raw.githubusercontent.com/rajamimnehmad-sudo/iahadut-ha-tora-app/main/web/public/category-icons/5afdf56761a76485d73e167df84c73312f437838f3ba01bd7ff7e95f93581ff1.png",
+      "bytes": 1815509
+    },
+    "4ea84089afce8b4fd0f78733f50277584c11124e7c8d5d1a952c366c3ba1a564": {
+      "sha256": "4ea84089afce8b4fd0f78733f50277584c11124e7c8d5d1a952c366c3ba1a564",
+      "url": "https://raw.githubusercontent.com/rajamimnehmad-sudo/iahadut-ha-tora-app/main/web/public/category-icons/4ea84089afce8b4fd0f78733f50277584c11124e7c8d5d1a952c366c3ba1a564.png",
+      "bytes": 1994771
+    },
+    "d9cd6c0b5ee8518c82b618fef76925da39d19c86e8db9ed9c49845fb92920c3a": {
+      "sha256": "d9cd6c0b5ee8518c82b618fef76925da39d19c86e8db9ed9c49845fb92920c3a",
+      "url": "https://raw.githubusercontent.com/rajamimnehmad-sudo/iahadut-ha-tora-app/main/web/public/category-icons/d9cd6c0b5ee8518c82b618fef76925da39d19c86e8db9ed9c49845fb92920c3a.png",
+      "bytes": 1842252
+    },
+    "67eeb9a62b7b328b7332971131abecd421123dbec558bb28fcd1310d9ac5e2b0": {
+      "sha256": "67eeb9a62b7b328b7332971131abecd421123dbec558bb28fcd1310d9ac5e2b0",
+      "url": "https://raw.githubusercontent.com/rajamimnehmad-sudo/iahadut-ha-tora-app/main/web/public/category-icons/67eeb9a62b7b328b7332971131abecd421123dbec558bb28fcd1310d9ac5e2b0.png",
+      "bytes": 2207131
+    },
+    "cfa12822a095cb27a7fa925a11288a183988ba58df08945e1974d16df8b64977": {
+      "sha256": "cfa12822a095cb27a7fa925a11288a183988ba58df08945e1974d16df8b64977",
+      "url": "https://raw.githubusercontent.com/rajamimnehmad-sudo/iahadut-ha-tora-app/main/web/public/category-icons/cfa12822a095cb27a7fa925a11288a183988ba58df08945e1974d16df8b64977.png",
+      "bytes": 1320709
+    },
+    "fd749e39b512093bbdd30bae5123a4aa2500db06d05ec284af7fc1b164d6fc53": {
+      "sha256": "fd749e39b512093bbdd30bae5123a4aa2500db06d05ec284af7fc1b164d6fc53",
+      "url": "https://raw.githubusercontent.com/rajamimnehmad-sudo/iahadut-ha-tora-app/main/web/public/category-icons/fd749e39b512093bbdd30bae5123a4aa2500db06d05ec284af7fc1b164d6fc53.png",
+      "bytes": 1064273
+    },
+    "05c192975d3fb8a2512aad1a6b60be71e5ff32a6f5289df509d60fae0d33baa8": {
+      "sha256": "05c192975d3fb8a2512aad1a6b60be71e5ff32a6f5289df509d60fae0d33baa8",
+      "url": "https://raw.githubusercontent.com/rajamimnehmad-sudo/iahadut-ha-tora-app/main/web/public/category-icons/05c192975d3fb8a2512aad1a6b60be71e5ff32a6f5289df509d60fae0d33baa8.png",
+      "bytes": 1470064
+    },
+    "2f5cd7a316cb0a087f9e34f1fc1daf1fb7bb42aa421ab198c01d0bf6e3754785": {
+      "sha256": "2f5cd7a316cb0a087f9e34f1fc1daf1fb7bb42aa421ab198c01d0bf6e3754785",
+      "url": "https://raw.githubusercontent.com/rajamimnehmad-sudo/iahadut-ha-tora-app/main/web/public/category-icons/2f5cd7a316cb0a087f9e34f1fc1daf1fb7bb42aa421ab198c01d0bf6e3754785.png",
+      "bytes": 550829
+    },
+    "df601a9efdb43e42e7746b0fb6e4670bae108714e354a8a759e30833abf2a9c0": {
+      "sha256": "df601a9efdb43e42e7746b0fb6e4670bae108714e354a8a759e30833abf2a9c0",
+      "url": "https://raw.githubusercontent.com/rajamimnehmad-sudo/iahadut-ha-tora-app/main/web/public/category-icons/df601a9efdb43e42e7746b0fb6e4670bae108714e354a8a759e30833abf2a9c0.png",
+      "bytes": 558291
+    },
+    "b55e84f935bc1bef0132e039a629832da5024751ccf76d3661cbf054d2a76e9f": {
+      "sha256": "b55e84f935bc1bef0132e039a629832da5024751ccf76d3661cbf054d2a76e9f",
+      "url": "https://raw.githubusercontent.com/rajamimnehmad-sudo/iahadut-ha-tora-app/main/web/public/category-icons/b55e84f935bc1bef0132e039a629832da5024751ccf76d3661cbf054d2a76e9f.png",
+      "bytes": 2036821
+    },
+    "0a4770f38ceab1df0d67413fd1da64ebdae839066e19164745b5a96e7451b9ad": {
+      "sha256": "0a4770f38ceab1df0d67413fd1da64ebdae839066e19164745b5a96e7451b9ad",
+      "url": "https://raw.githubusercontent.com/rajamimnehmad-sudo/iahadut-ha-tora-app/main/web/public/category-icons/0a4770f38ceab1df0d67413fd1da64ebdae839066e19164745b5a96e7451b9ad.png",
+      "bytes": 2227672
+    },
+    "ccdfa2f0378b9248b49c0c97d1b36b56f7c2b4d38f4a054f16843289e0f20584": {
+      "sha256": "ccdfa2f0378b9248b49c0c97d1b36b56f7c2b4d38f4a054f16843289e0f20584",
+      "url": "https://raw.githubusercontent.com/rajamimnehmad-sudo/iahadut-ha-tora-app/main/web/public/category-icons/ccdfa2f0378b9248b49c0c97d1b36b56f7c2b4d38f4a054f16843289e0f20584.png",
+      "bytes": 628402
+    },
+    "9b401d9b786b87883fcb4e4d02aa14f0b690d04de0096ccca8d69bc38ef7111a": {
+      "sha256": "9b401d9b786b87883fcb4e4d02aa14f0b690d04de0096ccca8d69bc38ef7111a",
+      "url": "https://raw.githubusercontent.com/rajamimnehmad-sudo/iahadut-ha-tora-app/main/web/public/category-icons/9b401d9b786b87883fcb4e4d02aa14f0b690d04de0096ccca8d69bc38ef7111a.png",
+      "bytes": 1918948
+    },
+    "77729a1bec126cca94e8a4567758176291c04627ed6ec468b5bcb2c89099bc1b": {
+      "sha256": "77729a1bec126cca94e8a4567758176291c04627ed6ec468b5bcb2c89099bc1b",
+      "url": "https://raw.githubusercontent.com/rajamimnehmad-sudo/iahadut-ha-tora-app/main/web/public/category-icons/77729a1bec126cca94e8a4567758176291c04627ed6ec468b5bcb2c89099bc1b.png",
+      "bytes": 1732562
+    },
+    "3b93d1ef84657bf08608b62727c3c41bafa9f4df4d320250289688a3e2e37e42": {
+      "sha256": "3b93d1ef84657bf08608b62727c3c41bafa9f4df4d320250289688a3e2e37e42",
+      "url": "https://raw.githubusercontent.com/rajamimnehmad-sudo/iahadut-ha-tora-app/main/web/public/category-icons/3b93d1ef84657bf08608b62727c3c41bafa9f4df4d320250289688a3e2e37e42.png",
+      "bytes": 1354976
+    },
+    "7ba1584acb7370272555fc2f886bd5caec8d3efe9219b927c32556d7dc30b423": {
+      "sha256": "7ba1584acb7370272555fc2f886bd5caec8d3efe9219b927c32556d7dc30b423",
+      "url": "https://raw.githubusercontent.com/rajamimnehmad-sudo/iahadut-ha-tora-app/main/web/public/category-icons/7ba1584acb7370272555fc2f886bd5caec8d3efe9219b927c32556d7dc30b423.png",
+      "bytes": 944960
     }
   },
   "categories": {
@@ -162,11 +247,11 @@
     "Aderezos": {
       "label": "Aderezos",
       "icon": {
-        "asset": "348ea39f5d2aa51bee3a198950f29398bba850d0ec0c93a2c2fc66e37b9aa5cf",
+        "asset": "ce8cc7afadc34d6d2b977f7969605ec743c3b6a5d9ac7eb16c7f7be132eca5bd",
         "columns": 6,
         "rows": 8,
-        "column": 0,
-        "row": 3
+        "column": 2,
+        "row": 5
       }
     },
     "Alcaparras": {
@@ -829,16 +914,6 @@
         "row": 4
       }
     },
-    "Papas": {
-      "label": "Papas",
-      "icon": {
-        "asset": "2af1de0ca150bbd1964da2731724b72d7b22e9f3da01089282e7ac7eaa6da970",
-        "columns": 1,
-        "rows": 1,
-        "column": 0,
-        "row": 0
-      }
-    },
     "Papas congeladas": {
       "label": "Papas congeladas",
       "icon": {
@@ -1218,6 +1293,26 @@
         "column": 0,
         "row": 0
       }
+    },
+    "Puré instantáneo": {
+      "label": "Puré instantáneo",
+      "icon": {
+        "asset": "2af1de0ca150bbd1964da2731724b72d7b22e9f3da01089282e7ac7eaa6da970",
+        "columns": 1,
+        "rows": 1,
+        "column": 0,
+        "row": 0
+      }
+    },
+    "Papas fritas": {
+      "label": "Papas fritas",
+      "icon": {
+        "asset": "3b93d1ef84657bf08608b62727c3c41bafa9f4df4d320250289688a3e2e37e42",
+        "columns": 1,
+        "rows": 1,
+        "column": 0,
+        "row": 0
+      }
     }
   },
   "texts": {},
@@ -1324,5 +1419,22 @@
     "Anis": "Anís",
     "aqui": "aquí",
     "baston": "bastón"
+  },
+  "productImages": {
+    "https://vaad.ar/producto/bebida-alcoholica-marca-brokers/": "8eabe4818d6a3cbdc4c4f722bdf8c7d7103d5ce3c5db960528b2e8c4ea2ee119",
+    "https://vaad.ar/producto/cerveza-marca-eschenbacher/": "5afdf56761a76485d73e167df84c73312f437838f3ba01bd7ff7e95f93581ff1",
+    "https://vaad.ar/producto/bebida-alcoholica-marca-jose-cuervo/": "4ea84089afce8b4fd0f78733f50277584c11124e7c8d5d1a952c366c3ba1a564",
+    "https://vaad.ar/producto/bebida-alcoholica-marca-el-jimador/": "d9cd6c0b5ee8518c82b618fef76925da39d19c86e8db9ed9c49845fb92920c3a",
+    "https://vaad.ar/producto/cerveza-marca-karlsberg/": "67eeb9a62b7b328b7332971131abecd421123dbec558bb28fcd1310d9ac5e2b0",
+    "https://vaad.ar/producto/vino-cabernet-wild-goat/": "cfa12822a095cb27a7fa925a11288a183988ba58df08945e1974d16df8b64977",
+    "https://vaad.ar/producto/bebida-alcoholica-marca-brown-forman/": "fd749e39b512093bbdd30bae5123a4aa2500db06d05ec284af7fc1b164d6fc53",
+    "https://vaad.ar/producto/cerveza-marca-oettinger-5/": "05c192975d3fb8a2512aad1a6b60be71e5ff32a6f5289df509d60fae0d33baa8",
+    "https://vaad.ar/producto/bebida-alcoholica-marca-beluga-3/": "2f5cd7a316cb0a087f9e34f1fc1daf1fb7bb42aa421ab198c01d0bf6e3754785",
+    "https://vaad.ar/producto/bebida-alcoholica-marca-beluga-2/": "df601a9efdb43e42e7746b0fb6e4670bae108714e354a8a759e30833abf2a9c0",
+    "https://vaad.ar/producto/mermelada-ginger-marca-mackays/": "b55e84f935bc1bef0132e039a629832da5024751ccf76d3661cbf054d2a76e9f",
+    "https://vaad.ar/producto/mermelada-sweet-navelina-orange-marca-mackays/": "0a4770f38ceab1df0d67413fd1da64ebdae839066e19164745b5a96e7451b9ad",
+    "https://vaad.ar/producto/aceite-en-aerosol-marca-cocinero/": "ccdfa2f0378b9248b49c0c97d1b36b56f7c2b4d38f4a054f16843289e0f20584",
+    "https://vaad.ar/producto/298235/": "9b401d9b786b87883fcb4e4d02aa14f0b690d04de0096ccca8d69bc38ef7111a",
+    "https://vaad.ar/producto/cerveza-pale-ale-marca-barba-roja/": "77729a1bec126cca94e8a4567758176291c04627ed6ec468b5bcb2c89099bc1b"
   }
 }

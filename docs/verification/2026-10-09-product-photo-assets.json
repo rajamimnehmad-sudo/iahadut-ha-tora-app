@@ -1,0 +1,522 @@
+[
+  {
+    "image": "https://vaad.ar/wp-content/uploads/2026/08/20260731_133907-scaled.jpg",
+    "products": [
+      {
+        "url": "https://vaad.ar/producto/bebida-alcoholica-marca-brokers/",
+        "title": "Bebida alcohólica marca »Broker’s»",
+        "thumbnail": "https://vaad.ar/wp-content/uploads/2026/08/20260731_133907-300x300.jpg"
+      }
+    ],
+    "path": "/Users/yejielnehmad/Developer/iaadut/output/product-photo-review/originals/6f00dd7aab8c938e61d4.image",
+    "size": [
+      955,
+      2560
+    ],
+    "mode": "RGB",
+    "transparent": false,
+    "alpha_fraction": 0,
+    "edge_occupancy": {
+      "top": 0.9955357142857143,
+      "bottom": 0.9895833333333334,
+      "left": 0.9883333333333333,
+      "right": 1
+    },
+    "candidate": true,
+    "edge_score": 3.9734523809523807,
+    "review_id": 24,
+    "source_path": "/Users/yejielnehmad/Developer/iaadut/output/product-photo-review/sources/24-20260731_133907-scaled.jpg",
+    "generated_path": "/Users/yejielnehmad/.codex/generated_images/01a1218a-0f61-7e21-9dbf-46554c902bbb/exec-b372885f-dec6-483a-bc6c-dd4d45c2b1d2.png",
+    "prompt": "Remove only surrounding background; retain original visible cropped bottle and label. Actual transparent PNG.",
+    "saved_path": "/Users/yejielnehmad/Developer/iaadut/web/public/category-icons/8eabe4818d6a3cbdc4c4f722bdf8c7d7103d5ce3c5db960528b2e8c4ea2ee119.png",
+    "public_path": "product-photos/bebida-alcoholica-marca-brokers-8eabe4818d6a.png",
+    "alpha_checked": true,
+    "asset": "8eabe4818d6a3cbdc4c4f722bdf8c7d7103d5ce3c5db960528b2e8c4ea2ee119"
+  },
+  {
+    "image": "https://vaad.ar/wp-content/uploads/2026/08/cervezas-alemanas-4.jpg",
+    "products": [
+      {
+        "url": "https://vaad.ar/producto/cerveza-marca-eschenbacher/",
+        "title": "Cerveza Alemana marca «Eschenbacher»",
+        "thumbnail": "https://vaad.ar/wp-content/uploads/2026/08/cervezas-alemanas-4-300x300.jpg"
+      }
+    ],
+    "path": "/Users/yejielnehmad/Developer/iaadut/output/product-photo-review/originals/4286eb96890f1d83e155.image",
+    "size": [
+      488,
+      1214
+    ],
+    "mode": "RGB",
+    "transparent": false,
+    "alpha_fraction": 0,
+    "edge_occupancy": {
+      "top": 0.9156293222683264,
+      "bottom": 1,
+      "left": 0.9877777777777778,
+      "right": 0.965
+    },
+    "candidate": true,
+    "edge_score": 3.8684071000461038,
+    "review_id": 30,
+    "source_path": "/Users/yejielnehmad/Developer/iaadut/output/product-photo-review/sources/30-cervezas-alemanas-4.jpg",
+    "generated_path": "/Users/yejielnehmad/.codex/generated_images/01a1218a-0f61-7e21-9dbf-46554c902bbb/exec-2ab4902d-49e9-43db-9bbe-2b66611bb6fb.png",
+    "prompt": "Use case: background-extraction. Asset: exact catalog product-photo cutout. Input image 1 is the ORIGINAL photograph to edit, depicting Cerveza Alemana marca «Eschenbacher». Remove ONLY the background (white fill, room, table, screenshot border/buttons, unrelated neighboring objects) and return a genuinely transparent PNG. Isolate only the single main bottle or jar. Keep the photographed product exactly as it appears: unchanged label words, logos, certification marks, colors, orientation, geometry, lighting and visible edges. Preserve all existing top/bottom cropping; do NOT outpaint, invent, reconstruct, complete, redraw, enhance or redesign the product or label. Keep the original visible product fragment centered at its original proportions with a small transparent margin. No added white or colored backdrop, no painted checkerboard, no floor shadow, no annotations. Background removal only, maximal fidelity to the original.",
+    "saved_path": "/Users/yejielnehmad/Developer/iaadut/web/public/category-icons/5afdf56761a76485d73e167df84c73312f437838f3ba01bd7ff7e95f93581ff1.png",
+    "public_path": "product-photos/cerveza-marca-eschenbacher-5afdf56761a7.png",
+    "alpha_checked": true,
+    "asset": "5afdf56761a76485d73e167df84c73312f437838f3ba01bd7ff7e95f93581ff1"
+  },
+  {
+    "image": "https://vaad.ar/wp-content/uploads/2026/08/jose-cuervo.jpg",
+    "products": [
+      {
+        "url": "https://vaad.ar/producto/bebida-alcoholica-marca-jose-cuervo/",
+        "title": "Bebida alcohólica marca «Jose Cuervo»",
+        "thumbnail": "https://vaad.ar/wp-content/uploads/2026/08/jose-cuervo-264x300.jpg"
+      }
+    ],
+    "path": "/Users/yejielnehmad/Developer/iaadut/output/product-photo-review/originals/31e58d31f551bbb4d645.image",
+    "size": [
+      264,
+      447
+    ],
+    "mode": "RGB",
+    "transparent": false,
+    "alpha_fraction": 0,
+    "edge_occupancy": {
+      "top": 1,
+      "bottom": 0.9848484848484849,
+      "left": 0.008948545861297539,
+      "right": 1
+    },
+    "candidate": true,
+    "edge_score": 2.993797030709782,
+    "review_id": 48,
+    "source_path": "/Users/yejielnehmad/Developer/iaadut/output/product-photo-review/sources/48-jose-cuervo.jpg",
+    "generated_path": "/Users/yejielnehmad/.codex/generated_images/01a1218a-0f61-7e21-9dbf-46554c902bbb/exec-514f0474-0fb1-4264-abaf-9935a78524a9.png",
+    "prompt": "Use case: background-extraction. Asset: exact catalog product-photo cutout. Input image 1 is the ORIGINAL photograph to edit, depicting Bebida alcohólica marca «Jose Cuervo». Remove ONLY the background (white fill, room, table, screenshot border/buttons, unrelated neighboring objects) and return a genuinely transparent PNG. Isolate only the single main bottle or jar. Keep the photographed product exactly as it appears: unchanged label words, logos, certification marks, colors, orientation, geometry, lighting and visible edges. Preserve all existing top/bottom cropping; do NOT outpaint, invent, reconstruct, complete, redraw, enhance or redesign the product or label. Keep the original visible product fragment centered at its original proportions with a small transparent margin. No added white or colored backdrop, no painted checkerboard, no floor shadow, no annotations. Background removal only, maximal fidelity to the original.",
+    "saved_path": "/Users/yejielnehmad/Developer/iaadut/web/public/category-icons/4ea84089afce8b4fd0f78733f50277584c11124e7c8d5d1a952c366c3ba1a564.png",
+    "public_path": "product-photos/bebida-alcoholica-marca-jose-cuervo-4ea84089afce.png",
+    "alpha_checked": true,
+    "asset": "4ea84089afce8b4fd0f78733f50277584c11124e7c8d5d1a952c366c3ba1a564"
+  },
+  {
+    "image": "https://vaad.ar/wp-content/uploads/2026/08/el-jimador.jpg",
+    "products": [
+      {
+        "url": "https://vaad.ar/producto/bebida-alcoholica-marca-el-jimador/",
+        "title": "Bebida alcohólica marca «el Jimador»",
+        "thumbnail": "https://vaad.ar/wp-content/uploads/2026/08/el-jimador-270x300.jpg"
+      }
+    ],
+    "path": "/Users/yejielnehmad/Developer/iaadut/output/product-photo-review/originals/bc94cbeb76c125d0fc4c.image",
+    "size": [
+      270,
+      453
+    ],
+    "mode": "RGB",
+    "transparent": false,
+    "alpha_fraction": 0,
+    "edge_occupancy": {
+      "top": 1,
+      "bottom": 0.9740740740740741,
+      "left": 0.6740250183958794,
+      "right": 0.22369389256806477
+    },
+    "candidate": true,
+    "edge_score": 2.8717929850380184,
+    "review_id": 50,
+    "source_path": "/Users/yejielnehmad/Developer/iaadut/output/product-photo-review/sources/50-el-jimador.jpg",
+    "generated_path": "/Users/yejielnehmad/.codex/generated_images/01a1218a-0f61-7e21-9dbf-46554c902bbb/exec-dc37df11-b0af-44b9-8a66-b7c1e1052326.png",
+    "prompt": "Use case: background-extraction. Asset: exact catalog product-photo cutout. Input image 1 is the ORIGINAL photograph to edit, depicting Bebida alcohólica marca «el Jimador». Remove ONLY the background (white fill, room, table, screenshot border/buttons, unrelated neighboring objects) and return a genuinely transparent PNG. Isolate only the single main bottle or jar. Keep the photographed product exactly as it appears: unchanged label words, logos, certification marks, colors, orientation, geometry, lighting and visible edges. Preserve all existing top/bottom cropping; do NOT outpaint, invent, reconstruct, complete, redraw, enhance or redesign the product or label. Keep the original visible product fragment centered at its original proportions with a small transparent margin. No added white or colored backdrop, no painted checkerboard, no floor shadow, no annotations. Background removal only, maximal fidelity to the original.",
+    "saved_path": "/Users/yejielnehmad/Developer/iaadut/web/public/category-icons/d9cd6c0b5ee8518c82b618fef76925da39d19c86e8db9ed9c49845fb92920c3a.png",
+    "public_path": "product-photos/bebida-alcoholica-marca-el-jimador-d9cd6c0b5ee8.png",
+    "alpha_checked": true,
+    "asset": "d9cd6c0b5ee8518c82b618fef76925da39d19c86e8db9ed9c49845fb92920c3a"
+  },
+  {
+    "image": "https://vaad.ar/wp-content/uploads/2026/08/cervezas-alemanas-3.jpg",
+    "products": [
+      {
+        "url": "https://vaad.ar/producto/cerveza-marca-karlsberg/",
+        "title": "Cerveza Alemana marca «Karlsberg»",
+        "thumbnail": "https://vaad.ar/wp-content/uploads/2026/08/cervezas-alemanas-3-300x300.jpg"
+      }
+    ],
+    "path": "/Users/yejielnehmad/Developer/iaadut/output/product-photo-review/originals/9d08162a31864916def4.image",
+    "size": [
+      525,
+      1185
+    ],
+    "mode": "RGB",
+    "transparent": false,
+    "alpha_fraction": 0,
+    "edge_occupancy": {
+      "top": 0.39473684210526316,
+      "bottom": 0.9962406015037594,
+      "left": 0.46444444444444444,
+      "right": 0.15444444444444444
+    },
+    "candidate": true,
+    "edge_score": 2.0098663324979116,
+    "review_id": 57,
+    "source_path": "/Users/yejielnehmad/Developer/iaadut/output/product-photo-review/sources/57-cervezas-alemanas-3.jpg",
+    "generated_path": "/Users/yejielnehmad/.codex/generated_images/01a1218a-0f61-7e21-9dbf-46554c902bbb/exec-97dfe5ac-2f22-4411-b99d-23f3bffec948.png",
+    "prompt": "Use case: background-extraction. Asset: exact catalog product-photo cutout. Input image 1 is the ORIGINAL photograph to edit, depicting Cerveza Alemana marca «Karlsberg». Remove ONLY the background (white fill, room, table, screenshot border/buttons, unrelated neighboring objects) and return a genuinely transparent PNG. Isolate only the single main bottle or jar. Keep the photographed product exactly as it appears: unchanged label words, logos, certification marks, colors, orientation, geometry, lighting and visible edges. Preserve all existing top/bottom cropping; do NOT outpaint, invent, reconstruct, complete, redraw, enhance or redesign the product or label. Keep the original visible product fragment centered at its original proportions with a small transparent margin. No added white or colored backdrop, no painted checkerboard, no floor shadow, no annotations. Background removal only, maximal fidelity to the original.",
+    "saved_path": "/Users/yejielnehmad/Developer/iaadut/web/public/category-icons/67eeb9a62b7b328b7332971131abecd421123dbec558bb28fcd1310d9ac5e2b0.png",
+    "public_path": "product-photos/cerveza-marca-karlsberg-67eeb9a62b7b.png",
+    "alpha_checked": true,
+    "asset": "67eeb9a62b7b328b7332971131abecd421123dbec558bb28fcd1310d9ac5e2b0"
+  },
+  {
+    "image": "https://vaad.ar/wp-content/uploads/2026/08/vino-6.jpeg",
+    "products": [
+      {
+        "url": "https://vaad.ar/producto/vino-cabernet-wild-goat/",
+        "title": "Vino Cabernet «Wild Goat»",
+        "thumbnail": "https://vaad.ar/wp-content/uploads/2026/08/vino-6-256x300.jpeg"
+      }
+    ],
+    "path": "/Users/yejielnehmad/Developer/iaadut/output/product-photo-review/originals/3b04844188fbc2ee8164.image",
+    "size": [
+      256,
+      1280
+    ],
+    "mode": "RGB",
+    "transparent": false,
+    "alpha_fraction": 0,
+    "edge_occupancy": {
+      "top": 0.4111111111111111,
+      "bottom": 0,
+      "left": 0.3022222222222222,
+      "right": 0.6655555555555556
+    },
+    "candidate": true,
+    "edge_score": 1.378888888888889,
+    "review_id": 63,
+    "source_path": "/Users/yejielnehmad/Developer/iaadut/output/product-photo-review/sources/63-vino-6.jpeg",
+    "generated_path": "/Users/yejielnehmad/.codex/generated_images/01a1218a-0f61-7e21-9dbf-46554c902bbb/exec-8b230823-d15d-4143-bec6-a7a6d954da78.png",
+    "prompt": "Use case: background-extraction. Asset: exact catalog product-photo cutout. Input image 1 is the ORIGINAL photograph to edit, depicting Vino Cabernet «Wild Goat». Remove ONLY the background (white fill, room, table, screenshot border/buttons, unrelated neighboring objects) and return a genuinely transparent PNG. Isolate only the single main bottle or jar. Keep the photographed product exactly as it appears: unchanged label words, logos, certification marks, colors, orientation, geometry, lighting and visible edges. Preserve all existing top/bottom cropping; do NOT outpaint, invent, reconstruct, complete, redraw, enhance or redesign the product or label. Keep the original visible product fragment centered at its original proportions with a small transparent margin. No added white or colored backdrop, no painted checkerboard, no floor shadow, no annotations. Background removal only, maximal fidelity to the original.",
+    "saved_path": "/Users/yejielnehmad/Developer/iaadut/web/public/category-icons/cfa12822a095cb27a7fa925a11288a183988ba58df08945e1974d16df8b64977.png",
+    "public_path": "product-photos/vino-cabernet-wild-goat-cfa12822a095.png",
+    "alpha_checked": true,
+    "asset": "cfa12822a095cb27a7fa925a11288a183988ba58df08945e1974d16df8b64977"
+  },
+  {
+    "image": "https://vaad.ar/wp-content/uploads/2026/08/brown-forman-blanco.png",
+    "products": [
+      {
+        "url": "https://vaad.ar/producto/bebida-alcoholica-marca-brown-forman/",
+        "title": "Bebida alcohólica marca »Brown forman»",
+        "thumbnail": "https://vaad.ar/wp-content/uploads/2026/08/brown-forman-blanco-300x300.png"
+      }
+    ],
+    "path": "/Users/yejielnehmad/Developer/iaadut/output/product-photo-review/originals/44191084fcefec1eedf0.image",
+    "size": [
+      538,
+      534
+    ],
+    "mode": "RGBA",
+    "transparent": false,
+    "alpha_fraction": 0,
+    "edge_occupancy": {
+      "top": 0.6592317224287485,
+      "bottom": 0.3748451053283767,
+      "left": 0.0018726591760299626,
+      "right": 0
+    },
+    "candidate": true,
+    "edge_score": 1.0359494869331551,
+    "review_id": 68,
+    "source_path": "/Users/yejielnehmad/Developer/iaadut/output/product-photo-review/sources/68-brown-forman-blanco.png",
+    "generated_path": "/Users/yejielnehmad/.codex/generated_images/01a1218a-0f61-7e21-9dbf-46554c902bbb/exec-45aac020-851e-4d13-8c09-b4b991bfa821.png",
+    "prompt": "Use case: background-extraction. Asset: exact catalog product-photo cutout. Input image 1 is the ORIGINAL photograph to edit, depicting Bebida alcohólica marca »Brown forman». Remove ONLY the background (white fill, room, table, screenshot border/buttons, unrelated neighboring objects) and return a genuinely transparent PNG. Isolate only the single main bottle or jar. Keep the photographed product exactly as it appears: unchanged label words, logos, certification marks, colors, orientation, geometry, lighting and visible edges. Preserve all existing top/bottom cropping; do NOT outpaint, invent, reconstruct, complete, redraw, enhance or redesign the product or label. Keep the original visible product fragment centered at its original proportions with a small transparent margin. No added white or colored backdrop, no painted checkerboard, no floor shadow, no annotations. Background removal only, maximal fidelity to the original.",
+    "saved_path": "/Users/yejielnehmad/Developer/iaadut/web/public/category-icons/fd749e39b512093bbdd30bae5123a4aa2500db06d05ec284af7fc1b164d6fc53.png",
+    "public_path": "product-photos/bebida-alcoholica-marca-brown-forman-fd749e39b512.png",
+    "alpha_checked": true,
+    "asset": "fd749e39b512093bbdd30bae5123a4aa2500db06d05ec284af7fc1b164d6fc53"
+  },
+  {
+    "image": "https://vaad.ar/wp-content/uploads/2026/08/cervezas-alemanas-10.jpg",
+    "products": [
+      {
+        "url": "https://vaad.ar/producto/cerveza-marca-oettinger-5/",
+        "title": "Cerveza Alemana marca «Oettinger»",
+        "thumbnail": "https://vaad.ar/wp-content/uploads/2026/08/cervezas-alemanas-10-300x300.jpg"
+      }
+    ],
+    "path": "/Users/yejielnehmad/Developer/iaadut/output/product-photo-review/originals/381504523e99799fd811.image",
+    "size": [
+      596,
+      1203
+    ],
+    "mode": "RGB",
+    "transparent": false,
+    "alpha_fraction": 0,
+    "edge_occupancy": {
+      "top": 0.9955106621773289,
+      "bottom": 1,
+      "left": 1,
+      "right": 1
+    },
+    "candidate": true,
+    "edge_score": 3.995510662177329,
+    "review_id": 22,
+    "source_path": "/Users/yejielnehmad/Developer/iaadut/output/product-photo-review/sources/22-cervezas-alemanas-10.jpg",
+    "generated_path": "/Users/yejielnehmad/.codex/generated_images/01a1218a-0f61-7e21-9dbf-46554c902bbb/exec-7202c387-54ad-434b-8576-8e35cafeca58.png",
+    "prompt": "Use case: background-extraction. Asset: exact catalog product-photo cutout. Input image 1 is the ORIGINAL photograph to edit, depicting Cerveza Alemana marca «Oettinger». Remove ONLY the background (white fill, room, table, screenshot border/buttons, unrelated neighboring objects) and return a genuinely transparent PNG. Isolate only the single main bottle or jar. Keep the photographed product exactly as it appears: unchanged label words, logos, certification marks, colors, orientation, geometry, lighting and visible edges. Preserve all existing top/bottom cropping; do NOT outpaint, invent, reconstruct, complete, redraw, enhance or redesign the product or label. Keep the original visible product fragment centered at its original proportions with a small transparent margin. No added white or colored backdrop, no painted checkerboard, no floor shadow, no annotations. Background removal only, maximal fidelity to the original.",
+    "saved_path": "/Users/yejielnehmad/Developer/iaadut/web/public/category-icons/05c192975d3fb8a2512aad1a6b60be71e5ff32a6f5289df509d60fae0d33baa8.png",
+    "public_path": "product-photos/cerveza-marca-oettinger-5-05c192975d3f.png",
+    "alpha_checked": true,
+    "asset": "05c192975d3fb8a2512aad1a6b60be71e5ff32a6f5289df509d60fae0d33baa8"
+  },
+  {
+    "image": "https://vaad.ar/wp-content/uploads/2026/07/Captura-de-pantalla-2026-07-17-a-las-15.17.03.png",
+    "products": [
+      {
+        "url": "https://vaad.ar/producto/bebida-alcoholica-marca-beluga-3/",
+        "title": "Bebida alcohólica marca »Beluga»",
+        "thumbnail": "https://vaad.ar/wp-content/uploads/2026/07/Captura-de-pantalla-2026-07-17-a-las-15.17.03-300x300.png"
+      }
+    ],
+    "path": "/Users/yejielnehmad/Developer/iaadut/output/product-photo-review/originals/2e636077f1a4efa5dacc.image",
+    "size": [
+      528,
+      536
+    ],
+    "mode": "RGBA",
+    "transparent": false,
+    "alpha_fraction": 0,
+    "edge_occupancy": {
+      "top": 0.6868686868686869,
+      "bottom": 1,
+      "left": 0.009328358208955223,
+      "right": 0.009328358208955223
+    },
+    "candidate": true,
+    "edge_score": 1.7055254032865972,
+    "review_id": 59,
+    "source_path": "/Users/yejielnehmad/Developer/iaadut/output/product-photo-review/sources/59-Captura-de-pantalla-2026-07-17-a-las-15.17.03.png",
+    "generated_path": "/Users/yejielnehmad/.codex/generated_images/01a1218a-0f61-7e21-9dbf-46554c902bbb/exec-d12c778c-2eaa-4cf9-80a2-c4bed31c219d.png",
+    "prompt": "Use case: background-extraction. Asset: exact catalog product-photo cutout. Input image 1 is the ORIGINAL photograph to edit, depicting Bebida alcohólica marca »Beluga». Remove ONLY the background (white fill, room, table, screenshot border/buttons, unrelated neighboring objects) and return a genuinely transparent PNG. Isolate only the single main bottle or jar. Keep the photographed product exactly as it appears: unchanged label words, logos, certification marks, colors, orientation, geometry, lighting and visible edges. Preserve all existing top/bottom cropping; do NOT outpaint, invent, reconstruct, complete, redraw, enhance or redesign the product or label. Keep the original visible product fragment centered at its original proportions with a small transparent margin. No added white or colored backdrop, no painted checkerboard, no floor shadow, no annotations. Background removal only, maximal fidelity to the original.",
+    "saved_path": "/Users/yejielnehmad/Developer/iaadut/web/public/category-icons/2f5cd7a316cb0a087f9e34f1fc1daf1fb7bb42aa421ab198c01d0bf6e3754785.png",
+    "public_path": "product-photos/bebida-alcoholica-marca-beluga-3-2f5cd7a316cb.png",
+    "alpha_checked": true,
+    "asset": "2f5cd7a316cb0a087f9e34f1fc1daf1fb7bb42aa421ab198c01d0bf6e3754785"
+  },
+  {
+    "image": "https://vaad.ar/wp-content/uploads/2026/07/Captura-de-pantalla-2026-07-17-a-las-15.16.59.png",
+    "products": [
+      {
+        "url": "https://vaad.ar/producto/bebida-alcoholica-marca-beluga-2/",
+        "title": "Bebida alcohólica marca »Beluga»",
+        "thumbnail": "https://vaad.ar/wp-content/uploads/2026/07/Captura-de-pantalla-2026-07-17-a-las-15.16.59-300x300.png"
+      }
+    ],
+    "path": "/Users/yejielnehmad/Developer/iaadut/output/product-photo-review/originals/b617dc81cadd3fc39d53.image",
+    "size": [
+      528,
+      536
+    ],
+    "mode": "RGBA",
+    "transparent": false,
+    "alpha_fraction": 0,
+    "edge_occupancy": {
+      "top": 0.6755050505050505,
+      "bottom": 1,
+      "left": 0.009328358208955223,
+      "right": 0.009328358208955223
+    },
+    "candidate": true,
+    "edge_score": 1.694161766922961,
+    "review_id": 60,
+    "source_path": "/Users/yejielnehmad/Developer/iaadut/output/product-photo-review/sources/60-Captura-de-pantalla-2026-07-17-a-las-15.16.59.png",
+    "generated_path": "/Users/yejielnehmad/.codex/generated_images/01a1218a-0f61-7e21-9dbf-46554c902bbb/exec-f751a435-1a21-41e6-8ed5-ae28028028fa.png",
+    "prompt": "Use case: background-extraction. Asset: exact catalog product-photo cutout. Input image 1 is the ORIGINAL photograph to edit, depicting Bebida alcohólica marca »Beluga». Remove ONLY the background (white fill, room, table, screenshot border/buttons, unrelated neighboring objects) and return a genuinely transparent PNG. Isolate only the single main bottle or jar. Keep the photographed product exactly as it appears: unchanged label words, logos, certification marks, colors, orientation, geometry, lighting and visible edges. Preserve all existing top/bottom cropping; do NOT outpaint, invent, reconstruct, complete, redraw, enhance or redesign the product or label. Keep the original visible product fragment centered at its original proportions with a small transparent margin. No added white or colored backdrop, no painted checkerboard, no floor shadow, no annotations. Background removal only, maximal fidelity to the original.",
+    "saved_path": "/Users/yejielnehmad/Developer/iaadut/web/public/category-icons/df601a9efdb43e42e7746b0fb6e4670bae108714e354a8a759e30833abf2a9c0.png",
+    "public_path": "product-photos/bebida-alcoholica-marca-beluga-2-df601a9efdb4.png",
+    "alpha_checked": true,
+    "asset": "df601a9efdb43e42e7746b0fb6e4670bae108714e354a8a759e30833abf2a9c0"
+  },
+  {
+    "image": "https://vaad.ar/wp-content/uploads/2026/09/mermelada-mackays-6.jpg",
+    "products": [
+      {
+        "url": "https://vaad.ar/producto/mermelada-ginger-marca-mackays/",
+        "title": "Mermelada Ginger marca «Mackays»",
+        "thumbnail": "https://vaad.ar/wp-content/uploads/2026/09/mermelada-mackays-6-300x300.jpg"
+      }
+    ],
+    "path": "/Users/yejielnehmad/Developer/iaadut/output/product-photo-review/originals/c0c9dc3836c8a2d9a29a.image",
+    "size": [
+      800,
+      1056
+    ],
+    "mode": "RGB",
+    "transparent": false,
+    "alpha_fraction": 0,
+    "edge_occupancy": {
+      "top": 0.7619047619047619,
+      "bottom": 0.4139194139194139,
+      "left": 0,
+      "right": 0
+    },
+    "candidate": true,
+    "edge_score": 1.1758241758241756,
+    "review_id": 66,
+    "source_path": "/Users/yejielnehmad/Developer/iaadut/output/product-photo-review/sources/66-mermelada-mackays-6.jpg",
+    "generated_path": "/Users/yejielnehmad/.codex/generated_images/01a1218a-0f61-7e21-9dbf-46554c902bbb/exec-dd3da913-63c0-4605-97bf-002e7b6a40bd.png",
+    "prompt": "Use case: background-extraction. Asset: exact catalog product-photo cutout. Input image 1 is the ORIGINAL photograph to edit, depicting Mermelada Ginger marca «Mackays». Remove ONLY the background (white fill, room, table, screenshot border/buttons, unrelated neighboring objects) and return a genuinely transparent PNG. Isolate only the single main bottle or jar. Keep the photographed product exactly as it appears: unchanged label words, logos, certification marks, colors, orientation, geometry, lighting and visible edges. Preserve all existing top/bottom cropping; do NOT outpaint, invent, reconstruct, complete, redraw, enhance or redesign the product or label. Keep the original visible product fragment centered at its original proportions with a small transparent margin. No added white or colored backdrop, no painted checkerboard, no floor shadow, no annotations. Background removal only, maximal fidelity to the original.",
+    "saved_path": "/Users/yejielnehmad/Developer/iaadut/web/public/category-icons/b55e84f935bc1bef0132e039a629832da5024751ccf76d3661cbf054d2a76e9f.png",
+    "public_path": "product-photos/mermelada-ginger-marca-mackays-b55e84f935bc.png",
+    "alpha_checked": true,
+    "asset": "b55e84f935bc1bef0132e039a629832da5024751ccf76d3661cbf054d2a76e9f"
+  },
+  {
+    "image": "https://vaad.ar/wp-content/uploads/2026/09/mermelada-mackays-9.jpg",
+    "products": [
+      {
+        "url": "https://vaad.ar/producto/mermelada-sweet-navelina-orange-marca-mackays/",
+        "title": "Mermelada Sweet Navelina Orange marca «Mackays»",
+        "thumbnail": "https://vaad.ar/wp-content/uploads/2026/09/mermelada-mackays-9-300x300.jpg"
+      }
+    ],
+    "path": "/Users/yejielnehmad/Developer/iaadut/output/product-photo-review/originals/89408df58a4161857b01.image",
+    "size": [
+      707,
+      1094
+    ],
+    "mode": "RGB",
+    "transparent": false,
+    "alpha_fraction": 0,
+    "edge_occupancy": {
+      "top": 0.9536082474226805,
+      "bottom": 0,
+      "left": 0.006666666666666667,
+      "right": 0.08833333333333333
+    },
+    "candidate": true,
+    "edge_score": 1.0486082474226806,
+    "review_id": 67,
+    "source_path": "/Users/yejielnehmad/Developer/iaadut/output/product-photo-review/sources/67-mermelada-mackays-9.jpg",
+    "generated_path": "/Users/yejielnehmad/.codex/generated_images/01a1218a-0f61-7e21-9dbf-46554c902bbb/exec-08f93597-5f3f-488e-9237-5d005efa4a6f.png",
+    "prompt": "Use case: background-extraction. Asset: exact catalog product-photo cutout. Input image 1 is the ORIGINAL photograph to edit, depicting Mermelada Sweet Navelina Orange marca «Mackays». Remove ONLY the background (white fill, room, table, screenshot border/buttons, unrelated neighboring objects) and return a genuinely transparent PNG. Isolate only the single main bottle or jar. Keep the photographed product exactly as it appears: unchanged label words, logos, certification marks, colors, orientation, geometry, lighting and visible edges. Preserve all existing top/bottom cropping; do NOT outpaint, invent, reconstruct, complete, redraw, enhance or redesign the product or label. Keep the original visible product fragment centered at its original proportions with a small transparent margin. No added white or colored backdrop, no painted checkerboard, no floor shadow, no annotations. Background removal only, maximal fidelity to the original.",
+    "saved_path": "/Users/yejielnehmad/Developer/iaadut/web/public/category-icons/0a4770f38ceab1df0d67413fd1da64ebdae839066e19164745b5a96e7451b9ad.png",
+    "public_path": "product-photos/mermelada-sweet-navelina-orange-marca-mackays-0a4770f38cea.png",
+    "alpha_checked": true,
+    "asset": "0a4770f38ceab1df0d67413fd1da64ebdae839066e19164745b5a96e7451b9ad"
+  },
+  {
+    "image": "https://vaad.ar/wp-content/uploads/2026/08/fritolin-cocinero.webp",
+    "products": [
+      {
+        "url": "https://vaad.ar/producto/aceite-en-aerosol-marca-cocinero/",
+        "title": "Aceite en aerosol marca »Cocinero»",
+        "thumbnail": "https://vaad.ar/wp-content/uploads/2026/08/fritolin-cocinero-300x300.webp"
+      }
+    ],
+    "path": "/Users/yejielnehmad/Developer/iaadut/output/product-photo-review/originals/0c76eebd7a7a310a90ac.image",
+    "size": [
+      1000,
+      1000
+    ],
+    "mode": "RGB",
+    "transparent": false,
+    "alpha_fraction": 0,
+    "edge_occupancy": {
+      "top": 0.15444444444444444,
+      "bottom": 0.25277777777777777,
+      "left": 0,
+      "right": 0
+    },
+    "candidate": true,
+    "edge_score": 0.4072222222222222,
+    "review_id": 85,
+    "source_path": "/Users/yejielnehmad/Developer/iaadut/output/product-photo-review/sources/85-fritolin-cocinero.webp",
+    "generated_path": "/Users/yejielnehmad/.codex/generated_images/01a1218a-0f61-7e21-9dbf-46554c902bbb/exec-ea82473a-f76f-4bbf-b259-a844456ac31d.png",
+    "prompt": "Use case: background-extraction. Asset: exact catalog product-photo cutout. Input image 1 is the ORIGINAL photograph to edit, depicting Aceite en aerosol marca »Cocinero». Remove ONLY the background (white fill, room, table, screenshot border/buttons, unrelated neighboring objects) and return a genuinely transparent PNG. Isolate only the single main bottle or jar. Keep the photographed product exactly as it appears: unchanged label words, logos, certification marks, colors, orientation, geometry, lighting and visible edges. Preserve all existing top/bottom cropping; do NOT outpaint, invent, reconstruct, complete, redraw, enhance or redesign the product or label. Keep the original visible product fragment centered at its original proportions with a small transparent margin. No added white or colored backdrop, no painted checkerboard, no floor shadow, no annotations. Background removal only, maximal fidelity to the original.",
+    "saved_path": "/Users/yejielnehmad/Developer/iaadut/web/public/category-icons/ccdfa2f0378b9248b49c0c97d1b36b56f7c2b4d38f4a054f16843289e0f20584.png",
+    "public_path": "product-photos/aceite-en-aerosol-marca-cocinero-ccdfa2f0378b.png",
+    "alpha_checked": true,
+    "asset": "ccdfa2f0378b9248b49c0c97d1b36b56f7c2b4d38f4a054f16843289e0f20584"
+  },
+  {
+    "image": "https://vaad.ar/wp-content/uploads/2026/08/palmito-scaled.jpg",
+    "products": [
+      {
+        "url": "https://vaad.ar/producto/298235/",
+        "title": "Palmito marca «Acapulco»",
+        "thumbnail": "https://vaad.ar/wp-content/uploads/2026/08/palmito-300x300.jpg"
+      }
+    ],
+    "path": "/Users/yejielnehmad/Developer/iaadut/output/product-photo-review/originals/38e2cb3379eea931148d.image",
+    "size": [
+      1920,
+      2560
+    ],
+    "mode": "RGB",
+    "transparent": false,
+    "alpha_fraction": 0,
+    "edge_occupancy": {
+      "top": 1,
+      "bottom": 0.4955555555555556,
+      "left": 1,
+      "right": 0.8461111111111111
+    },
+    "candidate": true,
+    "edge_score": 3.341666666666667,
+    "source_path": "/Users/yejielnehmad/Developer/iaadut/output/product-photo-review/sources/palmito-scaled.jpg",
+    "target_products": [
+      {
+        "url": "https://vaad.ar/producto/298235/",
+        "title": "Palmito marca «Acapulco»",
+        "thumbnail": "https://vaad.ar/wp-content/uploads/2026/08/palmito-300x300.jpg"
+      }
+    ],
+    "generated_path": "/Users/yejielnehmad/.codex/generated_images/01a1218a-0f61-7e21-9dbf-46554c902bbb/exec-d3c564c9-72c5-4313-9ea1-06e726aac833.png",
+    "prompt": "Use case: background-extraction. Edit the attached original product photograph of Palmito marca «Acapulco». Remove ONLY the surrounding room/table/colored background and graphical arrows, keeping the complete central bottle/can as visible in the original. Return real alpha-transparent PNG, centered with small transparent margins, no floor shadow. Preserve the original product silhouette, exact colors, angle, materials, printed label wording, all warnings, logos and certification graphics. Preserve existing gray obscured/covered regions on the Barba Roja label exactly; never invent or replace them. Do not redraw, beautify, relight or add missing product parts. Background removal only.",
+    "asset": "9b401d9b786b87883fcb4e4d02aa14f0b690d04de0096ccca8d69bc38ef7111a",
+    "saved_path": "/Users/yejielnehmad/Developer/iaadut/web/public/category-icons/9b401d9b786b87883fcb4e4d02aa14f0b690d04de0096ccca8d69bc38ef7111a.png",
+    "alpha_checked": true
+  },
+  {
+    "image": "https://vaad.ar/wp-content/uploads/2026/09/cerveza-braba-roja-2.jpg",
+    "products": [
+      {
+        "url": "https://vaad.ar/producto/cerveza-pale-ale-marca-barba-roja/",
+        "title": "Cerveza pale ale marca «Barba Roja»",
+        "thumbnail": "https://vaad.ar/wp-content/uploads/2026/09/cerveza-braba-roja-2-300x300.jpg"
+      }
+    ],
+    "path": "/Users/yejielnehmad/Developer/iaadut/output/product-photo-review/originals/0a853a19840ccc53d62f.image",
+    "size": [
+      307,
+      975
+    ],
+    "mode": "RGB",
+    "transparent": false,
+    "alpha_fraction": 0,
+    "edge_occupancy": {
+      "top": 1,
+      "bottom": 1,
+      "left": 1,
+      "right": 1
+    },
+    "candidate": true,
+    "edge_score": 4,
+    "source_path": "/Users/yejielnehmad/Developer/iaadut/output/product-photo-review/sources/cerveza-braba-roja-2.jpg",
+    "target_products": [
+      {
+        "url": "https://vaad.ar/producto/cerveza-pale-ale-marca-barba-roja/",
+        "title": "Cerveza pale ale marca «Barba Roja»",
+        "thumbnail": "https://vaad.ar/wp-content/uploads/2026/09/cerveza-braba-roja-2-300x300.jpg"
+      }
+    ],
+    "generated_path": "/Users/yejielnehmad/.codex/generated_images/01a1218a-0f61-7e21-9dbf-46554c902bbb/exec-07bbfa66-0aa9-4b5c-b1f9-930aecf007ac.png",
+    "prompt": "Use case: background-extraction. Remove the BACKGROUND ONLY from this ORIGINAL Barba Roja pale ale bottle photo. Preserve the complete bottle and every single interior pixel including label, text and logo as an opaque object. The gray flat painted areas over the person's face and parts of the striped shirt are intentional OPAQUE parts of the input label and MUST remain solid gray, with alpha 255. Do not treat those gray areas as background, punch transparent holes, draw a new face, or change any label. Every pixel within the bottle silhouette MUST be opaque, including the person illustration and gray painted patches. Only pixels OUTSIDE the bottle silhouette may become transparent. Remove external yellow/black backdrop and arrows. Preserve exact existing crop, label words, bottle proportions and photographic lighting. Center full visible bottle with small transparent margins; genuine transparent PNG backdrop, no shadow. Maximal fidelity background extraction, no product redraw or enhancement.",
+    "asset": "77729a1bec126cca94e8a4567758176291c04627ed6ec468b5bcb2c89099bc1b",
+    "saved_path": "/Users/yejielnehmad/Developer/iaadut/web/public/category-icons/77729a1bec126cca94e8a4567758176291c04627ed6ec468b5bcb2c89099bc1b.png",
+    "alpha_checked": true
+  }
+]

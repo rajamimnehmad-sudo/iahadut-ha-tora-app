@@ -9,7 +9,7 @@
     },
     {
       "item": "Preparación móvil de iconos/categorías/textos remotos",
-      "evidence": "PR #9; 190 pruebas Node y compilación web correctas; preparación conjunta Android/iOS; Android debug e iOS simulador compilados"
+      "evidence": "PR #9; 194 pruebas aprobadas; preparación conjunta Android/iOS 1.0.52 (110); Android debug e iOS simulador compilados. Ajuste final del aviso de coincidencias se sincroniza otra vez."
     },
     {
       "item": "Errores ortográficos claros",
@@ -34,12 +34,28 @@
     {
       "item": "Pagos y respaldos técnicos previos",
       "evidence": "Condiciones USD y referencia ARS fechada registradas; metadata distingue secretos técnicos verificados de contraseñas humanas faltantes"
+    },
+    {
+      "item": "Fotos de productos revisadas",
+      "evidence": "15 fotos con fondo transparente integradas, incluidos Palmito Acapulco y pale ale Barba Roja; se conservan cortes originales cuando existen. Las tarjetas usan foto completa disponible en lugar de miniatura cuadrada. Revisión de 1104 fuentes y 123 candidatas visuales, no examen visual exhaustivo de todas."
+    },
+    {
+      "item": "Categorías separadas",
+      "evidence": "Papas fritas: dos Free Chips. Puré instantáneo: Río de la Plata. Papas congeladas: 18, independiente. Confirmado en navegador."
+    },
+    {
+      "item": "Aderezos y botones de información",
+      "evidence": "Aderezos utiliza el mismo sachet rojo con pico de Ketchup por instrucción del usuario. Opción A aprobada y aplicada: local, bandeja y libro; tres PNG transparentes."
+    },
+    {
+      "item": "Coincidencias en el otro país al final de la búsqueda",
+      "evidence": "Aviso Coincidencias en Argentina/Uruguay movido después del listado de productos; selector conserva lugar previo. Alcance aclarado por el usuario."
     }
   ],
   "pending": [
     {
-      "item": "Revisión visual solicitada ahora",
-      "details": "13 iconos con bordes problemáticos. Los 112 tienen fondo blanco opaco. Lámina mostrada antes de editar. Archivos originales sin modificar."
+      "item": "Cuatro fuentes Free Chips no disponibles",
+      "details": "Maní pelado, maní japonés, papas fritas y papas pay: fotos y páginas oficiales devuelven HTTP 404. No se inventaron envases ni se dieron por corregidas."
     },
     {
       "item": "Distribuir una vez la app con configuración remota",
@@ -61,7 +77,7 @@
   "references": {
     "review": "https://github.com/rajamimnehmad-sudo/iahadut-ha-tora-app/pull/9",
     "analytics": "https://github.com/rajamimnehmad-sudo/iahadut-ha-tora-app/pull/8",
-    "image_review": "output/image-review/iconos-a-revisar.jpg",
+    "image_review": "output/product-photo-review/productos-con-cortes.jpg",
     "apple_draft": "docs/verification/2026-10-09-app-review-response-draft.txt"
   }
 }

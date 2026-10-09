@@ -23,4 +23,6 @@ for(const row of rows){
   paths[url]=/^barritas?\b/i.test(product.title.trim()) ? ['Barritas'] : path;
 }
 if(Object.keys(paths).length!==1109)throw new Error('Expected all 1109 reviewed products');
+const refinements=JSON.parse(fs.readFileSync(new URL('../web/data/catalog-category-overrides.json',import.meta.url),'utf8'));
+for(const [url,path] of Object.entries(refinements.paths||{})) if(paths[url]) paths[url]=path;
 console.log(JSON.stringify({reviewedAt:'2026-10-08',source:'Propuesta de categorías revisada con el usuario; Barritas separada de Snacks',paths},null,2));

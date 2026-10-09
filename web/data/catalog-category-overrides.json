@@ -1,3 +1,13 @@
 {
-  "paths": {}
+  "paths": {
+    "https://vaad.ar/producto/papas-fritas-marca-free-chips/": [
+      "Papas fritas"
+    ],
+    "https://vaad.ar/producto/papas-pay-marca-free-chips/": [
+      "Papas fritas"
+    ],
+    "https://vaad.ar/producto/pure-de-papa-marca-rio-de-la-plata/": [
+      "Puré instantáneo"
+    ]
+  }
 }

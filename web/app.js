@@ -464,6 +464,7 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     if (view === 'categoryDirectoryView') renderCategoryDirectory();
     else if (['subcategoryDirectoryView','categoryProductsView'].includes(view)) openTaxonomyPath([...activeCategoryPath], {restoreScroll:true});
     if (view === 'searchView' && $('#query').value) renderResults($('#query').value);
+    if (view === 'detailView' && currentProduct) renderDetail(currentProduct, productCache[currentProduct.url]);
   }
   function refreshCatalogPresentation(force = false) {
     return navigator.onLine ? catalogPresentation.refresh(force).catch(() => false) : Promise.resolve(false);
@@ -1845,7 +1846,7 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
   function featuredProductImage(product) {
     // Las miniaturas de WordPress pueden estar recortadas antes de llegar
     // a la app. Usar la misma foto completa que la ficha, no inventar URLs.
-    return productCache[product.url]?.images?.[0]?.src
+    return catalogPresentation.photo(product.url) || productCache[product.url]?.images?.[0]?.src
       || bundledProductDetails[product.url]?.images?.[0]?.src
       || product.image;
   }
@@ -2370,13 +2371,22 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     const regions = `<div class="region-switch" role="group" aria-label="País del catálogo"><button class="${selectedRegion === 'argentina' ? 'active' : ''}" type="button" data-region="argentina" aria-pressed="${selectedRegion === 'argentina'}"><span class="category-icon category-flag category-flag-arg"><img src="assets/flag-argentina.svg" alt=""></span><span>Argentina</span></button><button class="${selectedRegion === 'uruguay' ? 'active' : ''}" type="button" data-region="uruguay" aria-pressed="${selectedRegion === 'uruguay'}">${categoryIcon('uruguay')}<span>Uruguay</span></button></div>`;
     const ranked = (globalRanking?.products || []).map(entry => products.find(product => product.url === entry.url && product.image)).filter(Boolean);
     const popular = ranked.slice(0, 6);
-    const popularMarkup = `<div class="popular-searches"><strong>Más buscados</strong>${popular.length ? `<div class="popular-searches-track">${popular.map((product) => `<button class="popular-search-card" type="button" data-product="${escapeHtml(product.url)}" aria-label="Ver ${escapeHtml(product.title)}"><img class="asset-loading" src="${escapeHtml(product.image)}" alt="" loading="eager"><span>${escapeHtml(compactProductTitle(product.title))}</span></button>`).join('')}</div>` : '<p>Estamos reuniendo las búsquedas de la comunidad. Los productos aparecerán cuando haya datos disponibles.</p>'}</div>`;
+    const popularMarkup = `<div class="popular-searches"><strong>Más buscados</strong>${popular.length ? `<div class="popular-searches-track">${popular.map((product) => `<button class="popular-search-card" type="button" data-product="${escapeHtml(product.url)}" aria-label="Ver ${escapeHtml(product.title)}"><img class="asset-loading" ${transparentPhotoAttribute(product)} src="${escapeHtml(resolvedProductPhoto(product))}" alt="" loading="eager"><span>${escapeHtml(compactProductTitle(product.title))}</span></button>`).join('')}</div>` : '<p>Estamos reuniendo las búsquedas de la comunidad. Los productos aparecerán cuando haya datos disponibles.</p>'}</div>`;
     $('#searchCategories').innerHTML = `<div class="region-shortcut-wrap" aria-label="Filtro de país">${regions}</div>${popularMarkup}`;
     $('#recentSearches').innerHTML = '';
   }
 
   function productImage(product) {
-    return `<img class="asset-loading" src="${escapeHtml(product.image || productFallbackImage)}" alt="${escapeHtml(product.title)}" onload="this.classList.remove('asset-loading','asset-error');this.classList.add('asset-ready')" onerror="this.onerror=null;this.src='${productFallbackImage}';this.classList.add('asset-loading');this.classList.remove('asset-ready','asset-error')">`;
+    return `<img class="asset-loading" ${transparentPhotoAttribute(product)} src="${escapeHtml(resolvedProductPhoto(product) || productFallbackImage)}" alt="${escapeHtml(product.title)}" onload="this.classList.remove('asset-loading','asset-error');this.classList.add('asset-ready')" onerror="this.onerror=null;this.src='${productFallbackImage}';this.classList.add('asset-loading');this.classList.remove('asset-ready','asset-error')">`;
+  }
+
+  function resolvedProductPhoto(product, fallback) {
+    return catalogPresentation.photo(product.url) || fallback
+      || productCache[product.url]?.images?.[0]?.src
+      || bundledProductDetails[product.url]?.images?.[0]?.src || product.image;
+  }
+  function transparentPhotoAttribute(product) {
+    return catalogPresentation.photo(product.url) ? 'data-transparent-product-photo' : '';
   }
 
   function cleanDisplayText(value) {
@@ -2574,7 +2584,7 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
       regionLinks = document.createElement('div');
       regionLinks.id = 'searchRegionMatches';
       regionLinks.className = 'search-region-matches';
-      brandLinks.before(regionLinks);
+      $('#productList').after(regionLinks);
     }
     const otherRegion = otherRegionMatches(query);
     regionLinks.hidden = !otherRegion;
@@ -3362,7 +3372,7 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     canvas.height = 1080;
     const context = canvas.getContext('2d');
     if (!context) throw new Error('Canvas no disponible');
-    const photoSource = productCache[product.url]?.images?.[0]?.src || product.image;
+    const photoSource = resolvedProductPhoto(product, productCache[product.url]?.images?.[0]?.src || product.image);
     const loadedDetailImage = document.querySelector('#detailContent .detail-content > img');
     const canReuseDetailImage = loadedDetailImage?.complete
       && loadedDetailImage.naturalWidth > 0
@@ -3522,9 +3532,9 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
   function renderDetail(product, official = null) {
     currentProduct = product;
     const category = categoryFor(product.cat);
-    // La miniatura del catálogo ya está cargada en la pantalla anterior. Usarla
-    // también en la ficha evita una segunda descarga y cualquier parpadeo.
-    const officialImage = official?.images?.[0]?.src || product.image;
+    // Las fotos revisadas conservan su transparencia aunque se refresque la
+    // ficha oficial. Las demás mantienen su imagen de mayor resolución.
+    const officialImage = resolvedProductPhoto(product, official?.images?.[0]?.src || product.image);
     const officialDescription = official?.loading
       ? 'La ficha oficial está tardando un poco. Seguimos cargándola…'
       : official?.loadFailed
@@ -3537,7 +3547,7 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
       ? `<img class="detail-special-seal" src="${escapeHtml(shareLogoAssetUrl)}" alt="Sello de Iahadut HaTora">`
       : '';
     const detailImage = officialImage && !/(^|\/)assets\/(?:logo(?:-[^/]+)?\.png|product-placeholder\.svg)$/i.test(officialImage) ? officialImage : '';
-    const detailImageMarkup = detailImage ? `<img class="asset-loading" loading="eager" src="${escapeHtml(detailImage)}" alt="${escapeHtml(product.title)}" data-expanded-image="${escapeHtml(detailImage)}" data-expanded-caption="${escapeHtml(product.title)}" role="button" tabindex="0" aria-label="Ampliar imagen de ${escapeHtml(product.title)}" onload="this.classList.remove('asset-loading','asset-error');this.classList.add('asset-ready')" onerror="this.classList.remove('asset-loading','asset-ready');this.classList.add('asset-error');this.removeAttribute('data-expanded-image');this.removeAttribute('role');this.removeAttribute('tabindex')">` : '';
+    const detailImageMarkup = detailImage ? `<img class="asset-loading" ${transparentPhotoAttribute(product)} loading="eager" src="${escapeHtml(detailImage)}" alt="${escapeHtml(product.title)}" data-expanded-image="${escapeHtml(detailImage)}" data-expanded-caption="${escapeHtml(product.title)}" role="button" tabindex="0" aria-label="Ampliar imagen de ${escapeHtml(product.title)}" onload="this.classList.remove('asset-loading','asset-error');this.classList.add('asset-ready')" onerror="this.classList.remove('asset-loading','asset-ready');this.classList.add('asset-error');this.removeAttribute('data-expanded-image');this.removeAttribute('role');this.removeAttribute('tabindex')">` : '';
     const taxonomyMarkup = taxonomyPath.length ? `<nav class="detail-taxonomy" aria-label="Categoría del catálogo"><small>Categoría en el catálogo</small><div>${taxonomyPath.map((part, index) => `${index ? '<span aria-hidden="true">→</span>' : ''}<button type="button" data-detail-taxonomy-path="${escapeHtml(encodeURIComponent(JSON.stringify(taxonomyPath.slice(0, index + 1))))}">${escapeHtml(categoryDisplayName(part))}</button>`).join('')}</div></nav>` : '';
     const berajaMarkup = official?.beraja ? `<div class="detail-facts single"><div><small>Berajá</small><strong>${escapeHtml(official.beraja)}</strong></div></div>` : '';
     const detailContent = $('#detailContent');
@@ -4597,7 +4607,7 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
         scanButton:false,
         scanText:'Escanear',
         cameraDirection:CapacitorBarcodeScannerCameraDirection.BACK,
-        scanOrientation:CapacitorBarcodeScannerScanOrientation.PORTRAIT,
+        scanOrientation:CapacitorBarcodeScannerScanOrientation.ADAPTIVE,
         cancelButtonAccessibilityLabel:'Cancelar escaneo',
         torchButtonOnAccessibilityLabel:'Apagar linterna',
         torchButtonOffAccessibilityLabel:'Encender linterna',
