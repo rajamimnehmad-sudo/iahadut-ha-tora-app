@@ -18,3 +18,5 @@ Verificación posterior: S22 conectado informa versionCode=111 y versionName=1.0
 - Tienda: conservar tamaño original, simplificar el dibujo y reforzar contraste; el usuario rechazó agrandarlo.
 
 - Separación: añadir 6 px entre iconos 3D y texto en las cuatro tarjetas.
+
+- Proporción de tarjetas: dos columnas reales, 14 px de separación, textos equilibrados y flecha anclada abajo a la derecha, sin aumentar iconos ni letra.

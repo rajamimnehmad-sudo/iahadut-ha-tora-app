@@ -5852,3 +5852,10 @@ html[data-platform="ios"][data-ios-edge-to-edge="true"] body:not(.search-open) .
 
 /* Keep the enlarged artwork clear of its label without resizing it. */
 #homeView .useful-grid .link-row > span:nth-child(2) { padding-left: 6px !important; }
+
+/* Balance the service artwork and labels without enlarging either. */
+#homeView .useful-grid .link-row,
+#homeView .useful-grid .link-row:nth-child(even),
+#homeView .useful-grid .link-row.whatsapp-tile { position: relative; grid-template-columns: 36px minmax(0,1fr) !important; column-gap: 14px !important; }
+#homeView .useful-grid .link-row > span:nth-child(2) { padding-left: 0 !important; padding-right: 0 !important; text-wrap: balance; }
+#homeView .useful-grid .link-row > span:last-child { position: absolute !important; top: auto !important; bottom: 12px !important; right: 12px !important; transform: none !important; }
