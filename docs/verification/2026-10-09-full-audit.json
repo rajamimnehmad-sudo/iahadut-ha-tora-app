@@ -370,11 +370,12 @@
     ]
   },
   "open_validations": [
-    "QA físico del nuevo paquete tras instalarlo: recuadros, cabeceras, carrusel, descarga y vuelta sin red",
+    "QA física de descarga completa, reinicio y vuelta sin red, cámara/escáner y APNs. Inicio, cuatro tarjetas y carrusel comparados en ambos teléfonos físicos 112.",
     "Lecturas reales de Vistos y eventos de analítica ampliada en ambos equipos; pruebas automatizadas aprobadas, histórico anterior no medido",
     "Cuatro Free Chips: páginas e imágenes oficiales HTTP 404 y productos ausentes en la copia central actual; no se reincorporan como autorizados sin fuente vigente",
     "Información y video físico con iOS actual pedidos por Apple; iPhone conectado tiene iOS 16.7.16",
-    "Recuperación independiente de cuentas, clave de cifrado del Hub y código/archivos aún sin prueba completa"
+    "Recuperación independiente de cuentas, clave de cifrado del Hub y código/archivos aún sin prueba completa",
+    "Demo web pública HTTP 200 pero JavaScript versión 1.0.48: actualización del frontend público aún no desplegada; producción Android sigue 106."
   ],
   "no_new_notices_sent": true,
   "no_testflight_or_production_submission": true,
@@ -392,14 +393,33 @@
     "github_commit": "80cdc79",
     "android_production": "1.0.48 (106) unchanged",
     "apple_submission": "no new submission of 112; Xcode records prior build 110 upload today",
-    "verified_at": "2026-10-09T19:39:57.754724+00:00"
+    "verified_at": "2026-10-09T19:39:57.754724+00:00",
+    "review_url": "https://github.com/rajamimnehmad-sudo/iahadut-ha-tora-app/pull/11"
   },
   "physical_checks": {
     "iphone_112_home": "Xcode screenshot obtained after user opened app; all four cards legible with one arrow; featured carousel three cards with balanced side peeks; update invitation absent when no update is available",
     "brand_drag": "User confirmed iPhone and Samsung S22 during previous version tests",
     "cached_fiche_web": "Palmito reopened while CDP network offline, complete description 236 characters and loaded transparent photo; zero product page requests; network restored",
     "white_frame_rule": "global for every direct product fiche image; tested transparent Palmito and Barba Roja plus existing default frame rule",
-    "screenshot": "output/full-audit/iphone-112-home-physical.png"
+    "screenshot": "output/full-audit/iphone-112-home-physical.png",
+    "s22_112_home": "ADB resumed activity confirmed app; screenshot shows all four original cards with legible text, separated icons and one arrow each. Featured carousel centered. Compared with physical iPhone 112 screenshot.",
+    "s22_screenshot": "output/full-audit/s22-112-home-physical.png",
+    "home_comparison": "passed on both connected physical devices; complete offline/camera/APNs/analytics validation remains open"
   },
-  "updated_at": "2026-10-09T19:39:31.705713+00:00"
+  "updated_at": "2026-10-09T19:46:23.955721+00:00",
+  "public_demo": {
+    "url": "https://rajamimnehmad-sudo.github.io/iahadut-ha-tora-app/",
+    "http": 200,
+    "script_assets": [
+      "/iahadut-ha-tora-app/assets/index-BLwVuGtT.js"
+    ],
+    "contains_3d_service_icons": false,
+    "update_invitation_text": false,
+    "back_svg": false,
+    "version_literals": [
+      "1.0.48"
+    ],
+    "bytes": 1366188,
+    "deployment_state": "public demo remains 1.0.48; latest app UI is local and distributed as internal mobile 112, not deployed to public Pages"
+  }
 }

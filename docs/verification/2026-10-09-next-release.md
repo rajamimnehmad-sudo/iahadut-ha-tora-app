@@ -6,8 +6,10 @@ Incluye todos los ajustes posteriores a 111: distribución original de los cuatr
 
 La presentación remota se publicó por PR #10: 113 categorías, 15 fotos transparentes y 35 recursos referenciados comprobados por bytes/hash. La copia central contiene 1.117 productos y 1.117 fichas completas con clasificación que sobrevive actualizaciones. El ranking y el Hub se actualizaron y verificaron. Estos datos cambian sin otro paquete en clientes compatibles; estilos, iconos de servicios definidos en HTML y lógica nativa requieren paquete.
 
-Verificación: 198 pruebas de la app, 12 Android, 6 servidor y 60 Hub aprobadas; 156 pruebas y CI de la publicación remota aprobados. Android AAB/APK firmados e iOS Debug compilados. Los 111 archivos web de los dos paquetes son idénticos. Captura física iPhone 112 confirma tarjetas legibles y carrusel centrado. El usuario confirmó arrastre de marcas en ambos equipos. Palmito guardado se abrió en la prueba web sin red con texto y foto, sin pedir su página al servidor.
+Verificación: 198 pruebas de la app, 12 Android, 6 servidor y 60 Hub aprobadas; 156 pruebas y CI de la publicación remota aprobados. Android AAB/APK firmados e iOS Debug compilados. Los 111 archivos web de los dos paquetes son idénticos. Capturas físicas iPhone y S22 112 confirman las cuatro tarjetas legibles, sin superposición y carrusel centrado. El usuario confirmó arrastre de marcas en ambos equipos. Palmito guardado se abrió en la prueba web sin red con texto y foto, sin pedir su página al servidor.
 
 Queda pendiente la prueba física completa de descarga y reinicio sin conexión, escáner/cámara, APNs y eventos DebugView/Vistos. Las cuatro fuentes Free Chips siguen devolviendo 404 y no se reincorporaron desde la copia antigua. También faltan información/video físico con iOS actual solicitado por Apple y recuperación independiente de cuentas, clave del Hub y código/archivos. No se afirma que metadata sea un respaldo.
+
+La demo web pública responde HTTP 200 pero su JavaScript sigue en 1.0.48: los cambios de frontend públicos todavía no se desplegaron. Código de la 112 respaldado y en revisión en PR #11; presentación remota publicada en main por PR #10.
 
 Informe vigente: `2026-10-09-full-audit.json`.
