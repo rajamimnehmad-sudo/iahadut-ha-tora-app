@@ -22,3 +22,7 @@ Verificación posterior: S22 conectado informa versionCode=111 y versionName=1.0
 - Proporción de tarjetas: dos columnas reales, 14 px de separación, textos equilibrados y flecha anclada abajo a la derecha, sin aumentar iconos ni letra.
 
 - Ajuste óptico: catering ligeramente mayor y WhatsApp menor para igualar peso visual; no cambiar tarjetas ni letra.
+
+- Corrección final: igualar tamaño visible de los cuatro dibujos compensando margen transparente de WhatsApp; flecha próxima al bloque del texto de actualización.
+
+- Última revisión: cuatro dibujos de igual tamaño visible (aprox. 40 px de lado mayor); se eliminó la reducción de WhatsApp. Flecha a 8 px del bloque compacto de texto.
