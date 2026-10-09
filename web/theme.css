@@ -5865,7 +5865,7 @@ html[data-platform="ios"][data-ios-edge-to-edge="true"] body:not(.search-open) .
 #homeView .useful-grid .link-row.whatsapp-tile img.info-icon.info-icon-3d { transform: scale(1.25); }
 
 /* Equal visible artwork: WhatsApp's source has wider transparent margins. */
-#homeView .useful-grid .link-row.whatsapp-tile img.info-icon.info-icon-3d { transform: scale(1.98); }
+#homeView .useful-grid .link-row.whatsapp-tile img.info-icon.info-icon-3d { transform: scale(1.80); }
 /* Keep the arrow beside the actual text block, rather than at the outer edge. */
 #homeView .home-app-update button { width: fit-content !important; margin-inline: auto; }
 #homeView .home-app-update button > span { width: auto !important; max-width: 23ch; flex: 0 1 auto; }
