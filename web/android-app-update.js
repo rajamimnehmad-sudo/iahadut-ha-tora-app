@@ -1,10 +1,17 @@
 // Ask Play for fresh state on every user request. A cached availability flag
 // must never send someone to the store or start a second download.
-export function createAndroidAppUpdater({bridge, onState = () => {}, notify = () => {}}) {
+export function createAndroidAppUpdater({bridge, onState = () => {}, notify = () => {}, openStore = null}) {
   let pending = null;
   const complete = async () => {
     await bridge.complete();
     return {status:'installing'};
+  };
+  const fallback = async (status, message) => {
+    if (openStore) {
+      try { await openStore(); return {status:'store-fallback', reason:status}; } catch (_) {}
+    }
+    notify(message);
+    return {status};
   };
   const run = async () => {
     try {
@@ -21,8 +28,7 @@ export function createAndroidAppUpdater({bridge, onState = () => {}, notify = ()
       }
       const type = info.flexibleAllowed ? 'flexible' : info.immediateAllowed || info.immediateInProgress ? 'immediate' : '';
       if (!type) {
-        notify('Google Play todavía no permite actualizar dentro de la aplicación. Volvé a intentarlo más tarde.');
-        return {status:'unsupported'};
+        return await fallback('unsupported', 'Google Play todavía no permite actualizar dentro de la aplicación. Volvé a intentarlo más tarde.');
       }
       const result = await bridge.start({type});
       if (result?.started) return {status:'started', type};
@@ -32,13 +38,13 @@ export function createAndroidAppUpdater({bridge, onState = () => {}, notify = ()
         notify('La actualización ya se está descargando. Podés seguir usando la aplicación.');
         return {status:'downloading'};
       }
-      notify(result?.available === false
-        ? 'Ya tenés la última versión que Google Play ofrece para tu cuenta.'
-        : 'No se pudo iniciar la actualización dentro de la aplicación. Volvé a intentarlo.');
-      return {status:result?.available === false ? 'current' : 'not-started'};
+      if (result?.available === false) {
+        notify('Ya tenés la última versión que Google Play ofrece para tu cuenta.');
+        return {status:'current'};
+      }
+      return await fallback('not-started', 'No se pudo iniciar la actualización dentro de la aplicación. Volvé a intentarlo.');
     } catch (_) {
-      notify('No se pudo completar la actualización dentro de la aplicación. Revisá la conexión y volvé a intentarlo.');
-      return {status:'error'};
+      return await fallback('error', 'No se pudo completar la actualización dentro de la aplicación. Revisá la conexión y volvé a intentarlo.');
     }
   };
   return () => {

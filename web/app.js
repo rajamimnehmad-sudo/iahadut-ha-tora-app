@@ -485,7 +485,8 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
       renderHomeAppUpdate();
       if (moreOptionsVisible()) renderMore();
     },
-    notify:message => window.alert(message)
+    notify:message => window.alert(message),
+    openStore:() => openExternal(distributionLinks.install)
   });
 
   let remoteTaxonomyRules = [];

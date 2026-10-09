@@ -47,3 +47,23 @@ test('Repeated taps share one Play request and a later retry checks again',async
  resolve({available:false});await first;
  const retry=f.run();assert.deepEqual(f.calls,['check','check']);resolve({available:false});await retry;
 });
+
+test('Store fallback is used once only when an in-app attempt fails',async()=>{
+ for(const stage of ['checkForUpdate','start','complete','unsupported','not-started']) {
+  const calls=[];
+  const bridge={checkForUpdate:async()=>stage==='complete'?{downloaded:true}:{available:true,flexibleAllowed:stage!=='unsupported'},start:async()=>({started:false,available:true}),complete:async()=>{}};
+  if(['checkForUpdate','start','complete'].includes(stage))bridge[stage]=async()=>{throw Error('temporary failure');};
+  const run=createAndroidAppUpdater({bridge,openStore:async()=>calls.push('store')});
+  assert.equal((await run()).status,'store-fallback');assert.deepEqual(calls,['store']);
+ }
+});
+test('Successful or unavailable updates do not use the store fallback',async()=>{
+ for(const info of [{available:false},{available:true,flexibleAllowed:true},{downloaded:true},{available:true,inProgress:true}]) {
+  let stores=0;const bridge={checkForUpdate:async()=>info,start:async()=>({started:true}),complete:async()=>{}};
+  await createAndroidAppUpdater({bridge,openStore:()=>stores++})();assert.equal(stores,0);
+ }
+});
+test('An unavailable store fallback still gives a recoverable message',async()=>{
+ const messages=[];const run=createAndroidAppUpdater({bridge:{checkForUpdate:async()=>{throw Error('offline');}},openStore:async()=>{throw Error('no store');},notify:m=>messages.push(m)});
+ assert.equal((await run()).status,'error');assert.equal(messages.length,1);
+});

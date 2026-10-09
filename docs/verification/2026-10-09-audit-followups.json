@@ -9,7 +9,7 @@
     "crash_buffer": "empty"
   },
   "prepared_only": [
-    "Android update flow refreshes Play state and no longer redirects automatically on errors or unavailability",
+    "Android update flow checks fresh Play state, tries in-app first and opens Google Play only on failure, per explicit user preference",
     "Reader section titles restored once globally, verified for shops, catering, notes, world, certify, about, contact, collaboration",
     "Clear filter preserves selected country",
     "Empty search reset restores scanner",
@@ -21,5 +21,7 @@
     "Play in-app update end-to-end requires a newer eligible release",
     "Remaining audit checks and final delivery"
   ],
-  "evidence": "output/full-audit/e2e-browser-evidence.json"
+  "evidence": "output/full-audit/e2e-browser-evidence.json",
+  "prepared_version": "1.0.60 (118)",
+  "app_tests_passed": 217
 }
