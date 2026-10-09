@@ -1,3 +1,4 @@
+import {categorizeCatalog} from '../web/catalog-categories.js';
 import {correctContentTree} from '../web/text-corrections.js';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { dirname, resolve } from 'node:path';
@@ -102,5 +103,6 @@ const snapshot = {
 };
 
 await mkdir(dirname(outputPath), { recursive: true });
-await writeFile(outputPath, `${JSON.stringify(correctContentTree(snapshot))}\n`, 'utf8');
+const overrides = JSON.parse(await readFile(resolve(projectRoot, 'web/data/catalog-category-overrides.json'), 'utf8'));
+await writeFile(outputPath, `${JSON.stringify(correctContentTree(categorizeCatalog(snapshot, overrides.paths)))}\n`, 'utf8');
 console.log(`Snapshot generado: ${snapshotProducts.length} productos · ${outputPath}`);
