@@ -1,3 +1,4 @@
+import {validCategoryPath} from './catalog-categories.js';
 // Public static distribution keeps catalog reads out of Firestore quotas.
 export function normalizedSnapshot(value) {
   if (Array.isArray(value)) return value.map(normalizedSnapshot);
@@ -15,6 +16,7 @@ export function validSnapshot(value) {
   const urls = new Set();
   for (const product of products) {
     if (!product.url || !product.title || urls.has(product.url) || details[product.url]?.textFormatVersion !== 1) throw new Error('Faltan productos o fichas en la copia central');
+    if (product.categoryPath !== undefined && !validCategoryPath(product.categoryPath)) throw new Error('Categoría central inválida');
     urls.add(product.url);
   }
   return value;

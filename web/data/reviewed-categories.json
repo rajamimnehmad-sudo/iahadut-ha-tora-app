@@ -1,6 +1,6 @@
 {
-  "reviewedAt": "2026-10-05",
-  "source": "Propuesta de categorías revisada con el usuario",
+  "reviewedAt": "2026-10-08",
+  "source": "Propuesta de categorías revisada con el usuario; Barritas separada de Snacks",
   "paths": {
     "https://vaad.ar/producto/aceite-de-coco-marca-chennat/": [
       "Aceites",
@@ -293,13 +293,13 @@
       "Azúcares"
     ],
     "https://vaad.ar/producto/298478/": [
-      "Snacks"
+      "Barritas"
     ],
     "https://vaad.ar/producto/barrita-proteica-marca-biigual-sabor-mani/": [
-      "Snacks"
+      "Barritas"
     ],
     "https://vaad.ar/producto/barrita-proteica-marca-biigual-sabor-original/": [
-      "Snacks"
+      "Barritas"
     ],
     "https://vaad.ar/producto/bebida-alcoholica-marca-beefeater-london/": [
       "Bebidas alcohólicas",
@@ -1576,70 +1576,70 @@
       "Arvejas"
     ],
     "https://vaad.ar/producto/barrita-marca-alnuna-sabor-almond-bar/": [
-      "Snacks"
+      "Barritas"
     ],
     "https://vaad.ar/producto/barrita-marca-alnuna-sabor-cacao-bar/": [
-      "Snacks"
+      "Barritas"
     ],
     "https://vaad.ar/producto/barrita-full-arandanos-y-almendras/": [
-      "Snacks"
+      "Barritas"
     ],
     "https://vaad.ar/producto/barrita-full-sabor-cacao-y-mani/": [
-      "Snacks"
+      "Barritas"
     ],
     "https://vaad.ar/producto/barrita-marca-lyv-almendras-pasas-y-miel/": [
-      "Snacks"
+      "Barritas"
     ],
     "https://vaad.ar/producto/barrita-marca-lyv-caju-semillas-de-zapallo-y-sal-marina/": [
-      "Snacks"
+      "Barritas"
     ],
     "https://vaad.ar/producto/barrita-marca-lyv-mani-quinoa-y-chocolate-amargo/": [
-      "Snacks"
+      "Barritas"
     ],
     "https://vaad.ar/producto/barrita-marca-mudra-armonia/": [
-      "Snacks"
+      "Barritas"
     ],
     "https://vaad.ar/producto/barrita-marca-mudra-bienestar/": [
-      "Snacks"
+      "Barritas"
     ],
     "https://vaad.ar/producto/barrita-marca-mudra-energia/": [
-      "Snacks"
+      "Barritas"
     ],
     "https://vaad.ar/producto/barrita-marca-vitalgy-arandanos/": [
-      "Snacks"
+      "Barritas"
     ],
     "https://vaad.ar/producto/barrita-marca-vitalgy-cacao/": [
-      "Snacks"
+      "Barritas"
     ],
     "https://vaad.ar/producto/barrita-marca-vitalgy-caju/": [
-      "Snacks"
+      "Barritas"
     ],
     "https://vaad.ar/producto/barrita-marca-vitalgy-chocolate/": [
-      "Snacks"
+      "Barritas"
     ],
     "https://vaad.ar/producto/barrita-marca-vitalgy-manzana/": [
-      "Snacks"
+      "Barritas"
     ],
     "https://vaad.ar/producto/barrita-marca-wake-up/": [
-      "Snacks"
+      "Barritas"
     ],
     "https://vaad.ar/producto/barrita-marca-wiki/": [
-      "Snacks"
+      "Barritas"
     ],
     "https://vaad.ar/producto/barrita-proteica-marca-wik/": [
-      "Snacks"
+      "Barritas"
     ],
     "https://vaad.ar/producto/barrita-marca-vitalgy/": [
-      "Snacks"
+      "Barritas"
     ],
     "https://vaad.ar/producto/barrita-marca-vitalgy-3/": [
-      "Snacks"
+      "Barritas"
     ],
     "https://vaad.ar/producto/barrita-marca-vitalgy-2/": [
-      "Snacks"
+      "Barritas"
     ],
     "https://vaad.ar/producto/barrita-marca-vitalgy-proteina/": [
-      "Snacks"
+      "Barritas"
     ],
     "https://vaad.ar/producto/bebida-alcoholica-marca-pardalis/": [
       "Bebidas alcohólicas",
@@ -2778,10 +2778,10 @@
       "Panes"
     ],
     "https://vaad.ar/producto/papas-fritas-marca-free-chips/": [
-      "Papas"
+      "Papas fritas"
     ],
     "https://vaad.ar/producto/papas-pay-marca-free-chips/": [
-      "Papas"
+      "Papas fritas"
     ],
     "https://vaad.ar/producto/pasta-de-avellana-marca-sabores-orientales/": [
       "Pastas y mantequillas de frutos secos"
@@ -3384,7 +3384,7 @@
       "Tofu y proteínas de soja"
     ],
     "https://vaad.ar/producto/pure-de-papa-marca-rio-de-la-plata/": [
-      "Papas"
+      "Puré instantáneo"
     ],
     "https://vaad.ar/producto/sal-genser-66-menos-sodio/": [
       "Sales"

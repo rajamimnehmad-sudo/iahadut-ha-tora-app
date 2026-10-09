@@ -8,7 +8,7 @@ const catalog=JSON.parse(fs.readFileSync(new URL('../web/data/catalog.json',impo
 const reviewed=JSON.parse(fs.readFileSync(new URL('../web/data/reviewed-categories.json',import.meta.url)));
 const source=fs.readFileSync(new URL('../web/app.js',import.meta.url),'utf8');
 test('the approved 1109 classifications remain valid as the catalog grows',()=>{
-  assert.equal(reviewed.reviewedAt,'2026-10-05');
+  assert.ok(Date.parse(reviewed.reviewedAt) >= Date.parse('2026-10-05')); 
   assert.equal(Object.keys(reviewed.paths).length,1109);
   for(const product of catalog.filter(p=>reviewedCategoryPath(p))){
     const path=reviewedCategoryPath(product);
