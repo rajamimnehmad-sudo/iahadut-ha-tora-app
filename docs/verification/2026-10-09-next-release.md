@@ -1,12 +1,11 @@
-# Iahadut HaTora 1.0.60 (118)
+# Iahadut HaTora 1.0.61 (119)
 
-Títulos únicos de Tiendas, catering, Notas y demás apartados con navegación separada. Corrige Leer/Ocultar nota. Quitar filtro conserva el país; nueva búsqueda restaura escáner. Ventanas ampliadas mantienen foco y cierre por teclado.
+Habilita giro vertical y horizontal en tablets Android (600 dp o más), respetando el bloqueo de rotación del usuario. Conserva teléfonos en vertical y reevalúa plegables al cambiar de tamaño. Elimina el bloqueo global del manifiesto y permite redimensionar. iPad conserva sus orientaciones habilitadas. Incluye todos los cambios de 118.
 
-Android consulta el estado actual de Play: actualización dentro de la app primero, Google Play como respaldo si falla. No abre tienda cuando ya está al día ni durante una descarga en curso. Conserva fotos offline de 117.
-
-217 pruebas de app y 14 Android correctas. Android release firmado e iPhone Debug físico firmado, instalado por USB; recursos web idénticos. Auditoría física aún pendiente: descarga completa/reinicio offline y flujo Play con versión superior elegible. Producción Android sigue 1.0.48 (106). Sin subida Apple/TestFlight.
+Verificación: 17 pruebas Android correctas, Android AAB/APK release firmados y compilación iOS simulador correctos. Recursos web idénticos en ambas plataformas. Revisión web 768x1024 y 1024x768 sin desbordes. No prueba física de tablet: Android Studio no respondió al control. Sin subida Apple.
 
 Google Play: Correcciones y mejoras.
 
-Fuente: e8f6ced8509c80eb352f16e2cb02c119dcdfb062
-Workflow: https://github.com/rajamimnehmad-sudo/iahadut-ha-tora-app/actions/runs/37993986151
+Interna publicada: https://github.com/rajamimnehmad-sudo/iahadut-ha-tora-app/actions/runs/37995469758
+
+119 enviada a revisión de producción con verificaciones iniciales en curso. Publicación administrada activada: esperar aprobación de Google y autorización expresa antes de publicar manualmente. Pública 106 sin cambios. Hub guardado y verificado.
