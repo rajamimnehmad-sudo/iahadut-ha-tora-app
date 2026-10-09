@@ -6,10 +6,10 @@ import {mergeAlertHistory} from '../web/alert-history.js';
 const baseline = JSON.parse(readFileSync(new URL('../web/data/content.json', import.meta.url))).alerts;
 const app = readFileSync(new URL('../web/app.js', import.meta.url), 'utf8');
 
-test('A truncated 40-item cache recovers all 98 known additions and August dates', () => {
+test('A truncated 40-item cache recovers all baseline additions and August dates', () => {
   const result = mergeAlertHistory({alta:baseline.alta.slice(0,40)}, baseline);
-  assert.equal(result.alta.length, 98);
-  assert.equal(result.baja.length, 2);
+  assert.equal(result.alta.length, baseline.alta.length);
+  assert.equal(result.baja.length, baseline.baja.length);
   assert.ok(result.alta.some(item => item.text.includes('27/08/2026')));
 });
 test('New batches preserve unlimited history, deduplicate URLs and retain removals separately', () => {
@@ -24,7 +24,7 @@ test('Boot repairs a fresh cache immediately without network access', () => {
   const end = app.indexOf('  let timelineKind',start);
   const context = {storedAlertCache:{version:1,items:{alta:baseline.alta.slice(0,40)},fetchedAt:123},INFO_CACHE_VERSION:1,activeContentSnapshot:{alerts:{alta:baseline.alta.slice(0,40)}},contentSnapshot:{alerts:baseline},mergeAlertHistory};
   vm.runInNewContext(`${app.slice(start,end)};result=alertCache;`,context);
-  assert.equal(context.result.items.alta.length,98);
+  assert.equal(context.result.items.alta.length,baseline.alta.length);
   assert.equal(context.result.fetchedAt,123);
 });
 test('The snapshot generator also preserves previous batches absent from the live page', async () => {
@@ -40,8 +40,8 @@ test('The snapshot generator also preserves previous batches absent from the liv
   vm.createContext(context);
   vm.runInContext(generator.slice(start,end),context);
   const result = await context.mergeAlertHistory({alta:baseline.alta.slice(0,30),baja:[]});
-  assert.equal(result.alta.length,98);
-  assert.equal(result.baja.length,2);
+  assert.equal(result.alta.length,baseline.alta.length);
+  assert.equal(result.baja.length,baseline.baja.length);
 });
 test('The actual timeline renders August dates as well as the latest batches', () => {
   const start = app.indexOf('  function realAlertItems(');

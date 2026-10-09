@@ -2,6 +2,7 @@ package ar.vaad.catalogo.app;
 
 import android.os.Bundle;
 import android.os.Build;
+import android.content.res.Configuration;
 import android.graphics.Color;
 import android.view.View;
 import android.view.WindowManager;
@@ -36,6 +37,7 @@ public class MainActivity extends BridgeActivity {
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
+        DeviceOrientation.apply(this);
         registerPlugin(PlayStoreUpdatesPlugin.class);
         registerPlugin(CatalogBackgroundSyncPlugin.class);
         registerPlugin(PushHistoryPlugin.class);
@@ -60,6 +62,13 @@ public class MainActivity extends BridgeActivity {
     @Override
     public void onResume() {
         super.onResume();
+        applySystemBars();
+    }
+
+    @Override
+    public void onConfigurationChanged(Configuration newConfig) {
+        super.onConfigurationChanged(newConfig);
+        DeviceOrientation.apply(this);
         applySystemBars();
     }
 

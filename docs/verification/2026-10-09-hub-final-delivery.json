@@ -1,0 +1,15 @@
+{
+  "verified_at": "2026-10-09T19:46:24.635514+00:00",
+  "saved_and_verified": true,
+  "updated_keys": [
+    "demo-web",
+    "demo",
+    "iahadut:play-publishing-overview",
+    "iahadut:source-sync",
+    "iahadut:next-release-service-icons"
+  ],
+  "mobile_internal": "1.0.54 (112)",
+  "physical_home_comparison": "passed both",
+  "public_demo_frontend": "1.0.48",
+  "review_url": "https://github.com/rajamimnehmad-sudo/iahadut-ha-tora-app/pull/11"
+}

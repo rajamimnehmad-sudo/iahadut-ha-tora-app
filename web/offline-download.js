@@ -140,6 +140,11 @@ export function createOfflineDownload(onChange = () => {}, background = null) {
         for (const item of Object.values(manifest.images)) if (item.uri?.startsWith('file:')) item.uri = nativeImageUrl(item.uri);
       }
       const {manifest:ignored, ...status} = result;
+      // A photo can finish while the rounded percentage stays unchanged.
+      if (checkedTarget) {
+        status.completed = checkedTarget.urls.filter(url => manifest.images[url]).length;
+        status.total = checkedTarget.urls.length;
+      }
       // Native ready refers to its last job. The UI may now have newer content.
       if (checkedTarget) status.ready = manifest.signature === signature(checkedTarget.urls, checkedTarget.version)
         && checkedTarget.urls.every(url => manifest.images[url]);
@@ -191,7 +196,7 @@ export function createOfflineDownload(onChange = () => {}, background = null) {
       manifest = {images:{},signature:'',resume:{enabled:false,autoUpdate:false,allowMobile:false}};
       checkedTarget = null;
       paused = false;
-      emit({busy:false,clearing:false,ready:false,hasDownload:false,paused:false,waiting:false,percent:0,error:''});
+      emit({busy:false,clearing:false,ready:false,hasDownload:false,paused:false,waiting:false,percent:0,completed:0,total:0,error:''});
       return true;
     } catch (_) { emit({clearing:false,error:'No se pudo borrar la descarga · Reintentar'}); return false; }
   };
@@ -215,7 +220,7 @@ export function createOfflineDownload(onChange = () => {}, background = null) {
     busy = true;
     paused = false;
     let done = urls.filter(url => manifest.images[url]).length;
-    emit({busy:true, paused:false, ready:false, error:'', percent:Math.floor(done / Math.max(1,urls.length) * 99)});
+    emit({busy:true, paused:false, ready:false, error:'', completed:done, total:urls.length, percent:Math.floor(done / Math.max(1,urls.length) * 99)});
     const queue = urls.filter(url => !manifest.images[url]);
     try {
       // Data directory is durable application storage, not Android's evictable cache.
@@ -256,7 +261,7 @@ export function createOfflineDownload(onChange = () => {}, background = null) {
             await save();
           }
           done++;
-          emit({percent:Math.floor(done / Math.max(1, urls.length) * 99)});
+          emit({completed:done, total:urls.length, percent:Math.floor(done / Math.max(1, urls.length) * 99)});
         }
       }));
       if (paused) return;

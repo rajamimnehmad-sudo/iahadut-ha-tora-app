@@ -306,3 +306,36 @@ test('Android single-slash file URIs become WebView URLs and failed cached photo
   assert.equal(service.localUrl(url),url,'status refresh must not loop back to a broken local photo');
   assert.equal(service.rejectLocalUrl(url),null,'remote failure should use the regular image error handler');
 });
+
+test('Each saved photo advances progress before a one-percent boundary and is immediately usable',async()=>{
+  const f=fixture(); const saved=[];
+  const urls=Array.from({length:240},(_,i)=>`https://vaad.ar/progress-${i}.png`);
+  let service;
+  service=f.context.createOfflineDownload(state=>{
+    if(state.busy && state.completed>0 && state.completed!==saved.at(-1)?.completed){
+      const persisted=JSON.parse(f.files.get('offline-catalog/manifest.json'));
+      assert.ok(Object.keys(persisted.images).length>=state.completed);
+      assert.ok(Object.keys(persisted.images).some(url=>service.localUrl(url)!==url));
+      saved.push({...state});
+    }
+  });
+  await service.init(); await service.download(urls,'v1',{});
+  assert.deepEqual(saved.map(state=>state.completed),urls.map((_,i)=>i+1));
+  assert.equal(saved[0].percent,0);
+  assert.equal(saved[1].percent,0);
+  assert.equal(saved[0].ready,false);
+  assert.equal(service.check(urls,'v1').ready,true);
+});
+
+test('Native progress refresh notices one new photo even when percentage has not changed',async()=>{
+  const f=fixture(); const urls=Array.from({length:240},(_,i)=>`https://vaad.ar/native-${i}.png`);
+  const status={busy:true,percent:0,manifest:{signature:'',images:{}}};
+  const states=[];
+  const service=f.context.createOfflineDownload(state=>states.push({...state}),{status:async()=>JSON.parse(JSON.stringify(status))});
+  await service.init();service.check(urls,'v1');await service.refresh();
+  status.manifest.images[urls[0]]={uri:'file:///data/first.png'};
+  await service.refresh();
+  assert.equal(states.at(-1).completed,1);assert.equal(states.at(-1).total,240);
+  assert.equal(states.at(-1).percent,0);assert.equal(states.at(-1).ready,false);
+  assert.notEqual(service.localUrl(urls[0]),urls[0]);
+});

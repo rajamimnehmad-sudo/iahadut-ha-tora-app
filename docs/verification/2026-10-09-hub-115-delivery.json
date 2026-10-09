@@ -1,0 +1,15 @@
+{
+  "verified_at": "2026-10-09T20:59:10.656425+00:00",
+  "hub_saved_and_verified": true,
+  "internal": "1.0.57 (115)",
+  "iphone_usb_installed": true,
+  "s22_115_installed_confirmed": false,
+  "workflow": "https://github.com/rajamimnehmad-sudo/iahadut-ha-tora-app/actions/runs/37990434849",
+  "updated_keys": [
+    "iahadut:android-release-state",
+    "iahadut:play-publishing-overview",
+    "ios-native-readiness",
+    "iahadut:source-sync",
+    "iahadut:next-release-service-icons"
+  ]
+}

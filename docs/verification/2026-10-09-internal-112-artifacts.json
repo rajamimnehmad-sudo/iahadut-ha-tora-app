@@ -1,0 +1,22 @@
+{
+  "artifacts": {
+    "aab": {
+      "path": "/Users/yejielnehmad/Developer/iaadut/release-artifacts/iahadut-1.0.54-112.aab",
+      "bytes": 85693609,
+      "sha256": "6c2b68f552a9c846b05e4bacb48091d982f1182b0d57a299abe60b52f22f967f"
+    },
+    "apk": {
+      "path": "/Users/yejielnehmad/Developer/iaadut/release-artifacts/iahadut-1.0.54-112.apk",
+      "bytes": 103528989,
+      "sha256": "32ebb3b65e6067191e93532f535202f69567bb853b71fa387b9396f5aeaa04e3"
+    }
+  },
+  "ios_version": "1.0.54",
+  "ios_build": "112",
+  "resource_comparison": {
+    "shared_files": 111,
+    "differences": [],
+    "android_only": [],
+    "ios_only": []
+  }
+}

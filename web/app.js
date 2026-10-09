@@ -1,3 +1,4 @@
+import {createAndroidAppUpdater} from './android-app-update.js';
 import {createNoticeViews,observeNoticeViews} from './notice-views.js';
 import {centeredCarouselOffset} from './carousel-layout.js';
 import {enableBrandMarqueeDrag} from './brand-marquee.js';
@@ -124,9 +125,31 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
       marker?.parentNode?.insertBefore(mounted, marker.nextSibling);
     }
     const nextHeader = document.querySelector(`#${viewId} > .detail-head`);
-    if (nextHeader && viewTitleSlot) viewTitleSlot.appendChild(nextHeader);
+    if (nextHeader && viewTitleSlot) {
+      viewTitleSlot.appendChild(nextHeader);
+      updateReturnHeader(viewId, nextHeader);
+    }
     document.body.classList.toggle('has-view-title', Boolean(nextHeader));
   };
+  function updateReturnHeader(viewId, header = viewTitleSlot?.querySelector('.detail-head')) {
+    if (!header) return;
+    let destination;
+    if (['categoryDirectoryView', 'savedView', 'timelineView'].includes(viewId)) destination = 'Inicio';
+    else if (['subcategoryDirectoryView', 'categoryProductsView'].includes(viewId)) {
+      destination = activeCategoryPath.length > 1
+        ? categoryDisplayName(activeCategoryPath.at(-2))
+        : taxonomyReturnView === 'searchView' ? 'la búsqueda' : 'categorías';
+    } else if (viewId === 'readerView') {
+      const target = readerHistory.at(-1);
+      destination = target?.type === 'info' ? info[target.key]?.[0]
+        : ({homeView:'Inicio', moreView:'Más', searchView:'la búsqueda', categoryDirectoryView:'categorías', subcategoryDirectoryView:categoryDisplayName(activeCategoryPath.at(-1)), categoryProductsView:categoryDisplayName(activeCategoryPath.at(-1)), detailView:'la ficha del producto', savedView:'Guardados', alertsView:'Alertas', timelineView:'Últimos cambios'})[target?.id];
+      destination ||= 'Más';
+    }
+    if (!destination) return;
+    const label = `Volver a ${destination}`;
+    header.querySelector('strong').textContent = label;
+    header.querySelector('.back')?.setAttribute('aria-label', label);
+  }
   let searchFormHome;
   let searchPlaceholderTimer;
   let homePlaceholderTimer;
@@ -455,6 +478,17 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
   let renderedHomeItemsKey = '';
   let remoteControl = platformRemoteControl({...defaultRemoteControl, configured:false, checkedAt:0}, Capacitor.getPlatform(), APP_VERSION, import.meta.env.VITE_IOS_STORE_URL);
   let playUpdateState = {available:false, downloaded:false, flexibleAllowed:false, checked:false};
+  const requestAndroidAppUpdate = createAndroidAppUpdater({
+    bridge:PlayStoreUpdates,
+    onState:state => {
+      playUpdateState = {...playUpdateState, ...state};
+      renderHomeAppUpdate();
+      if (moreOptionsVisible()) renderMore();
+    },
+    notify:message => window.alert(message),
+    openStore:() => openExternal(distributionLinks.install)
+  });
+
   let remoteTaxonomyRules = [];
   const catalogPresentation = browserCatalogPresentation(bundledPresentation, () => refreshCatalogPresentationViews());
   function managedCategoryInfo(key) {
@@ -1931,18 +1965,31 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     const viewport = track.parentElement;
     if (!viewport) return;
     enableRecentCarouselTouch(viewport);
+    // Hidden views have no usable geometry; ResizeObserver starts us when visible.
+    if (!viewport.clientWidth) return;
     fitRecentCarouselCards(viewport);
     const metrics = recentCarouselMetrics(viewport);
     if (!metrics) return;
+    // Disable CSS snapping before the first scroll, otherwise WebKit aligns
+    // the first card to the edge and only centers it after a finger gesture.
+    track.dataset.carouselAutoplay = 'true';
+    viewport.classList.add('is-autoplaying');
     if (track.dataset.carouselPositioned !== 'true') {
       viewport.scrollTo({left: metrics.carouselStart, behavior: 'auto'});
       track.dataset.carouselPositioned = 'true';
       recentCarouselOffset = metrics.carouselStart;
+      // Apply once more after layout commits; never reset a user's drag.
+      window.requestAnimationFrame(() => {
+        if (track.dataset.carouselAutoplay !== 'true' || viewport.classList.contains('is-interacting')) return;
+        fitRecentCarouselCards(viewport);
+        const initial = recentCarouselMetrics(viewport);
+        if (!initial) return;
+        viewport.scrollTo({left: initial.carouselStart, behavior: 'auto'});
+        recentCarouselOffset = initial.carouselStart;
+      });
     } else {
       recentCarouselOffset = viewport.scrollLeft;
     }
-    track.dataset.carouselAutoplay = 'true';
-    viewport.classList.add('is-autoplaying');
     const stop = () => {
       if (recentCarouselTimer) {
         window.clearInterval(recentCarouselTimer);
@@ -2146,6 +2193,7 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     const refreshCarouselLayout = () => {
       if (pointerActive) return;
       const currentWidth = viewport.clientWidth;
+      if (!currentWidth) return;
       const previousWidth = Number(track?.dataset.carouselViewportWidth) || 0;
       if (previousWidth && Math.abs(currentWidth - previousWidth) < 1) return;
       const wasPositioned = track?.dataset.carouselPositioned === 'true';
@@ -2160,7 +2208,7 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
         : 0;
 
       fitRecentCarouselCards(viewport);
-      if (!wasPositioned) return;
+      if (!wasPositioned) { startRecentCarousel(); return; }
       const originalCount = Number(track.dataset.carouselOriginalCount) || 0;
       const firstCard = track.children[0];
       const styles = window.getComputedStyle(track);
@@ -2617,7 +2665,7 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
       resultsView.scrollLeft = 0;
     }
     renderProductCollection($('#productList'), result, `<div class="empty-state"><svg class="empty-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 5 5M8 10.5h5"/></svg><strong>No encontramos productos</strong><span>Probá con otra marca, nombre o categoría.</span><button class="text-btn" id="emptyReset">Hacer nueva búsqueda</button></div>`);
-    $('#emptyReset')?.addEventListener('click', () => { $('#query').value = ''; $('#clear').hidden = true; selectedCategory = 'all'; favoriteOnly = false; renderSearchScope(); renderSearchCategories(); $('#results').hidden = true; $('#searchCategories').hidden = false; $('#recentSearches').hidden = false; $('#query').focus(); });
+    $('#emptyReset')?.addEventListener('click', () => { window.clearTimeout(searchTimer); updateSearchScanAction(false); $('.bottom-nav').classList.remove('has-query'); $('#query').value = ''; startSearchPlaceholders(); $('#clear').hidden = true; selectedCategory = 'all'; favoriteOnly = false; renderSearchScope(); renderSearchCategories(); $('#results').hidden = true; $('#searchCategories').hidden = false; $('#recentSearches').hidden = false; $('#query').focus(); });
   }
 
   function renderSavedButtonCount() {
@@ -4006,15 +4054,15 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     return task;
   }
 
+
   async function refreshPlayUpdate() {
     if (Capacitor.getPlatform() !== 'android') return playUpdateState;
     try {
       const result = await PlayStoreUpdates.checkForUpdate();
-      playUpdateState = {...playUpdateState, ...result, checked:true};
+      playUpdateState = {...playUpdateState, ...result, checked:true, error:false};
     } catch (_) {
-      // Las instalaciones de desarrollo o fuera de Google Play no tienen
-      // acceso a esta API; en esos casos queda activo el fallback remoto.
-      playUpdateState = {...playUpdateState, checked:true};
+      // An unavailable Play API is not evidence that a store redirect is needed.
+      playUpdateState = {...playUpdateState, checked:true, error:true};
     }
     renderHomeAppUpdate();
     if (moreOptionsVisible()) renderMore();
@@ -4025,15 +4073,18 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     const update = $('#homeAppUpdate');
     if (!update) return;
     const button = update.querySelector('button');
-    if (button) button.setAttribute('aria-label', `Abrir la actualización de la aplicación en ${distributionLinks.label}`);
+    if (button) button.setAttribute('aria-label', Capacitor.getPlatform() === 'android' ? 'Actualizar la aplicación' : `Abrir la actualización de la aplicación en ${distributionLinks.label}`);
     // Local visual preview only; release builds keep the real update check.
     if (import.meta.env.DEV && new URLSearchParams(location.search).get('preview') === 'app-update') {
       update.hidden = false;
-      return;
+    } else {
+      update.hidden = Capacitor.getPlatform() === 'ios'
+        ? !(accessDecision(remoteControl).updateAvailable && remoteControl.update_url)
+        : !(playUpdateState.available || playUpdateState.downloaded);
     }
-    update.hidden = Capacitor.getPlatform() === 'ios'
-      ? !(accessDecision(remoteControl).updateAvailable && remoteControl.update_url)
-      : !(playUpdateState.available || playUpdateState.downloaded);
+    const scanner = $('#homeScan');
+    if (scanner) scanner.hidden = !update.hidden;
+    $('#homeForm')?.classList.toggle('has-app-update', !update.hidden);
   }
 
   function updateAccessOverlay(control) {
@@ -4293,12 +4344,12 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     }
     currentInfoKey = key;
     showView('readerView');
-    $('#readerTop').textContent = value[0];
+    updateReturnHeader('readerView');
     $('#readerContent').innerHTML = '<div class="content-skeleton" aria-hidden="true"><i></i><i></i><i></i></div>';
     const renderInfo = (content) => {
       window.__ihtInfoCards = content.cards || [];
-      $('#readerTop').textContent = value[0];
-      $('#readerContent').innerHTML = infoContentMarkup(content);
+      updateReturnHeader('readerView');
+      $('#readerContent').innerHTML = `<h2>${escapeHtml(value[0])}</h2>${infoContentMarkup(content)}`;
     };
     if (infoCache[key]) {
       renderInfo(infoCache[key]);
@@ -4322,7 +4373,7 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     readerHistory = [{type:'view', id:document.querySelector('.view.active')?.id || 'homeView'}];
     currentInfoKey = '__catalog';
     showView('readerView');
-    $('#readerTop').textContent = 'Catálogo';
+    updateReturnHeader('readerView');
     const renderDate = (date, note = 'Fecha publicada por Iahadut HaTora.') => {
       const totalLabel = totalCount().toLocaleString('es-AR');
       const currentMessage = syncState.running
@@ -4362,10 +4413,29 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     if (categoryInfoOpener?.isConnected) categoryInfoOpener.focus();
   }
 
+  let focusedOverlay = null;
+  let overlayOpener = null;
   function updateModalLock() {
-    const hasOpenOverlay = [...document.querySelectorAll('.overlay')].some((overlay) => !overlay.hidden);
-    document.body.classList.toggle('modal-open', hasOpenOverlay);
+    const overlay = [...document.querySelectorAll('.overlay')].find((node) => !node.hidden);
+    document.body.classList.toggle('modal-open', Boolean(overlay));
+    if (overlay && overlay !== focusedOverlay) {
+      overlayOpener = document.activeElement;
+      focusedOverlay = overlay;
+      overlay.querySelector('button, input, a[href]')?.focus();
+    } else if (!overlay && focusedOverlay) {
+      focusedOverlay = null;
+      if (overlayOpener?.isConnected) overlayOpener.focus();
+      overlayOpener = null;
+    }
   }
+  document.addEventListener('keydown', event => {
+    if (event.key !== 'Tab' || !focusedOverlay || event.defaultPrevented) return;
+    const controls = [...focusedOverlay.querySelectorAll('button, input, a[href], [tabindex="0"]')]
+      .filter(node => !node.disabled && node.getClientRects().length);
+    const first = controls[0], last = controls.at(-1);
+    if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last?.focus(); }
+    else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first?.focus(); }
+  });
 
   function openImage(src, caption = '') {
     resetImageZoom();
@@ -5129,12 +5199,8 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     const updateButton = event.target.closest('[data-app-update]');
     if (updateButton) {
       logAnalyticsEvent('store_open', {purpose:'update'});
-      if (playUpdateState.downloaded) {
-        PlayStoreUpdates.complete().then(() => { window.alert('La actualización se instalará al reiniciar la aplicación.'); refreshPlayUpdate(); }).catch(() => openExternal(remoteControl.update_url));
-        return;
-      }
-      if (playUpdateState.available) {
-        PlayStoreUpdates.start({type:'flexible'}).then((result) => { if (!result?.started) openExternal(remoteControl.update_url); }).catch(() => openExternal(remoteControl.update_url));
+      if (Capacitor.getPlatform() === 'android') {
+        void requestAndroidAppUpdate();
         return;
       }
       refreshRemoteControl(true).then((decision) => {
@@ -5323,7 +5389,7 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
   $('#cardOverlay').onclick = (event) => { if (event.target === $('#cardOverlay')) closeInfoCard(); };
   $('#homeScan').onclick = openScanner; updateSearchScanAction(false); $('#closeScan').onclick = closeScanner;
   $('#barcodeForm').onsubmit = (event) => { event.preventDefault(); const code = $('#barcode').value; closeScanner(); resolveBarcode(code); };
-  document.addEventListener('keydown', (event) => { if (event.key !== 'Escape') return; if (!$('#scanOverlay').hidden) closeScanner(); if (!$('#imageOverlay').hidden) closeImage(); if (!$('#cardOverlay').hidden) closeInfoCard(); });
+  document.addEventListener('keydown', (event) => { if (event.key !== 'Escape') return; if (!$('#filterOverlay').hidden) { $('#filterOverlay').hidden = true; updateModalLock(); } if (!$('#scanOverlay').hidden) closeScanner(); if (!$('#imageOverlay').hidden) closeImage(); if (!$('#cardOverlay').hidden) closeInfoCard(); });
   function openFilters() {
     $('#filterOptions').innerHTML = `<button class="filter-option ${selectedCategory === 'all' ? 'active' : ''}" data-filter="all">${categoryIcon('all')}<span>Todos los productos</span></button>${categories.map((category) => `<button class="filter-option ${selectedCategory === category.key ? 'active' : ''}" data-filter="${category.key}">${categoryIcon(category.key)}<span>${escapeHtml(category.name)}</span></button>`).join('')}`;
     $('#filterOverlay').hidden = false;
@@ -5332,12 +5398,12 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
   $('#filterBtn').addEventListener('click', (event) => { event.preventDefault(); event.stopPropagation(); openFilters(); });
   $('#closeFilter').onclick = () => { $('#filterOverlay').hidden = true; updateModalLock(); };
   $('#filterOverlay').onclick = (event) => { if (event.target === $('#filterOverlay')) { $('#filterOverlay').hidden = true; updateModalLock(); return; } const filter = event.target.closest('[data-filter]'); if (filter) { selectedCategory = filter.dataset.filter; if (selectedCategory === 'uruguay') selectedRegion = 'uruguay'; $('#filterOverlay').hidden = true; updateModalLock(); renderResults($('#query').value); } };
-  const clearActiveFilter = () => { selectedCategory = 'all'; selectedRegion = 'all'; renderResults($('#query').value); };
+  const clearActiveFilter = () => { selectedCategory = 'all'; renderResults($('#query').value); };
   $('#resetFilter').onclick = () => { clearActiveFilter(); $('#filterOverlay').hidden = true; updateModalLock(); };
   $('#clearSearchScope').onclick = clearActiveFilter;
   $('#syncStatus').onclick = () => { if (!syncRequest) syncAndPreload(true).catch(() => {}); };
   $('#accessRetry').onclick = () => refreshRemoteControl(true);
-  $('#accessUpdate').onclick = () => openExternal(remoteControl.update_url);
+  $('#accessUpdate').onclick = () => Capacitor.getPlatform() === 'android' ? requestAndroidAppUpdate() : openExternal(remoteControl.update_url);
   $('#headerNotifications')?.setAttribute('aria-label', 'Abrir Alertas');
   $('#headerNotifications')?.setAttribute('title', 'Alertas');
   tabletLayout.addEventListener('change', updateTabletResources);

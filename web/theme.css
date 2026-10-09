@@ -657,7 +657,7 @@ button.alert-timeline-item { width: 100%; cursor: pointer; }
   line-height: 1.12 !important;
   overflow-wrap: anywhere;
 }
-#homeView .useful-grid .link-row span:last-child {
+#homeView .useful-grid .link-row span:nth-child(3) {
   position: static !important;
   color: #1f684b !important;
   font-size: 17px !important;
@@ -872,6 +872,26 @@ body { color: #252925; }
 .push-notification-item small { color: #89938c; font-size: 10px; }
 .push-notification-image { display: block; width: 100%; max-height: 360px; object-fit: contain; margin: 12px 0; border-radius: 12px; background: #f5f8f6; }
 .push-notification-image[hidden] { display: none; }
+.push-note { margin: 12px 0; }
+.push-note > summary {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  min-height: 44px; padding: 8px 12px; box-sizing: border-box;
+  border: 1px solid #d5e6dc; border-radius: 12px; background: #eef6f1;
+  color: #1f5d46; font-size: 14px; font-weight: 750; line-height: 1.4;
+  cursor: pointer; list-style: none;
+}
+.push-note > summary::-webkit-details-marker { display: none; }
+.push-note > summary::marker { content: ''; }
+.push-note > summary::after {
+  content: ''; flex: 0 0 8px; width: 8px; height: 8px; margin: -4px 2px 0 0;
+  border-right: 2px solid currentColor; border-bottom: 2px solid currentColor;
+  transform: rotate(45deg);
+}
+.push-note > summary .push-note-open { display: none; }
+.push-note[open] > summary .push-note-closed { display: none; }
+.push-note[open] > summary .push-note-open { display: inline; }
+.push-note[open] > summary::after { transform: rotate(225deg); margin-top: 4px; }
+
 .push-notification-icon { display: grid; width: 30px; height: 30px; place-items: center; border-radius: 50%; background: #e7f4eb; color: #24704e; font-weight: 800; }
 .catalog-update-card { display: grid; gap: 6px; margin: 20px 0 14px; padding: 18px; border: 1px solid #d8e2dc; border-radius: 14px; background: #f3f8f4; }
 .catalog-update-card strong { color: #1f5d46; font-size: 20px; }
@@ -1060,7 +1080,7 @@ body { color: #252925; }
 .useful-grid .link-row:nth-child(4) { background: #f2f7f4; border-color: #cfe0d6; }
 .useful-grid .link-row .info-icon { width: 25px; height: 25px; }
 .useful-grid .link-row span:nth-child(2) { color: #29322c; font-size: 12px; font-weight: 650; line-height: 1.2; }
-.useful-grid .link-row span:last-child { position: absolute; right: 12px; bottom: 11px; font-size: 20px; }
+.useful-grid .link-row span:nth-child(3) { position: absolute; right: 12px; bottom: 11px; font-size: 20px; }
 .useful-grid .whatsapp-tile { background: #f2f7f4; border-color: #cfe0d6; color: #29322c; text-decoration: none; }
 .useful-grid .whatsapp-tile .info-icon { color: #25d366; filter: none; }
 .useful-grid .whatsapp-tile span:nth-child(2) { color: #29322c; font-weight: 700; }
@@ -1347,7 +1367,7 @@ body.modal-open { overflow: hidden; }
 
 /* Evita que el título y la flecha compartan el mismo espacio en las tarjetas. */
 .useful-grid .link-row span:nth-child(2) { width: 100%; padding-right: 27px; overflow-wrap: normal; word-break: normal; }
-.useful-grid .link-row span:last-child { right: 13px; bottom: 12px; }
+.useful-grid .link-row span:nth-child(3) { right: 13px; bottom: 12px; }
 
 /* Alertas: las bajas usan identidad roja completa e imágenes cuando existen. */
 .alert-product-image { width: 42px; height: 42px; padding: 3px; border: 1px solid #dce5df; border-radius: 10px; object-fit: contain; background: #fff; }
@@ -3187,7 +3207,7 @@ body.app-scrolled .app-hero .detail-head {
   font-weight: 700 !important;
   line-height: 1.22;
 }
-#homeView .useful-grid .link-row span:last-child {
+#homeView .useful-grid .link-row span:nth-child(3) {
   position: static;
   color: #1f684b;
   font-size: 22px;
@@ -3319,7 +3339,7 @@ body.app-scrolled .app-hero .detail-head {
     line-height: 1.18;
   }
 
-  #homeView .useful-grid .link-row span:last-child {
+  #homeView .useful-grid .link-row span:nth-child(3) {
     position: absolute;
     top: 50%;
     right: 10px;
@@ -3516,7 +3536,7 @@ body.search-open #searchView #results .results-head {
   line-height: 1.12 !important;
   overflow-wrap: anywhere;
 }
-#homeView .useful-grid .link-row span:last-child {
+#homeView .useful-grid .link-row span:nth-child(3) {
   position: static !important;
   color: #1f684b !important;
   font-size: 17px !important;
@@ -3562,7 +3582,7 @@ body.search-open #searchView #results .results-head {
     width: 21px !important;
     height: 21px !important;
   }
-  #homeView .useful-grid .link-row span:last-child {
+  #homeView .useful-grid .link-row span:nth-child(3) {
     font-size: 17px !important;
   }
 }
@@ -3947,8 +3967,8 @@ body.app-scrolled .app-hero .detail-head {
   .trusted-brands h2 { font-size: 23px; }
 }
 .detail-description { white-space: pre-line; }
-.detail-content > img[data-expanded-image] { object-fit: contain; object-position: center; }
-.detail-content > img[data-transparent-product-photo],
+/* Every product fiche keeps the entire photo inside the same white frame. */
+.detail-content > img { object-fit: contain; object-position: center; background: #fff; }
 .product img[data-transparent-product-photo],
 .popular-search-card img[data-transparent-product-photo] { background: transparent; }
 .catalog-news-link {
@@ -4673,7 +4693,7 @@ body.search-open #searchView #results .results-head {
   letter-spacing: -.01em;
 }
 
-#homeView .useful-grid .link-row span:last-child {
+#homeView .useful-grid .link-row span:nth-child(3) {
   display: grid;
   width: 28px;
   height: 28px;
@@ -4700,7 +4720,7 @@ body.search-open #searchView #results .results-head {
 #homeView .useful-grid .link-row:nth-child(even).whatsapp-tile { border: 1px solid #acd9bc !important; }
 
 /* La flecha acompaña desde el borde inferior, sin burbuja alrededor. */
-#homeView .useful-grid .link-row span:last-child {
+#homeView .useful-grid .link-row span:nth-child(3) {
   width: auto !important;
   height: auto !important;
   align-self: end;
@@ -4867,7 +4887,7 @@ body,
 
 /* One chevron shape for the home navigation cards. */
 #homeView .explore-categories-action > span:last-child,
-#homeView .useful-grid .link-row > span:last-child,
+#homeView .useful-grid .link-row > span:nth-child(3),
 #homeView .saved-home-action > span:last-child {
   display: inline-flex !important;
   align-items: center;
@@ -4880,7 +4900,7 @@ body,
   color: #1f684b !important;
 }
 #homeView .explore-categories-action > span:last-child::after,
-#homeView .useful-grid .link-row > span:last-child::after,
+#homeView .useful-grid .link-row > span:nth-child(3)::after,
 #homeView .saved-home-action > span:last-child::after {
   content: '';
   width: 8px;
@@ -5836,3 +5856,93 @@ html[data-platform="ios"][data-ios-edge-to-edge="true"] body:not(.search-open) .
 #homeView .useful-grid .link-row.whatsapp-tile { grid-template-columns: 36px minmax(0, 1fr) 14px !important; }
 #homeView .useful-grid .link-row img.info-icon.info-icon-3d { width: 36px !important; height: 36px !important; transform: scale(1.25); }
 #homeView .useful-grid [data-info="notes"] img.info-icon-3d { filter: contrast(1.6) saturate(1.15) brightness(.92); }
+
+/* New flyer artwork has its own stronger ink contrast. */
+#homeView .useful-grid .link-row[data-info="notes"] img.info-icon-3d { filter: none; }
+
+/* Next release: text update invitation above search. */
+#homeView .home-app-update { margin: 0 20px; padding: 0; background: transparent; border: 0; box-shadow: none; }
+#homeView .home-app-update button { justify-content: center; min-height: 44px; max-width: 100%; padding: 8px 4px; border: 0; border-radius: 0; background: transparent; color: #245b45; font-size: 12px; font-weight: 600; box-shadow: none; text-align: center; }
+#homeView .home-app-update button span { font-size: inherit; line-height: 1.45; text-decoration: underline; text-underline-offset: 3px; text-wrap: balance; }
+#homeView .home-app-update button:hover, #homeView .home-app-update button:active { background: transparent; color: #163e2d; transform: none; }
+#homeView .home-app-update button:focus-visible { outline: 2px solid #245b45; outline-offset: 2px; }
+
+#homeView .home-app-update button { gap: 8px; }
+#homeView .home-app-update button .app-update-arrow { width: 17px; height: 17px; flex: 0 0 17px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+
+/* Keep the enlarged artwork clear of its label without resizing it. */
+#homeView .useful-grid .link-row > span:nth-child(2) { padding-left: 6px !important; }
+
+/* Balance the service artwork and labels without enlarging either. */
+#homeView .useful-grid .link-row,
+#homeView .useful-grid .link-row:nth-child(even),
+#homeView .useful-grid .link-row.whatsapp-tile { position: relative; grid-template-columns: 36px minmax(0,1fr) !important; column-gap: 14px !important; }
+#homeView .useful-grid .link-row > span:nth-child(2) { padding-left: 0 !important; padding-right: 0 !important; text-wrap: balance; }
+#homeView .useful-grid .link-row > span:nth-child(3) { position: absolute !important; top: auto !important; bottom: 12px !important; right: 12px !important; transform: none !important; }
+
+/* Match perceived icon size: the wide cloche needs more scale than the round logo. */
+#homeView .useful-grid .link-row[data-info="catering"] img.info-icon.info-icon-3d { transform: scale(1.25); }
+#homeView .useful-grid .link-row.whatsapp-tile img.info-icon.info-icon-3d { transform: scale(1.25); }
+
+/* Equal visible artwork: WhatsApp's source has wider transparent margins. */
+#homeView .useful-grid .link-row.whatsapp-tile img.info-icon.info-icon-3d { transform: scale(1.80); }
+/* Keep the arrow beside the actual text block, rather than at the outer edge. */
+#homeView .home-app-update button { width: fit-content !important; margin-inline: auto; }
+#homeView .home-app-update button > span { width: auto !important; max-width: 23ch; flex: 0 1 auto; }
+
+/* Preserve silver material while separating the cloche from its yellow card. */
+#homeView .useful-grid .link-row[data-info="catering"] img.info-icon.info-icon-3d { filter: contrast(1.18) brightness(.95) drop-shadow(0 1px 0.5px rgb(67 58 34 / 20%)); }
+
+/* The update invitation is a recognizable dark blue link. */
+#homeView .home-app-update button { color: #245b87; }
+#homeView .home-app-update button:hover, #homeView .home-app-update button:active { color: #183f60; }
+#homeView .home-app-update button:focus-visible { outline-color: #245b87; }
+/* Shared back controls use the same vector size on iOS and Android. */
+.back { -webkit-appearance: none; appearance: none; -webkit-tap-highlight-color: transparent; border-radius: 10px; }
+.back:active, .back:hover, .back:focus:not(:focus-visible) { background: transparent !important; box-shadow: none !important; transform: none !important; outline: none; }
+.back svg { display: block; width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 2.3; stroke-linecap: round; stroke-linejoin: round; }
+#appHero .detail-head > strong { font-size: 16px !important; line-height: 1.2; font-weight: 650; transform: none !important; }
+
+/* Leave breathing room for the original four service cards on small phones. */
+@media (max-width: 700px) {
+  #homeView .useful-grid .link-row > span:nth-child(2) { font-size: 13px !important; line-height: 1.2; }
+}
+@media (max-width: 360px) {
+  #homeView .useful-grid .link-row,
+  #homeView .useful-grid .link-row:nth-child(even),
+  #homeView .useful-grid .link-row.whatsapp-tile { padding-inline: 10px !important; }
+  #homeView .useful-grid .link-row > span:nth-child(2) { font-size: clamp(11px, 3.33vw, 12px) !important; }
+}
+
+/* Four service cards are fully clickable; labels remain in normal grid flow without arrows. */
+#homeView .useful-grid .link-row > span:nth-child(2) { position: static !important; inset: auto !important; transform: none !important; }
+
+/* Explicit back-button centering keeps WebKit SVGs clear of section titles. */
+#appHero .detail-head { grid-template-columns: 44px minmax(0, 1fr) auto !important; column-gap: 8px !important; }
+#appHero .detail-head > .back { display: flex !important; align-items: center !important; justify-content: center !important; width: 44px !important; height: 44px !important; padding: 0 !important; margin: 0 !important; }
+#appHero .detail-head > .back > svg { width: 24px; height: 24px; flex: 0 0 24px; }
+#appHero .detail-head > strong { display: block; height: auto; line-height: 1.2; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* Match tablet specificity too: initial/autoplay positions must not snap to an edge. */
+#homeView .recent-products-viewport.is-autoplaying,
+#homeView .recent-products-viewport.is-interacting { scroll-snap-type: none; scroll-behavior: auto; }
+
+/* App update invitation: a compact pill, shown only when an update is available. */
+#homeView .home-app-update { justify-content: center; margin: 6px 20px 10px; }
+#homeView .home-app-update button { display: inline-flex; align-items: center; justify-content: center; gap: 12px; width: fit-content !important; min-height: 44px; margin-inline: auto; padding: 5px 5px 5px 18px; border: 1px solid #245b87; border-radius: 999px; background: #245b87; color: #fff; font-size: 13px; font-weight: 700; box-shadow: none; }
+#homeView .home-app-update button > span { max-width: none; font-size: inherit; line-height: 1.2; text-decoration: none; white-space: nowrap; }
+#homeView .home-app-update button > .app-update-refresh { display: grid; place-items: center; width: 32px; height: 32px; flex: 0 0 32px; border-radius: 50%; background: #fff; color: #245b87; }
+#homeView .home-app-update .app-update-refresh > svg { display: block; width: 20px; height: 20px; }
+#homeView .home-app-update button:hover, #homeView .home-app-update button:active { background: #183f60; border-color: #183f60; color: #fff; }
+#homeView .home-app-update button:focus-visible { outline: 2px solid #245b87; outline-offset: 3px; }
+
+/* The available app update replaces the scanner inside the home search field. */
+#homeView .search-row .home-app-update { flex: 0 0 auto; margin: 0; padding: 0; }
+#homeView .search-row .home-app-update button { gap: 12px; padding: 5px 5px 5px 18px; font-size: 13px; }
+#homeView .search-row .search-box { min-width: 0; }
+#homeView .search-row .search-box input { min-width: 0; text-overflow: ellipsis; }
+#homeView #homeScan[hidden], #homeView .home-app-update[hidden] { display: none !important; }
+#homeView .home-app-update .app-update-refresh > svg { stroke-width: 2.2; }
+
+#homeView #homeForm.has-app-update { grid-template-columns: minmax(0, 1fr) auto !important; }
+#homeView #homeForm.has-app-update .home-app-update { width: auto; min-width: max-content; overflow: visible; }

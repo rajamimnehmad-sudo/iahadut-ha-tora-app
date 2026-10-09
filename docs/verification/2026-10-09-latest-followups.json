@@ -24,5 +24,6 @@
     "transparentReviewedPhotos": 15,
     "unavailableOfficialPhotos": 4
   },
-  "realDevices": "Separate Current Device Installs metric published; actual source unavailable; do not substitute Analytics users."
+  "realDevices": "Separate Current Device Installs metric published; actual source unavailable; do not substitute Analytics users.",
+  "superseded_by": "2026-10-09-full-audit.json"
 }

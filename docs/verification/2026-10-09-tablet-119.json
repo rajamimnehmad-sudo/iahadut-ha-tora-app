@@ -1,0 +1,49 @@
+{
+  "version": "1.0.61",
+  "build": 119,
+  "android_tests": 17,
+  "android_release_build": "passed",
+  "ios_simulator_build": "passed",
+  "shared_web_files": 111,
+  "web_resource_differences": 0,
+  "tablet_web_sizes": [
+    [
+      768,
+      1024
+    ],
+    [
+      1024,
+      768
+    ]
+  ],
+  "horizontal_overflow": false,
+  "tablet_physical_test": false,
+  "apple_uploaded": false,
+  "production_119_submitted": true,
+  "production_118_review_hold": false,
+  "verified_at": "2026-10-09T21:46:15.542863+00:00",
+  "source_commit": "8796e18fcb7e2a34d1967aabdf3742565d9a9195",
+  "release_url": "https://github.com/rajamimnehmad-sudo/iahadut-ha-tora-app/releases/tag/internal-119-tablet-rotation",
+  "aab_api_url": "https://api.github.com/repos/rajamimnehmad-sudo/iahadut-ha-tora-app/releases/assets/626260541",
+  "artifact_checks": {
+    "aab": {
+      "path": "/Users/yejielnehmad/Developer/iaadut/release-artifacts/iahadut-1.0.61-119.aab",
+      "bytes": 85696395,
+      "sha256": "e451f1443f784b15021c5af3909f6395e45860a32a85647653a6a673685949d0"
+    },
+    "apk": {
+      "path": "/Users/yejielnehmad/Developer/iaadut/release-artifacts/iahadut-1.0.61-119.apk",
+      "bytes": 103546981,
+      "sha256": "67233e0e924747077cebd2a28b66517d2140afc61b1bb8204ec18c44fe09f889"
+    }
+  },
+  "apk_signature_verified": true,
+  "aab_signature_verified": true,
+  "internal_published": true,
+  "internal_workflow": "https://github.com/rajamimnehmad-sudo/iahadut-ha-tora-app/actions/runs/37995469758",
+  "internal_publication_job": "success",
+  "production_118_superseded": true,
+  "managed_publishing_enabled": true,
+  "automatic_publication": false,
+  "hub_saved_and_verified": true
+}

@@ -1,0 +1,39 @@
+{
+  "version": "1.0.55",
+  "build": 113,
+  "source_commit": "afc26de6a37056b424f6ba1e8f26c8712f9aeae2",
+  "source_branch": "codex/internal-112-audited-mobile",
+  "tag": "internal-113-no-service-arrows",
+  "artifact_checks": {
+    "aab": {
+      "path": "/Users/yejielnehmad/Developer/iaadut/release-artifacts/iahadut-1.0.55-113.aab",
+      "bytes": 85693663,
+      "sha256": "6c882e2e2731426ea77513af81ef7a27a74176d341e12539ecc343fae1ae5994"
+    },
+    "apk": {
+      "path": "/Users/yejielnehmad/Developer/iaadut/release-artifacts/iahadut-1.0.55-113.apk",
+      "bytes": 103529033,
+      "sha256": "19fec116029887e20049191735eca611e204e7a3a70ded79f0beb4f0cf2d2848"
+    }
+  },
+  "ios_bundle_version_verified": true,
+  "shared_web_files": 111,
+  "web_resource_differences": 0,
+  "verified_at": "2026-10-09T19:54:45.259510+00:00",
+  "release_url": "https://github.com/rajamimnehmad-sudo/iahadut-ha-tora-app/releases/tag/internal-113-no-service-arrows",
+  "aab_api_url": "https://api.github.com/repos/rajamimnehmad-sudo/iahadut-ha-tora-app/releases/assets/626015475",
+  "iphone_usb_install": "confirmed: ios-deploy InstallComplete and Xcode installed apps build 113",
+  "android_internal_state": "published",
+  "android_workflow": "https://github.com/rajamimnehmad-sudo/iahadut-ha-tora-app/actions/runs/37983481963",
+  "s22_connection": "USB disconnected; delivery through Google Play internal",
+  "production_android": "1.0.48 (106) unchanged",
+  "apple_113_submission": false,
+  "changes_since_112": [
+    "remove four service-card arrows",
+    "keep full-card click targets and label layout"
+  ],
+  "updated_at": "2026-10-09T19:56:57.839556+00:00",
+  "android_workflow_result": "success",
+  "s22_installed_113": "not confirmed; disconnected, update offered through internal Google Play",
+  "release_asset_digests_verified": true
+}

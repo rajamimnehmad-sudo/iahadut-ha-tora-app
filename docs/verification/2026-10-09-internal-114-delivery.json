@@ -1,0 +1,39 @@
+{
+  "version": "1.0.56",
+  "build": 114,
+  "source_commit": "e3fd7793af70fbdba59b52d016cb6ccc0a25d9e9",
+  "source_branch": "codex/internal-112-audited-mobile",
+  "tag": "internal-114-inline-update",
+  "artifact_checks": {
+    "aab": {
+      "path": "/Users/yejielnehmad/Developer/iaadut/release-artifacts/iahadut-1.0.56-114.aab",
+      "bytes": 85694125,
+      "sha256": "7d8a75b368970d58c1e3645cf5f67fc5b591cb710bb140d1983ce773aa24d941"
+    },
+    "apk": {
+      "path": "/Users/yejielnehmad/Developer/iaadut/release-artifacts/iahadut-1.0.56-114.apk",
+      "bytes": 103529509,
+      "sha256": "628bea7ea6c8286a482b7af34d9387f8a453d4122fabdcd9fb5ca96ca1a9f6af"
+    }
+  },
+  "ios_bundle_version_verified": true,
+  "shared_web_files": 111,
+  "web_resource_differences": 0,
+  "verified_at": "2026-10-09T20:29:34.743380+00:00",
+  "release_url": "https://github.com/rajamimnehmad-sudo/iahadut-ha-tora-app/releases/tag/internal-114-inline-update",
+  "aab_api_url": "https://api.github.com/repos/rajamimnehmad-sudo/iahadut-ha-tora-app/releases/assets/626096191",
+  "iphone_usb_install": "confirmed: ios-deploy InstallComplete, signed app bundle version 114 verified",
+  "s22_connection": "USB disconnected; delivery through Google Play internal",
+  "production_android": "1.0.48 (106) unchanged",
+  "apple_114_submission": false,
+  "changes_since_113": [
+    "update capsule replaces scanner only when update available",
+    "initial carousel centered before first touch",
+    "iPhone title and back arrow spacing"
+  ],
+  "android_internal_state": "published",
+  "android_workflow_result": "success",
+  "s22_installed_114": "not confirmed; disconnected, update offered through internal Google Play",
+  "updated_at": "2026-10-09T20:31:24.837978+00:00",
+  "release_asset_digests_verified": true
+}

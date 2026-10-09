@@ -1,0 +1,22 @@
+{
+  "verified_at": "2026-10-09T21:41:33.310634+00:00",
+  "version": "1.0.60",
+  "build": 118,
+  "review_submission_confirmed": true,
+  "initial_automated_checks": "in_progress",
+  "managed_publishing_enabled": true,
+  "automatic_publication": false,
+  "public_version": "1.0.48",
+  "public_build": 106,
+  "release_notes": {
+    "es-419": "Correcciones y mejoras."
+  },
+  "warnings": [
+    "APK download size",
+    "No deobfuscation file",
+    "No native debug symbols"
+  ],
+  "hub_saved_and_verified": true,
+  "screenshot": "output/play-production-118/review-managed-publishing.png",
+  "apple_uploaded": false
+}

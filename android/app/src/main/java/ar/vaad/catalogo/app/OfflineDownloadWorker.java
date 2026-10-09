@@ -8,6 +8,8 @@ import java.io.*;
 import java.net.*;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
+import java.util.concurrent.*;
+import java.util.concurrent.atomic.*;
 
 /** Time-bounded resumable transfers: no foreground service or extra Play permission. */
 public class OfflineDownloadWorker extends Worker {
@@ -17,33 +19,48 @@ public class OfflineDownloadWorker extends Worker {
         try {
             JSONObject job; synchronized(OfflineDownloadStore.class){job=OfflineDownloadStore.read(c,"job.json");}
             JSONArray urls=job.getJSONArray("urls");
-            IOException lastImageFailure=null;
-            for(int i=0;i<urls.length();i++){
-                String url=urls.getString(i);
-                synchronized(OfflineDownloadStore.class){
-                    if(!active(c,id))return Result.success();
-                    if(OfflineDownloadStore.present(c,OfflineDownloadStore.manifest(c).getJSONObject("images").optJSONObject(url)))continue;
-                }
-                if(System.currentTimeMillis()>=deadline){
-                    synchronized(OfflineDownloadStore.class){if(active(c,id))OfflineDownloadStore.enqueue(c,job,ExistingWorkPolicy.APPEND_OR_REPLACE);}
-                    return Result.success();
-                }
-                String name=fileName(url);File target=new File(OfflineDownloadStore.folder(c),name);File temporary=new File(target.getPath()+".part-"+id);
-                try {download(url,temporary);
-                    synchronized(OfflineDownloadStore.class){
-                        if(!active(c,id)){temporary.delete();return Result.success();}
-                        if(!temporary.renameTo(target))throw new IOException("No se pudo guardar imagen");
-                        JSONObject manifest=OfflineDownloadStore.manifest(c);
-                        manifest.getJSONObject("images").put(url,new JSONObject().put("path","offline-catalog/"+name));
-                        OfflineDownloadStore.write(c,"manifest.json",manifest);
+            AtomicInteger next=new AtomicInteger();
+            AtomicBoolean timeExpired=new AtomicBoolean();
+            AtomicReference<IOException> lastImageFailure=new AtomicReference<>();
+            ExecutorService transfers=Executors.newFixedThreadPool(3);
+            java.util.List<Future<?>> workers=new java.util.ArrayList<>();
+            try {
+                for(int lane=0;lane<3;lane++) workers.add(transfers.submit((Callable<Void>)()->{
+                    int i;
+                    while((i=next.getAndIncrement())<urls.length()){
+                        String url=urls.getString(i);
+                        synchronized(OfflineDownloadStore.class){
+                            if(!active(c,id))return null;
+                            if(OfflineDownloadStore.present(c,OfflineDownloadStore.manifest(c).getJSONObject("images").optJSONObject(url)))continue;
+                        }
+                        if(System.currentTimeMillis()>=deadline){timeExpired.set(true);return null;}
+                        String name=fileName(url);File target=new File(OfflineDownloadStore.folder(c),name);File temporary=new File(target.getPath()+".part-"+id);
+                        try {download(url,temporary);
+                            synchronized(OfflineDownloadStore.class){
+                                if(!active(c,id))return null;
+                                if(!temporary.renameTo(target))throw new IOException("No se pudo guardar imagen");
+                                JSONObject manifest=OfflineDownloadStore.manifest(c);
+                                manifest.getJSONObject("images").put(url,new JSONObject().put("path","offline-catalog/"+name));
+                                OfflineDownloadStore.write(c,"manifest.json",manifest);
+                            }
+                        } catch(IOException imageFailure){
+                            synchronized(OfflineDownloadStore.class){if(!active(c,id))return null;}
+                            // Preserve completed photos and prefer retryable failures over a 404.
+                            lastImageFailure.updateAndGet(previous -> previous==null || !(imageFailure instanceof UnavailableImageException) ? imageFailure : previous);
+                        } finally {temporary.delete();}
                     }
-                } catch(IOException imageFailure){
-                    if(!active(c,id)) return Result.success();
-                    // One unavailable photo must not prevent the remaining catalog from downloading.
-                    if(lastImageFailure == null || !(imageFailure instanceof UnavailableImageException)) lastImageFailure=imageFailure;
-                } finally {temporary.delete();}
+                    return null;
+                }));
+                // Join every transfer before marking ready, retrying or rescheduling.
+                Exception failure=null;
+                for(Future<?> worker:workers)try {worker.get();}catch(ExecutionException error){if(failure==null)failure=error.getCause() instanceof Exception ? (Exception)error.getCause() : error;}
+                if(failure!=null)throw failure;
+            } finally {transfers.shutdownNow();}
+            synchronized(OfflineDownloadStore.class){
+                if(!active(c,id))return Result.success();
+                if(timeExpired.get()){OfflineDownloadStore.enqueue(c,job,ExistingWorkPolicy.APPEND_OR_REPLACE);return Result.success();}
             }
-            if(lastImageFailure!=null) throw lastImageFailure;
+            if(lastImageFailure.get()!=null)throw lastImageFailure.get();
             synchronized(OfflineDownloadStore.class){if(active(c,id)){
                 JSONObject manifest=OfflineDownloadStore.manifest(c);manifest.put("signature",job.getString("signature"));
                 manifest.put("resume",new JSONObject().put("enabled",false).put("autoUpdate",true).put("allowMobile",!job.optBoolean("wifiOnly",true)));
