@@ -9,3 +9,5 @@ La auditoría previa comprobó 198 pruebas de app, 12 Android, 6 servidor, 60 Hu
 Pendientes documentados: QA física completa de descarga/reinicio sin conexión, cámara/escáner, APNs y eventos reales de analítica/Vistos; cuatro fuentes Free Chips ausentes/404; información solicitada por Apple y recuperación independiente de cuentas, clave del Hub y código/archivos. La demo web pública todavía usa frontend 1.0.48. No se afirma recuperación completa por metadata.
 
 Fuente final respaldada en GitHub, PR #11. Informe de entrega: `2026-10-09-internal-113-delivery.json`; auditoría: `2026-10-09-full-audit.json`.
+
+Corrección posterior a entrega 113: cabeceras internas con separación explícita de 8 px, Atrás centrado mediante flex sin padding nativo y área táctil 44 px; título en flujo normal con elipsis. Preparada localmente y recursos Android/iOS sincronizados. Vista web verificada al ancho 375 px, todavía no incluida en los paquetes instalados/publicados de 113.

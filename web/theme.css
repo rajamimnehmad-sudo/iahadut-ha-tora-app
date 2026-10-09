@@ -5896,3 +5896,9 @@ html[data-platform="ios"][data-ios-edge-to-edge="true"] body:not(.search-open) .
 
 /* Four service cards are fully clickable; labels remain in normal grid flow without arrows. */
 #homeView .useful-grid .link-row > span:nth-child(2) { position: static !important; inset: auto !important; transform: none !important; }
+
+/* Explicit back-button centering keeps WebKit SVGs clear of section titles. */
+#appHero .detail-head { grid-template-columns: 44px minmax(0, 1fr) auto !important; column-gap: 8px !important; }
+#appHero .detail-head > .back { display: flex !important; align-items: center !important; justify-content: center !important; width: 44px !important; height: 44px !important; padding: 0 !important; margin: 0 !important; }
+#appHero .detail-head > .back > svg { width: 24px; height: 24px; flex: 0 0 24px; }
+#appHero .detail-head > strong { display: block; height: auto; line-height: 1.2; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
