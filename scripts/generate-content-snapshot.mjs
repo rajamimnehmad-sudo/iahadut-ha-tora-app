@@ -1,3 +1,4 @@
+import {correctContentTree} from '../web/text-corrections.js';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -235,5 +236,5 @@ await Promise.all(workers);
 const alerts = await mergeAlertHistory(parseAlerts(await fetchHtml('https://vaad.ar/alertas-de-productos/')));
 
 await mkdir(dirname(outputPath), { recursive: true });
-await writeFile(outputPath, `${JSON.stringify({ generatedAt, info, cards: cardDetails, alerts })}\n`, 'utf8');
+await writeFile(outputPath, `${JSON.stringify(correctContentTree({ generatedAt, info, cards: cardDetails, alerts }))}\n`, 'utf8');
 console.log(`Contenido generado: ${Object.keys(info).length} secciones · ${Object.keys(cardDetails).length} fichas · ${outputPath}`);

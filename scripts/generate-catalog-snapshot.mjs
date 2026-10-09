@@ -1,3 +1,4 @@
+import {correctContentTree} from '../web/text-corrections.js';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -101,5 +102,5 @@ const snapshot = {
 };
 
 await mkdir(dirname(outputPath), { recursive: true });
-await writeFile(outputPath, `${JSON.stringify(snapshot)}\n`, 'utf8');
+await writeFile(outputPath, `${JSON.stringify(correctContentTree(snapshot))}\n`, 'utf8');
 console.log(`Snapshot generado: ${snapshotProducts.length} productos · ${outputPath}`);

@@ -1,3 +1,4 @@
+import {correctContentTree} from '../web/text-corrections.js';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -130,5 +131,5 @@ if (Object.keys(products).length < Math.floor(sourceProducts.length * 0.95)) {
   throw new Error(`La extracción de fichas quedó incompleta: ${Object.keys(products).length}/${sourceProducts.length}`);
 }
 await mkdir(dirname(outputPath), { recursive: true });
-await writeFile(outputPath, `${JSON.stringify({ generatedAt, products, failures })}\n`, 'utf8');
+await writeFile(outputPath, `${JSON.stringify(correctContentTree({ generatedAt, products, failures }))}\n`, 'utf8');
 console.log(`Fichas empaquetadas: ${Object.keys(products).length} · errores: ${failures.length} · ${outputPath}`);
