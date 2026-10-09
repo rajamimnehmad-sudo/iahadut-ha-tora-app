@@ -19,6 +19,11 @@ on:
         description: Foto opcional (URL HTTPS pública)
         required: false
         type: string
+      body_display:
+        description: Presentación del texto dentro de Alertas
+        type: choice
+        default: expanded
+        options: [expanded, collapsed]
       send:
         description: Enviar el aviso (desmarcado solo muestra una vista previa)
         default: false
@@ -47,6 +52,7 @@ jobs:
           PUSH_SEND: ${{ inputs.send && '1' || '0' }}
           PUSH_TITLE: ${{ inputs.title }}
           PUSH_BODY: ${{ inputs.body }}
+          PUSH_BODY_DISPLAY: ${{ inputs.body_display }}
           PUSH_IMAGE_URL: ${{ inputs.image_url }}
           PUSH_TEST_TOPIC: ${{ inputs.test_topic }}
           PUSH_EXPIRES_AFTER: ${{ inputs.expires_after }}
