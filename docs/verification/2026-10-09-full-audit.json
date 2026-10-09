@@ -406,7 +406,7 @@
     "s22_screenshot": "output/full-audit/s22-112-home-physical.png",
     "home_comparison": "passed on both connected physical devices; complete offline/camera/APNs/analytics validation remains open"
   },
-  "updated_at": "2026-10-09T21:05:20.485934+00:00",
+  "updated_at": "2026-10-09T21:10:03.022980+00:00",
   "public_demo": {
     "url": "https://rajamimnehmad-sudo.github.io/iahadut-ha-tora-app/",
     "http": 200,
@@ -423,44 +423,53 @@
     "deployment_state": "public demo remains 1.0.48; latest app UI is local and distributed as internal mobile 112, not deployed to public Pages"
   },
   "delivery_after_buttons": {
-    "version": "1.0.58",
-    "build": 116,
-    "source_commit": "9413cf45c65c8cb2b51c69bbd6b302473b7a4f1d",
+    "version": "1.0.59",
+    "build": 117,
+    "source_commit": "3e789dfb7c38205f4e57f65136a54fea482224c0",
     "source_branch": "codex/internal-112-audited-mobile",
-    "tag": "internal-116-in-app-update",
+    "tag": "internal-117-offline-photos",
     "artifact_checks": {
       "aab": {
-        "path": "/Users/yejielnehmad/Developer/iaadut/release-artifacts/iahadut-1.0.58-116.aab",
-        "bytes": 85694388,
-        "sha256": "df9d6a762c421257e9ffa092ba445638337d399ab7cab24fb7f51e4a9737254d"
+        "path": "/Users/yejielnehmad/Developer/iaadut/release-artifacts/iahadut-1.0.59-117.aab",
+        "bytes": 85695247,
+        "sha256": "a36b6de8136969e059b5e23c61031a186b40a3db8b115c644ee087d19637dc32"
       },
       "apk": {
-        "path": "/Users/yejielnehmad/Developer/iaadut/release-artifacts/iahadut-1.0.58-116.apk",
-        "bytes": 103529777,
-        "sha256": "d367ea936d135c923733fb9e2a29d5d8eeb5550bf5371c18bc65e542f18f9896"
+        "path": "/Users/yejielnehmad/Developer/iaadut/release-artifacts/iahadut-1.0.59-117.apk",
+        "bytes": 103546201,
+        "sha256": "7eca4d8af22f6bd7ed5568f176fc1fd5072091f423cf946388ed502fba18f5e6"
       }
     },
     "ios_bundle_version_verified": true,
     "shared_web_files": 111,
     "web_resource_differences": 0,
-    "verified_at": "2026-10-09T21:03:15.207467+00:00",
-    "release_url": "https://github.com/rajamimnehmad-sudo/iahadut-ha-tora-app/releases/tag/internal-116-in-app-update",
-    "aab_api_url": "https://api.github.com/repos/rajamimnehmad-sudo/iahadut-ha-tora-app/releases/assets/626172683",
-    "iphone_usb_install": "confirmed: ios-deploy InstallComplete; signed bundle 116 verified",
+    "verified_at": "2026-10-09T21:07:50.024516+00:00",
+    "release_url": "https://github.com/rajamimnehmad-sudo/iahadut-ha-tora-app/releases/tag/internal-117-offline-photos",
+    "aab_api_url": "https://api.github.com/repos/rajamimnehmad-sudo/iahadut-ha-tora-app/releases/assets/626182016",
+    "iphone_usb_install": "confirmed: ios-deploy InstallComplete; signed bundle 117 verified",
     "production_android": "1.0.48 (106) unchanged",
-    "apple_116_submission": false,
+    "apple_117_submission": false,
     "app_tests": {
-      "passed": 201,
+      "passed": 203,
       "failed": 0
     },
-    "update_state_cases": 3,
-    "changes_since_115": [
-      "Home capsule uses Android in-app update flow; iOS store link"
+    "android_tests": {
+      "passed": 14,
+      "failed": 0
+    },
+    "changes_since_116": [
+      "Android offline photos: up to three simultaneous transfers with durable per-photo saves",
+      "Shared offline counter changes for each saved photo, even below one percent",
+      "Completed files usable while remaining photos download"
     ],
+    "offline_physical_speed_measured": false,
+    "native_progress_refresh_seconds": 3,
+    "s22_connection": "USB disconnected; delivery through Google Play internal",
+    "android_workflow": "https://github.com/rajamimnehmad-sudo/iahadut-ha-tora-app/actions/runs/37991562089",
     "android_internal_state": "published",
     "android_workflow_result": "success",
-    "s22_installed_116": "not confirmed; disconnected, update offered through internal Google Play",
-    "updated_at": "2026-10-09T21:05:20.485934+00:00",
+    "s22_installed_117": "not confirmed; disconnected, update offered through internal Google Play",
+    "updated_at": "2026-10-09T21:10:03.022980+00:00",
     "release_asset_digests_verified": true
   }
 }
