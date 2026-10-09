@@ -11,8 +11,7 @@ import { catalogSnapshotNeedsRepair } from './catalog-cache.js';
 import {normalizedSnapshot, snapshotHash, readPublishedSnapshot} from './published-catalog.js';
 import catalogSnapshot from './data/catalog.json';
 import { productText } from './product-text.js';
-import { reviewedCategoryPath } from './reviewed-categories.js';
-import { newProductCategoryPath } from './new-product-categories.js';
+import { catalogCategoryPath } from './catalog-categories.js';
 import { mergeAlertHistory } from './alert-history.js';
 import { categoryInformation } from './category-info.js';
 import {collectOfflineImages, createOfflineDownload, offlineNetworkMayDownload, offlineContentRevision} from './offline-download.js';
@@ -2164,7 +2163,7 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
   }
 
   function productCategoryPaths(product) {
-    const path = reviewedCategoryPath(product) || newProductCategoryPath(product);
+    const path = catalogCategoryPath(product);
     if (path) return [path];
     // Sin un tipo inequívoco no inventamos una categoría por ingredientes.
     const fallback = {gondola:'Productos de góndola', planta:'Productos de plantas certificadas', especial:'Producción especial', uruguay:'Productos de Uruguay'};

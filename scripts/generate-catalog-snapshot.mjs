@@ -1,3 +1,4 @@
+import {categorizeCatalog} from '../web/catalog-categories.js';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -101,5 +102,6 @@ const snapshot = {
 };
 
 await mkdir(dirname(outputPath), { recursive: true });
-await writeFile(outputPath, `${JSON.stringify(snapshot)}\n`, 'utf8');
+const overrides = JSON.parse(await readFile(resolve(projectRoot, 'web/data/catalog-category-overrides.json'), 'utf8'));
+await writeFile(outputPath, `${JSON.stringify(categorizeCatalog(snapshot, overrides.paths))}\n`, 'utf8');
 console.log(`Snapshot generado: ${snapshotProducts.length} productos · ${outputPath}`);

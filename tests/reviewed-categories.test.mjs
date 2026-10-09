@@ -1,3 +1,4 @@
+import {catalogCategoryPath} from '../web/catalog-categories.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
@@ -22,7 +23,7 @@ test('all 1109 products have exactly the category paths approved in the live pro
 });
 test('approved classification takes precedence over descriptions and remote rules',()=>{
   const block=source.slice(source.indexOf('  function productCategoryPaths('),source.indexOf('  function productCategoryPath('));
-  const context={reviewedCategoryPath};vm.createContext(context);vm.runInContext(block,context);
+  const context={catalogCategoryPath,reviewedCategoryPath};vm.createContext(context);vm.runInContext(block,context);
   for(const product of catalog){
     const actual=context.productCategoryPaths({...product,description:'aceite de oliva carne vino harina presencia de insectos'});
     assert.equal(JSON.stringify(actual),JSON.stringify([reviewedCategoryPath(product)]));

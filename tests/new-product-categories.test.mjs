@@ -1,3 +1,4 @@
+import {catalogCategoryPath} from '../web/catalog-categories.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
@@ -6,7 +7,7 @@ import {reviewedCategoryPath} from '../web/reviewed-categories.js';
 import {newProductCategoryPath} from '../web/new-product-categories.js';
 const source=fs.readFileSync(new URL('../web/app.js',import.meta.url),'utf8');
 const audit=JSON.parse(fs.readFileSync(new URL('../audit/new-products-category-audit-2026-10-09.json',import.meta.url)));
-const context=vm.createContext({newProductCategoryPath,reviewedCategoryPath,remoteTaxonomyRules:[{path:['Frutos secos'],keywords:['avellana']}],normalize:value=>String(value).normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase()});
+const context=vm.createContext({catalogCategoryPath,newProductCategoryPath,reviewedCategoryPath,remoteTaxonomyRules:[{path:['Frutos secos'],keywords:['avellana']}],normalize:value=>String(value).normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase()});
 vm.runInContext(source.slice(source.indexOf('  function productCategoryPaths('),source.indexOf('  function productCategoryPath(')),context);
 const classify=product=>JSON.parse(JSON.stringify(context.productCategoryPaths(product)[0]));
 test('all eight October additions enter existing product families',()=>{
