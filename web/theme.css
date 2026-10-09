@@ -5902,3 +5902,27 @@ html[data-platform="ios"][data-ios-edge-to-edge="true"] body:not(.search-open) .
 #appHero .detail-head > .back { display: flex !important; align-items: center !important; justify-content: center !important; width: 44px !important; height: 44px !important; padding: 0 !important; margin: 0 !important; }
 #appHero .detail-head > .back > svg { width: 24px; height: 24px; flex: 0 0 24px; }
 #appHero .detail-head > strong { display: block; height: auto; line-height: 1.2; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* Match tablet specificity too: initial/autoplay positions must not snap to an edge. */
+#homeView .recent-products-viewport.is-autoplaying,
+#homeView .recent-products-viewport.is-interacting { scroll-snap-type: none; scroll-behavior: auto; }
+
+/* App update invitation: a compact pill, shown only when an update is available. */
+#homeView .home-app-update { justify-content: center; margin: 6px 20px 10px; }
+#homeView .home-app-update button { display: inline-flex; align-items: center; justify-content: center; gap: 12px; width: fit-content !important; min-height: 44px; margin-inline: auto; padding: 5px 5px 5px 18px; border: 1px solid #245b87; border-radius: 999px; background: #245b87; color: #fff; font-size: 13px; font-weight: 700; box-shadow: none; }
+#homeView .home-app-update button > span { max-width: none; font-size: inherit; line-height: 1.2; text-decoration: none; white-space: nowrap; }
+#homeView .home-app-update button > .app-update-refresh { display: grid; place-items: center; width: 32px; height: 32px; flex: 0 0 32px; border-radius: 50%; background: #fff; color: #245b87; }
+#homeView .home-app-update .app-update-refresh > svg { display: block; width: 20px; height: 20px; }
+#homeView .home-app-update button:hover, #homeView .home-app-update button:active { background: #183f60; border-color: #183f60; color: #fff; }
+#homeView .home-app-update button:focus-visible { outline: 2px solid #245b87; outline-offset: 3px; }
+
+/* The available app update replaces the scanner inside the home search field. */
+#homeView .search-row .home-app-update { flex: 0 0 auto; margin: 0; padding: 0; }
+#homeView .search-row .home-app-update button { gap: 12px; padding: 5px 5px 5px 18px; font-size: 13px; }
+#homeView .search-row .search-box { min-width: 0; }
+#homeView .search-row .search-box input { min-width: 0; text-overflow: ellipsis; }
+#homeView #homeScan[hidden], #homeView .home-app-update[hidden] { display: none !important; }
+#homeView .home-app-update .app-update-refresh > svg { stroke-width: 2.2; }
+
+#homeView #homeForm.has-app-update { grid-template-columns: minmax(0, 1fr) auto !important; }
+#homeView #homeForm.has-app-update .home-app-update { width: auto; min-width: max-content; overflow: visible; }

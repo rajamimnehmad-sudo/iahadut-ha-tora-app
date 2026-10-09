@@ -1931,18 +1931,31 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     const viewport = track.parentElement;
     if (!viewport) return;
     enableRecentCarouselTouch(viewport);
+    // Hidden views have no usable geometry; ResizeObserver starts us when visible.
+    if (!viewport.clientWidth) return;
     fitRecentCarouselCards(viewport);
     const metrics = recentCarouselMetrics(viewport);
     if (!metrics) return;
+    // Disable CSS snapping before the first scroll, otherwise WebKit aligns
+    // the first card to the edge and only centers it after a finger gesture.
+    track.dataset.carouselAutoplay = 'true';
+    viewport.classList.add('is-autoplaying');
     if (track.dataset.carouselPositioned !== 'true') {
       viewport.scrollTo({left: metrics.carouselStart, behavior: 'auto'});
       track.dataset.carouselPositioned = 'true';
       recentCarouselOffset = metrics.carouselStart;
+      // Apply once more after layout commits; never reset a user's drag.
+      window.requestAnimationFrame(() => {
+        if (track.dataset.carouselAutoplay !== 'true' || viewport.classList.contains('is-interacting')) return;
+        fitRecentCarouselCards(viewport);
+        const initial = recentCarouselMetrics(viewport);
+        if (!initial) return;
+        viewport.scrollTo({left: initial.carouselStart, behavior: 'auto'});
+        recentCarouselOffset = initial.carouselStart;
+      });
     } else {
       recentCarouselOffset = viewport.scrollLeft;
     }
-    track.dataset.carouselAutoplay = 'true';
-    viewport.classList.add('is-autoplaying');
     const stop = () => {
       if (recentCarouselTimer) {
         window.clearInterval(recentCarouselTimer);
@@ -2146,6 +2159,7 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     const refreshCarouselLayout = () => {
       if (pointerActive) return;
       const currentWidth = viewport.clientWidth;
+      if (!currentWidth) return;
       const previousWidth = Number(track?.dataset.carouselViewportWidth) || 0;
       if (previousWidth && Math.abs(currentWidth - previousWidth) < 1) return;
       const wasPositioned = track?.dataset.carouselPositioned === 'true';
@@ -2160,7 +2174,7 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
         : 0;
 
       fitRecentCarouselCards(viewport);
-      if (!wasPositioned) return;
+      if (!wasPositioned) { startRecentCarousel(); return; }
       const originalCount = Number(track.dataset.carouselOriginalCount) || 0;
       const firstCard = track.children[0];
       const styles = window.getComputedStyle(track);
@@ -4029,11 +4043,14 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     // Local visual preview only; release builds keep the real update check.
     if (import.meta.env.DEV && new URLSearchParams(location.search).get('preview') === 'app-update') {
       update.hidden = false;
-      return;
+    } else {
+      update.hidden = Capacitor.getPlatform() === 'ios'
+        ? !(accessDecision(remoteControl).updateAvailable && remoteControl.update_url)
+        : !(playUpdateState.available || playUpdateState.downloaded);
     }
-    update.hidden = Capacitor.getPlatform() === 'ios'
-      ? !(accessDecision(remoteControl).updateAvailable && remoteControl.update_url)
-      : !(playUpdateState.available || playUpdateState.downloaded);
+    const scanner = $('#homeScan');
+    if (scanner) scanner.hidden = !update.hidden;
+    $('#homeForm')?.classList.toggle('has-app-update', !update.hidden);
   }
 
   function updateAccessOverlay(control) {
