@@ -13,3 +13,5 @@ Queda pendiente la prueba física completa de descarga y reinicio sin conexión,
 La demo web pública responde HTTP 200 pero su JavaScript sigue en 1.0.48: los cambios de frontend públicos todavía no se desplegaron. Código de la 112 respaldado y en revisión en PR #11; presentación remota publicada en main por PR #10.
 
 Informe vigente: `2026-10-09-full-audit.json`.
+
+Cambio posterior a la entrega 112: el usuario eligió eliminar las cuatro flechas de los accesos de Inicio. Preparado localmente, con etiquetas en el flujo normal y toda la tarjeta pulsable; pendiente de la próxima entrega móvil.
