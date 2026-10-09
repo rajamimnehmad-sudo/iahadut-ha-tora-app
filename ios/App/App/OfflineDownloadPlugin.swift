@@ -1,3 +1,4 @@
+import UIKit
 import Capacitor
 import Foundation
 import CryptoKit
@@ -80,15 +81,39 @@ final class OfflineImageTransfers: NSObject, URLSessionDownloadDelegate {
     var manifest: [String: Any] = ["images": [:], "signature": ""]
     var job: [String: Any] = [:]
     var completion: (() -> Void)?
+    var eventsFinished = false
+    func finishBackgroundEventsIfReady() {
+        guard eventsFinished, !pumping, let completion else { return }
+        eventsFinished = false
+        self.completion = nil
+        DispatchQueue.main.async { completion() }
+    }
     var pumping = false
     var foreground = false
     let networkMonitor = NWPathMonitor()
     var path: NWPath?
     var diagnosticsPending = false
+    var failedTasks = Set<Int>()
+    var schedulingActivity: UIBackgroundTaskIdentifier = .invalid
+    func finishSchedulingActivity() {
+        let activity = schedulingActivity
+        schedulingActivity = .invalid
+        if activity != .invalid { DispatchQueue.main.async { UIApplication.shared.endBackgroundTask(activity) } }
+        finishBackgroundEventsIfReady()
+    }
+    func protectSchedulingActivity() {
+        guard foreground, schedulingActivity == .invalid else { return }
+        schedulingActivity = DispatchQueue.main.sync {
+            UIApplication.shared.beginBackgroundTask(withName: "Preparar descarga offline") {
+                self.queue.async { self.finishSchedulingActivity() }
+            }
+        }
+    }
     lazy var session: URLSession = {
         let config = URLSessionConfiguration.background(withIdentifier: Self.identifier)
         config.isDiscretionary = false
         config.sessionSendsLaunchEvents = true
+        config.waitsForConnectivity = true
         config.httpMaximumConnectionsPerHost = 3
         config.timeoutIntervalForRequest = 30
         config.timeoutIntervalForResource = 3600
@@ -198,30 +223,40 @@ final class OfflineImageTransfers: NSObject, URLSessionDownloadDelegate {
               let id = job["id"] as? String, let urls = job["urls"] as? [String] else { return }
         pumping = true
         session.getAllTasks { tasks in self.queue.async {
-            guard self.job["id"] as? String == id else { self.pumping = false; self.pump(); return }
-            guard !(self.job["paused"] as? Bool ?? false), (self.job["error"] as? String ?? "").isEmpty else { self.pumping = false; return }
+            guard self.job["id"] as? String == id else { self.pumping = false; self.finishSchedulingActivity(); self.pump(); return }
+            guard !(self.job["paused"] as? Bool ?? false), (self.job["error"] as? String ?? "").isEmpty else { self.pumping = false; self.finishSchedulingActivity(); return }
             let images = self.manifest["images"] as? [String: [String: Any]] ?? [:]
             let active = tasks.filter { $0.taskDescription?.hasPrefix(id + "|") == true && $0.state != .completed && $0.state != .canceling }
             tasks.filter { $0.taskDescription?.hasPrefix(id + "|") != true }.forEach { $0.cancel() }
             let running = Set(active.compactMap { $0.taskDescription?.components(separatedBy: "|").dropFirst().joined(separator: "|") })
-            let pending = urls.filter { !self.present(images[$0]) && !running.contains($0) }
+            let attempts = self.job["attempts"] as? [String: Int] ?? [:]
+            let pending = urls.filter { !self.present(images[$0]) && !running.contains($0) && (attempts[$0] ?? 0) < 3 }
             if urls.allSatisfy({ self.present(images[$0]) }) {
                 self.manifest["signature"] = self.job["signature"]
                 self.manifest["resume"] = ["enabled": false, "autoUpdate": true, "allowMobile": !(self.job["wifiOnly"] as? Bool ?? true)]
                 do { try self.saveManifest() } catch { self.fail() }
                 self.pumping = false
+                self.finishSchedulingActivity()
                 return
             }
-            // Hand the remaining queue to the background session now. Adding
-            // three more files on each wake makes progress depend on iOS's
-            // background resume rate limiter. URLSession controls concurrency.
-            let scheduled = pending
+            // Keep enough transfers queued for a background wake without blocking
+            // the state queue on thousands of URLSession task registrations.
+            if pending.isEmpty && active.isEmpty {
+                self.job["error"] = "Descarga incompleta · Reintentar"
+                try? self.saveJob()
+                self.pumping = false
+                self.finishSchedulingActivity()
+                self.recordDiagnostics()
+                return
+            }
+            let scheduled = Array(pending.prefix(max(0, 128 - active.count)))
+            if !scheduled.isEmpty { self.protectSchedulingActivity() }
             self.enqueue(scheduled, offset: 0, id: id)
         } }
     }
     func enqueue(_ pending: [String], offset: Int, id: String) {
         guard job["id"] as? String == id, !(job["paused"] as? Bool ?? false),
-              (job["error"] as? String ?? "").isEmpty else { pumping = false; pump(); return }
+              (job["error"] as? String ?? "").isEmpty else { pumping = false; finishSchedulingActivity(); pump(); return }
         let end = min(offset + 8, pending.count)
         // Yield the state queue between small scheduling batches so pause and
         // status are handled promptly even for thousands of image tasks.
@@ -240,7 +275,7 @@ final class OfflineImageTransfers: NSObject, URLSessionDownloadDelegate {
         }
         if end < pending.count {
             queue.async { self.enqueue(pending, offset: end, id: id) }
-        } else { pumping = false; recordDiagnostics() }
+        } else { pumping = false; finishSchedulingActivity(); recordDiagnostics() }
     }
     func fail() {
         let previousID = job["id"] as? String ?? ""
@@ -271,15 +306,28 @@ final class OfflineImageTransfers: NSObject, URLSessionDownloadDelegate {
             manifest["images"] = images
             try saveManifest()
             if images.count % 25 == 0 { recordDiagnostics() }
-        } catch { fail() }
+        } catch { recordFailure(downloadTask) }
+    }
+    func recordFailure(_ task: URLSessionTask) {
+        guard !failedTasks.contains(task.taskIdentifier),
+              let description = task.taskDescription,
+              description.hasPrefix((job["id"] as? String ?? "") + "|") else { return }
+        failedTasks.insert(task.taskIdentifier)
+        let value = description.components(separatedBy: "|").dropFirst().joined(separator: "|")
+        var attempts = job["attempts"] as? [String: Int] ?? [:]
+        attempts[value] = (attempts[value] ?? 0) + 1
+        job["attempts"] = attempts
+        try? saveJob()
     }
     func urlSession(_ session: URLSession, task: URLSessionTask, didCompleteWithError error: Error?) {
         guard task.taskDescription?.hasPrefix((job["id"] as? String ?? "") + "|") == true, !(job["paused"] as? Bool ?? false) else { return }
-        if error != nil || (task.response as? HTTPURLResponse)?.statusCode != 200 { fail() }
-        else { pump() }
+        if error != nil || (task.response as? HTTPURLResponse)?.statusCode != 200 { recordFailure(task) }
+        failedTasks.remove(task.taskIdentifier)
+        pump()
     }
     func urlSessionDidFinishEvents(forBackgroundURLSession session: URLSession) {
-        if let completion { self.completion = nil; DispatchQueue.main.async { completion() } }
+        eventsFinished = true
+        finishBackgroundEventsIfReady()
     }
     func reconnect(completion: @escaping () -> Void) {
         queue.async { self.completion = completion; _ = self.session; self.pump() }

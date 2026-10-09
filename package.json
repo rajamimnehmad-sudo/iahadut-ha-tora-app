@@ -1,8 +1,8 @@
 {
   "name": "iahadut-ha-tora",
-  "version": "1.0.52",
+  "version": "1.0.53",
   "private": true,
-  "description": "Catálogo kosher multiplataforma de Iahadut HaTora",
+  "description": "Cat\u00e1logo kosher multiplataforma de Iahadut HaTora",
   "engines": {
     "node": ">=22.0.0"
   },

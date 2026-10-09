@@ -5552,7 +5552,7 @@ html[data-platform="ios"][data-ios-edge-to-edge="true"] body:not(.search-open) .
 
 /* The selected iPad concept uses a persistent sidebar. Phone rules stay intact. */
 .tablet-sidebar, .tablet-welcome { display: none; }
-@media (min-width: 701px) and (min-height: 600px) {
+@media (min-width: 701px) and (min-height: 600px) and (orientation: landscape) {
   :root { --tablet-sidebar-width: clamp(176px, 20vw, 240px); }
   .tablet-sidebar {
     display: flex; flex-direction: column; position: fixed; z-index: 20;
@@ -5577,7 +5577,7 @@ html[data-platform="ios"][data-ios-edge-to-edge="true"] body:not(.search-open) .
   #homeView { max-width: 960px; margin-inline: auto; padding: 16px 28px 32px; }
   #homeView.view.active { display: flow-root !important; }
   .tablet-welcome { display: block; margin-bottom: 24px; }
-  .tablet-welcome h2 { margin: 0 0 8px; color: #174634; font: 600 clamp(34px, 4vw, 46px)/1.15 Georgia, serif; letter-spacing: -.025em; }
+  .tablet-welcome h2 { margin: 0 0 8px; color: #174634; font-family: inherit; font-size: clamp(32px, 3.5vw, 42px); line-height: 1.15; font-weight: 750; letter-spacing: -.035em; }
   .tablet-welcome p { margin: 0; font-size: 16px; line-height: 1.5; color: #64776c; }
   #homeView .search-wrap { width: 100% !important; margin: 0 !important; }
   #homeView .catalog-news-link { font-size: 14px; margin-top: 12px; }
@@ -5654,7 +5654,7 @@ html[data-platform="ios"][data-ios-edge-to-edge="true"] body:not(.search-open) .
 .taxonomy-photo{display:inline-block;width:100%;height:100%;min-width:24px;min-height:24px;background-repeat:no-repeat;border-radius:7px;background-color:#fff;flex-shrink:0}.alphabetical-category-icon.tone-photo{background:#fff;padding:0;overflow:hidden}.search-category-match>.taxonomy-photo{width:32px;height:32px}
 
 /* Resources use the persistent navigation only in tablet layouts. */
-@media (min-width: 701px) and (min-height: 600px) {
+@media (min-width: 701px) and (min-height: 600px) and (orientation: landscape) {
   :root { --tablet-sidebar-width: 220px; }
   .tablet-sidebar { padding: calc(env(safe-area-inset-top, 0px) + 16px) 14px 18px; scrollbar-width: none; }
   .tablet-sidebar::-webkit-scrollbar { display: none; }
@@ -5701,7 +5701,7 @@ html[data-platform="ios"][data-ios-edge-to-edge="true"] body:not(.search-open) .
 }
 
 .tablet-featured-copy, .tablet-featured-controls { display: none; }
-@media (min-width: 701px) and (min-height: 600px) {
+@media (min-width: 701px) and (min-height: 600px) and (orientation: landscape) {
   #homeView { box-sizing: border-box; max-width: 980px; padding: 20px clamp(24px, 3vw, 40px) 32px; }
   .tablet-welcome { margin-bottom: 22px; }
   .tablet-welcome h2 { font-size: clamp(32px, 3.5vw, 42px); }
@@ -5738,7 +5738,7 @@ html[data-platform="ios"][data-ios-edge-to-edge="true"] body:not(.search-open) .
   #homeView button:focus-visible, #homeView a:focus-visible { outline: 2px solid #245b45; outline-offset: 3px; }
 }
 
-@media (min-width: 701px) and (min-height: 600px) {
+@media (min-width: 701px) and (min-height: 600px) and (orientation: landscape) {
   #homeView .useful-section .section-head { justify-content: flex-start; }
   #homeView .useful-section .section-head h2 { text-align: left; }
   #homeView .useful-grid .link-row[data-info="shops"] { background: #f3dce5 !important; border-color: #e7b8c9 !important; }
@@ -5751,6 +5751,64 @@ html[data-platform="ios"][data-ios-edge-to-edge="true"] body:not(.search-open) .
   #homeView .useful-grid a.link-row.whatsapp-tile:active { background: #245b45 !important; }
   #homeView .useful-grid .link-row:active span:nth-child(2),
   #homeView .useful-grid .link-row:active .info-icon { color: #fff !important; }
+}
+
+/* Portrait tablets keep the shared dock with edge-to-edge surfaces. */
+@media (min-width: 701px) and (orientation: portrait) {
+  .app { width: 100% !important; max-width: none !important; margin-inline: 0 !important; }
+  #homeView .recent-products-viewport { width: 100vw !important; margin-inline: calc(50% - 50vw) !important; }
+  #homeView .trusted-brands { width: 100%; margin-inline: 0; border-radius: 0; }
+  #homeView .trusted-brands::after { left: 0; right: 0; background: #fff; }
+  html { scrollbar-width: none; }
+  html::-webkit-scrollbar { display: none; }
+}
+
+/* A lighter brand section in both tablet orientations. */
+@media (min-width: 701px) and (min-height: 600px) {
+  #homeView .trusted-brands { padding: 18px 20px 20px; }
+  #homeView .trusted-brands > p { margin-bottom: 6px; }
+  #homeView .trusted-brands h2 { margin-bottom: 14px; font-size: 18px; }
+}
+
+/* Spread portrait Home content instead of leaving the spare space at its foot. */
+@media (min-width: 701px) and (min-height: 600px) and (orientation: portrait) {
+  #homeView.view.active { display: flex !important; flex-direction: column; gap: 10px; }
+  #homeView.view.active > * { flex-shrink: 0; }
+  #homeView .useful-section::before { bottom: -214px !important; }
+}
+
+/* The web camera fallback fills the tablet in either orientation. */
+@media (min-width: 701px) {
+  #scanOverlay { align-items: stretch; }
+  #scanOverlay .scanner { width: 100%; max-width: none; margin: 0; height: 100%; min-height: 0; }
+  #scanOverlay:not(.manual-only) .camera { min-height: 0; }
+  #scanOverlay:not(.manual-only) .camera video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+  #scanOverlay .frame { width: min(70%, 480px); height: clamp(120px, 25dvh, 220px); max-height: calc(100% - 100px); }
+  #scanOverlay:not(.manual-only) .camera p { left: 24px; right: 24px; bottom: 20px; margin: 0; text-align: center; font-size: 14px; line-height: 1.5; color: #fff; text-shadow: 0 1px 4px #000; }
+  #scanOverlay .manual { flex-shrink: 0; padding-bottom: max(18px, env(safe-area-inset-bottom, 0px)); background: #162d24; }
+  #scanOverlay .manual input { background: #fff; color: #263b30; border-color: #b8d2c0; }
+  #scanOverlay .manual input::placeholder { color: #586e61; }
+  #scanOverlay .manual button { background: #2f7a59; color: #fff; border: 1px solid #8bc4a6; }
+  #scanOverlay .manual button:active { background: #20573f; }
+  #scanOverlay #closeScan { min-width: 44px; min-height: 44px; color: inherit; }
+}
+
+/* Ficha de producto: una escala propia para tablet en ambas orientaciones. */
+@media (min-width: 701px) and (min-height: 600px) {
+  #detailView .detail-content { max-width: 1080px; margin-inline: auto; padding-inline: 24px; }
+  #detailView .detail-content > img,
+  #detailView .detail-loading-image { width: 100%; height: clamp(320px, 40dvh, 480px); margin: 0; padding: 24px; object-fit: contain; border-radius: 24px; }
+  #detailView .detail-body { margin-inline: 0; padding: 28px 28px 32px; border-radius: 24px; }
+  #detailView .detail-body h1 { font-size: clamp(30px, 3vw, 32px); line-height: 1.2; }
+  #detailView .detail-body p { font-size: 18px; line-height: 1.65; }
+}
+@media (min-width: 701px) and (min-height: 600px) and (orientation: landscape) {
+  #detailView .detail-content:has(> img),
+  #detailView .detail-content-loading { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 3fr); align-items: start; gap: 20px; }
+  #detailView .detail-content > img,
+  #detailView .detail-loading-image { height: clamp(340px, 55dvh, 520px); }
+  #detailView .detail-content > img + .detail-body,
+  #detailView .detail-content-loading > .detail-loading-image + .detail-body { margin-top: 0; }
 }
 
 /* Give the final result and the other-country notice separate breathing room. */

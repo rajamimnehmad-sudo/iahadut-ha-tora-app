@@ -425,7 +425,7 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
   let previousView = 'homeView';
   let previousScrollTop = 0;
   let currentInfoKey = '';
-  const tabletLayout = window.matchMedia('(min-width: 701px) and (min-height: 600px)');
+  const tabletLayout = window.matchMedia('(min-width: 701px) and (min-height: 600px) and (orientation: landscape)');
   const moreListHome = $('#moreList').parentElement;
   const shareAppHome = $('#shareAppWhatsApp').parentElement;
   let shareBusy = false;
@@ -2824,7 +2824,7 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
         }
         // Native history carries the FCM message ID; Android's status-bar ID
         // does not. Do not import a second copy of the same displayed notice.
-        if (!pushNotifications.some((item) => item.title === clean(notification.title) && item.body === clean(notification.body))) {
+        if (!pushNotifications.some((item) => item.title === clean(notification.title) && clean(item.body) === clean(pushBody(notification)))) {
           persistPushNotification(notification, !markRead);
         }
       }
