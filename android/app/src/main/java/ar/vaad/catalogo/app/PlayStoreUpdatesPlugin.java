@@ -50,18 +50,19 @@ public class PlayStoreUpdatesPlugin extends Plugin {
         int updateType = "immediate".equals(requestedType) ? AppUpdateType.IMMEDIATE : AppUpdateType.FLEXIBLE;
         Activity activity = getActivity();
         updateManager.getAppUpdateInfo().addOnSuccessListener(info -> {
-            boolean available = info.updateAvailability() == UpdateAvailability.UPDATE_AVAILABLE;
+            boolean available = info.updateAvailability() == UpdateAvailability.UPDATE_AVAILABLE
+                || updateType == AppUpdateType.IMMEDIATE && info.updateAvailability() == UpdateAvailability.DEVELOPER_TRIGGERED_UPDATE_IN_PROGRESS;
             if (!available || !info.isUpdateTypeAllowed(updateType)) {
-                JSObject result = new JSObject();
+                JSObject result = updateInfo(info);
                 result.put("started", false);
                 call.resolve(result);
                 return;
             }
             try {
                 AppUpdateOptions options = AppUpdateOptions.newBuilder(updateType).build();
-                updateManager.startUpdateFlowForResult(info, activity, options, UPDATE_REQUEST_CODE);
+                boolean started = updateManager.startUpdateFlowForResult(info, activity, options, UPDATE_REQUEST_CODE);
                 JSObject result = new JSObject();
-                result.put("started", true);
+                result.put("started", started);
                 result.put("type", requestedType);
                 call.resolve(result);
             } catch (Exception error) {
@@ -81,6 +82,8 @@ public class PlayStoreUpdatesPlugin extends Plugin {
         JSObject result = new JSObject();
         result.put("available", info.updateAvailability() == UpdateAvailability.UPDATE_AVAILABLE);
         result.put("downloaded", info.installStatus() == InstallStatus.DOWNLOADED);
+        result.put("inProgress", info.installStatus() == InstallStatus.PENDING || info.installStatus() == InstallStatus.DOWNLOADING || info.installStatus() == InstallStatus.INSTALLING);
+        result.put("immediateInProgress", info.updateAvailability() == UpdateAvailability.DEVELOPER_TRIGGERED_UPDATE_IN_PROGRESS);
         result.put("priority", info.updatePriority());
         result.put("stalenessDays", info.clientVersionStalenessDays());
         result.put("flexibleAllowed", info.isUpdateTypeAllowed(AppUpdateType.FLEXIBLE));

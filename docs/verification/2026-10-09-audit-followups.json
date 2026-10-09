@@ -1,0 +1,25 @@
+{
+  "verified_at": "2026-10-09T21:26:59.930665+00:00",
+  "audit_state": "in_progress",
+  "installed_s22": {
+    "version": "1.0.59",
+    "build": 117,
+    "installer": "com.android.vending",
+    "usb": "authorized",
+    "crash_buffer": "empty"
+  },
+  "prepared_only": [
+    "Android update flow refreshes Play state and no longer redirects automatically on errors or unavailability",
+    "Reader section titles restored once globally, verified for shops, catering, notes, world, certify, about, contact, collaboration",
+    "Clear filter preserves selected country",
+    "Empty search reset restores scanner",
+    "Modal focus, keyboard containment and filter Escape handling"
+  ],
+  "unverified": [
+    "Physical Android UI: Android Studio file chooser disabled/unresponsive despite refreshed app state",
+    "Native offline full-download/restart/network-loss test",
+    "Play in-app update end-to-end requires a newer eligible release",
+    "Remaining audit checks and final delivery"
+  ],
+  "evidence": "output/full-audit/e2e-browser-evidence.json"
+}
