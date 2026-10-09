@@ -1,17 +1,11 @@
-# Entrega 1.0.54 (112) · 9 de octubre de 2026
+# Entrega 1.0.55 (113) · 9 de octubre de 2026
 
-Publicada en prueba interna de Google Play y confirmada instalada en el S22; compilada, firmada e instalada por USB en el iPhone. Producción Android sigue en 1.0.48 (106). La 112 no se subió a Apple.
+Publicada en prueba interna de Google Play y confirmada instalada en el iPhone por USB mediante InstallComplete y Xcode versión 113. El S22 está desconectado: la entrega es por Google Play y su instalación de 113 no está confirmada desde la Mac. Producción Android sigue en 1.0.48 (106). No se subió la 113 a Apple.
 
-Incluye todos los ajustes posteriores a 111: distribución original de los cuatro accesos con iconos 3D claros, catering sin pañuelo y con contraste, tienda simplificada, flyer Kashrut, WhatsApp ligeramente reducido y texto adaptable sin superposición; enlace azul de actualización con flecha junto al texto; reglas globales de marco blanco e imagen completa en las fichas; cabeceras y botones de volver corregidos. Conserva el círculo azul de avisos, coincidencias del otro país al final, barra de filtro a lo ancho, carrusel centrado y marcas arrastrables.
+Incluye todos los cambios de la 112 y el último ajuste aprobado: los cuatro accesos de Inicio sin flechas, manteniendo toda la tarjeta pulsable, iconos, textos y distribución. Las etiquetas se verificaron en el flujo normal, legibles y sin flechas generadas por CSS. Compilación web única y sincronización Android/iOS; los 111 archivos web empaquetados son idénticos. Android release firmado y versión 113 comprobada; iPhone Debug físico compilado y firmado.
 
-La presentación remota se publicó por PR #10: 113 categorías, 15 fotos transparentes y 35 recursos referenciados comprobados por bytes/hash. La copia central contiene 1.117 productos y 1.117 fichas completas con clasificación que sobrevive actualizaciones. El ranking y el Hub se actualizaron y verificaron. Estos datos cambian sin otro paquete en clientes compatibles; estilos, iconos de servicios definidos en HTML y lógica nativa requieren paquete.
+La auditoría previa comprobó 198 pruebas de app, 12 Android, 6 servidor, 60 Hub y 156 de publicación remota. Presentación remota publicada en main por PR #10: 113 categorías, 15 fotos transparentes y 35 recursos referenciados verificados. Copia central con 1.117 productos y fichas completas. Los datos remotos cambian sin otro paquete en clientes compatibles; diseño y lógica nativa requieren actualización.
 
-Verificación: 198 pruebas de la app, 12 Android, 6 servidor y 60 Hub aprobadas; 156 pruebas y CI de la publicación remota aprobados. Android AAB/APK firmados e iOS Debug compilados. Los 111 archivos web de los dos paquetes son idénticos. Capturas físicas iPhone y S22 112 confirman las cuatro tarjetas legibles, sin superposición y carrusel centrado. El usuario confirmó arrastre de marcas en ambos equipos. Palmito guardado se abrió en la prueba web sin red con texto y foto, sin pedir su página al servidor.
+Pendientes documentados: QA física completa de descarga/reinicio sin conexión, cámara/escáner, APNs y eventos reales de analítica/Vistos; cuatro fuentes Free Chips ausentes/404; información solicitada por Apple y recuperación independiente de cuentas, clave del Hub y código/archivos. La demo web pública todavía usa frontend 1.0.48. No se afirma recuperación completa por metadata.
 
-Queda pendiente la prueba física completa de descarga y reinicio sin conexión, escáner/cámara, APNs y eventos DebugView/Vistos. Las cuatro fuentes Free Chips siguen devolviendo 404 y no se reincorporaron desde la copia antigua. También faltan información/video físico con iOS actual solicitado por Apple y recuperación independiente de cuentas, clave del Hub y código/archivos. No se afirma que metadata sea un respaldo.
-
-La demo web pública responde HTTP 200 pero su JavaScript sigue en 1.0.48: los cambios de frontend públicos todavía no se desplegaron. Código de la 112 respaldado y en revisión en PR #11; presentación remota publicada en main por PR #10.
-
-Informe vigente: `2026-10-09-full-audit.json`.
-
-Cambio posterior a la entrega 112: el usuario eligió eliminar las cuatro flechas de los accesos de Inicio. Preparado localmente, con etiquetas en el flujo normal y toda la tarjeta pulsable; pendiente de la próxima entrega móvil.
+Fuente final respaldada en GitHub, PR #11. Informe de entrega: `2026-10-09-internal-113-delivery.json`; auditoría: `2026-10-09-full-audit.json`.
