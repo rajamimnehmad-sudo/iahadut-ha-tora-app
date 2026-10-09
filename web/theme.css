@@ -5836,3 +5836,6 @@ html[data-platform="ios"][data-ios-edge-to-edge="true"] body:not(.search-open) .
 #homeView .useful-grid .link-row.whatsapp-tile { grid-template-columns: 36px minmax(0, 1fr) 14px !important; }
 #homeView .useful-grid .link-row img.info-icon.info-icon-3d { width: 36px !important; height: 36px !important; transform: scale(1.25); }
 #homeView .useful-grid [data-info="notes"] img.info-icon-3d { filter: contrast(1.6) saturate(1.15) brightness(.92); }
+
+/* New flyer artwork has its own stronger ink contrast. */
+#homeView .useful-grid .link-row[data-info="notes"] img.info-icon-3d { filter: none; }
