@@ -1,0 +1,40 @@
+{
+  "version": "1.0.60",
+  "build": 118,
+  "source_commit": "e8f6ced8509c80eb352f16e2cb02c119dcdfb062",
+  "source_branch": "codex/internal-112-audited-mobile",
+  "tag": "internal-118-audited-fixes",
+  "artifact_checks": {
+    "aab": {
+      "path": "/Users/yejielnehmad/Developer/iaadut/release-artifacts/iahadut-1.0.60-118.aab",
+      "bytes": 85696350,
+      "sha256": "133d638ab4905428c6410c23b0c303569cc6b329112bb2417c30f43c4af0766b"
+    },
+    "apk": {
+      "path": "/Users/yejielnehmad/Developer/iaadut/release-artifacts/iahadut-1.0.60-118.apk",
+      "bytes": 103546981,
+      "sha256": "5bf3c9ac38e304647bcd51a97b11c87c575b4c15a722f42a6b0bebbbff64c715"
+    }
+  },
+  "ios_bundle_version_verified": true,
+  "shared_web_files": 111,
+  "web_resource_differences": 0,
+  "verified_at": "2026-10-09T21:34:09.279001+00:00",
+  "release_url": "https://github.com/rajamimnehmad-sudo/iahadut-ha-tora-app/releases/tag/internal-118-audited-fixes",
+  "aab_api_url": "https://api.github.com/repos/rajamimnehmad-sudo/iahadut-ha-tora-app/releases/assets/626229098",
+  "android_internal_published": true,
+  "workflow": {
+    "conclusion": "",
+    "headSha": "e8f6ced8509c80eb352f16e2cb02c119dcdfb062",
+    "status": "in_progress",
+    "url": "https://github.com/rajamimnehmad-sudo/iahadut-ha-tora-app/actions/runs/37993986151",
+    "publication_job": "success"
+  },
+  "iphone_usb_installed": true,
+  "s22_installed_build_verified": 117,
+  "production_unchanged": "1.0.48 (106)",
+  "apple_upload": false,
+  "app_tests": 217,
+  "android_tests": 14,
+  "physical_full_audit_complete": false
+}
