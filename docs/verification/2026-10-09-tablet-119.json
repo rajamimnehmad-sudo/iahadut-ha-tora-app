@@ -1,0 +1,25 @@
+{
+  "version": "1.0.61",
+  "build": 119,
+  "android_tests": 17,
+  "android_release_build": "passed",
+  "ios_simulator_build": "passed",
+  "shared_web_files": 111,
+  "web_resource_differences": 0,
+  "tablet_web_sizes": [
+    [
+      768,
+      1024
+    ],
+    [
+      1024,
+      768
+    ]
+  ],
+  "horizontal_overflow": false,
+  "tablet_physical_test": false,
+  "apple_uploaded": false,
+  "production_119_submitted": false,
+  "production_118_review_hold": true,
+  "verified_at": "2026-10-09T21:46:15.542863+00:00"
+}
