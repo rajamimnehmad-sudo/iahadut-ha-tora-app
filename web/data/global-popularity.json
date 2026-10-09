@@ -3,15 +3,15 @@
   "source": "google-analytics",
   "metric": "catalog_product_search",
   "windowDays": 28,
-  "generatedAt": "2026-10-08T19:01:30.365Z",
+  "generatedAt": "2026-10-09T06:45:59.266Z",
   "products": [
     {
       "url": "https://vaad.ar/producto/pure-de-tomate-marca-arcor/",
-      "searches": 7
+      "searches": 8
     },
     {
       "url": "https://vaad.ar/producto/pastillas-marca-dorins/",
-      "searches": 6
+      "searches": 7
     },
     {
       "url": "https://vaad.ar/producto/pure-de-tomate-marca-la-campagnola/",
@@ -30,7 +30,15 @@
       "searches": 3
     },
     {
+      "url": "https://vaad.ar/producto/golosina-ring-pop/",
+      "searches": 3
+    },
+    {
       "url": "https://vaad.ar/producto/manteca-marca-sozoe-veganteca/",
+      "searches": 3
+    },
+    {
+      "url": "https://vaad.ar/producto/mermelada-blend-de-frutas-durazno-mango-marca-arcor/",
       "searches": 3
     },
     {
@@ -62,27 +70,19 @@
       "searches": 2
     },
     {
+      "url": "https://vaad.ar/producto/bebida-alcoholica-marca-disaronno/",
+      "searches": 2
+    },
+    {
+      "url": "https://vaad.ar/producto/bebida-alcoholica-marca-heering/",
+      "searches": 2
+    },
+    {
       "url": "https://vaad.ar/producto/bebida-alcoholica-marca-kahlua/",
       "searches": 2
     },
     {
       "url": "https://vaad.ar/producto/bebida-alcoholica-marca-pardalis/",
-      "searches": 2
-    },
-    {
-      "url": "https://vaad.ar/producto/brocoli-congelado-marca-greens/",
-      "searches": 2
-    },
-    {
-      "url": "https://vaad.ar/producto/condimento-marca-la-parmesana-milanesas/",
-      "searches": 2
-    },
-    {
-      "url": "https://vaad.ar/producto/dulce-de-batata-marca-arcor/",
-      "searches": 2
-    },
-    {
-      "url": "https://vaad.ar/producto/golosina-ring-pop/",
       "searches": 2
     }
   ]
