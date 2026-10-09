@@ -9,7 +9,7 @@ const end = source.indexOf('  function featuredImageLayout(src)', start);
 const details = JSON.parse(fs.readFileSync(new URL('../web/data/product-details.json', import.meta.url))).products;
 const featured = JSON.parse(fs.readFileSync(new URL('../web/data/featured-products.json', import.meta.url))).products;
 const cache = {};
-const image = vm.runInNewContext(`(${source.slice(start, end).trim()})`, {productCache:cache, bundledProductDetails:details});
+const image = vm.runInNewContext(`(${source.slice(start, end).trim()})`, {productCache:cache, bundledProductDetails:details, catalogPresentation:{photo:()=>null}});
 const bounds = JSON.parse(fs.readFileSync(new URL('../web/data/featured-image-bounds.json', import.meta.url)));
 const layout = vm.runInNewContext(`(${source.slice(end, source.indexOf('  function renderHome()', end)).trim()})`, {
   featuredImageBounds:bounds, URL, location:{href:'http://127.0.0.1:5173/'}

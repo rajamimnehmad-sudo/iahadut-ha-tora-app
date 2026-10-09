@@ -40,7 +40,7 @@ public class OfflineDownloadWorker extends Worker {
                 } catch(IOException imageFailure){
                     if(!active(c,id)) return Result.success();
                     // One unavailable photo must not prevent the remaining catalog from downloading.
-                    lastImageFailure=imageFailure;
+                    if(lastImageFailure == null || !(imageFailure instanceof UnavailableImageException)) lastImageFailure=imageFailure;
                 } finally {temporary.delete();}
             }
             if(lastImageFailure!=null) throw lastImageFailure;
@@ -55,12 +55,13 @@ public class OfflineDownloadWorker extends Worker {
             if(isStopped()) return Result.success();
             if(shouldRetry(error,getRunAttemptCount())) return Result.retry();
             synchronized(OfflineDownloadStore.class){try{if(active(c,id)){
-                JSONObject job=OfflineDownloadStore.read(c,"job.json");job.put("error","Descarga incompleta · Reintentar");OfflineDownloadStore.write(c,"job.json",job);
+                JSONObject job=OfflineDownloadStore.read(c,"job.json");job.put("error",error instanceof UnavailableImageException ? "Descarga parcial · Hay fotos que la fuente oficial no tiene disponibles. Podés reintentar más adelante." : "Descarga incompleta · Reintentar");OfflineDownloadStore.write(c,"job.json",job);
             }}catch(Exception ignored){}}
             return Result.failure();
         }
     }
-    static boolean shouldRetry(Exception error,int attempt){return error instanceof IOException && attempt<3;}
+    static class UnavailableImageException extends IOException { UnavailableImageException(int code){super("Imagen no disponible: HTTP "+code);} }
+    static boolean shouldRetry(Exception error,int attempt){return error instanceof IOException && !(error instanceof UnavailableImageException) && attempt<3;}
     private boolean active(Context c,String id)throws Exception {JSONObject job=OfflineDownloadStore.read(c,"job.json");return !isStopped()&&id!=null&&id.equals(job.optString("id"))&&!job.optBoolean("paused");}
     static String fileName(String url)throws Exception {
         byte[] hash=MessageDigest.getInstance("SHA-256").digest(url.getBytes(StandardCharsets.UTF_8));StringBuilder s=new StringBuilder();for(byte b:hash)s.append(String.format("%02x",b));
@@ -80,6 +81,7 @@ public class OfflineDownloadWorker extends Worker {
         }
         try {
             int code=connection.getResponseCode();
+            if(code==404 || code==410)throw new UnavailableImageException(code);
             if(code!=200)throw new IOException("Imagen HTTP "+code);
             String type=connection.getContentType();if(type!=null&&(type.contains("text/html")||type.contains("application/json")))throw new IOException("Respuesta no es imagen");
             try(InputStream in=connection.getInputStream();OutputStream out=new FileOutputStream(target)){

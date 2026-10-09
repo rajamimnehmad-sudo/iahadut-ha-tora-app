@@ -3,7 +3,7 @@ import {pathToFileURL} from 'node:url';
 import {pushImageUrl} from '../web/push-image.js';
 
 // The catalog pipeline cannot call this sender without an explicit manual gate.
-export function manualPushMessage({title, body, imageUrl = '', topic = 'catalog-updates', eventKey = randomUUID(), sentAt = new Date().toISOString(), expiresAfter='none'}) {
+export function manualPushMessage({title, body, imageUrl = '', bodyDisplay = 'expanded', topic = 'catalog-updates', eventKey = randomUUID(), sentAt = new Date().toISOString(), expiresAfter='none'}) {
   title = String(title || '').trim();
   body = String(body || '').trim();
   if (!title || !body) throw new Error('Ingresá un título y un mensaje.');
@@ -13,12 +13,13 @@ export function manualPushMessage({title, body, imageUrl = '', topic = 'catalog-
   if (!Object.hasOwn(durations,expiresAfter)) throw new Error('Vencimiento no válido.');
   const seconds=durations[expiresAfter];
   if (topic !== 'catalog-updates' && !/^iahadut-test-[a-f0-9]{20}$/.test(topic)) throw new Error('El tema de prueba individual no es válido.');
+  if (!['expanded','collapsed'].includes(bodyDisplay)) throw new Error('Formato del texto no válido.');
   const message = {
     topic,
     notification:{title, body},
     android:{priority:'HIGH', ttl:'604800s', notification:{channel_id:'catalog-updates-v2', icon:'ic_notification', sound:'default', tag:eventKey}},
     apns:{headers:{'apns-push-type':'alert', 'apns-priority':'10'}, payload:{aps:{sound:'default', 'mutable-content':1}}},
-    data:{action:'alerts', type:'manual', eventKey, sentAt, title, body}
+    data:{action:'alerts', type:'manual', eventKey, sentAt, title, body, bodyDisplay}
   };
   if (seconds) {
     message.data.expiresAt=new Date(Date.parse(sentAt)+seconds*1000).toISOString();
@@ -27,6 +28,7 @@ export function manualPushMessage({title, body, imageUrl = '', topic = 'catalog-
   if (imageUrl) {
     message.notification.image = imageUrl;
     message.android.notification.image = imageUrl;
+    message.apns.fcm_options = {image:imageUrl};
     message.data.imageUrl = imageUrl;
   }
   // Keys and values count toward FCM's topic payload limit. Reserve headroom.
@@ -37,7 +39,7 @@ export function manualPushMessage({title, body, imageUrl = '', topic = 'catalog-
 }
 
 export async function sendManualPush(env = process.env, fetcher = fetch) {
-  const message = manualPushMessage({title:env.PUSH_TITLE, body:env.PUSH_BODY, imageUrl:env.PUSH_IMAGE_URL, topic:env.PUSH_TEST_TOPIC || 'catalog-updates',expiresAfter:env.PUSH_EXPIRES_AFTER || 'none'});
+  const message = manualPushMessage({title:env.PUSH_TITLE, body:env.PUSH_BODY, imageUrl:env.PUSH_IMAGE_URL, bodyDisplay:env.PUSH_BODY_DISPLAY || 'expanded', topic:env.PUSH_TEST_TOPIC || 'catalog-updates',expiresAfter:env.PUSH_EXPIRES_AFTER || 'none'});
   if (env.MANUAL_PUSH_APPROVED !== '1') throw new Error('El envío requiere una ejecución manual explícita.');
   if (env.PUSH_SEND !== '1') {
     console.log('Vista previa; no se envió ninguna notificación.');
@@ -48,7 +50,7 @@ export async function sendManualPush(env = process.env, fetcher = fetch) {
   if (!env.ALERTS_INGEST_SECRET) throw new Error('Falta la conexión con la bandeja de Alertas.');
   const saved = await fetcher('https://waien-hub.waien-studiodev-3c4.workers.dev/api/alerts', {
     method:'POST', headers:{'content-type':'application/json',Authorization:`Bearer ${env.ALERTS_INGEST_SECRET}`},
-    body:JSON.stringify({eventKey:message.data.eventKey,title:message.data.title,body:message.data.body,imageUrl:message.data.imageUrl || '',topic:message.topic,sentAt:message.data.sentAt,expiresAt:message.data.expiresAt || ''}),
+    body:JSON.stringify({eventKey:message.data.eventKey,title:message.data.title,body:message.data.body,imageUrl:message.data.imageUrl || '',bodyDisplay:message.data.bodyDisplay,topic:message.topic,sentAt:message.data.sentAt,expiresAt:message.data.expiresAt || ''}),
     signal:AbortSignal.timeout(20000)
   });
   if (!saved.ok) throw new Error(`No se pudo guardar en Alertas: HTTP ${saved.status}. No se envió push.`);

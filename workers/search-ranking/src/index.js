@@ -1,3 +1,4 @@
+import {recordNoticeView,noticeCounts,validNoticeKey} from './notice-views.js';
 import {verifySession} from './auth.js';
 import {record,rebuild,hashUid,dayAt,validProduct} from './ranking.js';
 const source = 'https://raw.githubusercontent.com/rajamimnehmad-sudo/iahadut-ha-tora-app/main/web/data/published/';
@@ -46,14 +47,19 @@ export function createHandler(verify = verifySession) {
     const json = (data,status=200) => Response.json(data,{status,headers});
     if (!allowedOrigin(origin)) return Response.json({error:'Origin not allowed'},{status:403});
     const path = new URL(request.url).pathname;
-    if (!['/ranking','/record'].includes(path)) return json({error:'Not found'},404);
+    if (!['/ranking','/record','/notice-view','/notice-counts'].includes(path)) return json({error:'Not found'},404);
     if (request.method==='OPTIONS') return new Response(null,{status:204,headers});
     try {
+      if (path==='/notice-counts' && request.method==='GET') {
+        const keys=(new URL(request.url).searchParams.get('keys')||'').split(',').filter(Boolean);
+        if(keys.length>100 || !keys.every(validNoticeKey)) return json({error:'Invalid notice keys'},400);
+        return json(await noticeCounts(env.DB,keys));
+      }
       if (path==='/ranking' && request.method==='GET') {
         const row = await env.DB.prepare("SELECT value FROM state WHERE key='ranking'").first();
         return row ? json(JSON.parse(row.value)) : json({error:'Ranking warming up'},503);
       }
-      if (path!=='/record' || request.method!=='POST') return json({error:'Method not allowed'},405);
+      if (!['/record','/notice-view'].includes(path) || request.method!=='POST') return json({error:'Method not allowed'},405);
       const authorization = request.headers.get('Authorization')||'';
       if (!/^Bearer [A-Za-z0-9_.-]{20,8192}$/.test(authorization)) return json({error:'Unauthorized'},401);
       let uid;
@@ -69,6 +75,7 @@ export function createHandler(verify = verifySession) {
         if(size>2048){await reader.cancel();return json({error:'Body too large'},413);} chunks.push(value); }
       const bytes = new Uint8Array(size); let offset=0; for(const chunk of chunks){bytes.set(chunk,offset);offset+=chunk.length;}
       let data; try {data=JSON.parse(new TextDecoder().decode(bytes));}catch(_){return json({error:'Invalid JSON'},400);}
+      if(path==='/notice-view') return json(await recordNoticeView(env.DB,uid,data?.eventKey));
       return json(await record(env.DB,uid,data?.productUrl));
     } catch (_) { return json({error:'Temporarily unavailable'},503); }
   };

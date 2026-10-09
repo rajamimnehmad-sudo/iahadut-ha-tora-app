@@ -1,0 +1,22 @@
+{
+  "verified_at": "2026-10-09T16:55:10.054403+00:00",
+  "project_id": "ad4c98bf-39c7-48e8-93c9-0ca2b59e4dde",
+  "saved_and_verified": true,
+  "updated_keys": [
+    "iahadut:android-release-state",
+    "iahadut:play-publishing-overview",
+    "iahadut:category-icon-design-site",
+    "iahadut:remote-catalog-presentation",
+    "iahadut:remote-catalog-release",
+    "app-store-connect-ios",
+    "ios-native-readiness",
+    "ios-store-review",
+    "iahadut:play-store-listing",
+    "iahadut:cloudflare-search-ranking-health",
+    "iahadut:access-recovery-validation"
+  ],
+  "production": "1.0.48 (106)",
+  "internal": "1.0.52 (110)",
+  "ios_review": "rejected_information_requested",
+  "review_url": "https://github.com/rajamimnehmad-sudo/iahadut-ha-tora-app/pull/9"
+}

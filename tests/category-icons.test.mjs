@@ -8,6 +8,7 @@ const start = source.indexOf('  function taxonomyIcon(name)');
 const end = source.indexOf('  function taxonomyTone(name)', start);
 const icon = vm.runInNewContext(`(${source.slice(start, end).trim()})`, {
   normalize: text => text.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, ''),
+  catalogPresentation: {icon:() => null},
   phosphorIcon: name => name
 });
 const css = readFileSync(new URL('../node_modules/@phosphor-icons/web/src/regular/style.css', import.meta.url), 'utf8');

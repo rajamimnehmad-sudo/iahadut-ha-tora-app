@@ -1,8 +1,10 @@
+import {correctContentTree} from '../web/text-corrections.js';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { DOMParser } from 'linkedom';
 import { productText } from '../web/product-text.js';
+import {productSourceFingerprint, reusableProductDetail} from './product-detail-policy.mjs';
 
 const projectRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const catalogPath = resolve(projectRoot, 'web/data/catalog.json');
@@ -109,13 +111,15 @@ const failures = [];
 let cursor = 0;
 let completed = 0;
 const sourceProducts = Array.isArray(catalog.products) ? catalog.products : [];
-const workers = Array.from({ length: 8 }, async () => {
+const needed = sourceProducts.filter(product => !reusableProductDetail(product, previousProducts[product.url], refreshAll));
+if (!refreshAll && needed.length > 200) throw new Error(`Se requieren ${needed.length} fichas; límite automático de 200. Se conserva la publicación anterior y se requiere una actualización manual.`);
+const workers = Array.from({ length: 3 }, async () => {
   while (cursor < sourceProducts.length) {
     const product = sourceProducts[cursor++];
     try {
-      products[product.url] = !refreshAll && previousProducts[product.url]?.textFormatVersion === 1
-        ? previousProducts[product.url]
-        : parseProduct(product, await fetchHtml(product.url));
+      const detail = reusableProductDetail(product, previousProducts[product.url], refreshAll)
+        ? previousProducts[product.url] : parseProduct(product, await fetchHtml(product.url));
+      products[product.url] = {...detail, sourceFingerprint:productSourceFingerprint(product)};
     } catch (error) {
       failures.push({ url: product.url, error: error.message });
       if (previousProducts[product.url]) products[product.url] = previousProducts[product.url];
@@ -126,9 +130,9 @@ const workers = Array.from({ length: 8 }, async () => {
 });
 
 await Promise.all(workers);
-if (Object.keys(products).length < Math.floor(sourceProducts.length * 0.95)) {
-  throw new Error(`La extracción de fichas quedó incompleta: ${Object.keys(products).length}/${sourceProducts.length}`);
+if (failures.length || Object.keys(products).length !== sourceProducts.length) {
+  throw new Error(`La extracción de fichas quedó incompleta: ${Object.keys(products).length}/${sourceProducts.length}; ${failures.length} errores. No se reemplaza la copia anterior.`);
 }
 await mkdir(dirname(outputPath), { recursive: true });
-await writeFile(outputPath, `${JSON.stringify({ generatedAt, products, failures })}\n`, 'utf8');
+await writeFile(outputPath, `${JSON.stringify(correctContentTree({ generatedAt, products, failures }))}\n`, 'utf8');
 console.log(`Fichas empaquetadas: ${Object.keys(products).length} · errores: ${failures.length} · ${outputPath}`);

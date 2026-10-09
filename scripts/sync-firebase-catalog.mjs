@@ -125,6 +125,7 @@ function productDocument(product, generatedAt, detail) {
     title: clean(product.title),
     brand: clean(product.brand),
     category: clean(product.cat),
+    categoryPathJson: JSON.stringify(product.categoryPath || null),
     imageUrl: clean(product.image),
     barcode,
     barcodeStatus: barcode ? 'verified-format' : 'missing',
@@ -139,7 +140,7 @@ function sameProduct(a, b) {
   // catalogGeneratedAt identifies the last snapshot in which this product
   // changed. It must not make every unchanged product look modified when a
   // new snapshot is generated.
-  const fields = ['sourceUrl', 'title', 'brand', 'category', 'imageUrl', 'barcode', 'barcodeStatus', 'status', 'source', 'description', 'detailsJson'];
+  const fields = ['sourceUrl', 'title', 'brand', 'category', 'categoryPathJson', 'imageUrl', 'barcode', 'barcodeStatus', 'status', 'source', 'description', 'detailsJson'];
   return fields.every((field) => String(a?.[field] ?? '') === String(b?.[field] ?? ''));
 }
 

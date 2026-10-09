@@ -1,0 +1,91 @@
+{
+  "date": "2026-10-09",
+  "source_thread": "01a1160c-70ba-7a61-aaa8-eb0129d64775",
+  "scope": "Revisión de todos los pedidos del chat actual y continuación de la tarea interrumpida",
+  "completed": [
+    {
+      "item": "Datos y recursos remotos",
+      "evidence": "main 876b7f4; manifiestos públicos HTTP 200; deploy Pages correcto"
+    },
+    {
+      "item": "Preparación móvil de iconos/categorías/textos remotos",
+      "evidence": "PR #9; 194 pruebas aprobadas; preparación conjunta Android/iOS 1.0.52 (110); Android debug e iOS simulador compilados. Ajuste final del aviso de coincidencias se sincroniza otra vez."
+    },
+    {
+      "item": "Errores ortográficos claros",
+      "evidence": "100 reglas; corregidos 246 productos y 420 fichas en la publicación actual; Buckinhgam conservado por instrucción expresa"
+    },
+    {
+      "item": "Alertas KV",
+      "evidence": "Historial y Hub confirman migración completa y lecturas el 09/10; no se enviaron avisos reales en esta tarea"
+    },
+    {
+      "item": "Más buscados",
+      "evidence": "HTTP 200; generación 2026-10-09T16:45:19Z"
+    },
+    {
+      "item": "Descripción Lista kosher y estrellas públicas",
+      "evidence": "Ficha pública argentina muestra descripción nueva y 6 calificaciones, 5/5"
+    },
+    {
+      "item": "Analítica del 8/10 en Hub",
+      "evidence": "Nota existente Analítica revisada · 8/10/2026, leída mediante API"
+    },
+    {
+      "item": "Pagos y respaldos técnicos previos",
+      "evidence": "Condiciones USD y referencia ARS fechada registradas; metadata distingue secretos técnicos verificados de contraseñas humanas faltantes"
+    },
+    {
+      "item": "Fotos de productos revisadas",
+      "evidence": "15 fotos con fondo transparente integradas, incluidos Palmito Acapulco y pale ale Barba Roja; se conservan cortes originales cuando existen. Las tarjetas usan foto completa disponible en lugar de miniatura cuadrada. Revisión de 1104 fuentes y 123 candidatas visuales, no examen visual exhaustivo de todas."
+    },
+    {
+      "item": "Categorías separadas",
+      "evidence": "Papas fritas: dos Free Chips. Puré instantáneo: Río de la Plata. Papas congeladas: 18, independiente. Confirmado en navegador."
+    },
+    {
+      "item": "Aderezos y botones de información",
+      "evidence": "Aderezos utiliza el mismo sachet rojo con pico de Ketchup por instrucción del usuario. Opción A aprobada y aplicada: local, bandeja y libro; tres PNG transparentes."
+    },
+    {
+      "item": "Coincidencias en el otro país al final de la búsqueda",
+      "evidence": "Aviso Coincidencias en Argentina/Uruguay movido después del listado de productos; selector conserva lugar previo. Alcance aclarado por el usuario."
+    },
+    {
+      "item": "Copia central de datos y apertura de fichas",
+      "evidence": "09/10 17:49 UTC: 1117 productos y 1117 fichas completas, hash público validado. Caché inmediata, solicitudes deduplicadas, texto independiente de imagen y recuperación central cubiertos por pruebas. No se midieron tiempos físicos ni se distribuyó la preparación visual."
+    },
+    {
+      "item": "Espaciado final",
+      "evidence": "Línea inferior del último resultado eliminada; 18 px antes de coincidencias. Iconos 3D con columnas de 40/52 px reservadas; no superposición en vista móvil verificada."
+    }
+  ],
+  "pending": [
+    {
+      "item": "Cuatro fuentes Free Chips no disponibles",
+      "details": "Maní pelado, maní japonés, papas fritas y papas pay: fotos y páginas oficiales devuelven HTTP 404. No se inventaron envases ni se dieron por corregidas."
+    },
+    {
+      "item": "Distribuir una vez la app con configuración remota",
+      "details": "Preparada y respaldada; no está en producción 1.0.48 ni en el paquete interno 110 ya publicado. No se incrementó versión ni se subió otro paquete."
+    },
+    {
+      "item": "Analítica ampliada",
+      "details": "Preparada en PR #8 y código interno; pendiente DebugView en Android/iPhone y producción autorizada. No hay cifras retrospectivas de guardados/escaneos exitosos."
+    },
+    {
+      "item": "App Review",
+      "details": "iOS 1.0.48 (106) rechazada por solicitud de información. Video y pruebas en iPhone físico con iOS actual; confirmar derechos del contenido; completar seis puntos. Borrador local sin envío."
+    },
+    {
+      "item": "Recuperación independiente",
+      "details": "Contraseñas humanas faltantes, recuperación de Hub, copia independiente de clave de cifrado y restauración de archivos/código desde otro equipo sin confirmar."
+    }
+  ],
+  "references": {
+    "review": "https://github.com/rajamimnehmad-sudo/iahadut-ha-tora-app/pull/9",
+    "analytics": "https://github.com/rajamimnehmad-sudo/iahadut-ha-tora-app/pull/8",
+    "image_review": "output/product-photo-review/productos-con-cortes.jpg",
+    "apple_draft": "docs/verification/2026-10-09-app-review-response-draft.txt"
+  }
+}

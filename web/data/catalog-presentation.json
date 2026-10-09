@@ -1,0 +1,1440 @@
+{
+  "schemaVersion": 1,
+  "revision": "2026-10-09T17:43:40.974544+00:00",
+  "assets": {
+    "348ea39f5d2aa51bee3a198950f29398bba850d0ec0c93a2c2fc66e37b9aa5cf": {
+      "url": "https://raw.githubusercontent.com/rajamimnehmad-sudo/iahadut-ha-tora-app/main/web/public/category-icons/348ea39f5d2aa51bee3a198950f29398bba850d0ec0c93a2c2fc66e37b9aa5cf.png",
+      "sha256": "348ea39f5d2aa51bee3a198950f29398bba850d0ec0c93a2c2fc66e37b9aa5cf",
+      "bytes": 1822368
+    },
+    "caf8c9dbf737f5227e6786b6109aaae014abffcc63ded6ebf22baa93fa476c39": {
+      "url": "https://raw.githubusercontent.com/rajamimnehmad-sudo/iahadut-ha-tora-app/main/web/public/category-icons/caf8c9dbf737f5227e6786b6109aaae014abffcc63ded6ebf22baa93fa476c39.png",
+      "sha256": "caf8c9dbf737f5227e6786b6109aaae014abffcc63ded6ebf22baa93fa476c39",
+      "bytes": 1734651
+    },
+    "5fae1327b5b9f5f621b9850dc8eb5d6600fc4ac94403f3155bb0ce480decd6b0": {
+      "url": "https://raw.githubusercontent.com/rajamimnehmad-sudo/iahadut-ha-tora-app/main/web/public/category-icons/5fae1327b5b9f5f621b9850dc8eb5d6600fc4ac94403f3155bb0ce480decd6b0.png",
+      "sha256": "5fae1327b5b9f5f621b9850dc8eb5d6600fc4ac94403f3155bb0ce480decd6b0",
+      "bytes": 1858880
+    },
+    "ce8cc7afadc34d6d2b977f7969605ec743c3b6a5d9ac7eb16c7f7be132eca5bd": {
+      "url": "https://raw.githubusercontent.com/rajamimnehmad-sudo/iahadut-ha-tora-app/main/web/public/category-icons/ce8cc7afadc34d6d2b977f7969605ec743c3b6a5d9ac7eb16c7f7be132eca5bd.png",
+      "sha256": "ce8cc7afadc34d6d2b977f7969605ec743c3b6a5d9ac7eb16c7f7be132eca5bd",
+      "bytes": 1927416
+    },
+    "72f77c0b051943a7d00d3f78b077bbbb2db4c23ee075d13f3e63fd5124708408": {
+      "url": "https://raw.githubusercontent.com/rajamimnehmad-sudo/iahadut-ha-tora-app/main/web/public/category-icons/72f77c0b051943a7d00d3f78b077bbbb2db4c23ee075d13f3e63fd5124708408.png",
+      "sha256": "72f77c0b051943a7d00d3f78b077bbbb2db4c23ee075d13f3e63fd5124708408",
+      "bytes": 1397262
+    },
+    "46b09fc37ebb88795f102eb63e45434bf68b65c5f6068ab2281fb13bb978654d": {
+      "url": "https://raw.githubusercontent.com/rajamimnehmad-sudo/iahadut-ha-tora-app/main/web/public/category-icons/46b09fc37ebb88795f102eb63e45434bf68b65c5f6068ab2281fb13bb978654d.png",
+      "sha256": "46b09fc37ebb88795f102eb63e45434bf68b65c5f6068ab2281fb13bb978654d",
+      "bytes": 1226997
+    },
+    "28182cde4ae587aa78050c0a9b17c11d414fc001425804073275432a51ad8dc9": {
+      "url": "https://raw.githubusercontent.com/rajamimnehmad-sudo/iahadut-ha-tora-app/main/web/public/category-icons/28182cde4ae587aa78050c0a9b17c11d414fc001425804073275432a51ad8dc9.png",
+      "sha256": "28182cde4ae587aa78050c0a9b17c11d414fc001425804073275432a51ad8dc9",
+      "bytes": 1482020
+    },
+    "fa4d98ec5c763fc94aae450f8bfaecd1f937940b4fd4e0fef21c07442952673a": {
+      "url": "https://raw.githubusercontent.com/rajamimnehmad-sudo/iahadut-ha-tora-app/main/web/public/category-icons/fa4d98ec5c763fc94aae450f8bfaecd1f937940b4fd4e0fef21c07442952673a.png",
+      "sha256": "fa4d98ec5c763fc94aae450f8bfaecd1f937940b4fd4e0fef21c07442952673a",
+      "bytes": 1891306
+    },
+    "4be429543bf31a087e1097bb1e72808eb6362513707ab9776a39e0a4e33aada1": {
+      "url": "https://raw.githubusercontent.com/rajamimnehmad-sudo/iahadut-ha-tora-app/main/web/public/category-icons/4be429543bf31a087e1097bb1e72808eb6362513707ab9776a39e0a4e33aada1.png",
+      "sha256": "4be429543bf31a087e1097bb1e72808eb6362513707ab9776a39e0a4e33aada1",
+      "bytes": 1242547
+    },
+    "2af1de0ca150bbd1964da2731724b72d7b22e9f3da01089282e7ac7eaa6da970": {
+      "url": "https://raw.githubusercontent.com/rajamimnehmad-sudo/iahadut-ha-tora-app/main/web/public/category-icons/2af1de0ca150bbd1964da2731724b72d7b22e9f3da01089282e7ac7eaa6da970.png",
+      "sha256": "2af1de0ca150bbd1964da2731724b72d7b22e9f3da01089282e7ac7eaa6da970",
+      "bytes": 1441366
+    },
+    "dedae0a9b3aa906b8e910418c6efdb517b87d4d9ab4fc4f8176a576bf72ba397": {
+      "url": "https://raw.githubusercontent.com/rajamimnehmad-sudo/iahadut-ha-tora-app/main/web/public/category-icons/dedae0a9b3aa906b8e910418c6efdb517b87d4d9ab4fc4f8176a576bf72ba397.png",
+      "sha256": "dedae0a9b3aa906b8e910418c6efdb517b87d4d9ab4fc4f8176a576bf72ba397",
+      "bytes": 1582918
+    },
+    "933325b9f8279b4a5fb9c120e60ee46b32657152641928e0264a4b17aaa3b893": {
+      "url": "https://raw.githubusercontent.com/rajamimnehmad-sudo/iahadut-ha-tora-app/main/web/public/category-icons/933325b9f8279b4a5fb9c120e60ee46b32657152641928e0264a4b17aaa3b893.png",
+      "sha256": "933325b9f8279b4a5fb9c120e60ee46b32657152641928e0264a4b17aaa3b893",
+      "bytes": 1887816
+    },
+    "24cf1b06174811a1489d7b5e180b4917d785715bea1707c5cf71b115234b05ff": {
+      "url": "https://raw.githubusercontent.com/rajamimnehmad-sudo/iahadut-ha-tora-app/main/web/public/category-icons/24cf1b06174811a1489d7b5e180b4917d785715bea1707c5cf71b115234b05ff.png",
+      "sha256": "24cf1b06174811a1489d7b5e180b4917d785715bea1707c5cf71b115234b05ff",
+      "bytes": 1530079
+    },
+    "7c8fdc62f9c9b408b1a5021652e9888d110926f5e27caf54f16098cec1524a90": {
+      "url": "https://raw.githubusercontent.com/rajamimnehmad-sudo/iahadut-ha-tora-app/main/web/public/category-icons/7c8fdc62f9c9b408b1a5021652e9888d110926f5e27caf54f16098cec1524a90.png",
+      "sha256": "7c8fdc62f9c9b408b1a5021652e9888d110926f5e27caf54f16098cec1524a90",
+      "bytes": 1405877
+    },
+    "f09279f25804b368e69809cc6812a22a173591fea9922b07286e77d81f37dcc2": {
+      "url": "https://raw.githubusercontent.com/rajamimnehmad-sudo/iahadut-ha-tora-app/main/web/public/category-icons/f09279f25804b368e69809cc6812a22a173591fea9922b07286e77d81f37dcc2.png",
+      "sha256": "f09279f25804b368e69809cc6812a22a173591fea9922b07286e77d81f37dcc2",
+      "bytes": 1183739
+    },
+    "2cf4e54441028e6a45131f6e8ca57fa0cbc70d0581bac2df1e3aea0feda68242": {
+      "url": "https://raw.githubusercontent.com/rajamimnehmad-sudo/iahadut-ha-tora-app/main/web/public/category-icons/2cf4e54441028e6a45131f6e8ca57fa0cbc70d0581bac2df1e3aea0feda68242.png",
+      "sha256": "2cf4e54441028e6a45131f6e8ca57fa0cbc70d0581bac2df1e3aea0feda68242",
+      "bytes": 1500232
+    },
+    "5bc3f0c308df34f8cc6eb8623c930b26109a5983a42d30ccf662bff35f3d3149": {
+      "url": "https://raw.githubusercontent.com/rajamimnehmad-sudo/iahadut-ha-tora-app/main/web/public/category-icons/5bc3f0c308df34f8cc6eb8623c930b26109a5983a42d30ccf662bff35f3d3149.png",
+      "sha256": "5bc3f0c308df34f8cc6eb8623c930b26109a5983a42d30ccf662bff35f3d3149",
+      "bytes": 1906085
+    },
+    "597aa958f73a947131aa52ebfbfbc9fffd17df05f319616fe582de55092d4afd": {
+      "url": "https://raw.githubusercontent.com/rajamimnehmad-sudo/iahadut-ha-tora-app/main/web/public/category-icons/597aa958f73a947131aa52ebfbfbc9fffd17df05f319616fe582de55092d4afd.png",
+      "sha256": "597aa958f73a947131aa52ebfbfbc9fffd17df05f319616fe582de55092d4afd",
+      "bytes": 1216442
+    },
+    "c8ee1ada02aa512c2bfa5bb120204bbbf3fac1ea241a997d628faf16be1b3bd4": {
+      "url": "https://raw.githubusercontent.com/rajamimnehmad-sudo/iahadut-ha-tora-app/main/web/public/category-icons/c8ee1ada02aa512c2bfa5bb120204bbbf3fac1ea241a997d628faf16be1b3bd4.png",
+      "sha256": "c8ee1ada02aa512c2bfa5bb120204bbbf3fac1ea241a997d628faf16be1b3bd4",
+      "bytes": 1696203
+    },
+    "8eabe4818d6a3cbdc4c4f722bdf8c7d7103d5ce3c5db960528b2e8c4ea2ee119": {
+      "sha256": "8eabe4818d6a3cbdc4c4f722bdf8c7d7103d5ce3c5db960528b2e8c4ea2ee119",
+      "url": "https://raw.githubusercontent.com/rajamimnehmad-sudo/iahadut-ha-tora-app/main/web/public/category-icons/8eabe4818d6a3cbdc4c4f722bdf8c7d7103d5ce3c5db960528b2e8c4ea2ee119.png",
+      "bytes": 2018199
+    },
+    "5afdf56761a76485d73e167df84c73312f437838f3ba01bd7ff7e95f93581ff1": {
+      "sha256": "5afdf56761a76485d73e167df84c73312f437838f3ba01bd7ff7e95f93581ff1",
+      "url": "https://raw.githubusercontent.com/rajamimnehmad-sudo/iahadut-ha-tora-app/main/web/public/category-icons/5afdf56761a76485d73e167df84c73312f437838f3ba01bd7ff7e95f93581ff1.png",
+      "bytes": 1815509
+    },
+    "4ea84089afce8b4fd0f78733f50277584c11124e7c8d5d1a952c366c3ba1a564": {
+      "sha256": "4ea84089afce8b4fd0f78733f50277584c11124e7c8d5d1a952c366c3ba1a564",
+      "url": "https://raw.githubusercontent.com/rajamimnehmad-sudo/iahadut-ha-tora-app/main/web/public/category-icons/4ea84089afce8b4fd0f78733f50277584c11124e7c8d5d1a952c366c3ba1a564.png",
+      "bytes": 1994771
+    },
+    "d9cd6c0b5ee8518c82b618fef76925da39d19c86e8db9ed9c49845fb92920c3a": {
+      "sha256": "d9cd6c0b5ee8518c82b618fef76925da39d19c86e8db9ed9c49845fb92920c3a",
+      "url": "https://raw.githubusercontent.com/rajamimnehmad-sudo/iahadut-ha-tora-app/main/web/public/category-icons/d9cd6c0b5ee8518c82b618fef76925da39d19c86e8db9ed9c49845fb92920c3a.png",
+      "bytes": 1842252
+    },
+    "67eeb9a62b7b328b7332971131abecd421123dbec558bb28fcd1310d9ac5e2b0": {
+      "sha256": "67eeb9a62b7b328b7332971131abecd421123dbec558bb28fcd1310d9ac5e2b0",
+      "url": "https://raw.githubusercontent.com/rajamimnehmad-sudo/iahadut-ha-tora-app/main/web/public/category-icons/67eeb9a62b7b328b7332971131abecd421123dbec558bb28fcd1310d9ac5e2b0.png",
+      "bytes": 2207131
+    },
+    "cfa12822a095cb27a7fa925a11288a183988ba58df08945e1974d16df8b64977": {
+      "sha256": "cfa12822a095cb27a7fa925a11288a183988ba58df08945e1974d16df8b64977",
+      "url": "https://raw.githubusercontent.com/rajamimnehmad-sudo/iahadut-ha-tora-app/main/web/public/category-icons/cfa12822a095cb27a7fa925a11288a183988ba58df08945e1974d16df8b64977.png",
+      "bytes": 1320709
+    },
+    "fd749e39b512093bbdd30bae5123a4aa2500db06d05ec284af7fc1b164d6fc53": {
+      "sha256": "fd749e39b512093bbdd30bae5123a4aa2500db06d05ec284af7fc1b164d6fc53",
+      "url": "https://raw.githubusercontent.com/rajamimnehmad-sudo/iahadut-ha-tora-app/main/web/public/category-icons/fd749e39b512093bbdd30bae5123a4aa2500db06d05ec284af7fc1b164d6fc53.png",
+      "bytes": 1064273
+    },
+    "05c192975d3fb8a2512aad1a6b60be71e5ff32a6f5289df509d60fae0d33baa8": {
+      "sha256": "05c192975d3fb8a2512aad1a6b60be71e5ff32a6f5289df509d60fae0d33baa8",
+      "url": "https://raw.githubusercontent.com/rajamimnehmad-sudo/iahadut-ha-tora-app/main/web/public/category-icons/05c192975d3fb8a2512aad1a6b60be71e5ff32a6f5289df509d60fae0d33baa8.png",
+      "bytes": 1470064
+    },
+    "2f5cd7a316cb0a087f9e34f1fc1daf1fb7bb42aa421ab198c01d0bf6e3754785": {
+      "sha256": "2f5cd7a316cb0a087f9e34f1fc1daf1fb7bb42aa421ab198c01d0bf6e3754785",
+      "url": "https://raw.githubusercontent.com/rajamimnehmad-sudo/iahadut-ha-tora-app/main/web/public/category-icons/2f5cd7a316cb0a087f9e34f1fc1daf1fb7bb42aa421ab198c01d0bf6e3754785.png",
+      "bytes": 550829
+    },
+    "df601a9efdb43e42e7746b0fb6e4670bae108714e354a8a759e30833abf2a9c0": {
+      "sha256": "df601a9efdb43e42e7746b0fb6e4670bae108714e354a8a759e30833abf2a9c0",
+      "url": "https://raw.githubusercontent.com/rajamimnehmad-sudo/iahadut-ha-tora-app/main/web/public/category-icons/df601a9efdb43e42e7746b0fb6e4670bae108714e354a8a759e30833abf2a9c0.png",
+      "bytes": 558291
+    },
+    "b55e84f935bc1bef0132e039a629832da5024751ccf76d3661cbf054d2a76e9f": {
+      "sha256": "b55e84f935bc1bef0132e039a629832da5024751ccf76d3661cbf054d2a76e9f",
+      "url": "https://raw.githubusercontent.com/rajamimnehmad-sudo/iahadut-ha-tora-app/main/web/public/category-icons/b55e84f935bc1bef0132e039a629832da5024751ccf76d3661cbf054d2a76e9f.png",
+      "bytes": 2036821
+    },
+    "0a4770f38ceab1df0d67413fd1da64ebdae839066e19164745b5a96e7451b9ad": {
+      "sha256": "0a4770f38ceab1df0d67413fd1da64ebdae839066e19164745b5a96e7451b9ad",
+      "url": "https://raw.githubusercontent.com/rajamimnehmad-sudo/iahadut-ha-tora-app/main/web/public/category-icons/0a4770f38ceab1df0d67413fd1da64ebdae839066e19164745b5a96e7451b9ad.png",
+      "bytes": 2227672
+    },
+    "ccdfa2f0378b9248b49c0c97d1b36b56f7c2b4d38f4a054f16843289e0f20584": {
+      "sha256": "ccdfa2f0378b9248b49c0c97d1b36b56f7c2b4d38f4a054f16843289e0f20584",
+      "url": "https://raw.githubusercontent.com/rajamimnehmad-sudo/iahadut-ha-tora-app/main/web/public/category-icons/ccdfa2f0378b9248b49c0c97d1b36b56f7c2b4d38f4a054f16843289e0f20584.png",
+      "bytes": 628402
+    },
+    "9b401d9b786b87883fcb4e4d02aa14f0b690d04de0096ccca8d69bc38ef7111a": {
+      "sha256": "9b401d9b786b87883fcb4e4d02aa14f0b690d04de0096ccca8d69bc38ef7111a",
+      "url": "https://raw.githubusercontent.com/rajamimnehmad-sudo/iahadut-ha-tora-app/main/web/public/category-icons/9b401d9b786b87883fcb4e4d02aa14f0b690d04de0096ccca8d69bc38ef7111a.png",
+      "bytes": 1918948
+    },
+    "77729a1bec126cca94e8a4567758176291c04627ed6ec468b5bcb2c89099bc1b": {
+      "sha256": "77729a1bec126cca94e8a4567758176291c04627ed6ec468b5bcb2c89099bc1b",
+      "url": "https://raw.githubusercontent.com/rajamimnehmad-sudo/iahadut-ha-tora-app/main/web/public/category-icons/77729a1bec126cca94e8a4567758176291c04627ed6ec468b5bcb2c89099bc1b.png",
+      "bytes": 1732562
+    },
+    "3b93d1ef84657bf08608b62727c3c41bafa9f4df4d320250289688a3e2e37e42": {
+      "sha256": "3b93d1ef84657bf08608b62727c3c41bafa9f4df4d320250289688a3e2e37e42",
+      "url": "https://raw.githubusercontent.com/rajamimnehmad-sudo/iahadut-ha-tora-app/main/web/public/category-icons/3b93d1ef84657bf08608b62727c3c41bafa9f4df4d320250289688a3e2e37e42.png",
+      "bytes": 1354976
+    },
+    "7ba1584acb7370272555fc2f886bd5caec8d3efe9219b927c32556d7dc30b423": {
+      "sha256": "7ba1584acb7370272555fc2f886bd5caec8d3efe9219b927c32556d7dc30b423",
+      "url": "https://raw.githubusercontent.com/rajamimnehmad-sudo/iahadut-ha-tora-app/main/web/public/category-icons/7ba1584acb7370272555fc2f886bd5caec8d3efe9219b927c32556d7dc30b423.png",
+      "bytes": 944960
+    }
+  },
+  "categories": {
+    "Aceite de girasol": {
+      "label": "Aceite de girasol",
+      "icon": {
+        "asset": "348ea39f5d2aa51bee3a198950f29398bba850d0ec0c93a2c2fc66e37b9aa5cf",
+        "columns": 6,
+        "rows": 8,
+        "column": 1,
+        "row": 0
+      }
+    },
+    "Aceite de oliva": {
+      "label": "Aceite de oliva",
+      "icon": {
+        "asset": "348ea39f5d2aa51bee3a198950f29398bba850d0ec0c93a2c2fc66e37b9aa5cf",
+        "columns": 6,
+        "rows": 8,
+        "column": 3,
+        "row": 0
+      }
+    },
+    "Aceites": {
+      "label": "Aceites",
+      "icon": {
+        "asset": "348ea39f5d2aa51bee3a198950f29398bba850d0ec0c93a2c2fc66e37b9aa5cf",
+        "columns": 6,
+        "rows": 8,
+        "column": 0,
+        "row": 1
+      }
+    },
+    "Aceites en aerosol": {
+      "label": "Aceites en aerosol",
+      "icon": {
+        "asset": "348ea39f5d2aa51bee3a198950f29398bba850d0ec0c93a2c2fc66e37b9aa5cf",
+        "columns": 6,
+        "rows": 8,
+        "column": 3,
+        "row": 1
+      }
+    },
+    "Aceites mezcla": {
+      "label": "Aceites mezcla",
+      "icon": {
+        "asset": "348ea39f5d2aa51bee3a198950f29398bba850d0ec0c93a2c2fc66e37b9aa5cf",
+        "columns": 6,
+        "rows": 8,
+        "column": 2,
+        "row": 2
+      }
+    },
+    "Aceitunas": {
+      "label": "Aceitunas",
+      "icon": {
+        "asset": "348ea39f5d2aa51bee3a198950f29398bba850d0ec0c93a2c2fc66e37b9aa5cf",
+        "columns": 6,
+        "rows": 8,
+        "column": 5,
+        "row": 2
+      }
+    },
+    "Aderezos": {
+      "label": "Aderezos",
+      "icon": {
+        "asset": "ce8cc7afadc34d6d2b977f7969605ec743c3b6a5d9ac7eb16c7f7be132eca5bd",
+        "columns": 6,
+        "rows": 8,
+        "column": 2,
+        "row": 5
+      }
+    },
+    "Alcaparras": {
+      "label": "Alcaparras",
+      "icon": {
+        "asset": "348ea39f5d2aa51bee3a198950f29398bba850d0ec0c93a2c2fc66e37b9aa5cf",
+        "columns": 6,
+        "rows": 8,
+        "column": 3,
+        "row": 3
+      }
+    },
+    "Algas para sushi": {
+      "label": "Algas para sushi",
+      "icon": {
+        "asset": "348ea39f5d2aa51bee3a198950f29398bba850d0ec0c93a2c2fc66e37b9aa5cf",
+        "columns": 6,
+        "rows": 8,
+        "column": 0,
+        "row": 4
+      }
+    },
+    "Almidones y féculas": {
+      "label": "Almidones y féculas",
+      "icon": {
+        "asset": "348ea39f5d2aa51bee3a198950f29398bba850d0ec0c93a2c2fc66e37b9aa5cf",
+        "columns": 6,
+        "rows": 8,
+        "column": 5,
+        "row": 4
+      }
+    },
+    "Arak y anisados": {
+      "label": "Arak y anisados",
+      "icon": {
+        "asset": "348ea39f5d2aa51bee3a198950f29398bba850d0ec0c93a2c2fc66e37b9aa5cf",
+        "columns": 6,
+        "rows": 8,
+        "column": 0,
+        "row": 5
+      }
+    },
+    "Arroz": {
+      "label": "Arroz",
+      "icon": {
+        "asset": "348ea39f5d2aa51bee3a198950f29398bba850d0ec0c93a2c2fc66e37b9aa5cf",
+        "columns": 6,
+        "rows": 8,
+        "column": 3,
+        "row": 5
+      }
+    },
+    "Arvejas": {
+      "label": "Arvejas",
+      "icon": {
+        "asset": "348ea39f5d2aa51bee3a198950f29398bba850d0ec0c93a2c2fc66e37b9aa5cf",
+        "columns": 6,
+        "rows": 8,
+        "column": 1,
+        "row": 6
+      }
+    },
+    "Atún y pescados en conserva": {
+      "label": "Atún y pescados en conserva",
+      "icon": {
+        "asset": "348ea39f5d2aa51bee3a198950f29398bba850d0ec0c93a2c2fc66e37b9aa5cf",
+        "columns": 6,
+        "rows": 8,
+        "column": 4,
+        "row": 6
+      }
+    },
+    "Avena": {
+      "label": "Avena",
+      "icon": {
+        "asset": "348ea39f5d2aa51bee3a198950f29398bba850d0ec0c93a2c2fc66e37b9aa5cf",
+        "columns": 6,
+        "rows": 8,
+        "column": 0,
+        "row": 7
+      }
+    },
+    "Azúcares": {
+      "label": "Azúcares",
+      "icon": {
+        "asset": "348ea39f5d2aa51bee3a198950f29398bba850d0ec0c93a2c2fc66e37b9aa5cf",
+        "columns": 6,
+        "rows": 8,
+        "column": 3,
+        "row": 7
+      }
+    },
+    "Barritas": {
+      "label": "Barritas",
+      "icon": {
+        "asset": "caf8c9dbf737f5227e6786b6109aaae014abffcc63ded6ebf22baa93fa476c39",
+        "columns": 6,
+        "rows": 8,
+        "column": 2,
+        "row": 0
+      }
+    },
+    "Bebidas alcohólicas": {
+      "label": "Bebidas alcohólicas",
+      "icon": {
+        "asset": "caf8c9dbf737f5227e6786b6109aaae014abffcc63ded6ebf22baa93fa476c39",
+        "columns": 6,
+        "rows": 8,
+        "column": 5,
+        "row": 0
+      }
+    },
+    "Bebidas deportivas": {
+      "label": "Bebidas deportivas",
+      "icon": {
+        "asset": "caf8c9dbf737f5227e6786b6109aaae014abffcc63ded6ebf22baa93fa476c39",
+        "columns": 6,
+        "rows": 8,
+        "column": 0,
+        "row": 1
+      }
+    },
+    "Bebidas saborizadas": {
+      "label": "Bebidas saborizadas",
+      "icon": {
+        "asset": "caf8c9dbf737f5227e6786b6109aaae014abffcc63ded6ebf22baa93fa476c39",
+        "columns": 6,
+        "rows": 8,
+        "column": 5,
+        "row": 1
+      }
+    },
+    "Bebidas vegetales": {
+      "label": "Bebidas vegetales",
+      "icon": {
+        "asset": "caf8c9dbf737f5227e6786b6109aaae014abffcc63ded6ebf22baa93fa476c39",
+        "columns": 6,
+        "rows": 8,
+        "column": 1,
+        "row": 2
+      }
+    },
+    "Bicarbonato y polvo de hornear": {
+      "label": "Bicarbonato y polvo de hornear",
+      "icon": {
+        "asset": "caf8c9dbf737f5227e6786b6109aaae014abffcc63ded6ebf22baa93fa476c39",
+        "columns": 6,
+        "rows": 8,
+        "column": 4,
+        "row": 2
+      }
+    },
+    "Cacao": {
+      "label": "Cacao",
+      "icon": {
+        "asset": "caf8c9dbf737f5227e6786b6109aaae014abffcc63ded6ebf22baa93fa476c39",
+        "columns": 6,
+        "rows": 8,
+        "column": 0,
+        "row": 3
+      }
+    },
+    "Café": {
+      "label": "Café",
+      "icon": {
+        "asset": "caf8c9dbf737f5227e6786b6109aaae014abffcc63ded6ebf22baa93fa476c39",
+        "columns": 6,
+        "rows": 8,
+        "column": 3,
+        "row": 3
+      }
+    },
+    "Caramelos y golosinas": {
+      "label": "Caramelos y golosinas",
+      "icon": {
+        "asset": "caf8c9dbf737f5227e6786b6109aaae014abffcc63ded6ebf22baa93fa476c39",
+        "columns": 6,
+        "rows": 8,
+        "column": 1,
+        "row": 4
+      }
+    },
+    "Carnes y fiambres": {
+      "label": "Carnes y fiambres",
+      "icon": {
+        "asset": "caf8c9dbf737f5227e6786b6109aaae014abffcc63ded6ebf22baa93fa476c39",
+        "columns": 6,
+        "rows": 8,
+        "column": 3,
+        "row": 4
+      }
+    },
+    "Cereales": {
+      "label": "Cereales",
+      "icon": {
+        "asset": "caf8c9dbf737f5227e6786b6109aaae014abffcc63ded6ebf22baa93fa476c39",
+        "columns": 6,
+        "rows": 8,
+        "column": 0,
+        "row": 5
+      }
+    },
+    "Cervezas": {
+      "label": "Cervezas",
+      "icon": {
+        "asset": "caf8c9dbf737f5227e6786b6109aaae014abffcc63ded6ebf22baa93fa476c39",
+        "columns": 6,
+        "rows": 8,
+        "column": 4,
+        "row": 5
+      }
+    },
+    "Cervezas sin alcohol": {
+      "label": "Cervezas sin alcohol",
+      "icon": {
+        "asset": "caf8c9dbf737f5227e6786b6109aaae014abffcc63ded6ebf22baa93fa476c39",
+        "columns": 6,
+        "rows": 8,
+        "column": 1,
+        "row": 6
+      }
+    },
+    "Champiñones": {
+      "label": "Champiñones",
+      "icon": {
+        "asset": "caf8c9dbf737f5227e6786b6109aaae014abffcc63ded6ebf22baa93fa476c39",
+        "columns": 6,
+        "rows": 8,
+        "column": 5,
+        "row": 6
+      }
+    },
+    "Chimichurri": {
+      "label": "Chimichurri",
+      "icon": {
+        "asset": "caf8c9dbf737f5227e6786b6109aaae014abffcc63ded6ebf22baa93fa476c39",
+        "columns": 6,
+        "rows": 8,
+        "column": 0,
+        "row": 7
+      }
+    },
+    "Choclo en conserva": {
+      "label": "Choclo en conserva",
+      "icon": {
+        "asset": "caf8c9dbf737f5227e6786b6109aaae014abffcc63ded6ebf22baa93fa476c39",
+        "columns": 6,
+        "rows": 8,
+        "column": 3,
+        "row": 7
+      }
+    },
+    "Chorizos y salchichas": {
+      "label": "Chorizos y salchichas",
+      "icon": {
+        "asset": "5fae1327b5b9f5f621b9850dc8eb5d6600fc4ac94403f3155bb0ce480decd6b0",
+        "columns": 6,
+        "rows": 8,
+        "column": 0,
+        "row": 0
+      }
+    },
+    "Coco rallado": {
+      "label": "Coco rallado",
+      "icon": {
+        "asset": "5fae1327b5b9f5f621b9850dc8eb5d6600fc4ac94403f3155bb0ce480decd6b0",
+        "columns": 6,
+        "rows": 8,
+        "column": 3,
+        "row": 0
+      }
+    },
+    "Condimentos": {
+      "label": "Condimentos",
+      "icon": {
+        "asset": "5fae1327b5b9f5f621b9850dc8eb5d6600fc4ac94403f3155bb0ce480decd6b0",
+        "columns": 6,
+        "rows": 8,
+        "column": 1,
+        "row": 1
+      }
+    },
+    "Cuscús y burgol": {
+      "label": "Cuscús y burgol",
+      "icon": {
+        "asset": "5fae1327b5b9f5f621b9850dc8eb5d6600fc4ac94403f3155bb0ce480decd6b0",
+        "columns": 6,
+        "rows": 8,
+        "column": 3,
+        "row": 1
+      }
+    },
+    "Dulce de leche": {
+      "label": "Dulce de leche",
+      "icon": {
+        "asset": "5fae1327b5b9f5f621b9850dc8eb5d6600fc4ac94403f3155bb0ce480decd6b0",
+        "columns": 6,
+        "rows": 8,
+        "column": 0,
+        "row": 2
+      }
+    },
+    "Dulces de batata y membrillo": {
+      "label": "Dulces de batata y membrillo",
+      "icon": {
+        "asset": "5fae1327b5b9f5f621b9850dc8eb5d6600fc4ac94403f3155bb0ce480decd6b0",
+        "columns": 6,
+        "rows": 8,
+        "column": 3,
+        "row": 2
+      }
+    },
+    "Edulcorantes": {
+      "label": "Edulcorantes",
+      "icon": {
+        "asset": "5fae1327b5b9f5f621b9850dc8eb5d6600fc4ac94403f3155bb0ce480decd6b0",
+        "columns": 6,
+        "rows": 8,
+        "column": 1,
+        "row": 3
+      }
+    },
+    "Esencias": {
+      "label": "Esencias",
+      "icon": {
+        "asset": "5fae1327b5b9f5f621b9850dc8eb5d6600fc4ac94403f3155bb0ce480decd6b0",
+        "columns": 6,
+        "rows": 8,
+        "column": 5,
+        "row": 3
+      }
+    },
+    "Espumantes": {
+      "label": "Espumantes",
+      "icon": {
+        "asset": "5fae1327b5b9f5f621b9850dc8eb5d6600fc4ac94403f3155bb0ce480decd6b0",
+        "columns": 6,
+        "rows": 8,
+        "column": 2,
+        "row": 4
+      }
+    },
+    "Extracto de tomate": {
+      "label": "Extracto de tomate",
+      "icon": {
+        "asset": "5fae1327b5b9f5f621b9850dc8eb5d6600fc4ac94403f3155bb0ce480decd6b0",
+        "columns": 6,
+        "rows": 8,
+        "column": 4,
+        "row": 4
+      }
+    },
+    "Fideos y pastas secas": {
+      "label": "Fideos y pastas secas",
+      "icon": {
+        "asset": "5fae1327b5b9f5f621b9850dc8eb5d6600fc4ac94403f3155bb0ce480decd6b0",
+        "columns": 6,
+        "rows": 8,
+        "column": 1,
+        "row": 5
+      }
+    },
+    "Frutas congeladas": {
+      "label": "Frutas congeladas",
+      "icon": {
+        "asset": "5fae1327b5b9f5f621b9850dc8eb5d6600fc4ac94403f3155bb0ce480decd6b0",
+        "columns": 6,
+        "rows": 8,
+        "column": 5,
+        "row": 5
+      }
+    },
+    "Frutas en conserva": {
+      "label": "Frutas en conserva",
+      "icon": {
+        "asset": "5fae1327b5b9f5f621b9850dc8eb5d6600fc4ac94403f3155bb0ce480decd6b0",
+        "columns": 6,
+        "rows": 8,
+        "column": 0,
+        "row": 6
+      }
+    },
+    "Frutas secas y deshidratadas": {
+      "label": "Frutas secas y deshidratadas",
+      "icon": {
+        "asset": "5fae1327b5b9f5f621b9850dc8eb5d6600fc4ac94403f3155bb0ce480decd6b0",
+        "columns": 6,
+        "rows": 8,
+        "column": 3,
+        "row": 6
+      }
+    },
+    "Frutos secos": {
+      "label": "Frutos secos",
+      "icon": {
+        "asset": "5fae1327b5b9f5f621b9850dc8eb5d6600fc4ac94403f3155bb0ce480decd6b0",
+        "columns": 6,
+        "rows": 8,
+        "column": 1,
+        "row": 7
+      }
+    },
+    "Galletitas y tostadas": {
+      "label": "Galletitas y tostadas",
+      "icon": {
+        "asset": "5fae1327b5b9f5f621b9850dc8eb5d6600fc4ac94403f3155bb0ce480decd6b0",
+        "columns": 6,
+        "rows": 8,
+        "column": 4,
+        "row": 7
+      }
+    },
+    "Gins": {
+      "label": "Gins",
+      "icon": {
+        "asset": "ce8cc7afadc34d6d2b977f7969605ec743c3b6a5d9ac7eb16c7f7be132eca5bd",
+        "columns": 6,
+        "rows": 8,
+        "column": 1,
+        "row": 0
+      }
+    },
+    "Granas y decoración": {
+      "label": "Granas y decoración",
+      "icon": {
+        "asset": "72f77c0b051943a7d00d3f78b077bbbb2db4c23ee075d13f3e63fd5124708408",
+        "columns": 1,
+        "rows": 1,
+        "column": 0,
+        "row": 0
+      }
+    },
+    "Granolas": {
+      "label": "Granolas",
+      "icon": {
+        "asset": "ce8cc7afadc34d6d2b977f7969605ec743c3b6a5d9ac7eb16c7f7be132eca5bd",
+        "columns": 6,
+        "rows": 8,
+        "column": 0,
+        "row": 1
+      }
+    },
+    "Hamburguesas": {
+      "label": "Hamburguesas",
+      "icon": {
+        "asset": "ce8cc7afadc34d6d2b977f7969605ec743c3b6a5d9ac7eb16c7f7be132eca5bd",
+        "columns": 6,
+        "rows": 8,
+        "column": 3,
+        "row": 1
+      }
+    },
+    "Harinas y sémolas": {
+      "label": "Harinas y sémolas",
+      "icon": {
+        "asset": "ce8cc7afadc34d6d2b977f7969605ec743c3b6a5d9ac7eb16c7f7be132eca5bd",
+        "columns": 6,
+        "rows": 8,
+        "column": 0,
+        "row": 2
+      }
+    },
+    "Hojas de parra": {
+      "label": "Hojas de parra",
+      "icon": {
+        "asset": "ce8cc7afadc34d6d2b977f7969605ec743c3b6a5d9ac7eb16c7f7be132eca5bd",
+        "columns": 6,
+        "rows": 8,
+        "column": 4,
+        "row": 2
+      }
+    },
+    "Jardinera en conserva": {
+      "label": "Jardinera en conserva",
+      "icon": {
+        "asset": "ce8cc7afadc34d6d2b977f7969605ec743c3b6a5d9ac7eb16c7f7be132eca5bd",
+        "columns": 6,
+        "rows": 8,
+        "column": 0,
+        "row": 3
+      }
+    },
+    "Jugo de uva": {
+      "label": "Jugo de uva",
+      "icon": {
+        "asset": "46b09fc37ebb88795f102eb63e45434bf68b65c5f6068ab2281fb13bb978654d",
+        "columns": 1,
+        "rows": 1,
+        "column": 0,
+        "row": 0
+      }
+    },
+    "Jugo en polvo": {
+      "label": "Jugo en polvo",
+      "icon": {
+        "asset": "28182cde4ae587aa78050c0a9b17c11d414fc001425804073275432a51ad8dc9",
+        "columns": 1,
+        "rows": 1,
+        "column": 0,
+        "row": 0
+      }
+    },
+    "Jugos": {
+      "label": "Jugos",
+      "icon": {
+        "asset": "ce8cc7afadc34d6d2b977f7969605ec743c3b6a5d9ac7eb16c7f7be132eca5bd",
+        "columns": 6,
+        "rows": 8,
+        "column": 5,
+        "row": 4
+      }
+    },
+    "Ketchup": {
+      "label": "Ketchup",
+      "icon": {
+        "asset": "ce8cc7afadc34d6d2b977f7969605ec743c3b6a5d9ac7eb16c7f7be132eca5bd",
+        "columns": 6,
+        "rows": 8,
+        "column": 2,
+        "row": 5
+      }
+    },
+    "Kombucha": {
+      "label": "Kombucha",
+      "icon": {
+        "asset": "ce8cc7afadc34d6d2b977f7969605ec743c3b6a5d9ac7eb16c7f7be132eca5bd",
+        "columns": 6,
+        "rows": 8,
+        "column": 3,
+        "row": 5
+      }
+    },
+    "Levaduras": {
+      "label": "Levaduras",
+      "icon": {
+        "asset": "ce8cc7afadc34d6d2b977f7969605ec743c3b6a5d9ac7eb16c7f7be132eca5bd",
+        "columns": 6,
+        "rows": 8,
+        "column": 1,
+        "row": 6
+      }
+    },
+    "Licores": {
+      "label": "Licores",
+      "icon": {
+        "asset": "ce8cc7afadc34d6d2b977f7969605ec743c3b6a5d9ac7eb16c7f7be132eca5bd",
+        "columns": 6,
+        "rows": 8,
+        "column": 5,
+        "row": 6
+      }
+    },
+    "Malta sin alcohol": {
+      "label": "Malta sin alcohol",
+      "icon": {
+        "asset": "ce8cc7afadc34d6d2b977f7969605ec743c3b6a5d9ac7eb16c7f7be132eca5bd",
+        "columns": 6,
+        "rows": 8,
+        "column": 0,
+        "row": 7
+      }
+    },
+    "Maní japonés": {
+      "label": "Maní japonés",
+      "icon": {
+        "asset": "ce8cc7afadc34d6d2b977f7969605ec743c3b6a5d9ac7eb16c7f7be132eca5bd",
+        "columns": 6,
+        "rows": 8,
+        "column": 3,
+        "row": 7
+      }
+    },
+    "Mantecas vegetales / parve": {
+      "label": "Mantecas vegetales / parve",
+      "icon": {
+        "asset": "fa4d98ec5c763fc94aae450f8bfaecd1f937940b4fd4e0fef21c07442952673a",
+        "columns": 6,
+        "rows": 8,
+        "column": 2,
+        "row": 0
+      }
+    },
+    "Mayonesas": {
+      "label": "Mayonesas",
+      "icon": {
+        "asset": "4be429543bf31a087e1097bb1e72808eb6362513707ab9776a39e0a4e33aada1",
+        "columns": 1,
+        "rows": 1,
+        "column": 0,
+        "row": 0
+      }
+    },
+    "Mermeladas": {
+      "label": "Mermeladas",
+      "icon": {
+        "asset": "fa4d98ec5c763fc94aae450f8bfaecd1f937940b4fd4e0fef21c07442952673a",
+        "columns": 6,
+        "rows": 8,
+        "column": 2,
+        "row": 1
+      }
+    },
+    "Miel": {
+      "label": "Miel",
+      "icon": {
+        "asset": "fa4d98ec5c763fc94aae450f8bfaecd1f937940b4fd4e0fef21c07442952673a",
+        "columns": 6,
+        "rows": 8,
+        "column": 4,
+        "row": 1
+      }
+    },
+    "Mostaza": {
+      "label": "Mostaza",
+      "icon": {
+        "asset": "fa4d98ec5c763fc94aae450f8bfaecd1f937940b4fd4e0fef21c07442952673a",
+        "columns": 6,
+        "rows": 8,
+        "column": 2,
+        "row": 2
+      }
+    },
+    "Obleas": {
+      "label": "Obleas",
+      "icon": {
+        "asset": "fa4d98ec5c763fc94aae450f8bfaecd1f937940b4fd4e0fef21c07442952673a",
+        "columns": 6,
+        "rows": 8,
+        "column": 4,
+        "row": 2
+      }
+    },
+    "Otros aceites": {
+      "label": "Otros aceites",
+      "icon": {
+        "asset": "fa4d98ec5c763fc94aae450f8bfaecd1f937940b4fd4e0fef21c07442952673a",
+        "columns": 6,
+        "rows": 8,
+        "column": 0,
+        "row": 3
+      }
+    },
+    "Palmitos": {
+      "label": "Palmitos",
+      "icon": {
+        "asset": "fa4d98ec5c763fc94aae450f8bfaecd1f937940b4fd4e0fef21c07442952673a",
+        "columns": 6,
+        "rows": 8,
+        "column": 3,
+        "row": 3
+      }
+    },
+    "Panes": {
+      "label": "Panes",
+      "icon": {
+        "asset": "fa4d98ec5c763fc94aae450f8bfaecd1f937940b4fd4e0fef21c07442952673a",
+        "columns": 6,
+        "rows": 8,
+        "column": 0,
+        "row": 4
+      }
+    },
+    "Papas congeladas": {
+      "label": "Papas congeladas",
+      "icon": {
+        "asset": "fa4d98ec5c763fc94aae450f8bfaecd1f937940b4fd4e0fef21c07442952673a",
+        "columns": 6,
+        "rows": 8,
+        "column": 1,
+        "row": 5
+      }
+    },
+    "Pasta de aceitunas": {
+      "label": "Pasta de aceitunas",
+      "icon": {
+        "asset": "fa4d98ec5c763fc94aae450f8bfaecd1f937940b4fd4e0fef21c07442952673a",
+        "columns": 6,
+        "rows": 8,
+        "column": 4,
+        "row": 5
+      }
+    },
+    "Pastas dulces": {
+      "label": "Pastas dulces",
+      "icon": {
+        "asset": "dedae0a9b3aa906b8e910418c6efdb517b87d4d9ab4fc4f8176a576bf72ba397",
+        "columns": 1,
+        "rows": 1,
+        "column": 0,
+        "row": 0
+      }
+    },
+    "Pastas sin gluten y de legumbres": {
+      "label": "Pastas sin gluten y de legumbres",
+      "icon": {
+        "asset": "fa4d98ec5c763fc94aae450f8bfaecd1f937940b4fd4e0fef21c07442952673a",
+        "columns": 6,
+        "rows": 8,
+        "column": 4,
+        "row": 6
+      }
+    },
+    "Pastas y mantequillas de frutos secos": {
+      "label": "Pastas y mantequillas de frutos secos",
+      "icon": {
+        "asset": "fa4d98ec5c763fc94aae450f8bfaecd1f937940b4fd4e0fef21c07442952673a",
+        "columns": 6,
+        "rows": 8,
+        "column": 2,
+        "row": 7
+      }
+    },
+    "Pepinos en conserva": {
+      "label": "Pepinos en conserva",
+      "icon": {
+        "asset": "fa4d98ec5c763fc94aae450f8bfaecd1f937940b4fd4e0fef21c07442952673a",
+        "columns": 6,
+        "rows": 8,
+        "column": 5,
+        "row": 7
+      }
+    },
+    "Pescados ahumados": {
+      "label": "Pescados ahumados",
+      "icon": {
+        "asset": "933325b9f8279b4a5fb9c120e60ee46b32657152641928e0264a4b17aaa3b893",
+        "columns": 6,
+        "rows": 8,
+        "column": 0,
+        "row": 0
+      }
+    },
+    "Pochoclos": {
+      "label": "Pochoclos",
+      "icon": {
+        "asset": "933325b9f8279b4a5fb9c120e60ee46b32657152641928e0264a4b17aaa3b893",
+        "columns": 6,
+        "rows": 8,
+        "column": 3,
+        "row": 0
+      }
+    },
+    "Polenta": {
+      "label": "Polenta",
+      "icon": {
+        "asset": "933325b9f8279b4a5fb9c120e60ee46b32657152641928e0264a4b17aaa3b893",
+        "columns": 6,
+        "rows": 8,
+        "column": 0,
+        "row": 1
+      }
+    },
+    "Porotos, lentejas y garbanzos": {
+      "label": "Porotos, lentejas y garbanzos",
+      "icon": {
+        "asset": "933325b9f8279b4a5fb9c120e60ee46b32657152641928e0264a4b17aaa3b893",
+        "columns": 6,
+        "rows": 8,
+        "column": 5,
+        "row": 1
+      }
+    },
+    "Productos de dietética": {
+      "label": "Productos de dietética",
+      "icon": {
+        "asset": "933325b9f8279b4a5fb9c120e60ee46b32657152641928e0264a4b17aaa3b893",
+        "columns": 6,
+        "rows": 8,
+        "column": 0,
+        "row": 2
+      }
+    },
+    "Pulpas de fruta": {
+      "label": "Pulpas de fruta",
+      "icon": {
+        "asset": "933325b9f8279b4a5fb9c120e60ee46b32657152641928e0264a4b17aaa3b893",
+        "columns": 6,
+        "rows": 8,
+        "column": 3,
+        "row": 2
+      }
+    },
+    "Puré de tomate": {
+      "label": "Puré de tomate",
+      "icon": {
+        "asset": "24cf1b06174811a1489d7b5e180b4917d785715bea1707c5cf71b115234b05ff",
+        "columns": 1,
+        "rows": 1,
+        "column": 0,
+        "row": 0
+      }
+    },
+    "Quesos": {
+      "label": "Quesos",
+      "icon": {
+        "asset": "933325b9f8279b4a5fb9c120e60ee46b32657152641928e0264a4b17aaa3b893",
+        "columns": 6,
+        "rows": 8,
+        "column": 4,
+        "row": 3
+      }
+    },
+    "Rones": {
+      "label": "Rones",
+      "icon": {
+        "asset": "933325b9f8279b4a5fb9c120e60ee46b32657152641928e0264a4b17aaa3b893",
+        "columns": 6,
+        "rows": 8,
+        "column": 2,
+        "row": 4
+      }
+    },
+    "Sales": {
+      "label": "Sales",
+      "icon": {
+        "asset": "933325b9f8279b4a5fb9c120e60ee46b32657152641928e0264a4b17aaa3b893",
+        "columns": 6,
+        "rows": 8,
+        "column": 4,
+        "row": 4
+      }
+    },
+    "Salsa barbacoa": {
+      "label": "Salsa barbacoa",
+      "icon": {
+        "asset": "7c8fdc62f9c9b408b1a5021652e9888d110926f5e27caf54f16098cec1524a90",
+        "columns": 1,
+        "rows": 1,
+        "column": 0,
+        "row": 0
+      }
+    },
+    "Salsa golf": {
+      "label": "Salsa golf",
+      "icon": {
+        "asset": "933325b9f8279b4a5fb9c120e60ee46b32657152641928e0264a4b17aaa3b893",
+        "columns": 6,
+        "rows": 8,
+        "column": 5,
+        "row": 5
+      }
+    },
+    "Salsas": {
+      "label": "Salsas",
+      "icon": {
+        "asset": "f09279f25804b368e69809cc6812a22a173591fea9922b07286e77d81f37dcc2",
+        "columns": 1,
+        "rows": 1,
+        "column": 0,
+        "row": 0
+      }
+    },
+    "Semillas": {
+      "label": "Semillas",
+      "icon": {
+        "asset": "933325b9f8279b4a5fb9c120e60ee46b32657152641928e0264a4b17aaa3b893",
+        "columns": 6,
+        "rows": 8,
+        "column": 4,
+        "row": 6
+      }
+    },
+    "Snacks": {
+      "label": "Snacks",
+      "icon": {
+        "asset": "2cf4e54441028e6a45131f6e8ca57fa0cbc70d0581bac2df1e3aea0feda68242",
+        "columns": 1,
+        "rows": 1,
+        "column": 0,
+        "row": 0
+      }
+    },
+    "Sopas y caldos": {
+      "label": "Sopas y caldos",
+      "icon": {
+        "asset": "933325b9f8279b4a5fb9c120e60ee46b32657152641928e0264a4b17aaa3b893",
+        "columns": 6,
+        "rows": 8,
+        "column": 3,
+        "row": 7
+      }
+    },
+    "Tahini y pastas de semillas": {
+      "label": "Tahini y pastas de semillas",
+      "icon": {
+        "asset": "5bc3f0c308df34f8cc6eb8623c930b26109a5983a42d30ccf662bff35f3d3149",
+        "columns": 6,
+        "rows": 8,
+        "column": 1,
+        "row": 0
+      }
+    },
+    "Té": {
+      "label": "Té",
+      "icon": {
+        "asset": "5bc3f0c308df34f8cc6eb8623c930b26109a5983a42d30ccf662bff35f3d3149",
+        "columns": 6,
+        "rows": 8,
+        "column": 3,
+        "row": 0
+      }
+    },
+    "Tequilas": {
+      "label": "Tequilas",
+      "icon": {
+        "asset": "5bc3f0c308df34f8cc6eb8623c930b26109a5983a42d30ccf662bff35f3d3149",
+        "columns": 6,
+        "rows": 8,
+        "column": 0,
+        "row": 1
+      }
+    },
+    "Tofu y proteínas de soja": {
+      "label": "Tofu y proteínas de soja",
+      "icon": {
+        "asset": "5bc3f0c308df34f8cc6eb8623c930b26109a5983a42d30ccf662bff35f3d3149",
+        "columns": 6,
+        "rows": 8,
+        "column": 4,
+        "row": 1
+      }
+    },
+    "Tomates en conserva": {
+      "label": "Tomates en conserva",
+      "icon": {
+        "asset": "5bc3f0c308df34f8cc6eb8623c930b26109a5983a42d30ccf662bff35f3d3149",
+        "columns": 6,
+        "rows": 8,
+        "column": 1,
+        "row": 2
+      }
+    },
+    "Tomates secos": {
+      "label": "Tomates secos",
+      "icon": {
+        "asset": "5bc3f0c308df34f8cc6eb8623c930b26109a5983a42d30ccf662bff35f3d3149",
+        "columns": 6,
+        "rows": 8,
+        "column": 3,
+        "row": 2
+      }
+    },
+    "Turrones": {
+      "label": "Turrones",
+      "icon": {
+        "asset": "5bc3f0c308df34f8cc6eb8623c930b26109a5983a42d30ccf662bff35f3d3149",
+        "columns": 6,
+        "rows": 8,
+        "column": 0,
+        "row": 3
+      }
+    },
+    "Vegetales deshidratados": {
+      "label": "Vegetales deshidratados",
+      "icon": {
+        "asset": "5bc3f0c308df34f8cc6eb8623c930b26109a5983a42d30ccf662bff35f3d3149",
+        "columns": 6,
+        "rows": 8,
+        "column": 5,
+        "row": 3
+      }
+    },
+    "Verduras congeladas": {
+      "label": "Verduras congeladas",
+      "icon": {
+        "asset": "5bc3f0c308df34f8cc6eb8623c930b26109a5983a42d30ccf662bff35f3d3149",
+        "columns": 6,
+        "rows": 8,
+        "column": 0,
+        "row": 4
+      }
+    },
+    "Vinagres": {
+      "label": "Vinagres",
+      "icon": {
+        "asset": "597aa958f73a947131aa52ebfbfbc9fffd17df05f319616fe582de55092d4afd",
+        "columns": 1,
+        "rows": 1,
+        "column": 0,
+        "row": 0
+      }
+    },
+    "Vinos": {
+      "label": "Vinos",
+      "icon": {
+        "asset": "5bc3f0c308df34f8cc6eb8623c930b26109a5983a42d30ccf662bff35f3d3149",
+        "columns": 6,
+        "rows": 8,
+        "column": 0,
+        "row": 5
+      }
+    },
+    "Vodkas": {
+      "label": "Vodkas",
+      "icon": {
+        "asset": "5bc3f0c308df34f8cc6eb8623c930b26109a5983a42d30ccf662bff35f3d3149",
+        "columns": 6,
+        "rows": 8,
+        "column": 3,
+        "row": 5
+      }
+    },
+    "Wasabi": {
+      "label": "Wasabi",
+      "icon": {
+        "asset": "5bc3f0c308df34f8cc6eb8623c930b26109a5983a42d30ccf662bff35f3d3149",
+        "columns": 6,
+        "rows": 8,
+        "column": 0,
+        "row": 6
+      }
+    },
+    "Whiskies": {
+      "label": "Whiskies",
+      "icon": {
+        "asset": "5bc3f0c308df34f8cc6eb8623c930b26109a5983a42d30ccf662bff35f3d3149",
+        "columns": 6,
+        "rows": 8,
+        "column": 4,
+        "row": 6
+      }
+    },
+    "Yerba mate": {
+      "label": "Yerba mate",
+      "icon": {
+        "asset": "5bc3f0c308df34f8cc6eb8623c930b26109a5983a42d30ccf662bff35f3d3149",
+        "columns": 6,
+        "rows": 8,
+        "column": 0,
+        "row": 7
+      }
+    },
+    "Yogures vegetales / parve": {
+      "label": "Yogures vegetales / parve",
+      "icon": {
+        "asset": "c8ee1ada02aa512c2bfa5bb120204bbbf3fac1ea241a997d628faf16be1b3bd4",
+        "columns": 1,
+        "rows": 1,
+        "column": 0,
+        "row": 0
+      }
+    },
+    "Puré instantáneo": {
+      "label": "Puré instantáneo",
+      "icon": {
+        "asset": "2af1de0ca150bbd1964da2731724b72d7b22e9f3da01089282e7ac7eaa6da970",
+        "columns": 1,
+        "rows": 1,
+        "column": 0,
+        "row": 0
+      }
+    },
+    "Papas fritas": {
+      "label": "Papas fritas",
+      "icon": {
+        "asset": "3b93d1ef84657bf08608b62727c3c41bafa9f4df4d320250289688a3e2e37e42",
+        "columns": 1,
+        "rows": 1,
+        "column": 0,
+        "row": 0
+      }
+    }
+  },
+  "texts": {},
+  "categoryInformation": {},
+  "featuredProducts": null,
+  "textCorrections": {
+    "certifiacion": "certificación",
+    "certifiación": "certificación",
+    "certificacion": "certificación",
+    "certifcación": "certificación",
+    "certtificacion": "certificación",
+    "cerificación": "certificación",
+    "cetificacion": "certificación",
+    "supervisón": "supervisión",
+    "supervision": "supervisión",
+    "autorizdad": "autorizado",
+    "autorizacion": "autorización",
+    "contaminacion": "contaminación",
+    "naraja": "naranja",
+    "damasaco": "damasco",
+    "revanado": "rebanado",
+    "cogeladas": "congeladas",
+    "amrago": "amargo",
+    "naturla": "natural",
+    "humado": "ahumado",
+    "iportado": "importado",
+    "parpika": "páprika",
+    "paprika": "páprika",
+    "taratas": "tartas",
+    "azarfán": "azafrán",
+    "acides": "acidez",
+    "MErmelada": "Mermelada",
+    "Light maca": "Light marca",
+    "artesanalemnte": "artesanalmente",
+    "cominudad": "comunidad",
+    "condusirce": "conducirse",
+    "consute": "consulte",
+    "cosultar": "consultar",
+    "exsisten": "existen",
+    "opinian": "opinan",
+    "provienentes": "provenientes",
+    "puenden": "pueden",
+    "repecto": "respecto",
+    "restauranes": "restaurantes",
+    "truran": "trituran",
+    "lo mejo": "lo mejor",
+    "kahsrut": "kashrut",
+    "kohser": "kosher",
+    "prave": "parve",
+    "rabianto": "rabinato",
+    "isarel": "israel",
+    "badtaz": "badatz",
+    "snaks": "snacks",
+    "alcoholica": "alcohólica",
+    "energisantes": "energizantes",
+    "cafe": "café",
+    "maiz": "maíz",
+    "pure": "puré",
+    "fecula": "fécula",
+    "azucar": "azúcar",
+    "atun": "atún",
+    "salmon": "salmón",
+    "turron": "turrón",
+    "brocoli": "brócoli",
+    "anana": "ananá",
+    "consome": "consomé",
+    "clasico": "clásico",
+    "capsulas": "cápsulas",
+    "carton": "cartón",
+    "estan": "están",
+    "faciles": "fáciles",
+    "instantanea": "instantánea",
+    "japones": "japonés",
+    "morron": "morrón",
+    "oregano": "orégano",
+    "organica": "orgánica",
+    "organico": "orgánico",
+    "proteina": "proteína",
+    "reunion": "reunión",
+    "salchichon": "salchichón",
+    "traves": "través",
+    "vacio": "vacío",
+    "dietetica": "dietética",
+    "dieteticas": "dietéticas",
+    "cafeteria": "cafetería",
+    "rabinica": "rabínica",
+    "cascara": "cáscara",
+    "cascaras": "cáscaras",
+    "ingles": "inglés",
+    "Mexico": "México",
+    "La campagnola": "La Campagnola",
+    "La parmesana": "La Parmesana",
+    "Sabores orientales": "Sabores Orientales",
+    "Mount Gay Eclipce": "Mount Gay Eclipse",
+    "Bitbunger": "Bitburger",
+    "Herradua": "Herradura",
+    "Kellog’s": "Kellogg’s",
+    "Lemon Crud": "Lemon Curd",
+    "Lime Crud": "Lime Curd",
+    "Brugol": "Burgol",
+    "en fabrica de": "en fábrica de",
+    "El producto en si": "El producto en sí",
+    "Apicola": "Apícola",
+    "Anis": "Anís",
+    "aqui": "aquí",
+    "baston": "bastón"
+  },
+  "productImages": {
+    "https://vaad.ar/producto/bebida-alcoholica-marca-brokers/": "8eabe4818d6a3cbdc4c4f722bdf8c7d7103d5ce3c5db960528b2e8c4ea2ee119",
+    "https://vaad.ar/producto/cerveza-marca-eschenbacher/": "5afdf56761a76485d73e167df84c73312f437838f3ba01bd7ff7e95f93581ff1",
+    "https://vaad.ar/producto/bebida-alcoholica-marca-jose-cuervo/": "4ea84089afce8b4fd0f78733f50277584c11124e7c8d5d1a952c366c3ba1a564",
+    "https://vaad.ar/producto/bebida-alcoholica-marca-el-jimador/": "d9cd6c0b5ee8518c82b618fef76925da39d19c86e8db9ed9c49845fb92920c3a",
+    "https://vaad.ar/producto/cerveza-marca-karlsberg/": "67eeb9a62b7b328b7332971131abecd421123dbec558bb28fcd1310d9ac5e2b0",
+    "https://vaad.ar/producto/vino-cabernet-wild-goat/": "cfa12822a095cb27a7fa925a11288a183988ba58df08945e1974d16df8b64977",
+    "https://vaad.ar/producto/bebida-alcoholica-marca-brown-forman/": "fd749e39b512093bbdd30bae5123a4aa2500db06d05ec284af7fc1b164d6fc53",
+    "https://vaad.ar/producto/cerveza-marca-oettinger-5/": "05c192975d3fb8a2512aad1a6b60be71e5ff32a6f5289df509d60fae0d33baa8",
+    "https://vaad.ar/producto/bebida-alcoholica-marca-beluga-3/": "2f5cd7a316cb0a087f9e34f1fc1daf1fb7bb42aa421ab198c01d0bf6e3754785",
+    "https://vaad.ar/producto/bebida-alcoholica-marca-beluga-2/": "df601a9efdb43e42e7746b0fb6e4670bae108714e354a8a759e30833abf2a9c0",
+    "https://vaad.ar/producto/mermelada-ginger-marca-mackays/": "b55e84f935bc1bef0132e039a629832da5024751ccf76d3661cbf054d2a76e9f",
+    "https://vaad.ar/producto/mermelada-sweet-navelina-orange-marca-mackays/": "0a4770f38ceab1df0d67413fd1da64ebdae839066e19164745b5a96e7451b9ad",
+    "https://vaad.ar/producto/aceite-en-aerosol-marca-cocinero/": "ccdfa2f0378b9248b49c0c97d1b36b56f7c2b4d38f4a054f16843289e0f20584",
+    "https://vaad.ar/producto/298235/": "9b401d9b786b87883fcb4e4d02aa14f0b690d04de0096ccca8d69bc38ef7111a",
+    "https://vaad.ar/producto/cerveza-pale-ale-marca-barba-roja/": "77729a1bec126cca94e8a4567758176291c04627ed6ec468b5bcb2c89099bc1b"
+  }
+}
