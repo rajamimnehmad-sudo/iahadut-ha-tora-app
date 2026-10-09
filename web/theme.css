@@ -949,7 +949,7 @@ body { color: #252925; }
 .recent-product:nth-child(2) { border-color: #e8dfca; }
 .recent-product:nth-child(3) { border-color: #d8e2ee; }
 .recent-product:nth-child(4) { border-color: #ead8dc; }
-.recent-product img { display: block; width: 100%; height: 100%; object-fit: contain; border-radius: 8px; background: #f5f7f4; }
+.recent-product img { display: block; width: 100%; height: 100%; object-fit: contain; border-radius: 8px; background: #fff; }
 .recent-product-media { position: relative; display: block; width: 100%; height: 100%; }
 .recent-product-media > img { display: block; }
 .recent-product-media { overflow: hidden; border-radius: 8px; background: #fff; }
@@ -1178,7 +1178,7 @@ body { color: #252925; }
 .product-list .product { border: 0; border-bottom: 1px solid #edf1ee; }
 .product-list .product:last-child { border-bottom-color: transparent; }
 .product:hover { background: #f4f8f5; }
-.product img { width: 66px; height: 66px; border-radius: 10px; background: #fafbf9; }
+.product img { width: 66px; height: 66px; border-radius: 10px; background: #fff; }
 .product .cat { color: #6e7971; font-size: 9px; }
 .product strong { color: #222722; font-size: 14px; font-weight: 700; }
 .brand-separator { display: inline-block; margin: 0 .18em 0 .24em; color: #9aa69f; font-weight: 500; }
@@ -1487,7 +1487,7 @@ body strong { font-weight: 600; }
 .popular-searches-track { display: flex; gap: 9px; overflow-x: auto; padding: 2px 1px 7px; scrollbar-width: none; }
 .popular-searches-track::-webkit-scrollbar { display: none; }
 .popular-search-card { flex: 0 0 94px; display: grid; gap: 6px; padding: 7px; border: 1px solid #d6e5db; border-radius: 13px; background: #fff; color: #30443a; text-align: left; box-shadow: 0 3px 10px #26372d0d; }
-.popular-search-card img { width: 78px; height: 70px; object-fit: contain; border-radius: 8px; background: #f5f7f4; }
+.popular-search-card img { width: 78px; height: 70px; object-fit: contain; border-radius: 8px; background: #fff; }
 .popular-search-card span { display: -webkit-box; overflow: hidden; font-size: 10px; font-weight: 700; line-height: 1.2; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
 .popular-search-card span { font-size: 9px; font-weight: 600; line-height: 1.22; }
 .popular-search-card:active { transform: scale(.97); }
@@ -3116,7 +3116,7 @@ body.app-scrolled .app-hero .detail-head {
   box-shadow: 0 5px 14px rgb(36 91 69 / 10%);
 }
 #homeView .recent-product img {
-  background: #edf6ef;
+  background: #fff;
 }
 #homeView .explore-categories-action {
   border-color: #8fbda1;
@@ -4973,6 +4973,28 @@ body,
   top: 50% !important;
 }
 
+/* El botón ocupa 44px: reservar además 8px antes del texto editable. */
+body.search-open .bottom-nav.search-mode #searchForm .search-box input {
+  padding-left: 52px !important;
+}
+@media (min-width: 701px) {
+  body.search-open .bottom-nav.search-mode #searchForm .search-box input {
+    padding-left: 60px !important;
+  }
+}
+
+/* iOS amplía los campos con letra menor de 16px al enfocarlos. Mantener
+   ese mínimo sin impedir que el usuario amplíe la página voluntariamente. */
+#homeView #homeForm .search-box input {
+  font-size: 16px !important;
+}
+
+html[data-platform="ios"] input,
+html[data-platform="ios"] textarea,
+html[data-platform="ios"] select {
+  font-size: max(16px, 1em);
+}
+
 /* Buscador expandido compacto: altura equilibrada con el botón de escaneo. */
 @media (max-width: 700px) {
   #homeView #homeForm {
@@ -5035,13 +5057,13 @@ body.search-open::after {
    línea horizontal. Es una capa fija: no alarga el área desplazable. */
 body[data-active-view="homeView"]:not(.search-open)::after {
   height: calc(
-    var(--dock-height) + var(--dock-gap) + 28px + env(safe-area-inset-bottom, 0px)
+    var(--dock-height) + max(16px, calc(env(safe-area-inset-bottom, 0px) - 8px)) + 12px
   );
   background: linear-gradient(
     to bottom,
     rgb(255 255 255 / 0%) 0%,
-    rgb(255 255 255 / 82%) 30%,
-    #fff 52%,
+    rgb(255 255 255 / 82%) 45%,
+    #fff 70%,
     #fff 100%
   );
   -webkit-mask-image: none;
@@ -5223,13 +5245,12 @@ body.app-scrolled #appHero {
   backdrop-filter: blur(18px) saturate(116%) !important;
 }
 
-/* En tablet el hero de dos franjas acompaña el documento: mantenerlo sticky
-   tapaba las primeras filas y dejaba una cabecera flotante cortada. El dock
-   conserva la navegación, por lo que no hace falta fijar también el hero. */
+/* En tablet la cabecera conserva su espacio y acompaña el desplazamiento. */
 @media (min-width: 701px) {
   #appHero {
-    position: relative !important;
-    top: auto !important;
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 30 !important;
     overflow: visible !important;
   }
 
@@ -5325,6 +5346,11 @@ body.app-scrolled #appHero {
 .offline-download-progress { display: block; height: 3px; border-radius: 4px; background: #dce9e1; overflow: hidden; margin-top: 7px; }
 .offline-download-progress > span { display: block; height: 100%; background: #297555; transition: width .2s linear; }
 .offline-download-item { position: relative; }
+.offline-storage-icon svg { width: 23px; height: 23px; fill: none; stroke: currentColor; stroke-width: 1.65; stroke-linecap: round; stroke-linejoin: round; }
+.offline-download-actions { display: flex; justify-content: flex-end; padding: 0 12px 10px; }
+.offline-delete-button { display: inline-flex; align-items: center; gap: 7px; min-height: 44px; padding: 8px 12px; border: 1px solid #d7e2dc; border-radius: 10px; background: #fff; color: #52665b; font: inherit; font-size: 13px; cursor: pointer; }
+.offline-delete-button svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+.offline-delete-button:disabled { opacity: .6; cursor: default; }
 .offline-download-item:has(.offline-pause-button) .offline-download-row { padding-right: 100px; }
 .offline-pause-button { position: absolute; right: 8px; top: 50%; transform: translateY(-50%); min-height: 44px; padding: 8px 12px; border: 1px solid #a6c4b5; border-radius: 12px; background: transparent; color: #205d46; font: inherit; font-size: 12px; cursor: pointer; }
 .offline-network-dialog { max-width: 340px; width: calc(100% - 40px); padding: 24px; border: 0; border-radius: 24px; background: #fff; color: #1d4335; font-family: inherit; }
@@ -5336,6 +5362,11 @@ body.app-scrolled #appHero {
 /* Category shortcuts complement, rather than replace, product search results. */
 .search-category-matches {margin:0 20px 18px;display:grid;gap:8px;}
 .search-category-caption {font-size:12px;color:#64766e;}
+.search-region-matches { margin: 0 20px 16px; }
+.search-region-match { display:flex; align-items:center; gap:10px; width:100%; min-height:48px; padding:10px 12px; border:1px solid #bdd6c8; border-radius:12px; background:#f3faf6; color:#205d46; font:inherit; font-size:14px; text-align:left; cursor:pointer; }
+.search-region-match > span:nth-child(2) { flex:1; min-width:0; }
+.search-region-match small { font-size:12px; color:#64766e; white-space:nowrap; }
+.search-region-match > span:last-child { font-size:22px; }
 .search-category-match {display:flex;align-items:center;gap:10px;padding:12px 14px;border:1px solid #c5dfd2;border-radius:14px;background:#f0f8f3;color:#205b46;text-align:left;font:inherit;font-weight:650;}
 .search-category-match > span:nth-last-child(2) {flex:1;}
 .search-category-match .taxonomy-icon {font-size:22px;width:24px;flex-shrink:0;}
@@ -5367,6 +5398,30 @@ body.app-scrolled #appHero {
 .image-overlay .overlay-close-control, .scanner .overlay-close-control { color: #fff; background: #203f34; border-color: #ffffff66; }
 #filterOverlay .sheet-title { align-items: center; }
 #filterOverlay .sheet-title > div { display: flex; align-items: center; gap: 8px; }
+
+/* En tablet los filtros son un diálogo centrado, sin recortar las opciones. */
+@media (min-width: 701px) {
+  #filterOverlay {
+    align-items: center;
+    justify-content: center;
+    padding: max(24px, env(safe-area-inset-top)) max(24px, env(safe-area-inset-right)) max(24px, env(safe-area-inset-bottom)) max(24px, env(safe-area-inset-left));
+  }
+  #filterOverlay .sheet {
+    display: flex;
+    flex-direction: column;
+    width: min(520px, 100%);
+    max-width: 520px;
+    max-height: calc(100dvh - 48px);
+    margin: 0;
+    padding: 20px 24px 12px;
+    border-radius: 24px;
+    box-shadow: 0 18px 60px #17322430;
+  }
+  #filterOverlay .grab { display: none; }
+  #filterOverlay .sheet-title { flex-shrink: 0; margin-bottom: 10px; }
+  #filterOptions { min-height: 0; overflow-y: auto; overscroll-behavior: contain; }
+  #filterOverlay .filter-option { min-height: 62px; padding: 14px 0; }
+}
 /* Shortcuts remain compact so the product cards are visible immediately. */
 .search-category-match { padding-block: 8px; font-size: 13px; }
 
@@ -5465,3 +5520,121 @@ body.app-scrolled #appHero {
   body.search-open .bottom-nav.search-mode #searchForm .scan.is-clear span { transform: translateY(-1px); }
   body.search-closing .bottom-nav { visibility: hidden; }
 }
+
+/* iPhone: retain the shared rounded, symmetric dock. The safe area
+   adapts the inset without assuming a private physical screen-radius API. */
+html[data-platform="ios"][data-ios-edge-to-edge="true"] {
+  --dock-height: 73px;
+  --dock-inset: max(16px, calc(env(safe-area-inset-bottom, 0px) - 8px));
+  --dock-gap: var(--dock-inset);
+  --dock-radius: 36px;
+}
+html[data-platform="ios"][data-ios-edge-to-edge="true"] body:not(.search-open) .bottom-nav {
+  min-height: var(--dock-height) !important;
+  bottom: var(--dock-inset) !important;
+  width: min(calc(100% - var(--dock-inset) - var(--dock-inset)), 760px) !important;
+  border-radius: var(--dock-radius) !important;
+  padding: 6px 5px !important;
+}
+html[data-platform="ios"][data-ios-edge-to-edge="true"] body:not(.search-open) .bottom-nav .nav {
+  min-height: 60px !important;
+  border-radius: 28px !important;
+}
+
+/* The selected iPad concept uses a persistent sidebar. Phone rules stay intact. */
+.tablet-sidebar, .tablet-welcome { display: none; }
+@media (min-width: 701px) and (min-height: 600px) {
+  :root { --tablet-sidebar-width: clamp(176px, 20vw, 240px); }
+  .tablet-sidebar {
+    display: flex; flex-direction: column; position: fixed; z-index: 20;
+    inset: 0 auto 0 0; width: var(--tablet-sidebar-width); box-sizing: border-box;
+    padding: calc(env(safe-area-inset-top, 0px) + 38px) 18px 24px;
+    border-right: 1px solid #c5ddcf; background: #dcefe2;
+    overflow-y: auto;
+  }
+  .tablet-sidebar-brand { display: flex; flex-direction: column; align-items: flex-start; gap: 5px; padding: 0 10px 38px; color: var(--deep); }
+  .tablet-sidebar-brand img { object-fit: contain; margin: 0 0 12px; }
+  .tablet-sidebar-brand strong { font-size: 19px; line-height: 1.3; }
+  .tablet-sidebar-brand span { font-size: 12px; color: #597667; }
+  .tablet-sidebar-nav { display: grid; gap: 12px; }
+  .tablet-sidebar-nav .nav { display: flex; flex-direction: row; align-items: center; justify-content: flex-start; gap: 14px; min-height: 60px; padding: 14px; border: 0; border-radius: 16px; background: transparent; color: var(--deep); font-size: 17px; text-align: left; position: relative; }
+  .tablet-sidebar-nav .nav::before { content: none; }
+  .tablet-sidebar-nav .nav svg { width: 25px; height: 25px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+  .tablet-sidebar-nav .nav.active { background: #245b45; color: #fff; box-shadow: 0 4px 12px #245b4514; }
+  .tablet-sidebar-nav .nav.has-alerts::after { content: ''; width: 7px; height: 7px; border-radius: 50%; background: #c9363e; position: absolute; right: 12px; top: 12px; }
+  .app { width: calc(100% - var(--tablet-sidebar-width)) !important; max-width: none !important; margin-left: var(--tablet-sidebar-width) !important; margin-right: 0 !important; padding-bottom: 32px !important; }
+  #appHero .topbar { min-height: 44px !important; padding-top: max(8px, env(safe-area-inset-top, 0px)) !important; justify-content: flex-end; }
+  #appHero .topbar > .logo, #appHero .topbar > .brand { display: none !important; }
+  #homeView { max-width: 960px; margin-inline: auto; padding: 16px 28px 32px; }
+  #homeView.view.active { display: flow-root !important; }
+  .tablet-welcome { display: block; margin-bottom: 24px; }
+  .tablet-welcome h2 { margin: 0 0 8px; color: #174634; font: 600 clamp(34px, 4vw, 46px)/1.15 Georgia, serif; letter-spacing: -.025em; }
+  .tablet-welcome p { margin: 0; font-size: 16px; line-height: 1.5; color: #64776c; }
+  #homeView .search-wrap { width: 100% !important; margin: 0 !important; }
+  #homeView .catalog-news-link { font-size: 14px; margin-top: 12px; }
+  #homeView .recent-products-section { margin-top: 24px; padding: 22px !important; background: #ffffffb8; border: 1px solid #d8e8dd; border-radius: 22px; overflow: hidden; }
+  #homeView .recent-products-section .section-head { padding-inline: 0 !important; }
+  #homeView .recent-products-section .section-head h2 { font-size: 23px !important; }
+  #homeView .recent-products-viewport { width: calc(100% + 44px); margin-inline: -22px; }
+  #homeView .recent-products { padding-inline: 22px; }
+  #homeView .recent-product { width: 136px !important; min-width: 136px; }
+  #homeView .explore-categories-action { width: 100% !important; margin-inline: 0 !important; }
+  #homeView .useful-section { padding: 24px 0 0 !important; }
+  #homeView .useful-section::before { content: none !important; }
+  #homeView .useful-grid { width: 100% !important; max-width: none !important; gap: 12px !important; }
+  #homeView .useful-grid .link-row { min-height: 90px !important; padding: 16px !important; }
+  #homeView .useful-grid .link-row span:nth-child(2) { font-size: 15px !important; }
+  #homeView .saved-home-action { width: 100% !important; margin: 12px 0 0 !important; }
+  #homeView .trusted-brands { margin: 24px 0 0; padding: 24px 20px; border: 1px solid #d8e8dd; border-radius: 22px; background: #ffffffb8; }
+  #homeView .trusted-brands::after { content: none; }
+  #homeView .trusted-brands h2 { font-size: 21px; margin-bottom: 22px; }
+  body:not(.search-open) .bottom-nav { display: none !important; }
+  body::after { content: none !important; }
+  body.search-open .bottom-nav.search-mode {
+    left: calc(var(--tablet-sidebar-width) + (100% - var(--tablet-sidebar-width)) / 2) !important;
+    width: min(calc(100% - var(--tablet-sidebar-width) - 48px), 720px) !important;
+    max-width: 720px !important;
+  }
+  #searchView.view { max-width: 760px; }
+  /* Search is a fixed panel: center it in the content area, not the entire
+     screen, so its country tabs and cards never sit behind the sidebar. */
+  #searchView.view.active {
+    inset: 0 auto 0;
+    left: calc(var(--tablet-sidebar-width) + (100% - var(--tablet-sidebar-width)) / 2);
+    width: min(calc(100% - var(--tablet-sidebar-width) - 56px), 760px);
+  }
+}
+
+/* Tablet y pantallas amplias: el dock ya reserva su espacio superior.
+   La lista ocupa el resto de la pantalla, sin descontar otros 150px. */
+@media (min-width: 701px) {
+  body.search-open #searchView.view.active {
+    display: flex;
+    flex-direction: column;
+    box-sizing: border-box;
+  }
+  body.search-open #searchView.view.active > * {
+    flex-shrink: 0;
+  }
+  body.search-open #searchView.view.active #results,
+  body.search-open #searchView.view.active #searchCategories {
+    flex: 1 1 0;
+    min-height: 0;
+    max-height: none;
+    overflow-y: auto;
+    padding-bottom: max(16px, env(safe-area-inset-bottom, 0px));
+  }
+}
+
+/* Shared app actions: compact, quiet controls on every platform. */
+.home-app-update { justify-content: flex-end; padding: 0; border: 0; border-radius: 0; background: transparent; box-shadow: none; }
+.home-app-update-copy { gap: 0; }
+.home-app-update-icon { display: none; }
+.home-app-update-copy strong { color: #245b45; font-size: 12px; font-weight: 600; }
+.home-app-update-copy small { color: #61756a; font-size: 10px; }
+.home-app-update button { min-height: 44px; padding: 8px 14px; border: 1px solid #c9ded1; border-radius: 10px; background: #f5faf6; color: #245b45; font-size: 12px; font-weight: 600; box-shadow: none; }
+.home-app-update button:active { background: #e4f0e8; transform: none; }
+
+
+/* Same share control as product sheets; only its header layout differs. */
+.share-app-action { display: inline-flex; align-items: center; justify-content: center; flex: 0 0 44px; width: 44px; height: 44px; padding: 0; border: 0; background: transparent; text-decoration: none; }

@@ -23,6 +23,17 @@ test('oversized UTF-8 payload and unsupported topics are rejected before sending
   assert.throws(() => manualPushMessage({title:'Aviso', body:'ñ'.repeat(1500)}));
   assert.throws(() => manualPushMessage({title:'Aviso', body:'Texto', topic:'other'}));
 });
+test('photo notices carry the same image to Android, APNs and retained Alertas data', () => {
+  const imageUrl = 'https://example.com/notice.jpg';
+  const topic = 'iahadut-test-aaaaaaaaaaaaaaaaaaaa';
+  const message = manualPushMessage({title:'Foto', body:'Prueba privada', imageUrl, topic});
+  assert.equal(message.topic, topic);
+  assert.equal(message.apns.fcm_options.image, imageUrl);
+  assert.equal(message.android.notification.image, imageUrl);
+  assert.equal(message.data.imageUrl, imageUrl);
+  assert.equal(message.apns.payload.aps['mutable-content'], 1);
+  assert.equal(manualPushMessage({title:'Sin foto', body:'Texto'}).apns.fcm_options, undefined);
+});
 test('neither automatic execution nor preview calls Firebase', async () => {
   const fetcher = () => { throw new Error('Network must not be called'); };
   const env = {PUSH_TITLE:'Aviso', PUSH_BODY:'Texto', PUSH_SEND:'1'};

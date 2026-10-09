@@ -1,6 +1,6 @@
 {
   "name": "iahadut-ha-tora",
-  "version": "1.0.48",
+  "version": "1.0.49",
   "private": true,
   "description": "Catálogo kosher multiplataforma de Iahadut HaTora",
   "engines": {
@@ -18,7 +18,8 @@
     "sync:firebase:catalog": "node scripts/sync-firebase-catalog.mjs",
     "build": "vite build --config vite.config.js",
     "build:release": "npm run snapshot && npm run build",
-    "build:sync": "npm run build && cap sync",
+    "build:sync": "node scripts/prepare-ios.mjs --all",
+    "prepare:mobile": "node scripts/prepare-ios.mjs --all",
     "cap:sync": "cap sync",
     "cap:android": "cap open android",
     "cap:ios": "cap open ios",
@@ -26,6 +27,7 @@
     "import:ios:firebase": "node scripts/import-ios-firebase.mjs",
     "check:ios": "node scripts/check-ios-setup.mjs",
     "build:ios:simulator": "node scripts/build-ios-simulator.mjs",
+    "install:ios:device": "node scripts/install-ios-device.mjs",
     "test:ios:push": "node scripts/test-ios-push.mjs",
     "cap:android:live": "cap run android --livereload --external",
     "cap:ios:live": "cap run ios --livereload --external"

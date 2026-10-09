@@ -57,3 +57,23 @@ test('Un fallo al persistir la ficha oficial no invalida el resultado descargado
   });
   assert.equal(persist().description,'Ficha válida');
 });
+test('Opening a complete online fiche does not scrape again merely because it is old',()=>{
+  const h=harness({a:{description:'Lista',images:[],textFormatVersion:1,fetchedAt:1}});
+  let requests=0;h.ctx.navigator.onLine=true;
+  h.ctx.fetchProductContent=()=>{requests++;return Promise.resolve({});};
+  h.ctx.openDetail('a');h.paint();
+  assert.equal(requests,0);assert.equal(h.rendered.length,1);
+});
+test('Concurrent fiche requests share the same download and a failure allows retry',async()=>{
+  const a=source.indexOf('  const productContentRequests =');
+  const b=source.indexOf('  async function fetchProductContentFromSource(',a);
+  let requests=0, reject;
+  const ctx=vm.createContext({productCache:{},fetchProductContentFromSource:()=>{requests++;return new Promise((_,fail)=>{reject=fail;});}});
+  vm.runInContext(source.slice(a,b),ctx);
+  const first=ctx.fetchProductContent({url:'a'}),second=ctx.fetchProductContent({url:'a'},true);
+  assert.equal(requests,1);
+  reject(new Error('network'));await Promise.all([assert.rejects(first,/network/),assert.rejects(second,/network/)]);
+  ctx.fetchProductContentFromSource=async()=>{requests++;return {description:'Ficha'};};
+  assert.equal((await ctx.fetchProductContent({url:'a'})).description,'Ficha');
+  assert.equal(requests,2);
+});

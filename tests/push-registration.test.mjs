@@ -9,7 +9,7 @@ test('support-code button is removed without removing private device identity',(
  assert.ok(source.includes('await PushHistory.getTestTopic()'));
 });
 const registration = source.slice(source.indexOf('  async function pushTestTopicForToken('), source.indexOf('  async function refreshPlayUpdate('));
-const setup = source.slice(source.indexOf('  function setupPushNotifications('), source.indexOf('  function renderMore()')).replaceAll("await import('@capacitor-firebase/messaging')", '({FirebaseMessaging:NativeMessaging})');
+const setup = source.slice(source.indexOf('  function setupPushNotifications('), source.indexOf('  function renderMore(')).replaceAll("await import('@capacitor-firebase/messaging')", '({FirebaseMessaging:NativeMessaging})');
 function harness(permission = 'granted', platform = 'android') {
   const storage = new Map(); const listeners = {}; const calls = [];
   const messaging = {
@@ -22,7 +22,7 @@ function harness(permission = 'granted', platform = 'android') {
     unsubscribeFromTopic:async() => {}, deleteToken:async() => {}
   };
   const context = vm.createContext({
-    TextEncoder, crypto:webcrypto, console, setTimeout, clearTimeout,
+    logAnalyticsEvent(){}, TextEncoder, crypto:webcrypto, console, setTimeout, clearTimeout,
     localStorage:{getItem:key => storage.get(key) ?? null,setItem:(key,value) => storage.set(key,value),removeItem:key => storage.delete(key)},
     Capacitor:{isNativePlatform:() => true,getPlatform:() => platform},
     NativeMessaging:messaging,

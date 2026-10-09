@@ -3,16 +3,16 @@ import assert from 'node:assert/strict';
 import {appleDistributionUrl, storeLinks, platformRemoteControl, ANDROID_STORE_URL} from '../web/platform-store.js';
 
 test('iPhone never advertises Google Play when its store entry is not configured', () => {
-  assert.deepEqual(storeLinks('ios'), {install:'https://vaad.ar/', rate:'', label:'App Store'});
+  assert.deepEqual(storeLinks('ios'), {install:'https://apps.apple.com/app/id6819809029', rate:'https://apps.apple.com/app/id6819809029?action=write-review', label:'App Store'});
   assert.equal(storeLinks('android').install, ANDROID_STORE_URL);
 });
 
-test('TestFlight is a distribution link but cannot collect App Store reviews', () => {
+test('TestFlight installation remains separate from the public App Store review link', () => {
   const testflight = 'https://testflight.apple.com/join/1234abcd';
   assert.equal(storeLinks('ios', testflight).install, testflight);
-  assert.equal(storeLinks('ios', testflight).rate, '');
+  assert.equal(storeLinks('ios', testflight).rate, 'https://apps.apple.com/app/id6819809029?action=write-review');
   assert.equal(storeLinks('ios', testflight).label, 'TestFlight');
-  assert.equal(storeLinks('ios', 'https://apps.apple.com/ar/app/id123456789').rate, 'https://apps.apple.com/ar/app/id123456789');
+  assert.equal(storeLinks('ios', 'https://apps.apple.com/ar/app/id123456789').rate, 'https://apps.apple.com/ar/app/id123456789?action=write-review');
 });
 
 test('untrusted, credentialed and Android update URLs cannot be opened as Apple updates', () => {

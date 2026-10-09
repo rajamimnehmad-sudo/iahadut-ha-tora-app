@@ -1,3 +1,5 @@
+import {ANDROID_STORE_URL, APPLE_STORE_URL} from './platform-store.js';
+
 const introduction = 'Hola, vengo de la app de Iahadut HaTora.';
 
 export function appWhatsAppLink(href, {product = '', message = ''} = {}) {
@@ -12,5 +14,12 @@ export function appWhatsAppLink(href, {product = '', message = ''} = {}) {
   if (previous.includes(introduction)) return url.href;
   const text = product ? `Quería consultar por ${product}.` : previous || 'Quería hacer una consulta.';
   url.searchParams.set('text', `${introduction} ${text}`);
+  return url.href;
+}
+
+// No recipient: WhatsApp lets the user choose whom to share the app with.
+export function appShareWhatsAppLink() {
+  const url = new URL('https://wa.me/');
+  url.searchParams.set('text', `Te comparto Iahadut HaTora, el catálogo kosher.\n\nAndroid: ${ANDROID_STORE_URL}\niPhone: ${APPLE_STORE_URL}`);
   return url.href;
 }

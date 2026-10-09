@@ -16,6 +16,27 @@ export function collectOfflineImages(...sources) {
   return [...urls].sort();
 }
 
+// Fetch timestamps and cache bookkeeping do not change the offline content.
+// Keep a compact, deterministic revision so refreshing the same catalog does
+// not request a new download. This is a change detector, not a security hash.
+export function offlineContentRevision(snapshot) {
+  const normalize = value => {
+    if (Array.isArray(value)) return value.map(normalize);
+    if (!value || typeof value !== 'object') return value;
+    return Object.fromEntries(Object.keys(value).sort()
+      .filter(key => !['generatedAt', 'fetchedAt', 'bundled', 'sourceFingerprint'].includes(key))
+      .map(key => [key, normalize(value[key])]));
+  };
+  const content = normalize({...snapshot, products:[...(snapshot.products || [])].sort((a,b) => String(a.url).localeCompare(String(b.url), 'en'))});
+  const text = JSON.stringify(content);
+  let first = 2166136261, second = 5381;
+  for (let index = 0; index < text.length; index++) {
+    first = Math.imul(first ^ text.charCodeAt(index), 16777619);
+    second = Math.imul(second, 33) ^ text.charCodeAt(index);
+  }
+  return `content-v1:${(first >>> 0).toString(16)}:${(second >>> 0).toString(16)}`;
+}
+
 export function createOfflineDownload(onChange = () => {}, background = null) {
   const native = Capacitor.isNativePlatform();
   const folder = 'offline-catalog';
@@ -25,8 +46,13 @@ export function createOfflineDownload(onChange = () => {}, background = null) {
   let busy = false;
   let paused = false;
   let writes = Promise.resolve();
+  let checkedTarget = null;
   let state = {busy:false, percent:0, ready:false, error:''};
-  const emit = patch => {state = {...state, ...patch}; onChange(state);};
+  const emit = patch => {
+    const changed = Object.entries(patch).some(([key,value]) => state[key] !== value);
+    state = {...state, ...patch};
+    if (changed) onChange(state);
+  };
   const signature = (urls, version) => JSON.stringify([version, urls]);
   const save = () => writes = writes.catch(() => {}).then(async () => {
     if (native) await Filesystem.writeFile({path:manifestPath, directory:Directory.Data, encoding:Encoding.UTF8, data:JSON.stringify(manifest), recursive:true});
@@ -41,7 +67,12 @@ export function createOfflineDownload(onChange = () => {}, background = null) {
         const files = (await Filesystem.readdir({path:folder, directory:Directory.Data})).files;
         const present = new Set(files.filter(file => file.size > 0).map(file => `${folder}/${file.name}`));
         for (const [url, item] of Object.entries(manifest.images)) if (!present.has(item.path)) delete manifest.images[url];
-        for (const item of Object.values(manifest.images)) if (item.uri?.startsWith('file:')) item.uri = Capacitor.convertFileSrc(item.uri);
+        // iOS may relocate the data container after an update or restore.
+        // Rebuild URLs from durable relative paths, not yesterday's container.
+        const {uri} = await Filesystem.getUri({path:folder, directory:Directory.Data});
+        for (const item of Object.values(manifest.images)) {
+          item.uri = Capacitor.convertFileSrc(`${uri.replace(/\/$/, '')}/${item.path.slice(folder.length + 1)}`);
+        }
       } else {
         const cache = await caches.open(cacheName);
         for (const url of Object.keys(manifest.images)) {
@@ -53,18 +84,23 @@ export function createOfflineDownload(onChange = () => {}, background = null) {
     } catch (_) { manifest = {images:{}, signature:''}; }
   };
   const check = (urls, version) => {
+    checkedTarget = {urls, version};
     const ready = manifest.signature === signature(urls, version) && urls.every(url => manifest.images[url]);
-    state = {...state, ready, hasDownload:Boolean(manifest.signature)};
+    state = {...state, ready, hasDownload:Boolean(manifest.signature) || Object.keys(manifest.images).length > 0};
     return state;
   };
   const localUrl = url => manifest.images[url]?.uri || url;
+  const remoteUrl = uri => Object.entries(manifest.images).find(([,item]) => item.uri === uri)?.[0] || uri;
   const getResumePreference = () => ({
     enabled:manifest.resume?.enabled ?? (!manifest.signature && Object.keys(manifest.images).length > 0),
-    allowMobile:Boolean(manifest.resume?.allowMobile)
+    allowMobile:Boolean(manifest.resume?.allowMobile),
+    autoUpdate:manifest.resume?.autoUpdate ?? (Boolean(manifest.signature) && !state.paused)
   });
   const setResumePreference = async preference => {
-    manifest.resume = {enabled:Boolean(preference.enabled), allowMobile:Boolean(preference.allowMobile)};
-    await save();
+    manifest.resume = {enabled:Boolean(preference.enabled), allowMobile:Boolean(preference.allowMobile),
+      autoUpdate:preference.autoUpdate ?? getResumePreference().autoUpdate};
+    if (background) await background.preference(manifest.resume);
+    else await save();
   };
   const readSnapshot = async () => {
     try {
@@ -73,20 +109,27 @@ export function createOfflineDownload(onChange = () => {}, background = null) {
     } catch (_) { return null; }
   };
   let refreshing = false;
+  let generation = 0;
   const refresh = async () => {
-    if (!background || refreshing) return;
+    if (!background || refreshing || state.clearing) return state;
+    const startedGeneration = generation;
     refreshing = true;
     try {
       const result = await background.status();
+      if (generation !== startedGeneration) return state;
       if (result.manifest?.images) {
         manifest = result.manifest;
         for (const item of Object.values(manifest.images)) if (item.uri?.startsWith('file:')) item.uri = Capacitor.convertFileSrc(item.uri);
       }
       const {manifest:ignored, ...status} = result;
+      // Native ready refers to its last job. The UI may now have newer content.
+      if (checkedTarget) status.ready = manifest.signature === signature(checkedTarget.urls, checkedTarget.version)
+        && checkedTarget.urls.every(url => manifest.images[url]);
       busy = Boolean(status.busy);
       emit(status);
     } catch (_) { /* Keep last known state during bridge reconnection. */ }
     finally {refreshing = false;}
+    return state;
   };
   const pause = async () => {
     paused = true;
@@ -95,13 +138,37 @@ export function createOfflineDownload(onChange = () => {}, background = null) {
       catch (_) {emit({error:'No se pudo pausar · Reintentar'});}
     } else emit({paused:true});
   };
+  const clear = async () => {
+    if (busy || state.clearing) return false;
+    generation++;
+    emit({clearing:true});
+    try {
+      await writes.catch(() => {});
+      await setResumePreference({enabled:false,autoUpdate:false,allowMobile:false});
+      if (background) await background.clear();
+      else if (native) await Filesystem.rmdir({path:folder, directory:Directory.Data, recursive:true});
+      else {
+        await caches.delete(cacheName);
+        localStorage.removeItem('iht_offline_manifest');
+        localStorage.removeItem('iht_offline_catalog');
+        for (const item of Object.values(manifest.images)) if (item.uri?.startsWith('blob:')) URL.revokeObjectURL(item.uri);
+      }
+      manifest = {images:{},signature:'',resume:{enabled:false,autoUpdate:false,allowMobile:false}};
+      checkedTarget = null;
+      paused = false;
+      emit({busy:false,clearing:false,ready:false,hasDownload:false,paused:false,waiting:false,percent:0,error:''});
+      return true;
+    } catch (_) { emit({clearing:false,error:'No se pudo borrar la descarga · Reintentar'}); return false; }
+  };
   const download = async (urls, version, snapshot, canContinue = async () => true, wifiOnly = true) => {
-    if (busy) return;
+    if (busy || state.clearing) return;
     if (background) {
+      busy = true;
+      emit({busy:true, paused:false, waiting:false, error:''});
       try {
         await background.start({urls, signature:signature(urls, version), snapshot, wifiOnly});
         await refresh();
-      } catch (_) {emit({busy:false, error:'No se pudo iniciar la descarga · Reintentar'});}
+      } catch (_) {busy = false; emit({busy:false, error:'No se pudo iniciar la descarga · Reintentar'});}
       return;
     }
     busy = true;
@@ -161,5 +228,5 @@ export function createOfflineDownload(onChange = () => {}, background = null) {
       emit({error:'Descarga incompleta. Revisá la conexión y el espacio disponible; tocá para reintentar.'});
     } finally {busy = false; emit({busy:false});}
   };
-  return {init, check, download, localUrl, readSnapshot, pause, refresh, getResumePreference, setResumePreference};
+  return {init, check, download, localUrl, remoteUrl, readSnapshot, pause, clear, refresh, getResumePreference, setResumePreference};
 }

@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		A1AD00000000000000000012 /* OfflineDownloadPlugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1AD00000000000000000011 /* OfflineDownloadPlugin.swift */; };
 		2FAD9763203C412B000D30F8 /* config.xml in Resources */ = {isa = PBXBuildFile; fileRef = 2FAD9762203C412B000D30F8 /* config.xml */; };
 		4D22ABE92AF431CB00220026 /* CapApp-SPM in Frameworks */ = {isa = PBXBuildFile; productRef = 4D22ABE82AF431CB00220026 /* CapApp-SPM */; };
 		50379B232058CBB4000EE86E /* capacitor.config.json in Resources */ = {isa = PBXBuildFile; fileRef = 50379B222058CBB4000EE86E /* capacitor.config.json */; };
@@ -16,9 +17,19 @@
 		504EC3121FED79650016851F /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 504EC3101FED79650016851F /* LaunchScreen.storyboard */; };
 		50B271D11FEDC1A000F3C39B /* public in Resources */ = {isa = PBXBuildFile; fileRef = 50B271D01FEDC1A000F3C39B /* public */; };
 		9582B6832FE993A70072D4E8 /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9582B6822FE993A50072D4E8 /* SceneDelegate.swift */; };
+		A1AD00000000000000000002 /* IahadutBridgeViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1AD00000000000000000001 /* IahadutBridgeViewController.swift */; };
+		A1AD00000000000000000004 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = A1AD00000000000000000003 /* PrivacyInfo.xcprivacy */; };
+		64E4FAD64C144AD19F950DD6 /* PushHistoryStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 115F67C346434F008D91DD68 /* PushHistoryStore.swift */; };
+		26F45D7A234D4BA3AF71617A /* PushHistoryPlugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = F92EEA3EFEF74534A3AFC293 /* PushHistoryPlugin.swift */; };
+		563C3CFD75194AD192CEAE4E /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 205BD1CD660745FF9F724BE4 /* GoogleService-Info.plist */; };
+		2165B317B098479C919CB1CB /* NotificationService.appex in Copy Files */ = {isa = PBXBuildFile; fileRef = 3A39F42B10D543F79CD03647 /* NotificationService.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, CodeSignOnCopy, ); }; };
+		F8B0067F18DB48798C72CFFC /* NotificationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = EB38901A9FCE478E9BC66806 /* NotificationService.swift */; };
+		844D8519AA1A4D56B42BFECE /* PushHistoryStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = C198413DD6344830A1504874 /* PushHistoryStore.swift */; };
+		84DF75D1BEFA4E1AA3133F07 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 39B4119F67894FE4BB0041BE /* PrivacyInfo.xcprivacy */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		A1AD00000000000000000011 /* OfflineDownloadPlugin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OfflineDownloadPlugin.swift; sourceTree = "<group>"; };
 		2FAD9762203C412B000D30F8 /* config.xml */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = config.xml; sourceTree = "<group>"; };
 		50379B222058CBB4000EE86E /* capacitor.config.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = capacitor.config.json; sourceTree = "<group>"; };
 		504EC3041FED79650016851F /* App.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = App.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -30,6 +41,15 @@
 		50B271D01FEDC1A000F3C39B /* public */ = {isa = PBXFileReference; lastKnownFileType = folder; path = public; sourceTree = "<group>"; };
 		9582B6822FE993A50072D4E8 /* SceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneDelegate.swift; sourceTree = "<group>"; };
 		958DCC722DB07C7200EA8C5F /* debug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = debug.xcconfig; path = ../debug.xcconfig; sourceTree = SOURCE_ROOT; };
+		A1AD00000000000000000001 /* IahadutBridgeViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IahadutBridgeViewController.swift; sourceTree = "<group>"; };
+		A1AD00000000000000000003 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
+		115F67C346434F008D91DD68 /* PushHistoryStore.swift */ = {isa = PBXFileReference; name = "PushHistoryStore.swift"; path = "PushHistoryStore.swift"; sourceTree = "<group>"; fileEncoding = 4; lastKnownFileType = sourcecode.swift; explicitFileType = undefined; includeInIndex = 0; };
+		F92EEA3EFEF74534A3AFC293 /* PushHistoryPlugin.swift */ = {isa = PBXFileReference; name = "PushHistoryPlugin.swift"; path = "PushHistoryPlugin.swift"; sourceTree = "<group>"; fileEncoding = 4; lastKnownFileType = sourcecode.swift; explicitFileType = undefined; includeInIndex = 0; };
+		205BD1CD660745FF9F724BE4 /* GoogleService-Info.plist */ = {isa = PBXFileReference; name = "GoogleService-Info.plist"; path = "GoogleService-Info.plist"; sourceTree = "<group>"; fileEncoding = 4; lastKnownFileType = text.plist.xml; explicitFileType = undefined; includeInIndex = 0; };
+		3A39F42B10D543F79CD03647 /* NotificationService.appex */ = {isa = PBXFileReference; name = "NotificationService.appex"; path = "NotificationService.appex"; sourceTree = BUILT_PRODUCTS_DIR; fileEncoding = undefined; lastKnownFileType = undefined; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; };
+		EB38901A9FCE478E9BC66806 /* NotificationService.swift */ = {isa = PBXFileReference; name = "NotificationService.swift"; path = "NotificationService.swift"; sourceTree = "<group>"; fileEncoding = 4; lastKnownFileType = sourcecode.swift; explicitFileType = undefined; includeInIndex = 0; };
+		C198413DD6344830A1504874 /* PushHistoryStore.swift */ = {isa = PBXFileReference; name = "PushHistoryStore.swift"; path = "../App/PushHistoryStore.swift"; sourceTree = "<group>"; fileEncoding = 4; lastKnownFileType = sourcecode.swift; explicitFileType = undefined; includeInIndex = 0; };
+		39B4119F67894FE4BB0041BE /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; name = "PrivacyInfo.xcprivacy"; path = "../App/PrivacyInfo.xcprivacy"; sourceTree = "<group>"; fileEncoding = undefined; lastKnownFileType = unknown; explicitFileType = undefined; includeInIndex = 0; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -38,6 +58,13 @@
 			buildActionMask = 2147483647;
 			files = (
 				4D22ABE92AF431CB00220026 /* CapApp-SPM in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		1060AE6AD36644FCB4BAE0B1 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -50,6 +77,8 @@
 				958DCC722DB07C7200EA8C5F /* debug.xcconfig */,
 				504EC3061FED79650016851F /* App */,
 				504EC3051FED79650016851F /* Products */,
+				BAC3248EC80F4D42BEC85DD9 /* Resources */,
+				0459B5BADCB64D23B82F7390 /* NotificationService */,
 			);
 			sourceTree = "<group>";
 		};
@@ -57,6 +86,7 @@
 			isa = PBXGroup;
 			children = (
 				504EC3041FED79650016851F /* App.app */,
+				3A39F42B10D543F79CD03647 /* NotificationService.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -65,6 +95,9 @@
 			isa = PBXGroup;
 			children = (
 				9582B6822FE993A50072D4E8 /* SceneDelegate.swift */,
+				A1AD00000000000000000003 /* PrivacyInfo.xcprivacy */,
+				A1AD00000000000000000001 /* IahadutBridgeViewController.swift */,
+				A1AD00000000000000000011 /* OfflineDownloadPlugin.swift */,
 				50379B222058CBB4000EE86E /* capacitor.config.json */,
 				504EC3071FED79650016851F /* AppDelegate.swift */,
 				504EC30B1FED79650016851F /* Main.storyboard */,
@@ -73,8 +106,30 @@
 				504EC3131FED79650016851F /* Info.plist */,
 				2FAD9762203C412B000D30F8 /* config.xml */,
 				50B271D01FEDC1A000F3C39B /* public */,
+				115F67C346434F008D91DD68 /* PushHistoryStore.swift */,
+				F92EEA3EFEF74534A3AFC293 /* PushHistoryPlugin.swift */,
+				205BD1CD660745FF9F724BE4 /* GoogleService-Info.plist */,
 			);
 			path = App;
+			sourceTree = "<group>";
+		};
+		BAC3248EC80F4D42BEC85DD9 /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = Resources;
+			path = undefined;
+			sourceTree = "<group>";
+		};
+		0459B5BADCB64D23B82F7390 /* NotificationService */ = {
+			isa = PBXGroup;
+			children = (
+				EB38901A9FCE478E9BC66806 /* NotificationService.swift */,
+				C198413DD6344830A1504874 /* PushHistoryStore.swift */,
+				39B4119F67894FE4BB0041BE /* PrivacyInfo.xcprivacy */,
+			);
+			name = NotificationService;
+			path = NotificationService;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -87,6 +142,7 @@
 				504EC3001FED79650016851F /* Sources */,
 				504EC3011FED79650016851F /* Frameworks */,
 				504EC3021FED79650016851F /* Resources */,
+				53DF0B0ED50A49629B91731B /* Copy Files */,
 			);
 			buildRules = (
 			);
@@ -100,19 +156,52 @@
 			productReference = 504EC3041FED79650016851F /* App.app */;
 			productType = "com.apple.product-type.application";
 		};
+		FAD55DFE1C28447D9E30B690 /* "NotificationService" */ = {
+			isa = PBXNativeTarget;
+			name = "NotificationService";
+			productName = "NotificationService";
+			productReference = 3A39F42B10D543F79CD03647;
+			productType = "com.apple.product-type.app-extension";
+			buildConfigurationList = 7AD70CD02CD34ED7B9D42133;
+			buildPhases = (
+				E879E9684C6C4F00AF1B341F /* Sources */,
+				1060AE6AD36644FCB4BAE0B1 /* Frameworks */,
+				43F40495941E4E83A853498F /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
 		504EC2FC1FED79650016851F /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastSwiftUpdateCheck = 0920;
-				LastUpgradeCheck = 0920;
+				LastSwiftUpdateCheck = 920;
+				LastUpgradeCheck = 920;
 				TargetAttributes = {
 					504EC3031FED79650016851F = {
 						CreatedOnToolsVersion = 9.2;
 						LastSwiftMigration = 1100;
 						ProvisioningStyle = Automatic;
+						SystemCapabilities = {
+							com.apple.Push = {
+								enabled = 1;
+							};
+							com.apple.ApplicationGroups.iOS = {
+								enabled = 1;
+							};
+						};
+					};
+					FAD55DFE1C28447D9E30B690 = {
+						ProvisioningStyle = Automatic;
+						SystemCapabilities = {
+							com.apple.ApplicationGroups.iOS = {
+								enabled = 1;
+							};
+						};
 					};
 				};
 			};
@@ -133,6 +222,7 @@
 			projectRoot = "";
 			targets = (
 				504EC3031FED79650016851F /* App */,
+				FAD55DFE1C28447D9E30B690 /* "NotificationService" */,
 			);
 		};
 /* End PBXProject section */
@@ -142,12 +232,22 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				A1AD00000000000000000004 /* PrivacyInfo.xcprivacy in Resources */,
 				504EC3121FED79650016851F /* LaunchScreen.storyboard in Resources */,
 				50B271D11FEDC1A000F3C39B /* public in Resources */,
 				504EC30F1FED79650016851F /* Assets.xcassets in Resources */,
 				50379B232058CBB4000EE86E /* capacitor.config.json in Resources */,
 				504EC30D1FED79650016851F /* Main.storyboard in Resources */,
 				2FAD9763203C412B000D30F8 /* config.xml in Resources */,
+				563C3CFD75194AD192CEAE4E /* GoogleService-Info.plist in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		43F40495941E4E83A853498F /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				84DF75D1BEFA4E1AA3133F07 /* PrivacyInfo.xcprivacy in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -158,8 +258,21 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				A1AD00000000000000000002 /* IahadutBridgeViewController.swift in Sources */,
+				A1AD00000000000000000012 /* OfflineDownloadPlugin.swift in Sources */,
 				504EC3081FED79650016851F /* AppDelegate.swift in Sources */,
 				9582B6832FE993A70072D4E8 /* SceneDelegate.swift in Sources */,
+				64E4FAD64C144AD19F950DD6 /* PushHistoryStore.swift in Sources */,
+				26F45D7A234D4BA3AF71617A /* PushHistoryPlugin.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		E879E9684C6C4F00AF1B341F /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				F8B0067F18DB48798C72CFFC /* NotificationService.swift in Sources */,
+				844D8519AA1A4D56B42BFECE /* PushHistoryStore.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -300,20 +413,23 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 542VYD549N;
+				CURRENT_PROJECT_VERSION = 107;
 				INFOPLIST_FILE = App/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.0;
+				MARKETING_VERSION = 1.0.49;
 				OTHER_SWIFT_FLAGS = "$(inherited) \"-D\" \"COCOAPODS\" \"-DDEBUG\"";
 				PRODUCT_BUNDLE_IDENTIFIER = ar.vaad.catalogo.app;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
+				CODE_SIGN_ENTITLEMENTS = App/App.entitlements;
+				APS_ENVIRONMENT = development;
 			};
 			name = Debug;
 		};
@@ -322,21 +438,72 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 542VYD549N;
+				CURRENT_PROJECT_VERSION = 107;
 				INFOPLIST_FILE = App/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.0;
+				MARKETING_VERSION = 1.0.49;
 				PRODUCT_BUNDLE_IDENTIFIER = ar.vaad.catalogo.app;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
+				CODE_SIGN_ENTITLEMENTS = App/App.entitlements;
+				APS_ENVIRONMENT = production;
 			};
 			name = Release;
+		};
+		E48D8CD1C62A4055A354A92A /* Debug */ = {
+			name = Debug;
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				INFOPLIST_FILE = NotificationService/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @executable_path/../../Frameworks";
+				PRODUCT_NAME = "NotificationService";
+				SKIP_INSTALL = YES;
+				PRODUCT_BUNDLE_IDENTIFIER = "ar.vaad.catalogo.app.NotificationService";
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = 542VYD549N;
+				CODE_SIGN_ENTITLEMENTS = NotificationService/NotificationService.entitlements;
+				CURRENT_PROJECT_VERSION = 107;
+				MARKETING_VERSION = 1.0.49;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				SDKROOT = iphoneos;
+			};
+		};
+		DAA862D67F5045489137C308 /* Release */ = {
+			name = Release;
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				INFOPLIST_FILE = NotificationService/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @executable_path/../../Frameworks";
+				PRODUCT_NAME = "NotificationService";
+				SKIP_INSTALL = YES;
+				PRODUCT_BUNDLE_IDENTIFIER = "ar.vaad.catalogo.app.NotificationService";
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = 542VYD549N;
+				CODE_SIGN_ENTITLEMENTS = NotificationService/NotificationService.entitlements;
+				CURRENT_PROJECT_VERSION = 107;
+				MARKETING_VERSION = 1.0.49;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				SDKROOT = iphoneos;
+			};
 		};
 /* End XCBuildConfiguration section */
 
@@ -359,6 +526,15 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
+		7AD70CD02CD34ED7B9D42133 /* Build configuration list for PBXNativeTarget "NotificationService" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				E48D8CD1C62A4055A354A92A /* Debug */,
+				DAA862D67F5045489137C308 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 /* End XCConfigurationList section */
 
 /* Begin XCLocalSwiftPackageReference section */
@@ -375,6 +551,20 @@
 			productName = "CapApp-SPM";
 		};
 /* End XCSwiftPackageProductDependency section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		53DF0B0ED50A49629B91731B /* Copy Files */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				2165B317B098479C919CB1CB /* NotificationService.appex in Copy Files */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			name = "Copy Files";
+			dstPath = "";
+			dstSubfolderSpec = 13;
+		};
+/* End PBXCopyFilesBuildPhase section */
 	};
 	rootObject = 504EC2FC1FED79650016851F /* Project object */;
 }

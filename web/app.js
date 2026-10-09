@@ -1,3 +1,4 @@
+import {createUsageAnalytics} from './usage-analytics.js';
 import {productSearchKey, validGlobalRanking} from './global-popularity.js';
 import initialGlobalRanking from './data/global-popularity.json';
 import { storeLinks, platformRemoteControl, appleDistributionUrl } from './platform-store.js';
@@ -11,15 +12,16 @@ import {normalizedSnapshot, snapshotHash, readPublishedSnapshot} from './publish
 import catalogSnapshot from './data/catalog.json';
 import { productText } from './product-text.js';
 import { reviewedCategoryPath } from './reviewed-categories.js';
+import { newProductCategoryPath } from './new-product-categories.js';
 import { mergeAlertHistory } from './alert-history.js';
 import { categoryInformation } from './category-info.js';
-import {collectOfflineImages, createOfflineDownload, offlineNetworkMayDownload} from './offline-download.js';
+import {collectOfflineImages, createOfflineDownload, offlineNetworkMayDownload, offlineContentRevision} from './offline-download.js';
 import {pushImageUrl} from './push-image.js';
 import {mergeInboxNotifications, alertExpired} from './alerts-inbox.js';
 import {matchingCategories, navigationScrollKey, matchingBrands, brandName, brandKey} from './category-navigation.js';
 import {brandLogo, brandForLogoPath} from './brand-logos.js';
 import {additionKeys, unreadAdditionCount} from './catalog-unread.js';
-import {appWhatsAppLink} from './whatsapp-links.js';
+import {appWhatsAppLink, appShareWhatsAppLink} from './whatsapp-links.js';
 import {createLiveSearchClient, createLiveSearchTransport, LIVE_SEARCH_REFRESH_INTERVAL} from './live-search.js';
 import featuredProductsSnapshot from './data/featured-products.json';
 import featuredImageBounds from './data/featured-image-bounds.json';
@@ -28,9 +30,29 @@ import productDetailsSnapshot from './data/product-details.json';
 import '@fontsource-variable/manrope';
 import '@phosphor-icons/web/regular';
 
+document.documentElement.dataset.platform = Capacitor.getPlatform();
+if (Capacitor.getPlatform() === 'ios') {
+  // Devices with a home button retain the shared Android dock. Bottom/side
+  // safe areas identify edge-to-edge layouts, including landscape rotation.
+  const probe = document.createElement('div');
+  probe.setAttribute('aria-hidden', 'true');
+  probe.style.cssText = 'position:fixed;top:0;left:0;visibility:hidden;pointer-events:none;width:calc(env(safe-area-inset-left,0px) + env(safe-area-inset-right,0px));height:env(safe-area-inset-bottom,0px);padding:0;border:0';
+  document.body.append(probe);
+  const updateIosDockLayout = () => {
+    const {width, height} = probe.getBoundingClientRect();
+    document.documentElement.dataset.iosEdgeToEdge = String(width > 0 || height > 0);
+  };
+  // Capacitor can provide safe areas after the first WebView layout. Observe
+  // the inset itself instead of assuming a window resize accompanies it.
+  new ResizeObserver(updateIosDockLayout).observe(probe);
+  updateIosDockLayout();
+  window.addEventListener('resize', updateIosDockLayout);
+}
+
 const PlayStoreUpdates = registerPlugin('PlayStoreUpdates');
 const CatalogBackgroundSync = registerPlugin('CatalogBackgroundSync');
 const OfflineNetwork = registerPlugin('OfflineNetwork');
+const OfflineDownload = registerPlugin('OfflineDownload');
 const ScannerPermissions = registerPlugin('ScannerPermissions');
 const PushHistory = registerPlugin('PushHistory');
 
@@ -365,9 +387,14 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     }
     return firebaseReadyPromise;
   }
-  let firebaseAnalytics = null;
-  if (Capacitor.isNativePlatform()) import('@capacitor-firebase/analytics').then(({FirebaseAnalytics}) => { firebaseAnalytics = FirebaseAnalytics; }).catch(() => {});
-  const logAnalyticsEvent = (name, params) => { try { firebaseAnalytics?.logEvent({name, params})?.catch(() => {}); } catch (_) {} };
+  const usageAnalytics = createUsageAnalytics({enabled:Capacitor.isNativePlatform() && import.meta.env.PROD});
+  const logAnalyticsEvent = usageAnalytics.track;
+  if (Capacitor.isNativePlatform() && import.meta.env.PROD) {
+    import('@capacitor-firebase/analytics').then(({FirebaseAnalytics}) => {
+      usageAnalytics.connect(event => FirebaseAnalytics.logEvent(event));
+    }).catch(() => {});
+  }
+  usageAnalytics.screen('homeView');
   const countPopularity = (key, type) => {
     const entry = popularity[key] || {searches: 0, opens: 0};
     entry[type] = (entry[type] || 0) + 1;
@@ -489,12 +516,15 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
   let offlineWifiWait = readJson('iht_offline_wifi_wait', false);
   let offlineStarting = false;
   let offlineNextRetryAt = 0;
+  let offlineNextUpdateCheckAt = 0;
+  let offlineObservedError = '';
   let offlineMobileAllowed = false;
   const offlineDownload = createOfflineDownload(() => {
-    if (document.querySelector('.view.active')?.id === 'moreView') renderMore();
+    if (document.querySelector('.view.active')?.id === 'moreView') renderMore({offlineOnly:true});
     useOfflineImages();
-  });
+  }, Capacitor.isNativePlatform() ? OfflineDownload : null);
   await offlineDownload.init();
+  await offlineDownload.refresh();
   if (!navigator.onLine) {
     const savedOffline = await offlineDownload.readSnapshot();
     if (Array.isArray(savedOffline?.products)) {
@@ -508,8 +538,7 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     return collectOfflineImages(products, productCache, infoCache, cardCache, featuredProductsSnapshot);
   }
   function offlineVersion() {
-    try { return `${APP_VERSION}:${localStorage.getItem('iht_catalog_version') || activeCatalogSnapshot.generatedAt}`; }
-    catch (_) { return `${APP_VERSION}:${activeCatalogSnapshot.generatedAt}`; }
+    return offlineContentRevision({products, productCache, infoCache, cardCache});
   }
   function setOfflineWifiWait(value) {
     offlineWifiWait = value;
@@ -539,32 +568,66 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
       dialog.showModal();
     });
   }
+  async function removeOfflineDownload() {
+    const confirmed = await new Promise(resolve => {
+      const dialog = document.createElement('dialog');
+      dialog.className = 'offline-network-dialog';
+      dialog.setAttribute('aria-labelledby','offlineDeleteTitle');
+      dialog.innerHTML = '<h2 id="offlineDeleteTitle">¿Borrar la descarga offline?</h2><p>Se eliminarán las fotos y la copia descargada para liberar espacio. Tus favoritos y ajustes se conservan. Podés descargarla de nuevo cuando quieras.</p><button data-delete-choice="yes">Borrar descarga</button><button data-delete-choice="no">Cancelar</button>';
+      const finish = value => {dialog.remove();resolve(value);};
+      dialog.addEventListener('click',event => {
+        const button=event.target.closest('[data-delete-choice]');
+        if (button) finish(button.dataset.deleteChoice === 'yes');
+      });
+      dialog.addEventListener('cancel',event => {event.preventDefault();finish(false);});
+      document.body.append(dialog);dialog.showModal();
+    });
+    if (!confirmed) return;
+    const images = [...document.querySelectorAll('img[src]')].map(image => [image,offlineDownload.remoteUrl(image.getAttribute('src'))]);
+    if (await offlineDownload.clear()) {
+      images.forEach(([image,url]) => {if (image.getAttribute('src') !== url) image.setAttribute('src',url);});
+      offlineNextRetryAt = 0;offlineNextUpdateCheckAt = 0;offlineObservedError = '';
+      setOfflineWifiWait(false);
+      logAnalyticsEvent('offline_download',{outcome:'deleted',automatic:0});
+    }
+  }
   async function startOfflineDownload(automatic = false) {
     if (automatic && Date.now() < offlineNextRetryAt) return;
-    if (document.visibilityState !== 'visible' || offlineStarting || offlineDownload.check(offlineAssets(), offlineVersion()).busy) return;
+    if (automatic && !offlineDownload.getResumePreference().enabled && !offlineWifiWait && Date.now() < offlineNextUpdateCheckAt) return;
+    if (document.visibilityState !== 'visible' || offlineStarting) return;
+    const currentOffline = offlineDownload.check(offlineAssets(), offlineVersion());
+    if (currentOffline.busy || currentOffline.clearing) return;
+    if (automatic && currentOffline.ready) {
+      offlineNextUpdateCheckAt = Date.now() + 30000;
+      if (offlineDownload.getResumePreference().enabled) await offlineDownload.setResumePreference({enabled:false, allowMobile:offlineDownload.getResumePreference().allowMobile});
+      if (offlineWifiWait) setOfflineWifiWait(false);
+      return;
+    }
     offlineStarting = true;
     try {
       const connection = await offlineConnection();
       const wifi = connection.type === 'wifi' && !connection.metered;
       if (automatic) {
         const preference = offlineDownload.getResumePreference();
-        if (!preference.enabled && !offlineWifiWait) return;
+        if (!preference.enabled && !preference.autoUpdate && !offlineWifiWait) return;
         offlineMobileAllowed = preference.allowMobile && !offlineWifiWait;
         if (!offlineNetworkMayDownload(connection, offlineMobileAllowed)) return;
       }
       if (!automatic && !wifi && connection.type !== 'ethernet') {
         const choice = await chooseOfflineNetwork(connection);
-        if (choice === 'cancel') return;
+        if (choice === 'cancel') { logAnalyticsEvent('offline_download', {outcome:'cancelled', automatic:0}); return; }
         if (choice === 'wifi') {
-          await offlineDownload.setResumePreference({enabled:true, allowMobile:false});
+          logAnalyticsEvent('offline_download', {outcome:'wait_wifi', automatic:0});
+          await offlineDownload.setResumePreference({enabled:true, allowMobile:false, autoUpdate:true});
           setOfflineWifiWait(true);
           return;
         }
         if (connection.type === 'none') {window.alert('Conectate a Internet para descargar.'); return;}
         offlineMobileAllowed = true;
       } else if (!automatic) offlineMobileAllowed = false;
-      await offlineDownload.setResumePreference({enabled:true, allowMobile:offlineMobileAllowed});
+      await offlineDownload.setResumePreference({enabled:true, allowMobile:offlineMobileAllowed, autoUpdate:true});
       setOfflineWifiWait(false);
+      logAnalyticsEvent('offline_download', {outcome:'start', automatic:automatic ? 1 : 0});
       await offlineDownload.download(offlineAssets(), offlineVersion(), {products, productCache, infoCache, cardCache}, async () => {
         if (document.visibilityState !== 'visible') return false;
         if (!offlineDownload.getResumePreference().enabled) return false;
@@ -573,20 +636,27 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
         if (offlineNetworkMayDownload(network, offlineMobileAllowed)) return true;
         setOfflineWifiWait(true);
         return false;
-      });
+      }, !offlineMobileAllowed);
       const result = offlineDownload.check(offlineAssets(), offlineVersion());
+      logAnalyticsEvent('offline_download', {outcome:result.ready ? 'ready' : result.error ? 'error' : 'paused', automatic:automatic ? 1 : 0});
       if (result.ready) await offlineDownload.setResumePreference({enabled:false, allowMobile:offlineMobileAllowed});
       // A failed file must not trigger a tight automatic retry loop.
       offlineNextRetryAt = result.error ? Date.now() + 60000 : 0;
     } catch (_) {
       await offlineDownload.setResumePreference({enabled:false, allowMobile:false}).catch(() => {});
+      logAnalyticsEvent('offline_download', {outcome:'error', automatic:automatic ? 1 : 0});
       window.alert('No se pudo guardar el estado de la descarga. Tocá para reintentar.');
     } finally {offlineStarting = false;}
   }
-  const resumeOfflineWhenOpen = () => {
-    if ((offlineDownload.getResumePreference().enabled || offlineWifiWait) && document.visibilityState === 'visible') startOfflineDownload(true);
+  const resumeOfflineWhenOpen = async () => {
+    if (document.visibilityState !== 'visible') return;
+    const status = await offlineDownload.refresh();
+    if (status?.error && status.error !== offlineObservedError) offlineNextRetryAt = Date.now() + 60000;
+    offlineObservedError = status?.error || '';
+    const preference = offlineDownload.getResumePreference();
+    if ((preference.enabled || preference.autoUpdate || offlineWifiWait) && document.visibilityState === 'visible') startOfflineDownload(true);
   };
-  window.setInterval(resumeOfflineWhenOpen, 5000);
+  window.setInterval(resumeOfflineWhenOpen, 3000);
   window.addEventListener('online', resumeOfflineWhenOpen);
   document.addEventListener('visibilitychange', resumeOfflineWhenOpen);
   function useOfflineImages() {
@@ -1102,9 +1172,18 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     return result;
   }
 
+  const productContentRequests = new Map();
   async function fetchProductContent(product, force = false) {
     if (!product?.url) return null;
     if (!force && productCache[product.url]?.textFormatVersion === 1) return productCache[product.url];
+    if (productContentRequests.has(product.url)) return productContentRequests.get(product.url);
+    const request = fetchProductContentFromSource(product);
+    productContentRequests.set(product.url, request);
+    try { return await request; }
+    finally { if (productContentRequests.get(product.url) === request) productContentRequests.delete(product.url); }
+  }
+
+  async function fetchProductContentFromSource(product) {
     const document = new DOMParser().parseFromString(await fetchText(sourceUrl(product.url)), 'text/html');
     const structuredBarcodes = [];
     const collectStructuredBarcodes = (value) => {
@@ -2080,252 +2159,10 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     showView('categoryDirectoryView');
   }
 
-  // Solo identifica chocolates/bombones cuando el título describe el
-  // producto principal. No clasifica cereales, barritas u otros artículos
-  // que únicamente mencionan chocolate como sabor o ingrediente.
-  const actualChocolateProductPattern = /^(?:chocolates?|bombones?|bombonera|tabletas?(?:\s+de)?\s+chocolate|barras?\s+de\s+chocolate|cajas?\s+de\s+chocolates?)\b/;
-
-  const productCategoryRules = [
-    [['Carnes y embutidos', 'Carnes y fiambres'], /bresaola|matambrito|pastron|pastrón|\bcarne\b/],
-    [['Carnes y embutidos', 'Hamburguesas'], /hamburguesa/],
-    [['Carnes y embutidos', 'Chorizos y salchichas'], /chorizo|salchicha/],
-    [['Pescados', 'Pescados ahumados'], /salmon|salm[oó]n|pescado ahumado/],
-    [['Untables y pastas', 'Pastas de frutos secos'], /pasta(?:\s+untable)?\s+de\s+(?:avellana|caju|cajú|pecan|pecán|pistacho|mani|maní|almendra)/],
-    [['Untables y pastas', 'Tahini y pastas de semillas'], /pasta\s+de\s+sesamo|tahini/],
-    [['Legumbres y derivados', 'Pastas de legumbres'], /pasta\s+de\s+(?:arveja|lenteja|garbanzo|poroto)/],
-    [['Legumbres y derivados', 'Tofu y soja'], /tofu|tofú|proteina\s+de\s+soja|proteína\s+de\s+soja/],
-    [['Legumbres y derivados', 'Arvejas'], /\barveja/],
-    [['Legumbres y derivados', 'Porotos, lentejas y garbanzos'], /\bporoto|\blenteja|\bgarbanzo/],
-    [['Azúcares'], /\bazucar(?:es)?\b/],
-    [['Edulcorantes'], /edulcorante|stevia|sucralosa/],
-    [['Ingredientes para repostería', 'Levaduras y leudantes'], /levadura|polvo\s+para\s+hornear|bicarbonato/],
-    [['Ingredientes para repostería', 'Almidones y féculas'], /fecula|fécula|almidon|almidón/],
-    [['Ingredientes para repostería', 'Cacao'], /\bcacao\b/],
-    [['Ingredientes para repostería', 'Esencias y decoración'], /\breposteria\b|\brepostería\b|esencia\s+de|\bgranas?\b/],
-    [['Frutos secos y deshidratados', 'Frutos secos'], /avellana|\bnueces?\b|pistacho|pecan|pecán|caju|cajú|almendra|\bmani\b|castana|castaña/],
-    [['Frutos secos y deshidratados', 'Frutas deshidratadas'], /datil|dátil|damasco|damasaco|ciruela\s+seca|pasas?\s+de\s+uva|cascara\s+de|cáscara\s+de|polvo\s+de\s+(?:limon|limón|mandarina)/],
-    [['Frutos secos y deshidratados', 'Coco'], /coco\s+rallado/],
-    [['Condimentos'], /\balga|\balaga|wasabi/],
-    [['Condimentos', 'Condimentos para hamburguesas'], /(?:condimento|sazonador|especia).*\bhamburguesas?\b/],
-    [['Cereales, granos y semillas', 'Cuscús y burgol'], /couscous|cuscus|cuscús|burgol|brugol|bulgur/],
-    [['Sopas y caldos', 'Caldos y acompañamientos'], /consome|consomé|caldo|shkedei\s+marak/],
-    [['Alimentos saludables', 'Productos de dietética'], /productos?\s+de\s+dietetica|mix\s+fibra/],
-    [['Alimentos saludables', 'Proteínas y suplementos'], /suplemento|proteina\s+(?!de\s+soja)|proteína\s+(?!de\s+soja)/],
-    [['Bebidas', 'Bebidas alcohólicas', 'Otros destilados'], /bebida\s+alcoholica|bebida\s+alcohólica/],
-    [['Bebidas', 'Bebidas sin alcohol', 'Bebidas deportivas'], /gatorade|bebida\s+deportiva|isotonica|isotónica/],
-    [['Bebidas', 'Bebidas sin alcohol', 'Kombucha'], /kombucha/],
-    [['Bebidas', 'Bebidas sin alcohol', 'Bebidas saborizadas'], /bebida\s+saborizada/],
-    [['Cereales, granos y semillas', 'Maíz y polenta'], /\bmaiz\b|polenta|pochoclo|corn\s+flakes|semola\s+de\s+trigo|sémola\s+de\s+trigo/],
-    [['Cereales, granos y semillas', 'Granolas'], /granola/],
-    [['Cereales, granos y semillas', 'Semillas'], /girasol\s+pelado/],
-    [['Frutas y vegetales', 'Frutas en conserva'], /anana|ananá|durazno|ciruela|damasco|damasaco/],
-    [['Frutas y vegetales', 'Pulpas de fruta'], /pulpa\s+de/],
-    [['Frutas y vegetales', 'Hongos'], /champignon|champiñon|champiñón|hongo/],
-    [['Frutas y vegetales', 'Vegetales en conserva'], /arveja|hojas?\s+de\s+parra|alcaparra/],
-    [['Frutas y vegetales', 'Vegetales deshidratados'], /espinaca|\bkale\b|vegetales?\s+deshidratados|morron|morrón/],
-    [['Condimentos', 'Hierbas y especias'], /azafran|azarfan|azafrán|canela|clavo\s+de\s+olor|curry|jengibre|pimenton|pimentón|paprika|perejil|oregano|orégano|romero|salvia|tomillo|estragon|estragón|hibiscus|chimichurri|\bsales\b|\bhierbas?\b|mix\s+para\s+(?:carnes|ensaladas)/],
-    [['Snacks'], /\bchips?\b|\bthins?\b|\bthings\b|\bbamba\b/],
-    [['Obleas'], /oblea/],
-    [['Caramelos y golosinas'], /pastilla/],
-    [['Aceites', 'Aceite de oliva'], /aceite.+oliva|oliva.+aceite/],
-    [['Aceites', 'Aceite de girasol'], /aceite.+girasol|girasol.+aceite/],
-    [['Aceites', 'Otros aceites'], /\baceite\b/],
-    [['Bebidas', 'Bebidas alcohólicas', 'Espumantes'], /champagne|espumante/],
-    [['Bebidas', 'Bebidas alcohólicas', 'Vinos'], /\bvino|malbec|cabernet|merlot|chardonnay|sauvignon\b/],
-    [['Bebidas', 'Bebidas alcohólicas', 'Cervezas'], /\bcerveza\b/],
-    [['Bebidas', 'Bebidas alcohólicas', 'Licores'], /\blicor\b|fernet/],
-    [['Bebidas', 'Bebidas alcohólicas', 'Vodkas'], /\bvodka\b/],
-    [['Bebidas', 'Bebidas alcohólicas', 'Whiskies'], /\bwhisk(?:y|ey)\b/],
-    [['Bebidas', 'Bebidas alcohólicas', 'Gins'], /\bgin\b/],
-    [['Bebidas', 'Bebidas alcohólicas', 'Rones'], /\bron\b/],
-    [['Bebidas', 'Bebidas sin alcohol', 'Aguas'], /\bagua\b/],
-    [['Bebidas', 'Bebidas sin alcohol', 'Jugos'], /\bjugo|zumo|nectar\b/],
-    [['Bebidas', 'Bebidas sin alcohol', 'Gaseosas y sodas'], /gaseosa|\bsoda\b|tonica/],
-    [['Bebidas', 'Bebidas sin alcohol', 'Bebidas vegetales'], /bebida.+(avena|almendra|soja|coco|arroz)/],
-    [['Bebidas', 'Bebidas sin alcohol', 'Energizantes'], /energizante/],
-    [['Café'], /\bcafe\b/],
-    [['Café'], /nescafe|nescafé/],
-    [['Té'], /\bte\b|infusion/],
-    [['Yerba mate'], /yerba|\bmate\b/],
-    [['Dulce de leche'], /dulce.+leche/],
-    [['Lácteos', 'Leches'], /\bleche\b/],
-    [['Lácteos', 'Quesos'], /\bqueso/],
-    [['Lácteos', 'Yogures'], /yogur/],
-    // "Porotos de manteca" es una variedad de legumbre, no manteca.
-    [['Manteca'], /(?:^manteca\b|\bmanteca\s+parve\b|\bveganteca\b)/],
-    [['Lácteos', 'Cremas'], /\bcrema\b/],
-    [['Panadería y repostería', 'Harinas'], /\bharina|premezcla/],
-    [['Panadería y repostería', 'Panes'], /\bpan\b|panificad/],
-    [['Panadería y repostería', 'Galletitas y tostadas'], /gallet|tostad|bizcoch/],
-    [['Panadería y repostería', 'Masas'], /\bmasa\b|tapa.+empanada|tapa.+tarta/],
-    [['Chocolates y bombones'], actualChocolateProductPattern],
-    [['Caramelos y golosinas'], actualChocolateProductPattern],
-    [['Alfajores'], /alfajor/],
-    [['Caramelos y golosinas'], /alfajor|oblea/],
-    [['Turrones'], /\bturron(?:es)?\b/],
-    [['Caramelos y golosinas'], /caramelo|golosina|chicle/],
-    [['Mermeladas'], /mermelada|jalea/],
-    [['Dulces de fruta'], /dulce\s+de\s+(?:batata|membrillo|fruta)|\bbatata\b|\bmembrillo\b/],
-    [['Miel'], /\bmiel\b/],
-    [['Cereales, granos y semillas', 'Arroz'], /\barroz\b/],
-    [['Cereales, granos y semillas', 'Avena'], /\bavena\b/],
-    [['Cereales, granos y semillas', 'Quinoa'], /quinoa/],
-    [['Cereales, granos y semillas', 'Semillas'], /^(?:semillas?|s[eé]samo|lino|chia|girasol\s+pelado|mix\s+de\s+semillas)\b/],
-    [['Cereales, granos y semillas', 'Cereales'], /\bcereal/],
-    [['Pastas dulces'], /pastas?\s+dulces?/],
-    [['Aderezos', 'Mayonesas'], /mayonesa/],
-    [['Aderezos', 'Ketchup'], /ketchup/],
-    [['Aderezos', 'Mostaza'], /mostaza/],
-    [['Aderezos'], /aderezo|dressing|mayonesa|ketchup|mostaza|salsa\s+(?:golf|cesar|césar|barbacoa|bbq)|alioli|tartara|tártara|ranch/],
-    [['Salsas'], /\bsalsa/],
-    [['Conservas', 'Pepinos en conserva'], /pepinos?\s+(?:en\s+vinagre|encurtidos?)/],
-    [['Vinagres'], /vinagre/],
-    [['Condimentos'], /condimento|sazonador|condifran|condifrán/],
-    [['Condimentos', 'Hierbas y especias'], /especia|pimienta|\bsal\b/],
-    [['Conservas', 'Pescados en conserva'], /atun|sardina|caballa/],
-    [['Aceitunas'], /\baceitunas?\b/],
-    [['Conservas', 'Vegetales en conserva'], /aceituna|pickle|palmito|conserva/],
-    [['Pastas', 'Pastas secas'], /fideo|spaghetti|tallar|pasta seca/],
-    [['Pastas', 'Pastas rellenas'], /raviol|sorrentino|capelet/],
-    [['Snacks'], /papas fritas/],
-    [['Snacks'], /\bsnack|nacho|palito|barrita/],
-    [['Frutas y vegetales', 'Frutas'], /\bfruta/],
-    [['Papas'], /\bpapas?\b|\bpure\s+de\s+papa\b|\bfecula\s+de\s+papa\b/],
-    [['Frutas y vegetales', 'Vegetales'], /vegetal|verdura|tomate|cebolla|ajo/],
-    [['Congelados', 'Productos congelados'], /congelad|freezado/]
-  ];
-
-  // Reglas de alta confianza. Se evalúan antes que las coincidencias generales
-  // para que una palabra secundaria (sabor, uso o ingrediente) no mande un
-  // producto a una categoría equivocada.
-  const priorityProductCategoryRules = [
-    // La categoría principal se decide por el tipo de producto, no por un
-    // ingrediente o sabor mencionado después en el nombre/descripción.
-    [['Legumbres y derivados', 'Porotos, lentejas y garbanzos'], /^porotos?\s+de\s+manteca\b/],
-    [['Carnes y embutidos', 'Carnes y fiambres'], /\b(?:fiambre|mortadela|mortadelita|salchich[oó]n|pastr[oó]n|bresaola|matambrito)\b/],
-    [['Bebidas', 'Bebidas sin alcohol', 'Bebidas vegetales'], /^(?:bebida|leche)\b.*\b(?:avena|almendras?|soja|coco|arroz|parve)\b/],
-    [['Aceites', 'Aceite de oliva'], /^aceite\b.*\boliva\b/],
-    [['Aceites', 'Aceite de girasol'], /^aceite\b.*\bgirasol\b/],
-    [['Aceites', 'Otros aceites'], /^aceite\b/],
-    [['Mermeladas'], /^mermelada\b/],
-    [['Frutos secos y deshidratados', 'Frutas deshidratadas'], /^frutas?\s+(?:desecadas?|deshidratadas?|liofilizadas?)\b/],
-    [['Untables y pastas', 'Pastas de frutos secos'], /^(?:mantequilla|pasta(?:\s+untable)?)\s+de\s+(?:avellanas?|caj[uú]|casta[nñ]as?\s+de\s+caj[uú]|nuez\s+pec[aá]n|nueces?|pistachos?|man[ií]|almendras?)\b/],
-    [['Pastas', 'Pastas especiales'], /^(?:fideos?|pasta)\s+de\s+arroz\b/],
-    [['Panadería y repostería', 'Harinas'], /^s[eé]mola\s+de\s+trigo\b/],
-    [['Frutos secos y deshidratados', 'Frutos secos'], /^(?:nuez|mix\s+frutos)\b.*\btostad/],
-    [['Bebidas', 'Bebidas alcohólicas', 'Gins'], /\b(?:beefeater|bombay saphire|bombay sapphire|gordon.?s|plymouth gin|tanqueray|broker.?s)\b/],
-    [['Bebidas', 'Bebidas alcohólicas', 'Vodkas'], /\b(?:beluga|grey goose|smirnoff|stolichnaya|van gogh blue|skyy)\b/],
-    [['Bebidas', 'Bebidas alcohólicas', 'Whiskies'], /\b(?:deanston|glen moray|jack daniel.?s|johnnie walker|speyburn|chivas regal)\b/],
-    [['Bebidas', 'Bebidas alcohólicas', 'Rones'], /\b(?:don q gold|flor de cana|ron abuelo|bacardi|barcelo|mount gay|myers.?s|velho barreiro)\b/],
-    [['Bebidas', 'Bebidas alcohólicas', 'Tequilas'], /\b(?:patron|el jimador|jose cuervo|ultramark)\b/],
-    [['Bebidas', 'Bebidas alcohólicas', 'Arak y anisados'], /\b(?:elite arak|zachlawi)\b/],
-    [['Bebidas', 'Bebidas alcohólicas', 'Licores'], /\b(?:cointreau|disaronno|heering|kahlua|luxardo)\b/],
-    [['Bebidas', 'Bebidas alcohólicas', 'Vinos'], /\b(?:galilee winery|joseph gold)\b/],
-    [['Turrones'], /\bturron(?:es)?\b/],
-    // Las papas son una familia que el usuario busca como categoría propia
-    // (fritas, congeladas, pay, puré y fécula), no como un vegetal genérico.
-    [['Papas'], /\bpapas?\b|\bpure\s+de\s+papa\b|\bfecula\s+de\s+papa\b/],
-    [['Congelados', 'Frutas congeladas'], /(?:^|\s)fruta\s+congelad|(?:frambuesa|frutilla|mango|arandanos?)\s+congelad/],
-    [['Congelados', 'Vegetales congelados'], /congelad|freezado|cogelad/],
-    [['Snacks'], /\bbarritas?\b/],
-    [['Panadería y repostería', 'Harinas'], /\bharina\b/],
-    [['Panadería y repostería', 'Galletitas y tostadas'], /\bgallet(?:a|as|ita|itas)\b|\bbizcoch|\btostadas?\b/],
-    [['Pastas', 'Pastas especiales'], /\b(?:fusilli|spaghetti|tallarines?|coditos|sedanini|ravioles?|sorrentinos?|capeletis?)\b/],
-    [['Untables y pastas', 'Pastas de frutos secos'], /mantequilla\s+de\s+mani/],
-    [['Manteca'], /manteca\s+parve|veganteca/],
-    [['Frutos secos y deshidratados', 'Frutas deshidratadas'], /fruta\s+liofilizada|liofilizad[ao].*\b(?:anana|banana|frutilla|mango|fruta)\b/],
-    [['Frutos secos y deshidratados', 'Frutos secos'], /mix\s+frutos\s+tostados|nuez\s+tostada/],
-    [['Conservas', 'Frutas en conserva'], /coctel\s+de\s+frutas/],
-    [['Conservas', 'Choclos en conserva'], /\bchoclos?\b(?!\s+congelad)(?=.*(?:marca|lata|conserva|enlatad))|crema\s+de\s+choclo\b/],
-    [['Condimentos'], /^condimentos?\b|\bsazonador(?:es)?\b|condifran|condifrán/],
-    [['Condimentos', 'Hierbas y especias'], /^especias?\b|\bnuez\s+moscada\b/],
-    [['Condimentos', 'Pimientas'], /\bpimientas?\b/],
-    [['Condimentos', 'Sales'], /(?:^|\s)sal(?:\s|$)|\bsales\b/]
-  ];
-
   function productCategoryPaths(product) {
-    const reviewedPath = reviewedCategoryPath(product);
-    if (reviewedPath) return [reviewedPath];
-    const text = normalize(`${product.title} ${product.description || ''}`);
-    const titleText = normalize(product.title);
-    // La yerba mate y el mate cocido tienen su propia categoría, nunca
-    // Condimentos. Este atajo evita que reglas remotas o descripciones
-    // demasiado amplias agreguen una clasificación incorrecta.
-    if (/\byerba\b|\bmate\b/.test(text)) return [['Yerba mate']];
-    const paths = [];
-    const separateCondimentPath = (path) => {
-      if (!Array.isArray(path)) return [];
-      const root = normalize(path[0]);
-      if (root !== 'salsas, aderezos y condimentos') return path;
-      const child = normalize(path[1] || '');
-      if (child === 'aderezos' || child === 'mayonesas' || child === 'ketchup y mostazas') return ['Aderezos', ...path.slice(1)];
-      if (child === 'salsas') return ['Salsas', ...path.slice(1)];
-      if (child === 'vinagres') return ['Vinagres', ...path.slice(1)];
-      if (child) return ['Condimentos', ...path.slice(1)];
-      return [];
-    };
-    const addPath = (path) => {
-      let canonicalPath = separateCondimentPath(path);
-      const originalRoot = normalize(canonicalPath[0] || '');
-      const originalChild = normalize(canonicalPath[1] || '');
-      // Los cereales no deben terminar bajo Azúcares solo porque el nombre
-      // mencione "azucarado". Esa categoría queda reservada para productos
-      // cuyo título realmente es azúcar o edulcorante.
-      if (['azucares y endulzantes', 'azucares'].includes(originalRoot)) {
-        const sugarPattern = originalChild === 'edulcorantes' ? /edulcorante|stevia|sucralosa/ : /\bazucar(?:es)?\b/;
-        if (!sugarPattern.test(titleText)) return;
-      }
-      if (originalRoot === 'edulcorantes' && !/edulcorante|stevia|sucralosa/.test(titleText)) return;
-      // Un condimento para hamburguesas no es una hamburguesa.
-      if (originalRoot === 'carnes y embutidos' && originalChild === 'hamburguesas' && /\b(?:condimento|sazonador|especia)\b/.test(text)) return;
-      // Un chocolate real con cereal en el título no debe contaminar la
-      // familia de cereales; el sabor a chocolate de un cereal sí conserva
-      // su clasificación de cereal.
-      if (originalRoot === 'cereales, granos y semillas' && actualChocolateProductPattern.test(text)) return;
-      // Semillas queda reservada para productos cuyo título es realmente una
-      // semilla. Evita que aceite de sésamo, arroz o barritas terminen allí
-      // solo porque la descripción menciona un ingrediente.
-      if (originalRoot === 'cereales, granos y semillas' && originalChild === 'semillas' && !/^(?:semillas?|s[eé]samo|lino|chia|girasol\s+pelado|mix\s+de\s+semillas)\b/.test(titleText)) return;
-      // Aceitunas se muestran como familia principal, no como vegetal en conserva.
-      if (originalRoot === 'conservas' && originalChild === 'vegetales en conserva' && /\baceitunas?\b/.test(text)) return;
-      // Un pepino en vinagre es una conserva, no un vinagre.
-      if (originalRoot === 'vinagres' && /\bpepinos?\b/.test(text)) return;
-      // Snacks es una familia principal: sus variantes no abren otra rama.
-      if (originalRoot === 'snacks') canonicalPath = ['Snacks'];
-      // Café y té son categorías principales, no subcategorías de Infusiones.
-      if (originalRoot === 'infusiones') {
-        if (/cafe|nescafe/.test(originalChild) || /\bcafe\b|nescafe/.test(text)) canonicalPath = ['Café'];
-        else if (/\bte\b|tea|infusion/.test(originalChild) || /\bte\b|tea|infusion/.test(text)) canonicalPath = ['Té'];
-        else return;
-      }
-      // La manteca tiene su propia categoría principal, incluso si una regla
-      // remota todavía la entrega dentro de Lácteos.
-      if (originalRoot === 'lacteos' && originalChild === 'mantecas y cremas' && /\bmanteca\b/.test(text)) return;
-      // Cada subfamilia de Cereales, granos y semillas pasa al listado
-      // principal: Arroz, Avena, Maíz, Quinoa, Semillas, etc.
-      if (originalRoot === 'cereales, granos y semillas') canonicalPath = [canonicalPath[1] || 'Cereales'];
-      // Maíz y polenta son una sola familia. Unificamos también los caminos
-      // que puedan llegar desde reglas remotas o datos antiguos como "Maíz".
-      if (['maiz', 'maiz y polenta'].includes(normalize(canonicalPath[0] || ''))) canonicalPath = ['Maíz y polenta'];
-      // Azúcar y edulcorantes son búsquedas distintas para el usuario.
-      if (originalRoot === 'azucares y endulzantes') canonicalPath = originalChild === 'edulcorantes' ? ['Edulcorantes'] : ['Azúcares'];
-      const root = normalize(canonicalPath[0] || '');
-      if (!canonicalPath.length || root === 'dulces y golosinas' || canonicalPath.some((part) => normalize(part) === 'cocina internacional')) return;
-      if (!paths.some((candidate) => candidate.join('|') === canonicalPath.join('|'))) paths.push(canonicalPath);
-    };
-    const priorityMatch = priorityProductCategoryRules.find(([, pattern]) => pattern.test(text));
-    if (priorityMatch) addPath(priorityMatch[0]);
-    // Los productos identificados como cereales se convierten a la categoría
-    // principal "Cereales" mediante la normalización de addPath().
-    if (/\bcereales?\b|\bcopos de maiz\b/.test(text)) addPath(['Cereales, granos y semillas', 'Cereales']);
-    const remoteMatch = remoteTaxonomyRules.find((rule) => !rule.path.some((part) => normalize(part) === 'cocina internacional') && rule.keywords.some((keyword) => text.includes(keyword)));
-    if (remoteMatch) addPath(remoteMatch.path);
-    // Se reúnen las coincidencias para conservar la compatibilidad con las
-    // reglas remotas, pero el catálogo expone una sola categoría principal.
-    // Así una palabra secundaria (por ejemplo "manteca" en "porotos de
-    // manteca") no duplica ni contamina otros listados.
-    productCategoryRules.forEach(([path, pattern]) => { if (pattern.test(text)) addPath(path); });
-    if (paths.length) return [paths[0]];
+    const path = reviewedCategoryPath(product) || newProductCategoryPath(product);
+    if (path) return [path];
+    // Sin un tipo inequívoco no inventamos una categoría por ingredientes.
     const fallback = {gondola:'Productos de góndola', planta:'Productos de plantas certificadas', especial:'Producción especial', uruguay:'Productos de Uruguay'};
     return [['Otros productos', fallback[product.cat] || 'Sin clasificar']];
   }
@@ -2359,9 +2196,16 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
 
   function taxonomyIcon(name) {
     const key = normalize(name);
+    const dryFood = /^frutos secos y (?:deshidratados|frutas secas)$/.test(key)
+      ? '<path d="M10 3C4 5 2 12 5 17c5 1 10-5 5-14ZM9 6 6 14"/><ellipse cx="17" cy="15" rx="3" ry="4" transform="rotate(25 17 15)"/><path d="m17 13-1 3M19 7c-2 0-3 1-3 3"/>'
+      : /^frutos secos$/.test(key)
+        ? '<path d="M12 3c-2-1-4 0-5 2-3 0-4 3-3 5-2 3 0 6 2 7 0 3 4 5 6 3 2 2 6 0 6-3 2-1 4-4 2-7 1-2 0-5-3-5-1-2-3-3-5-2ZM12 3v17M8 7l-2 3 3 2-2 4M16 7l2 3-3 2 2 4"/>'
+        : /^(?:frutas secas(?: y deshidratadas)?|frutas deshidratadas)$/.test(key)
+          ? '<ellipse cx="8" cy="9" rx="3.5" ry="4.5" transform="rotate(-25 8 9)"/><ellipse cx="17" cy="10" rx="3.5" ry="4.5" transform="rotate(25 17 10)"/><ellipse cx="12" cy="18" rx="4" ry="3.5"/><path d="m8 7-1 3M17 8l-1 3M10 18h3"/>' : '';
+    if (dryFood) return `<svg class="taxonomy-icon" viewBox="0 0 24 24" aria-hidden="true">${dryFood}</svg>`;
     // Dibujos específicos para productos que no tienen un equivalente claro
     // en la biblioteca. Comparten tamaño y trazo con los demás iconos.
-    const specific = /alcaparra/.test(key) ? '<path d="M6 5h12M8 3h8v2M7 5v3l-2 3v8a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-8l-2-3V5"/><circle cx="9" cy="13" r="1.5"/><circle cx="15" cy="13" r="1.5"/><circle cx="12" cy="17" r="1.5"/>' :
+    const specific = /barrita/.test(key) ? '<path d="m5 4 14 3-3 13-14-3Z M5 4l3 4M19 7l-4 2M2 17l4-2M16 20l-3-4"/>' : /alcaparra/.test(key) ? '<path d="M6 5h12M8 3h8v2M7 5v3l-2 3v8a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-8l-2-3V5"/><circle cx="9" cy="13" r="1.5"/><circle cx="15" cy="13" r="1.5"/><circle cx="12" cy="17" r="1.5"/>' :
       /alga|sushi/.test(key) ? '<path d="m5 4 13-1 1 14-13 2Z M8 7l7-1M8 10l7-1M9 13l6-1M9 16l6-1M6 19l1 3 14-3-2-2"/>' :
       /almidon|fecula/.test(key) ? '<path d="M8 3h8l-1 4 4 7v5a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-5l4-7Z M9 7h6M5 15c3-2 5 2 8 0s4-1 6 0"/><path d="M9 18h.01M12 17h.01M15 19h.01"/>' :
       /hojas de parra/.test(key) ? '<path d="M12 21v-8M12 16C4 18 2 11 3 5l5 2 4-5 4 5 5-2c1 6-1 13-9 11ZM12 13l-5-3M12 13l5-3"/>' :
@@ -2532,14 +2376,14 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     return distances[query.length][word.length] <= limit;
   }
 
-  function filtered(query) {
+  function filtered(query, region = selectedRegion, category = selectedCategory) {
     const term = normalize(query);
     const searchTokens = term.split(/[^a-z0-9]+/).filter((token) => token && !['de', 'del', 'la', 'el', 'los', 'las', 'un', 'una', 'marca'].includes(token));
     const searchableProducts = products;
     return searchableProducts.map((product) => {
       const isUruguay = product.cat === 'uruguay' || product.category === 'uruguay';
-      const matchesRegion = selectedRegion === 'all' || (selectedRegion === 'uruguay' ? isUruguay : !isUruguay);
-      const matchesCategory = selectedCategory === 'all' || (selectedCategory === 'gondola' ? product.cat === 'gondola' && !isUruguay : product.cat === selectedCategory);
+      const matchesRegion = region === 'all' || (region === 'uruguay' ? isUruguay : !isUruguay);
+      const matchesCategory = category === 'all' || (category === 'gondola' ? product.cat === 'gondola' && !isUruguay : product.cat === category);
       const matchesFavorite = !favoriteOnly || favorites.has(product.url);
       const taxonomyPath = productCategoryPath(product);
       const taxonomyText = [...taxonomyPath, ...taxonomyPath.map(categoryDisplayName)].join(' ');
@@ -2625,12 +2469,29 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
   }
 
   let searchBrand = '';
+  function otherRegionMatches(query) {
+    if (favoriteOnly || normalize(query).length < 3 || !['argentina','uruguay'].includes(selectedRegion)) return null;
+    const region = selectedRegion === 'argentina' ? 'uruguay' : 'argentina';
+    const matches = searchBrand
+      ? filtered('',region,'all').filter(product => brandKey(brandName(product)) === brandKey(searchBrand))
+      : filtered(query,region,'all');
+    return matches.length ? {region, count:matches.length} : null;
+  }
+
+  function showSearchRegion(region) {
+    if (!['argentina','uruguay'].includes(region)) return;
+    selectedRegion = region;
+    selectedCategory = 'all';
+    renderSearchCategories();
+    renderResults($('#query').value);
+    logAnalyticsEvent('catalog_filter',{kind:'region',region:selectedRegion,source:'search_match'});
+  }
   function renderResults(query = '') {
     if (brandKey(query) !== brandKey(searchBrand)) searchBrand = '';
     const result = searchBrand ? filtered('').filter(product => brandKey(brandName(product)) === brandKey(searchBrand)) : filtered(query);
     const title = favoriteOnly ? 'Guardados' : query ? 'Resultados' : selectedCategory !== 'all' ? categoryFor(selectedCategory).name : selectedRegion === 'all' ? 'Todos los productos' : selectedRegion === 'uruguay' ? 'Uruguay' : 'Argentina';
     $('#resultsTitle').textContent = searchBrand ? `Marca ${searchBrand}` : title;
-    $('#resultsMeta').textContent = `${result.length.toLocaleString('es-AR')} ${result.length === 1 ? 'producto' : 'productos'} en esta vista`;
+    $('#resultsMeta').textContent = `${result.length.toLocaleString('es-AR')} ${result.length === 1 ? 'producto' : 'productos'} ${selectedRegion === 'all' ? 'en esta vista' : `en ${selectedRegion === 'uruguay' ? 'Uruguay' : 'Argentina'}`}`;
     renderSearchScope();
     let categoryLinks = $('#searchCategoryMatches');
     if (!categoryLinks) {
@@ -2650,6 +2511,16 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
       brandLinks.className = 'search-brand-matches';
       categoryLinks.before(brandLinks);
     }
+    let regionLinks = $('#searchRegionMatches');
+    if (!regionLinks) {
+      regionLinks = document.createElement('div');
+      regionLinks.id = 'searchRegionMatches';
+      regionLinks.className = 'search-region-matches';
+      brandLinks.before(regionLinks);
+    }
+    const otherRegion = otherRegionMatches(query);
+    regionLinks.hidden = !otherRegion;
+    regionLinks.innerHTML = otherRegion ? `<button type="button" class="search-region-match" data-search-region="${otherRegion.region}"><span aria-hidden="true">${otherRegion.region === 'uruguay' ? '🇺🇾' : '🇦🇷'}</span><span>Coincidencias en ${otherRegion.region === 'uruguay' ? 'Uruguay' : 'Argentina'} <small>· ${otherRegion.count.toLocaleString('es-AR')} ${otherRegion.count === 1 ? 'producto' : 'productos'}</small></span><span aria-hidden="true">›</span></button>` : '';
     // Filter before limiting: logo-less matches must not occupy suggestion slots.
     const brands = !favoriteOnly && !searchBrand ? matchingBrands(filtered('').filter(product => brandLogo(brandName(product))), query) : [];
     brandLinks.hidden = !brands.length;
@@ -2773,6 +2644,7 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     const savedPosition = restoreScroll ? viewScrollPositions.get(activeScrollKey) : null;
     if (viewId === 'homeView' && !$('#homeView').classList.contains('active')) resumeBrandMarquee();
     document.body.dataset.activeView = viewId;
+    usageAnalytics.screen(viewId);
     if (viewId !== 'searchView') {
       document.body.classList.remove('search-open');
       setSearchHomeHidden(false);
@@ -2856,7 +2728,7 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     $('#headerNotificationDot').hidden = !value;
     $('#headerNotifications')?.classList.toggle('has-alerts', value);
     $('#navDot').hidden = !value;
-    $('.nav[data-view="alertsView"]')?.classList.toggle('has-alerts', value);
+    document.querySelectorAll('.nav[data-view="alertsView"]').forEach(button => button.classList.toggle('has-alerts', value));
   }
 
   // La campana y la pestaña Alertas representan avisos push. Las novedades
@@ -3204,16 +3076,18 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     const value = clean(input.value);
     if (!value) return;
     countPopularity(`query:${normalize(value)}`, 'searches');
-    logAnalyticsEvent('catalog_search', {query: value.slice(0, 80)});
+    // Never transmit the free text a person enters in the search box.
     recent = [value, ...recent.filter((item) => normalize(item) !== normalize(value))].slice(0,5);
     localStorage.setItem('iht_recent', JSON.stringify(recent));
     if (fromHome) { showView('searchView'); $('#query').value = value; }
     favoriteOnly = false; selectedCategory = 'all'; renderResults(value); renderSearchCategories();
+    logAnalyticsEvent('catalog_search', {query_length:value.length, result_count:filtered(value).length, region:selectedRegion});
   }
 
   function toggleFavorite(url) {
     favorites.has(url) ? favorites.delete(url) : favorites.add(url);
     save();
+    logAnalyticsEvent(favorites.has(url) ? 'product_save' : 'product_unsave', {screen:document.querySelector('.view.active')?.id, saved_count:favorites.size});
     renderSavedButtonCount();
     if (currentProduct && currentProduct.url === url) {
       const detailSave = $('#detailSave');
@@ -3516,6 +3390,7 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
   async function shareCurrentProduct() {
     if (!currentProduct || shareBusy) return;
     shareBusy = true;
+    logAnalyticsEvent('product_share', {outcome:'attempt'});
     const button = $('#detailShare');
     if (button) {
       button.disabled = true;
@@ -3540,6 +3415,7 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
           .replace(/^-+|-+$/g, '')
           .slice(0, 56) || 'producto';
         await shareImageWithAndroid(imageBlob, `iahadut-${safeName}.jpg`, title, text);
+        logAnalyticsEvent('product_share', {outcome:'sheet_returned'});
         showShareNotice('Foto y ficha listas para compartir');
       } else if (navigator.share) {
         // Los navegadores que admiten archivos reciben la misma tarjeta visual;
@@ -3554,16 +3430,20 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
         const shareData = {title, text, url};
         if (navigator.canShare?.({files: [imageFile]})) shareData.files = [imageFile];
         await navigator.share(shareData);
+        logAnalyticsEvent('product_share', {outcome:'sheet_returned'});
         showShareNotice(shareData.files ? 'Foto y ficha listas para compartir' : 'Ficha lista para compartir');
       } else {
         try {
           await navigator.clipboard.writeText(`${title}\n${url}`);
+          logAnalyticsEvent('product_share', {outcome:'copied'});
           showShareNotice('Enlace copiado');
         } catch (_) {
+          logAnalyticsEvent('product_share', {outcome:'error'});
           showShareNotice('Copiá el enlace de la ficha para compartirla', 'bad');
         }
       }
     } catch (error) {
+      logAnalyticsEvent('product_share', {outcome:error?.name === 'AbortError' ? 'cancelled' : 'error'});
       if (error?.name !== 'AbortError') showShareNotice('No pudimos preparar la imagen para compartir', 'bad');
       else preparingNotice.remove();
     } finally {
@@ -3704,12 +3584,14 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
       if (remoteControl.live_search_ranking_v1_enabled === true) void liveSearch.record(product.url).catch(() => {});
     }
     countPopularity(product.url, 'opens');
-    logAnalyticsEvent('product_open', {product_url: product.url, product_name: product.title?.slice(0, 80) || ''});
+    logAnalyticsEvent('product_open', {source:options.fromScan ? 'scanner' : fromSearch ? 'search' : previousView === 'savedView' ? 'saved' : 'catalog', retry:options.retry ? 1 : 0});
     const cachedOfficial = productCache[product.url] || null;
     if (cachedOfficial) renderDetail(product, cachedOfficial);
     if (options.fromScan) showKosherToast(product);
     if (cachedOfficial) {
-      if (navigator.onLine && (cachedOfficial.textFormatVersion !== 1 || !isFresh(cachedOfficial))) fetchProductContent(product, true).then((official) => {
+      // Complete fiches are updated with the central catalog; their age alone
+      // must not trigger another scrape of the official website on each phone.
+      if (navigator.onLine && cachedOfficial.textFormatVersion !== 1) fetchProductContent(product, true).then((official) => {
         if (currentProduct?.url === product.url) renderDetail(product, official);
       }).catch(() => {});
       return;
@@ -3782,7 +3664,7 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     const hydrated = await Promise.all(missing.map(async (item) => {
       const candidate = {url:item.url, title:cleanDisplayText(item.text || ''), brand:'', barcode:'', cat:'gondola', image:'', description:''};
       try {
-        const official = await fetchProductContent(candidate, true);
+        const official = await fetchProductContent(candidate);
         const image = official?.images?.[0]?.src;
         if (!image) return false;
         candidate.image = image;
@@ -4054,10 +3936,13 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
   function renderHomeAppUpdate() {
     const update = $('#homeAppUpdate');
     if (!update) return;
-    const detail = update.querySelector('small');
     const button = update.querySelector('button');
-    if (detail) detail.textContent = `Disponible en ${distributionLinks.label}`;
     if (button) button.setAttribute('aria-label', `Abrir la actualización de la aplicación en ${distributionLinks.label}`);
+    // Local visual preview only; release builds keep the real update check.
+    if (import.meta.env.DEV && new URLSearchParams(location.search).get('preview') === 'app-update') {
+      update.hidden = false;
+      return;
+    }
     update.hidden = Capacitor.getPlatform() === 'ios'
       ? !(accessDecision(remoteControl).updateAvailable && remoteControl.update_url)
       : !(playUpdateState.available || playUpdateState.downloaded);
@@ -4171,6 +4056,7 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
   async function disablePushNotifications() {
     if (pushPhase === 'deactivating') return;
     pushPhase = 'deactivating';
+    logAnalyticsEvent('notification_setting', {outcome:'disabled'});
     localStorage.setItem('iht_push_enabled', '0');
     localStorage.setItem('iht_push_status', 'disabled');
     pushGeneration += 1;
@@ -4206,13 +4092,20 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     return Promise.race([operation,new Promise((_,reject)=>{timer=setTimeout(()=>reject(new Error('La conexión de notificaciones no respondió. Reintentá con conexión.')),milliseconds);})]).finally(()=>clearTimeout(timer));
   }
 
-  function renderMore() {
+  function renderMore({offlineOnly = false} = {}) {
     const offlineState = offlineDownload.check(offlineAssets(), offlineVersion());
-    const offlineTitle = offlineState.ready ? '✓ Listo para usar offline' : 'Usar sin conexión';
+    const offlineTitle = offlineState.ready ? 'Listo para usar offline' : 'Usar sin conexión';
     const offlineStatus = offlineWifiWait || offlineState.waiting ? 'Esperando conexión permitida' : offlineState.paused ? (offlineState.busy ? 'Pausando…' : 'Descarga pausada') : offlineState.busy ? `Descargando · ${offlineState.percent}%` : offlineState.error ? 'Descarga incompleta · Reintentar' : offlineState.ready ? '' : offlineState.hasDownload ? 'Actualizar descarga' : 'Descarga aproximada: 399 MB';
-    const offline = `<div class="offline-download-item"><button class="more-row offline-download-row" data-offline-download ${offlineState.busy || offlineState.ready ? 'disabled' : ''}><span class="more-row-leading-icon" aria-hidden="true">↓</span><span><strong>${offlineTitle}</strong>${offlineStatus ? `<small>${offlineStatus}</small>` : ''}${offlineState.busy || offlineState.paused || offlineWifiWait ? `<span class="offline-download-progress" role="progressbar" aria-label="Descarga offline" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${offlineState.percent}"><span style="width:${offlineState.percent}%"></span></span>` : ''}</span></button>${offlineState.busy || offlineWifiWait ? `<button class="offline-pause-button" data-offline-pause ${offlineState.paused && offlineState.busy ? 'disabled' : ''}>${offlineWifiWait ? 'Cancelar' : 'Pausar'}</button>` : offlineState.paused ? '<button class="offline-pause-button" data-offline-download>Reanudar</button>' : ''}</div>`;
+    const offline = `<div class="offline-download-item"><button class="more-row offline-download-row" data-offline-download ${offlineState.busy || offlineState.clearing || offlineState.ready ? 'disabled' : ''}><span class="more-row-leading-icon offline-storage-icon" aria-hidden="true"><svg viewBox="0 0 24 24">${offlineState.ready ? '<path d="M4 8h16v12H4zM3 4h18v4H3zM10 12h4"/>' : '<path d="M12 3v12m-4-4 4 4 4-4M4 16v4h16v-4"/>'}</svg></span><span><strong>${offlineTitle}</strong>${offlineStatus ? `<small>${offlineStatus}</small>` : ''}${offlineState.busy || offlineState.paused || offlineWifiWait ? `<span class="offline-download-progress" role="progressbar" aria-label="Descarga offline" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${offlineState.percent}"><span style="width:${offlineState.percent}%"></span></span>` : ''}</span></button>${offlineState.busy || offlineWifiWait ? `<button class="offline-pause-button" data-offline-pause ${offlineState.paused && offlineState.busy ? 'disabled' : ''}>${offlineWifiWait ? 'Cancelar' : 'Pausar'}</button>` : offlineState.paused ? '<button class="offline-pause-button" data-offline-download>Reanudar</button>' : ''}${offlineState.hasDownload && !offlineState.busy ? `<div class="offline-download-actions"><button class="offline-delete-button" type="button" data-offline-delete ${offlineState.clearing ? 'disabled' : ''}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13M10 11v5M14 11v5"/></svg>${offlineState.clearing ? 'Borrando…' : 'Borrar descarga'}</button></div>` : ''}</div>`;
+    // Progress changes only this row. Recreating the entire More screen
+    // reloads the lazy Waien logo and interrupts focus/scroll on every image.
+    const offlineItem = $('#moreList .offline-download-item');
+    if (offlineOnly && offlineItem) {
+      offlineItem.outerHTML = offline;
+      return;
+    }
     const officialWebsite = `<a class="more-row official-site-row" href="https://vaad.ar/" target="_blank" rel="noopener"><span class="more-row-leading-icon" aria-hidden="true">↗</span><span><strong>Sitio web oficial</strong></span><span class="row-arrow" aria-hidden="true">›</span></a>`;
-    const rateApp = distributionLinks.rate ? `<a class="more-row rate-app-row" href="${distributionLinks.rate}" data-rate-app target="_blank" rel="noopener"><span class="rate-app-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="m12 3 2.8 5.7 6.2.9-4.5 4.4 1.1 6.2-5.6-3-5.6 3 1.1-6.2L3 9.6l6.2-.9L12 3Z"/></svg></span><span><strong>Calificá la app</strong><small>Dejanos tu opinión en ${distributionLinks.label}</small></span><span class="row-arrow" aria-hidden="true">›</span></a>` : '';
+    const rateApp = distributionLinks.rate ? `<a class="more-row rate-app-row" href="${distributionLinks.rate}" data-rate-app target="_blank" rel="noopener"><span class="rate-app-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="m12 3 2.8 5.7 6.2.9-4.5 4.4 1.1 6.2-5.6-3-5.6 3 1.1-6.2L3 9.6l6.2-.9L12 3Z"/></svg></span><span><strong>Calificá la app</strong><small>Dejanos tu opinión en ${Capacitor.getPlatform() === 'ios' ? 'App Store' : distributionLinks.label}</small></span><span class="row-arrow" aria-hidden="true">›</span></a>` : '';
     const decision = accessDecision(remoteControl);
     const pushStatus = localStorage.getItem('iht_push_status');
     const notificationButton = $('#notificationButton');
@@ -4326,6 +4219,7 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
   function openCategoryInfo(key, opener) {
     const info = categoryInformation[key];
     if (!info) return;
+    logAnalyticsEvent('content_open', {kind:'category'});
     categoryInfoOpener = opener;
     $('#categoryInfoTitle').textContent = info.title;
     $('#categoryInfoText').innerHTML = info.paragraphs.map(text => `<p>${escapeHtml(text)}</p>`).join('');
@@ -4560,6 +4454,7 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
   }
 
   async function openScanner() {
+    logAnalyticsEvent('scanner_open');
     if (!Capacitor.isNativePlatform()) {
       openWebScanner();
       return;
@@ -4568,6 +4463,7 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
       if (Capacitor.getPlatform() === 'android') {
         const permission = await ScannerPermissions.requestCamera();
         if (!permission.granted) {
+          logAnalyticsEvent('scanner_result', {outcome:'permission_denied'});
           openWebScanner('La cámara no tiene permiso. Podés habilitarla en Ajustes o ingresar el EAN o UPC.', false);
           return;
         }
@@ -4592,9 +4488,11 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
         android:{scanningLibrary:CapacitorBarcodeScannerAndroidScanningLibrary.MLKIT}
       });
       if (result?.ScanResult) await resolveBarcode(result.ScanResult);
+      else logAnalyticsEvent('scanner_result', {outcome:'cancelled'});
     } catch (error) {
       const cancellation = `${error?.code || ''} ${error?.message || error || ''}`;
-      if (/0006|cancel(?:led|ado|aci[oó]n)?/i.test(cancellation)) return;
+      if (/0006|cancel(?:led|ado|aci[oó]n)?/i.test(cancellation)) { logAnalyticsEvent('scanner_result', {outcome:'cancelled'}); return; }
+      logAnalyticsEvent('scanner_result', {outcome:'error'});
       // Si Android rechaza el permiso o el lector nativo no puede iniciarse,
       // no mostramos una segunda pantalla de error: volvemos a la vista que
       // estaba usando la persona y dejamos el ingreso manual en Catálogo.
@@ -4874,17 +4772,20 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     // internal codes). Only query the catalog / Open Food Facts for a complete,
     // checksum-valid GTIN so a short read cannot be mistaken for a product.
     if (!validGtin(code)) {
+      logAnalyticsEvent('scanner_result', {outcome:'invalid'});
       showInvalidBarcode(code);
       return;
     }
     stopCamera();
     const exactMatches = findProductsByBarcode(code);
     if (exactMatches.length === 1) {
+      logAnalyticsEvent('scanner_result', {outcome:'exact'});
       closeScanner();
       openDetail(exactMatches[0].url, {fromScan:true});
       return;
     }
     if (exactMatches.length > 1) {
+      logAnalyticsEvent('scanner_result', {outcome:'multiple'});
       showScanResult(code, null, null, exactMatches);
       return;
     }
@@ -4896,11 +4797,13 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     // variants remain explicit so a scan can never open the wrong product.
     const matchedProduct = identityMatches.length === 1 ? identityMatches[0].product : findProductByIdentity(identity);
     if (matchedProduct) {
+      logAnalyticsEvent('scanner_result', {outcome:'identified'});
       rememberBarcodeAssociation(code, matchedProduct, identity);
       closeScanner();
       openDetail(matchedProduct.url, {fromScan:true});
       return;
     }
+    logAnalyticsEvent('scanner_result', {outcome:identityMatches.length ? 'multiple' : 'not_found'});
     showScanResult(code, null, identity, [], identityMatches);
   }
 
@@ -4960,6 +4863,11 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
   const prepareWhatsAppContact = (event) => {
     const link = event.target.closest('a[href]');
     if (!link) return;
+    if (link.id !== 'shareAppWhatsApp' && event.type === 'click' && /^https:\/\/(?:wa\.me|api\.whatsapp\.com)\//.test(link.href)) logAnalyticsEvent('contact_open', {screen:document.querySelector('.view.active')?.id});
+    if (link.id === 'shareAppWhatsApp') {
+      if (event.type === 'click') logAnalyticsEvent('app_share', {channel:'whatsapp'});
+      return;
+    }
     const product = link.closest('#detailView') && currentProduct ? currentProduct.title : '';
     const href = appWhatsAppLink(link.href, {product});
     if (href !== link.href) link.href = href;
@@ -4968,11 +4876,16 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
   document.addEventListener('auxclick', prepareWhatsAppContact, true);
   document.addEventListener('contextmenu', prepareWhatsAppContact, true);
   document.addEventListener('click', (event) => {
+    if (event.target.closest('[data-offline-delete]')) {
+      void removeOfflineDownload();
+      return;
+    }
     if (event.target.closest('[data-offline-pause]')) {
       // Explicit pause cancels auto-resume; hiding the app does not.
-      void offlineDownload.setResumePreference({enabled:false, allowMobile:offlineMobileAllowed}).catch(() => {});
+      void offlineDownload.setResumePreference({enabled:false, allowMobile:offlineMobileAllowed, autoUpdate:false}).catch(() => {});
       setOfflineWifiWait(false);
       offlineDownload.pause();
+      logAnalyticsEvent('offline_download', {outcome:'paused', automatic:0});
       return;
     }
     if (event.target.closest('[data-offline-download]')) {
@@ -5012,6 +4925,7 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
         favoriteOnly = false;
       }
       window.clearTimeout(searchTimer);
+      logAnalyticsEvent('catalog_filter', {kind:'brand'});
       searchBrand = brandButton.dataset.searchBrand;
       $('#query').value = searchBrand;
       updateSearchScanAction(true);
@@ -5022,11 +4936,14 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     const exploreCategories = event.target.closest('[data-explore-categories]');
     if (exploreCategories) { openCategoryDirectoryFromHome(); return; }
     const taxonomyButton = event.target.closest('[data-taxonomy-path]');
-    if (taxonomyButton) { openTaxonomyPath(JSON.parse(decodeURIComponent(taxonomyButton.dataset.taxonomyPath))); return; }
+    if (taxonomyButton) { logAnalyticsEvent('catalog_filter', {kind:'category'}); openTaxonomyPath(JSON.parse(decodeURIComponent(taxonomyButton.dataset.taxonomyPath))); return; }
     const regionButton = event.target.closest('[data-region]');
+    const searchRegionButton = event.target.closest('[data-search-region]');
+    if (searchRegionButton) { showSearchRegion(searchRegionButton.dataset.searchRegion); return; }
     if (regionButton) {
       const keepSearchFocus = document.activeElement === $('#query');
       selectedRegion = regionButton.dataset.region;
+      logAnalyticsEvent('catalog_filter', {kind:'region', region:selectedRegion});
       if (regionButton.closest('.region-switch')) {
         favoriteOnly = false;
         selectedCategory = selectedRegion === 'uruguay' ? 'uruguay' : 'all';
@@ -5050,26 +4967,30 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     if (allChangesButton) { timelineKind = 'all'; renderCatalogTimeline(undefined, '', timelineKind); return; }
     const timelineButton = event.target.closest('[data-open-timeline]');
     if (timelineButton) { timelineKind = timelineButton.dataset.openTimeline === 'alta' ? 'alta' : 'all'; showView('timelineView'); return; }
-    const categoryButton = event.target.closest('[data-category]'); if (categoryButton) { selectedCategory = categoryButton.dataset.category; favoriteOnly = false; showView('searchView'); renderResults(''); }
+    const categoryButton = event.target.closest('[data-category]'); if (categoryButton) { logAnalyticsEvent('catalog_filter', {kind:'category'}); selectedCategory = categoryButton.dataset.category; favoriteOnly = false; showView('searchView'); renderResults(''); }
     const productButton = event.target.closest('[data-product]'); if (productButton && !event.target.closest('[data-favorite]')) openDetail(productButton.dataset.product, {fromSearch:Boolean(productButton.closest('#productList'))});
     const favoriteButton = event.target.closest('[data-favorite]'); if (favoriteButton) { event.stopPropagation(); toggleFavorite(favoriteButton.dataset.favorite); }
     const recentButton = event.target.closest('[data-recent]'); if (recentButton) { $('#query').value = recentButton.dataset.recent; renderResults(recentButton.dataset.recent); }
-    const infoButton = event.target.closest('[data-info]'); if (infoButton) openInfo(infoButton.dataset.info);
+    const infoButton = event.target.closest('[data-info]'); if (infoButton) { logAnalyticsEvent('content_open', {kind:'info'}); openInfo(infoButton.dataset.info); }
     const categoryInfoButton = event.target.closest('[data-category-info]'); if (categoryInfoButton) { openCategoryInfo(categoryInfoButton.dataset.categoryInfo, categoryInfoButton); return; }
     const savedButton = event.target.closest('[data-saved]'); if (savedButton) { openSavedScreen(); return; }
     const clearHistoryButton = event.target.closest('[data-clear-history]'); if (clearHistoryButton) { if (!recent.length || window.confirm('¿Borrar el historial de búsquedas?')) { recent = []; localStorage.removeItem('iht_recent'); renderMore(); renderSearchCategories(); } }
     const notificationButton = event.target.closest('[data-enable-notifications]');
-    if (notificationButton) { setupPushNotifications(true).then(() => { renderPushNotifications(); renderMore(); }); return; }
+    if (notificationButton) {
+      logAnalyticsEvent('notification_setting', {outcome:'request'});
+      setupPushNotifications(true).then(status => { logAnalyticsEvent('notification_setting', {outcome:status}); renderPushNotifications(); renderMore(); }); return;
+    }
     const disableNotificationButton = event.target.closest('[data-disable-notifications]');
     if (disableNotificationButton) { disablePushNotifications(); return; }
     const openAlertsButton = event.target.closest('[data-open-alerts]');
     if (openAlertsButton) { showView('alertsView'); return; }
     const openPlayStoreButton = event.target.closest('[data-open-play-store]');
-    if (openPlayStoreButton) { openExternal(remoteControl.update_url || appInstallUrl); return; }
+    if (openPlayStoreButton) { logAnalyticsEvent('store_open', {purpose:'store'}); openExternal(remoteControl.update_url || appInstallUrl); return; }
     const rateAppButton = event.target.closest('[data-rate-app]');
-    if (rateAppButton) { event.preventDefault(); openExternal(distributionLinks.rate); return; }
+    if (rateAppButton) { logAnalyticsEvent('store_open', {purpose:'rate'}); event.preventDefault(); openExternal(distributionLinks.rate); return; }
     const updateButton = event.target.closest('[data-app-update]');
     if (updateButton) {
+      logAnalyticsEvent('store_open', {purpose:'update'});
       if (playUpdateState.downloaded) {
         PlayStoreUpdates.complete().then(() => { window.alert('La actualización se instalará al reiniciar la aplicación.'); refreshPlayUpdate(); }).catch(() => openExternal(remoteControl.update_url));
         return;
@@ -5085,7 +5006,13 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
       return;
     }
     const infoSyncButton = event.target.closest('[data-info-sync]');
-    if (infoSyncButton) { if (!syncRequest) syncAndPreload(true).catch(() => {}); return; }
+    if (infoSyncButton) {
+      if (!syncRequest) {
+        logAnalyticsEvent('catalog_refresh', {outcome:'attempt'});
+        syncAndPreload(true).then(() => logAnalyticsEvent('catalog_refresh', {outcome:syncState.error ? 'error' : 'finished'})).catch(() => logAnalyticsEvent('catalog_refresh', {outcome:'error'}));
+      }
+      return;
+    }
     const copyValueButton = event.target.closest('[data-copy-value]');
     if (copyValueButton) {
       const text = copyValueButton.dataset.copyValue || '';
@@ -5105,9 +5032,10 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
     const cardButton = event.target.closest('[data-info-card]');
     const photo = event.target.closest('.info-photo');
     const expandedImage = event.target.closest('[data-expanded-image]');
-    if (expandedImage) { event.preventDefault(); openImage(expandedImage.dataset.expandedImage, expandedImage.dataset.expandedCaption || 'Nota Kashrut'); return; }
-    if (cardButton && window.__ihtInfoCards) { event.preventDefault(); event.stopPropagation(); openInfoCard(window.__ihtInfoCards[Number(cardButton.dataset.infoCard)]); return; }
-    if (photo) { event.preventDefault(); event.stopPropagation(); openImage(photo.currentSrc || photo.src, photo.alt || ''); }
+    if (expandedImage) {
+      logAnalyticsEvent('content_open', {kind:'image'}); event.preventDefault(); openImage(expandedImage.dataset.expandedImage, expandedImage.dataset.expandedCaption || 'Nota Kashrut'); return; }
+    if (cardButton && window.__ihtInfoCards) { logAnalyticsEvent('content_open', {kind:'card'}); event.preventDefault(); event.stopPropagation(); openInfoCard(window.__ihtInfoCards[Number(cardButton.dataset.infoCard)]); return; }
+    if (photo) { logAnalyticsEvent('content_open', {kind:'image'}); event.preventDefault(); event.stopPropagation(); openImage(photo.currentSrc || photo.src, photo.alt || ''); }
   });
   const dismissKeyboard = (input) => { input?.blur(); window.scrollTo({top: 0, behavior: 'smooth'}); };
   $('#homeForm').onsubmit = (event) => { event.preventDefault(); dismissKeyboard($('#homeQuery')); doSearch($('#homeQuery'), true); };
@@ -5116,6 +5044,7 @@ if (import.meta.env.PROD && !Capacitor.isNativePlatform()) {
   $('#clear').onclick = () => { window.clearTimeout(searchTimer); $('#query').value = ''; updateSearchScanAction(false); $('.bottom-nav').classList.remove('has-query'); $('#clear').hidden = true; $('#results').hidden = true; $('#searchCategories').hidden = false; $('#recentSearches').hidden = false; $('#query').focus(); startSearchPlaceholders(); };
   $('#detailSave').onclick = () => { if (currentProduct) toggleFavorite(currentProduct.url); };
   $('#detailShare').onclick = shareCurrentProduct;
+  $('#shareAppWhatsApp').href = appShareWhatsAppLink();
   $('#homeQuery').addEventListener('input', () => {
     const hasText = Boolean($('#homeQuery').value.trim());
     $('#homeClear').hidden = !$('#homeQuery').value;

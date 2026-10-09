@@ -9,21 +9,44 @@ function fixture() {
   const files = new Map();
   const downloads = [];
   let fail = '';
+  let uriRoot = '';
   const context = {crypto:webcrypto, TextEncoder, URL, setTimeout, clearTimeout, Image:class {set src(value) {queueMicrotask(() => this.onload());}},
     Capacitor:{isNativePlatform:()=>true,convertFileSrc:uri=>`local:${uri}`}, Directory:{Data:'DATA'}, Encoding:{UTF8:'utf8'},
     Filesystem:{
       writeFile:async ({path,data})=>files.set(path,data),
       readFile:async ({path})=> {if (!files.has(path)) throw Error('missing'); return {data:files.get(path)};},
+      rmdir:async({path})=>{for (const key of files.keys()) if(key.startsWith(path+'/')) files.delete(key);},
       readdir:async()=>({files:[...files.entries()].map(([path,data])=>({name:path.split('/').pop(),size:data.length}))}),
       downloadFile:async ({url,path,directory})=> {downloads.push({url,directory}); if(url===fail)throw Error('network');files.set(path,'image');},
-      stat:async({path})=>({size:files.get(path)?.length||0}),getUri:async({path})=>({uri:path})
+      stat:async({path})=>({size:files.get(path)?.length||0}),getUri:async({path})=>({uri:`${uriRoot}${path}`})
     }};
   vm.createContext(context); vm.runInContext(source,context);
-  return {context,files,downloads,setFail:url=>{fail=url;}};
+  return {context,files,downloads,setFail:url=>{fail=url;},setUriRoot:value=>{uriRoot=value;}};
 }
+test('Downloaded images survive a relocated native data container without another download',async()=>{
+  const f=fixture();f.setUriRoot('file:///old-container/');
+  const urls=['https://vaad.ar/a.jpg'];const service=f.context.createOfflineDownload();await service.init();
+  await service.download(urls,'v1',{products:[{name:'cached'}]});
+  assert.ok(service.localUrl(urls[0]).includes('old-container'));
+  f.setUriRoot('file:///new-container/');
+  const reopened=f.context.createOfflineDownload();await reopened.init();
+  assert.equal(reopened.check(urls,'v1').ready,true);
+  assert.ok(reopened.localUrl(urls[0]).startsWith('local:file:///new-container/offline-catalog/'));
+  assert.equal(f.downloads.length,1);
+  assert.equal((await reopened.readSnapshot()).products[0].name,'cached');
+});
 test('Offline assets are unique images, not external page links',()=>{
   const {context}=fixture();
   assert.deepEqual(Array.from(context.collectOfflineImages({image:'https://vaad.ar/a.jpg',url:'https://vaad.ar/producto/'},['https://vaad.ar/a.jpg','https://vaad.ar/b.png'])),['https://vaad.ar/a.jpg','https://vaad.ar/b.png']);
+});
+test('Offline revision ignores refresh dates and ordering but detects changed content',()=>{
+  const {context}=fixture();
+  const snapshot={products:[{url:'b',title:'B'},{url:'a',title:'A'}],productCache:{a:{description:'Original',fetchedAt:1,bundled:true}},infoCache:{},cardCache:{}};
+  const revision=context.offlineContentRevision(snapshot);
+  const refreshed={...snapshot,products:[...snapshot.products].reverse(),productCache:{a:{bundled:false,fetchedAt:999,description:'Original'}},generatedAt:999};
+  assert.equal(context.offlineContentRevision(refreshed),revision);
+  assert.notEqual(context.offlineContentRevision({...refreshed,productCache:{a:{description:'Updated'}}}),revision);
+  assert.notEqual(context.offlineContentRevision({...refreshed,products:[...refreshed.products,{url:'c',title:'C'}]}),revision);
 });
 test('Ready requires durable files, completed manifest, and matching catalog',async()=>{
   const {context,files,downloads}=fixture();
@@ -92,17 +115,52 @@ test('Native background transfer is delegated, survives a new UI instance, and s
   await reopened.refresh();assert.equal(reopened.check(urls,'v1').ready,true);
   assert.equal(reopened.localUrl(urls[0]),'local:file:///data/a.png');
 });
-test('The shipping app uses foreground downloads and excludes foreground-service permissions',()=>{
+test('Native downloads use their background bridge without Android foreground-service permissions',()=>{
   const app=readFileSync(new URL('../web/app.js',import.meta.url),'utf8');
   const activity=readFileSync(new URL('../android/app/src/main/java/ar/vaad/catalogo/app/MainActivity.java',import.meta.url),'utf8');
   const manifest=readFileSync(new URL('../android/app/src/main/AndroidManifest.xml',import.meta.url),'utf8');
-  assert.doesNotMatch(app,/registerPlugin\('OfflineDownload'\)/);
-  assert.doesNotMatch(activity,/registerPlugin\(OfflineDownloadPlugin/);
+  assert.match(app,/registerPlugin\('OfflineDownload'\)/);
+  assert.match(activity,/registerPlugin\(OfflineDownloadPlugin/);
   assert.match(app,/if \(document.visibilityState !== 'visible'\) return false/);
-  assert.match(app,/const offlineTitle = offlineState.ready \? '✓ Listo para usar offline' : 'Usar sin conexión';/);
+  assert.match(app,/const offlineTitle = offlineState.ready \? 'Listo para usar offline' : 'Usar sin conexión';/);
   assert.match(app,/'Descarga aproximada: 399 MB'/);
   assert.match(manifest,/android.permission.FOREGROUND_SERVICE" tools:node="remove"/);
   assert.match(manifest,/android.permission.FOREGROUND_SERVICE_DATA_SYNC" tools:node="remove"/);
+});
+test('Deleting offline files preserves unrelated storage and stops automatic updates',async()=>{
+ const f=fixture();const url='https://vaad.ar/a.png';
+ f.files.set('favorites.json','keep');f.files.set('other-cache/image.jpg','keep');
+ const service=f.context.createOfflineDownload();await service.init();
+ await service.setResumePreference({enabled:true,autoUpdate:true});await service.download([url],'v1',{products:[{url}]});
+ assert.notEqual(service.localUrl(url),url);
+ assert.equal(service.remoteUrl(service.localUrl(url)),url);
+ assert.equal(await service.clear(),true);
+ assert.equal(service.localUrl(url),url);
+ assert.equal(service.getResumePreference().autoUpdate,false);
+ assert.equal(service.check([url],'v1').hasDownload,false);
+ assert.equal((await service.readSnapshot()),null);
+ assert.deepEqual([...f.files.keys()].sort(),['favorites.json','other-cache/image.jpg']);
+ await service.download([url],'v1',{});assert.equal(service.check([url],'v1').ready,true);
+});
+test('A stale native status response cannot resurrect a deleted download',async()=>{
+ const f=fixture();let resolveStatus;
+ const bridge={preference:async()=>{},clear:async()=>{},status:()=>new Promise(resolve=>{resolveStatus=resolve;})};
+ const service=f.context.createOfflineDownload(()=>{},bridge);await service.init();
+ const pending=service.refresh();assert.equal(await service.clear(),true);
+ resolveStatus({busy:false,ready:true,manifest:{signature:'old',images:{'https://vaad.ar/a.png':{uri:'file:///old'}}}});
+ await pending;
+ assert.equal(service.check(['https://vaad.ar/a.png'],'old').hasDownload,false);
+ assert.equal(service.getResumePreference().autoUpdate,false);
+});
+test('Polling a completed native job does not flicker or erase a newer content requirement',async()=>{
+  const f=fixture();const urls=['https://vaad.ar/a.png'];let renders=0;
+  const status={busy:false,ready:true,percent:100,manifest:{signature:JSON.stringify(['old',urls]),images:{[urls[0]]:{uri:'file:///data/a.png'}}}};
+  const service=f.context.createOfflineDownload(()=>renders++,{status:async()=>JSON.parse(JSON.stringify(status))});
+  await service.init();service.check(urls,'new');await service.refresh();
+  assert.equal(service.check(urls,'new').ready,false);
+  const initial=renders;await service.refresh();await service.refresh();
+  assert.equal(renders,initial);
+  assert.equal(service.check(urls,'new').ready,false);
 });
 test('Pending offline downloads and network consent survive closing and reopening',async()=>{
   const f=fixture();const service=f.context.createOfflineDownload();await service.init();
@@ -136,16 +194,18 @@ test('Interrupted downloads reopen with pending intent and reuse completed image
 });
 test('App auto-resume respects visibility, explicit pause, Wi-Fi-only and mobile consent',async()=>{
   const f=fixture();let transfers=0;
+  let ready=false;
   let preference={enabled:true,allowMobile:false};
   let connection={type:'cellular',metered:true};
   Object.assign(f.context,{
-    offlineStarting:false,offlineNextRetryAt:0,offlineWifiWait:false,offlineMobileAllowed:false,
+    logAnalyticsEvent(){},
+    offlineStarting:false,offlineNextRetryAt:0,offlineNextUpdateCheckAt:0,offlineWifiWait:false,offlineMobileAllowed:false,
     document:{visibilityState:'visible',addEventListener:()=>{}},
     window:{setInterval:()=>{},addEventListener:()=>{},alert:()=>{}},
     offlineAssets:()=>['https://vaad.ar/a.png'],offlineVersion:()=> 'v1',
     products:[],productCache:{},infoCache:{},cardCache:{},
     offlineConnection:async()=>connection,setOfflineWifiWait:value=>{f.context.offlineWifiWait=value;},
-    offlineDownload:{check:()=>({busy:false,ready:false}),getResumePreference:()=>preference,
+    offlineDownload:{check:()=>({busy:false,ready}),getResumePreference:()=>preference,
       setResumePreference:async next=>{preference=next;},download:async()=>{transfers++;}}
   });
   const app=readFileSync(new URL('../web/app.js',import.meta.url),'utf8');
@@ -159,5 +219,38 @@ test('App auto-resume respects visibility, explicit pause, Wi-Fi-only and mobile
   await f.context.startOfflineDownload(true);assert.equal(transfers,1);
   connection={type:'cellular',metered:true};preference={enabled:true,allowMobile:true};
   await f.context.startOfflineDownload(true);assert.equal(transfers,2);
+  ready=true;preference={enabled:true,allowMobile:true};
+  await f.context.startOfflineDownload(true);assert.equal(transfers,2);
+  assert.equal(preference.enabled,false);
+  ready=false;preference={enabled:false,allowMobile:false,autoUpdate:true};
+  f.context.offlineNextUpdateCheckAt=0;connection={type:'cellular',metered:true};
+  await f.context.startOfflineDownload(true);assert.equal(transfers,2);
+  connection={type:'wifi',metered:false};
+  await f.context.startOfflineDownload(true);assert.equal(transfers,3);
+  assert.equal(preference.autoUpdate,true);
+  preference={enabled:false,allowMobile:false,autoUpdate:false};
+  await f.context.startOfflineDownload(true);assert.equal(transfers,3);
   assert.match(app,/window.setTimeout\(resumeOfflineWhenOpen, 0\)/);
+});
+
+test('Native resume preferences use the bridge without overwriting a manifest being downloaded',async()=>{
+ const f=fixture();let preference;
+ const bridge={preference:async value=>{preference={...value};},status:async()=>({busy:true,percent:20}),pause:async()=>{},start:async()=>{}};
+ const service=f.context.createOfflineDownload(()=>{},bridge);await service.init();
+ await service.setResumePreference({enabled:true,allowMobile:true});
+ assert.deepEqual(preference,{enabled:true,allowMobile:true,autoUpdate:false});
+ assert.equal(f.files.has('offline-catalog/manifest.json'),false);
+});
+test('Automatic offline updates survive completion and reopening; explicit pause disables them',async()=>{
+ const f=fixture();const urls=['https://vaad.ar/a.png'];
+ const service=f.context.createOfflineDownload();await service.init();
+ await service.setResumePreference({enabled:true,allowMobile:false,autoUpdate:true});
+ await service.download(urls,'v1',{});
+ await service.setResumePreference({enabled:false,allowMobile:false});
+ const reopened=f.context.createOfflineDownload();await reopened.init();
+ assert.equal(reopened.getResumePreference().autoUpdate,true);
+ assert.equal(reopened.getResumePreference().enabled,false);
+ await reopened.setResumePreference({enabled:false,allowMobile:false,autoUpdate:false});
+ const paused=f.context.createOfflineDownload();await paused.init();
+ assert.equal(paused.getResumePreference().autoUpdate,false);
 });

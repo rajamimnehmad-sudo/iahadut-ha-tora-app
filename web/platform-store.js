@@ -1,4 +1,5 @@
 export const ANDROID_STORE_URL = 'https://play.google.com/store/apps/details?id=ar.vaad.catalogo.app';
+export const APPLE_STORE_URL = 'https://apps.apple.com/app/id6819809029';
 
 export function appleDistributionUrl(value) {
   try {
@@ -10,8 +11,10 @@ export function appleDistributionUrl(value) {
 
 export function storeLinks(platform, iosUrl = '') {
   if (platform !== 'ios') return {install:ANDROID_STORE_URL, rate:ANDROID_STORE_URL, label:'Google Play'};
-  const install = appleDistributionUrl(iosUrl);
-  return {install:install || 'https://vaad.ar/', rate:install.startsWith('https://apps.apple.com/') ? install : '', label:install.startsWith('https://testflight.apple.com/') ? 'TestFlight' : 'App Store'};
+  const install = appleDistributionUrl(iosUrl) || APPLE_STORE_URL;
+  const rate = new URL(install.startsWith('https://apps.apple.com/') ? install : APPLE_STORE_URL);
+  rate.searchParams.set('action', 'write-review');
+  return {install, rate:rate.href, label:install.startsWith('https://testflight.apple.com/') ? 'TestFlight' : 'App Store'};
 }
 
 export function platformRemoteControl(control, platform, version, iosUrl = '') {

@@ -2,7 +2,7 @@
 export function normalizedSnapshot(value) {
   if (Array.isArray(value)) return value.map(normalizedSnapshot);
   if (!value || typeof value !== 'object') return value;
-  return Object.fromEntries(Object.keys(value).sort().filter(key => !['generatedAt', 'fetchedAt', 'bundled'].includes(key)).map(key => [key, normalizedSnapshot(value[key])]));
+  return Object.fromEntries(Object.keys(value).sort().filter(key => !['generatedAt', 'fetchedAt', 'bundled', 'sourceFingerprint'].includes(key)).map(key => [key, normalizedSnapshot(value[key])]));
 }
 export async function snapshotHash(value) {
   const bytes = new TextEncoder().encode(JSON.stringify(normalizedSnapshot(value)));
@@ -14,7 +14,8 @@ export function validSnapshot(value) {
   if (!Array.isArray(products) || products.length < 900 || !details || !value?.content?.info || !value?.content?.cards) throw new Error('Copia central incompleta');
   const urls = new Set();
   for (const product of products) {
-    if (!product.url || !product.title || urls.has(product.url) || details[product.url]?.textFormatVersion !== 1) throw new Error('Faltan productos o fichas en la copia central');
+    const detail = details[product.url];
+    if (!product.url || !product.title || urls.has(product.url) || detail?.textFormatVersion !== 1 || !Array.isArray(detail.images) || typeof detail.description !== 'string') throw new Error('Faltan productos o fichas en la copia central');
     urls.add(product.url);
   }
   return value;
