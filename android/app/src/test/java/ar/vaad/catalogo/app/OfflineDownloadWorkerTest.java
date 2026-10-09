@@ -84,6 +84,34 @@ public class OfflineDownloadWorkerTest {
             assertTrue(OfflineDownloadStore.read(context,"job.json").getString("error").contains("fuente oficial"));
         } finally {NetworkFixtureWorker.permanentFailure=false;}
     }
+    public static class ParallelFixtureWorker extends OfflineDownloadWorker {
+        static java.util.concurrent.CountDownLatch firstWave;
+        static java.util.concurrent.atomic.AtomicInteger active,maximum,requests;
+        public ParallelFixtureWorker(Context c,WorkerParameters p){super(c,p);}
+        @Override void download(String value,File target)throws Exception {
+            int concurrent=active.incrementAndGet();maximum.accumulateAndGet(concurrent,Math::max);
+            try {
+                requests.incrementAndGet();firstWave.countDown();
+                if(!firstWave.await(10,java.util.concurrent.TimeUnit.SECONDS))throw new IOException("Transfers did not overlap");
+                try(FileOutputStream out=new FileOutputStream(target)){out.write(new byte[]{1,2,3});}
+            } finally {active.decrementAndGet();}
+        }
+    }
+    @Test public void downloadsUseThreeLanesWithoutLosingManifestEntries()throws Exception {
+        JSONArray urls=new JSONArray();for(int i=0;i<6;i++)urls.put("https://vaad.ar/parallel-"+i+".jpg");
+        job.put("urls",urls);OfflineDownloadStore.write(context,"job.json",job);
+        ParallelFixtureWorker.firstWave=new java.util.concurrent.CountDownLatch(3);
+        ParallelFixtureWorker.active=new java.util.concurrent.atomic.AtomicInteger();
+        ParallelFixtureWorker.maximum=new java.util.concurrent.atomic.AtomicInteger();
+        ParallelFixtureWorker.requests=new java.util.concurrent.atomic.AtomicInteger();
+        OfflineDownloadWorker w=TestWorkerBuilder.from(context,ParallelFixtureWorker.class,Executors.newSingleThreadExecutor())
+            .setInputData(new Data.Builder().putString("job","test-generation").build()).build();
+        assertEquals(ListenableWorker.Result.success(),w.doWork());
+        assertEquals(3,ParallelFixtureWorker.maximum.get());assertEquals(6,ParallelFixtureWorker.requests.get());
+        JSONObject persisted=OfflineDownloadStore.manifest(context);
+        assertEquals(6,persisted.getJSONObject("images").length());assertEquals("current",persisted.getString("signature"));
+        for(int i=0;i<urls.length();i++)assertTrue(OfflineDownloadStore.present(context,persisted.getJSONObject("images").getJSONObject(urls.getString(i))));
+    }
     @Test public void temporaryNetworkErrorsRetryWithinABoundedBudget(){
         assertTrue(OfflineDownloadWorker.shouldRetry(new SocketTimeoutException(),0));
         assertTrue(OfflineDownloadWorker.shouldRetry(new IOException("connection lost"),2));
