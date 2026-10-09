@@ -1,0 +1,32 @@
+BORRADOR — NO ENVIADO A APPLE
+Envío: iOS 1.0.48 (106). Rechazo visible el 09/10/2026 por solicitud de información, Guideline 2.1.
+
+ANTES DE ENVIAR
+- Adjuntar un video grabado en un iPhone físico con la versión de iOS más reciente. Debe empezar al abrir el build revisado y recorrer búsqueda, categorías, ficha, favoritos, escáner, compartir, consulta offline y preferencias de avisos.
+- Comprobar esas funciones y APNs en el dispositivo real. Una prueba en simulador no satisface el pedido de Apple.
+- Confirmar la autorización de Iahadut HaTora/Vaad para distribuir catálogo, textos, fotos y sellos. Adjuntar documentación si corresponde; no afirmar permisos sin evidencia.
+- Copiar el texto final confirmado a Notas de revisión y enviar la respuesta y el video solo con autorización del usuario.
+
+DRAFT RESPONSE
+
+Hello App Review,
+
+1. Physical-device recording
+[Attach the recording of the reviewed build launching on a physical iPhone running the latest iOS, and replace this placeholder with the attachment name and device/iOS version.]
+
+2. Purpose and audience
+Iahadut HaTora helps people consult a kosher product catalog for Argentina and Uruguay. It provides product search, product information, category browsing, saved favorites and barcode lookup. It also provides official informational resources and optional notices. Catalog information is a reference; the app does not replace the certifying authority.
+
+3. Access and main features
+The app does not require registration or login. Open the app, enter a product or brand in the search field, and select a result to view its information. Browse categories from the home screen. Use the bookmark control to save or remove favorites. The barcode scanner requests camera permission; a code may also be entered manually. In the resources menu, choose the offline download option while online and then consult the downloaded catalog without a connection. Notification permission is optional. There are no user accounts, user-generated content submission, purchases or paid app features.
+
+4. External services
+Catalog and information source: vaad.ar. The app uses Firebase/Firestore for remote catalog control, Firebase Cloud Messaging with Apple Push Notification service for optional notices, and Firebase Analytics for aggregate usage measurement. GitHub hosts static catalog snapshots and resources. Cloudflare provides notice history and the shared search-selection ranking. Capacitor provides the native application container and native camera, sharing, filesystem and notification integrations. WhatsApp links open the external WhatsApp app. The app has no AI feature or payment processor.
+
+5. Regions
+The same application features are available across supported regions. Product metadata can distinguish products relevant to Argentina or Uruguay. That catalog distinction does not add a different login, payment or feature flow.
+
+6. Content authorization
+[Insert the confirmed relationship with Iahadut HaTora/Vaad and attach evidence of permission to distribute third-party text, product images and certification material where applicable.]
+
+Thank you.

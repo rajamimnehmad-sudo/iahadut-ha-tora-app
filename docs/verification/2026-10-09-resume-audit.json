@@ -1,0 +1,67 @@
+{
+  "date": "2026-10-09",
+  "source_thread": "01a1160c-70ba-7a61-aaa8-eb0129d64775",
+  "scope": "Revisión de todos los pedidos del chat actual y continuación de la tarea interrumpida",
+  "completed": [
+    {
+      "item": "Datos y recursos remotos",
+      "evidence": "main 876b7f4; manifiestos públicos HTTP 200; deploy Pages correcto"
+    },
+    {
+      "item": "Preparación móvil de iconos/categorías/textos remotos",
+      "evidence": "PR #9; 190 pruebas Node y compilación web correctas; preparación conjunta Android/iOS; Android debug e iOS simulador compilados"
+    },
+    {
+      "item": "Errores ortográficos claros",
+      "evidence": "100 reglas; corregidos 246 productos y 420 fichas en la publicación actual; Buckinhgam conservado por instrucción expresa"
+    },
+    {
+      "item": "Alertas KV",
+      "evidence": "Historial y Hub confirman migración completa y lecturas el 09/10; no se enviaron avisos reales en esta tarea"
+    },
+    {
+      "item": "Más buscados",
+      "evidence": "HTTP 200; generación 2026-10-09T16:45:19Z"
+    },
+    {
+      "item": "Descripción Lista kosher y estrellas públicas",
+      "evidence": "Ficha pública argentina muestra descripción nueva y 6 calificaciones, 5/5"
+    },
+    {
+      "item": "Analítica del 8/10 en Hub",
+      "evidence": "Nota existente Analítica revisada · 8/10/2026, leída mediante API"
+    },
+    {
+      "item": "Pagos y respaldos técnicos previos",
+      "evidence": "Condiciones USD y referencia ARS fechada registradas; metadata distingue secretos técnicos verificados de contraseñas humanas faltantes"
+    }
+  ],
+  "pending": [
+    {
+      "item": "Revisión visual solicitada ahora",
+      "details": "13 iconos con bordes problemáticos. Los 112 tienen fondo blanco opaco. Lámina mostrada antes de editar. Archivos originales sin modificar."
+    },
+    {
+      "item": "Distribuir una vez la app con configuración remota",
+      "details": "Preparada y respaldada; no está en producción 1.0.48 ni en el paquete interno 110 ya publicado. No se incrementó versión ni se subió otro paquete."
+    },
+    {
+      "item": "Analítica ampliada",
+      "details": "Preparada en PR #8 y código interno; pendiente DebugView en Android/iPhone y producción autorizada. No hay cifras retrospectivas de guardados/escaneos exitosos."
+    },
+    {
+      "item": "App Review",
+      "details": "iOS 1.0.48 (106) rechazada por solicitud de información. Video y pruebas en iPhone físico con iOS actual; confirmar derechos del contenido; completar seis puntos. Borrador local sin envío."
+    },
+    {
+      "item": "Recuperación independiente",
+      "details": "Contraseñas humanas faltantes, recuperación de Hub, copia independiente de clave de cifrado y restauración de archivos/código desde otro equipo sin confirmar."
+    }
+  ],
+  "references": {
+    "review": "https://github.com/rajamimnehmad-sudo/iahadut-ha-tora-app/pull/9",
+    "analytics": "https://github.com/rajamimnehmad-sudo/iahadut-ha-tora-app/pull/8",
+    "image_review": "output/image-review/iconos-a-revisar.jpg",
+    "apple_draft": "docs/verification/2026-10-09-app-review-response-draft.txt"
+  }
+}
