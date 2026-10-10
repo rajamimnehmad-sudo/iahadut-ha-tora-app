@@ -3,8 +3,12 @@
   "source": "google-analytics",
   "metric": "catalog_product_search",
   "windowDays": 28,
-  "generatedAt": "2026-10-09T18:31:48.362Z",
+  "generatedAt": "2026-10-10T06:24:09.553Z",
   "products": [
+    {
+      "url": "https://vaad.ar/producto/298235/",
+      "searches": 8
+    },
     {
       "url": "https://vaad.ar/producto/pure-de-tomate-marca-arcor/",
       "searches": 8
@@ -19,7 +23,19 @@
     },
     {
       "url": "https://vaad.ar/producto/pure-de-tomate-marolio/",
-      "searches": 5
+      "searches": 6
+    },
+    {
+      "url": "https://vaad.ar/producto/golosina-marca-ring-pop-2/",
+      "searches": 4
+    },
+    {
+      "url": "https://vaad.ar/producto/golosina-ring-pop/",
+      "searches": 4
+    },
+    {
+      "url": "https://vaad.ar/producto/aceite-de-maiz-marca-arcor/",
+      "searches": 3
     },
     {
       "url": "https://vaad.ar/producto/alga-de-sushi-2/",
@@ -30,7 +46,15 @@
       "searches": 3
     },
     {
-      "url": "https://vaad.ar/producto/golosina-ring-pop/",
+      "url": "https://vaad.ar/producto/dulce-de-batata-marca-arcor/",
+      "searches": 3
+    },
+    {
+      "url": "https://vaad.ar/producto/golosina-marca-ring-pop/",
+      "searches": 3
+    },
+    {
+      "url": "https://vaad.ar/producto/mani-pelado/",
       "searches": 3
     },
     {
@@ -59,30 +83,6 @@
     },
     {
       "url": "https://vaad.ar/producto/atun-marca-mar-caribe/",
-      "searches": 2
-    },
-    {
-      "url": "https://vaad.ar/producto/atun-marca-mare-pronto/",
-      "searches": 2
-    },
-    {
-      "url": "https://vaad.ar/producto/bebida-alcoholica-marca-bombay-saphire/",
-      "searches": 2
-    },
-    {
-      "url": "https://vaad.ar/producto/bebida-alcoholica-marca-disaronno/",
-      "searches": 2
-    },
-    {
-      "url": "https://vaad.ar/producto/bebida-alcoholica-marca-heering/",
-      "searches": 2
-    },
-    {
-      "url": "https://vaad.ar/producto/bebida-alcoholica-marca-kahlua/",
-      "searches": 2
-    },
-    {
-      "url": "https://vaad.ar/producto/bebida-alcoholica-marca-pardalis/",
       "searches": 2
     }
   ]
