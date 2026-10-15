@@ -1,0 +1,89 @@
+{
+  "schemaVersion": 1,
+  "source": "google-analytics",
+  "metric": "catalog_product_search",
+  "windowDays": 28,
+  "generatedAt": "2026-10-14T17:37:37.637Z",
+  "products": [
+    {
+      "url": "https://vaad.ar/producto/pure-de-tomate-marca-arcor/",
+      "searches": 11
+    },
+    {
+      "url": "https://vaad.ar/producto/298235/",
+      "searches": 8
+    },
+    {
+      "url": "https://vaad.ar/producto/dulce-de-batata-con-chocolate-marca-arcor/",
+      "searches": 8
+    },
+    {
+      "url": "https://vaad.ar/producto/pastillas-marca-dorins/",
+      "searches": 7
+    },
+    {
+      "url": "https://vaad.ar/producto/acelga-congelada-marca-greens/",
+      "searches": 6
+    },
+    {
+      "url": "https://vaad.ar/producto/dulce-de-batata-marca-arcor/",
+      "searches": 6
+    },
+    {
+      "url": "https://vaad.ar/producto/pure-de-tomate-marca-la-campagnola/",
+      "searches": 6
+    },
+    {
+      "url": "https://vaad.ar/producto/pure-de-tomate-marolio/",
+      "searches": 6
+    },
+    {
+      "url": "https://vaad.ar/producto/coctel-de-frutas-marca-arcor/",
+      "searches": 5
+    },
+    {
+      "url": "https://vaad.ar/producto/aceite-de-maiz-marca-arcor/",
+      "searches": 4
+    },
+    {
+      "url": "https://vaad.ar/producto/barrita-full-arandanos-y-almendras/",
+      "searches": 4
+    },
+    {
+      "url": "https://vaad.ar/producto/espinaca-congelada-marca-greens/",
+      "searches": 4
+    },
+    {
+      "url": "https://vaad.ar/producto/fideos-marca-la-molisana-2/",
+      "searches": 4
+    },
+    {
+      "url": "https://vaad.ar/producto/golosina-marca-ring-pop-2/",
+      "searches": 4
+    },
+    {
+      "url": "https://vaad.ar/producto/golosina-ring-pop/",
+      "searches": 4
+    },
+    {
+      "url": "https://vaad.ar/producto/granola-cereal-mix-marca-3-arroyos/",
+      "searches": 4
+    },
+    {
+      "url": "https://vaad.ar/producto/mermelada-blend-de-frutas-durazno-mango-marca-arcor/",
+      "searches": 4
+    },
+    {
+      "url": "https://vaad.ar/producto/mermelada-de-naranja-con-trozos-de-fruta-marca-arcor/",
+      "searches": 4
+    },
+    {
+      "url": "https://vaad.ar/producto/obleas-marca-santa-maria/",
+      "searches": 4
+    },
+    {
+      "url": "https://vaad.ar/producto/papas-marca-carrefour-2/",
+      "searches": 4
+    }
+  ]
+}
