@@ -3,30 +3,46 @@
   "source": "google-analytics",
   "metric": "catalog_product_search",
   "windowDays": 28,
-  "generatedAt": "2026-10-15T17:22:57.170Z",
+  "generatedAt": "2026-10-16T05:03:05.884Z",
   "products": [
     {
       "url": "https://vaad.ar/producto/pure-de-tomate-marca-arcor/",
-      "searches": 12
+      "searches": 20
     },
     {
       "url": "https://vaad.ar/producto/dulce-de-batata-con-chocolate-marca-arcor/",
-      "searches": 10
+      "searches": 12
     },
     {
       "url": "https://vaad.ar/producto/pure-de-tomate-marca-la-campagnola/",
+      "searches": 11
+    },
+    {
+      "url": "https://vaad.ar/producto/pastillas-marca-dorins/",
       "searches": 10
     },
     {
       "url": "https://vaad.ar/producto/298235/",
-      "searches": 8
+      "searches": 9
     },
     {
       "url": "https://vaad.ar/producto/dulce-de-batata-marca-arcor/",
+      "searches": 9
+    },
+    {
+      "url": "https://vaad.ar/producto/golosina-marca-ring-pop-2/",
+      "searches": 8
+    },
+    {
+      "url": "https://vaad.ar/producto/obleas-marca-santa-maria/",
+      "searches": 8
+    },
+    {
+      "url": "https://vaad.ar/producto/golosina-ring-pop/",
       "searches": 7
     },
     {
-      "url": "https://vaad.ar/producto/pastillas-marca-dorins/",
+      "url": "https://vaad.ar/producto/mermelada-blend-de-frutas-durazno-mango-marca-arcor/",
       "searches": 7
     },
     {
@@ -38,11 +54,27 @@
       "searches": 6
     },
     {
-      "url": "https://vaad.ar/producto/mermelada-blend-de-frutas-durazno-mango-marca-arcor/",
+      "url": "https://vaad.ar/producto/cafe-marca-juan-valdes/",
       "searches": 6
     },
     {
-      "url": "https://vaad.ar/producto/obleas-marca-santa-maria/",
+      "url": "https://vaad.ar/producto/golosina-marca-ring-pop/",
+      "searches": 6
+    },
+    {
+      "url": "https://vaad.ar/producto/granola-cereal-mix-marca-3-arroyos/",
+      "searches": 6
+    },
+    {
+      "url": "https://vaad.ar/producto/mermelada-de-durazno-bc-marca-la-campagnola/",
+      "searches": 6
+    },
+    {
+      "url": "https://vaad.ar/producto/mermelada-de-naranja-con-trozos-de-fruta-marca-arcor/",
+      "searches": 6
+    },
+    {
+      "url": "https://vaad.ar/producto/papas-marca-carrefour-2/",
       "searches": 6
     },
     {
@@ -52,38 +84,6 @@
     {
       "url": "https://vaad.ar/producto/barrita-full-arandanos-y-almendras/",
       "searches": 5
-    },
-    {
-      "url": "https://vaad.ar/producto/coctel-de-frutas-marca-arcor/",
-      "searches": 5
-    },
-    {
-      "url": "https://vaad.ar/producto/mermelada-de-naranja-con-trozos-de-fruta-marca-arcor/",
-      "searches": 5
-    },
-    {
-      "url": "https://vaad.ar/producto/mermelado-de-damasco-marca-arcor/",
-      "searches": 5
-    },
-    {
-      "url": "https://vaad.ar/producto/papas-marca-carrefour-2/",
-      "searches": 5
-    },
-    {
-      "url": "https://vaad.ar/producto/atun-marca-mar-caribe/",
-      "searches": 4
-    },
-    {
-      "url": "https://vaad.ar/producto/espinaca-congelada-marca-greens/",
-      "searches": 4
-    },
-    {
-      "url": "https://vaad.ar/producto/fideos-marca-la-molisana-2/",
-      "searches": 4
-    },
-    {
-      "url": "https://vaad.ar/producto/golosina-marca-ring-pop-2/",
-      "searches": 4
     }
   ]
 }
