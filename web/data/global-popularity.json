@@ -3,7 +3,7 @@
   "source": "google-analytics",
   "metric": "catalog_product_search",
   "windowDays": 28,
-  "generatedAt": "2026-10-16T05:03:05.884Z",
+  "generatedAt": "2026-10-16T16:58:43.129Z",
   "products": [
     {
       "url": "https://vaad.ar/producto/pure-de-tomate-marca-arcor/",
@@ -11,15 +11,11 @@
     },
     {
       "url": "https://vaad.ar/producto/dulce-de-batata-con-chocolate-marca-arcor/",
-      "searches": 12
+      "searches": 13
     },
     {
       "url": "https://vaad.ar/producto/pure-de-tomate-marca-la-campagnola/",
       "searches": 11
-    },
-    {
-      "url": "https://vaad.ar/producto/pastillas-marca-dorins/",
-      "searches": 10
     },
     {
       "url": "https://vaad.ar/producto/298235/",
@@ -30,7 +26,11 @@
       "searches": 9
     },
     {
-      "url": "https://vaad.ar/producto/golosina-marca-ring-pop-2/",
+      "url": "https://vaad.ar/producto/pastillas-marca-dorins/",
+      "searches": 9
+    },
+    {
+      "url": "https://vaad.ar/producto/mermelada-blend-de-frutas-durazno-mango-marca-arcor/",
       "searches": 8
     },
     {
@@ -38,11 +38,7 @@
       "searches": 8
     },
     {
-      "url": "https://vaad.ar/producto/golosina-ring-pop/",
-      "searches": 7
-    },
-    {
-      "url": "https://vaad.ar/producto/mermelada-blend-de-frutas-durazno-mango-marca-arcor/",
+      "url": "https://vaad.ar/producto/golosina-marca-ring-pop-2/",
       "searches": 7
     },
     {
@@ -58,7 +54,7 @@
       "searches": 6
     },
     {
-      "url": "https://vaad.ar/producto/golosina-marca-ring-pop/",
+      "url": "https://vaad.ar/producto/golosina-ring-pop/",
       "searches": 6
     },
     {
@@ -83,6 +79,10 @@
     },
     {
       "url": "https://vaad.ar/producto/barrita-full-arandanos-y-almendras/",
+      "searches": 5
+    },
+    {
+      "url": "https://vaad.ar/producto/barrita-marca-alnuna-sabor-almond-bar/",
       "searches": 5
     }
   ]
