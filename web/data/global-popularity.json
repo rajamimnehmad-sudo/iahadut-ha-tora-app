@@ -3,7 +3,7 @@
   "source": "google-analytics",
   "metric": "catalog_product_search",
   "windowDays": 28,
-  "generatedAt": "2026-10-18T05:10:38.273Z",
+  "generatedAt": "2026-10-18T16:09:03.023Z",
   "products": [
     {
       "url": "https://vaad.ar/producto/pure-de-tomate-marca-arcor/",
@@ -11,7 +11,7 @@
     },
     {
       "url": "https://vaad.ar/producto/dulce-de-batata-con-chocolate-marca-arcor/",
-      "searches": 13
+      "searches": 14
     },
     {
       "url": "https://vaad.ar/producto/pure-de-tomate-marca-la-campagnola/",
@@ -26,15 +26,19 @@
       "searches": 9
     },
     {
+      "url": "https://vaad.ar/producto/obleas-marca-santa-maria/",
+      "searches": 9
+    },
+    {
       "url": "https://vaad.ar/producto/pastillas-marca-dorins/",
       "searches": 9
     },
     {
-      "url": "https://vaad.ar/producto/mermelada-blend-de-frutas-durazno-mango-marca-arcor/",
+      "url": "https://vaad.ar/producto/cafe-marca-juan-valdes/",
       "searches": 8
     },
     {
-      "url": "https://vaad.ar/producto/obleas-marca-santa-maria/",
+      "url": "https://vaad.ar/producto/mermelada-blend-de-frutas-durazno-mango-marca-arcor/",
       "searches": 8
     },
     {
@@ -47,10 +51,6 @@
     },
     {
       "url": "https://vaad.ar/producto/acelga-congelada-marca-greens/",
-      "searches": 6
-    },
-    {
-      "url": "https://vaad.ar/producto/cafe-marca-juan-valdes/",
       "searches": 6
     },
     {
@@ -82,8 +82,8 @@
       "searches": 6
     },
     {
-      "url": "https://vaad.ar/producto/barrita-full-arandanos-y-almendras/",
-      "searches": 5
+      "url": "https://vaad.ar/producto/salsa-basilico-marca-la-campagnola/",
+      "searches": 6
     }
   ]
 }
