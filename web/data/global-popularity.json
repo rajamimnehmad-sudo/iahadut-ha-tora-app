@@ -3,11 +3,11 @@
   "source": "google-analytics",
   "metric": "catalog_product_search",
   "windowDays": 28,
-  "generatedAt": "2026-10-18T16:09:03.023Z",
+  "generatedAt": "2026-10-19T05:22:05.878Z",
   "products": [
     {
       "url": "https://vaad.ar/producto/pure-de-tomate-marca-arcor/",
-      "searches": 20
+      "searches": 21
     },
     {
       "url": "https://vaad.ar/producto/dulce-de-batata-con-chocolate-marca-arcor/",
@@ -18,11 +18,11 @@
       "searches": 12
     },
     {
-      "url": "https://vaad.ar/producto/298235/",
-      "searches": 9
+      "url": "https://vaad.ar/producto/dulce-de-batata-marca-arcor/",
+      "searches": 10
     },
     {
-      "url": "https://vaad.ar/producto/dulce-de-batata-marca-arcor/",
+      "url": "https://vaad.ar/producto/298235/",
       "searches": 9
     },
     {
@@ -42,7 +42,15 @@
       "searches": 8
     },
     {
+      "url": "https://vaad.ar/producto/papas-marca-carrefour-2/",
+      "searches": 8
+    },
+    {
       "url": "https://vaad.ar/producto/aceite-de-maiz-marca-arcor/",
+      "searches": 7
+    },
+    {
+      "url": "https://vaad.ar/producto/barrita-proteica-marca-wik/",
       "searches": 7
     },
     {
@@ -74,15 +82,7 @@
       "searches": 6
     },
     {
-      "url": "https://vaad.ar/producto/papas-marca-carrefour-2/",
-      "searches": 6
-    },
-    {
-      "url": "https://vaad.ar/producto/pure-de-tomate-marolio/",
-      "searches": 6
-    },
-    {
-      "url": "https://vaad.ar/producto/salsa-basilico-marca-la-campagnola/",
+      "url": "https://vaad.ar/producto/pure-de-tomate-marca-la-campagnola-2/",
       "searches": 6
     }
   ]
