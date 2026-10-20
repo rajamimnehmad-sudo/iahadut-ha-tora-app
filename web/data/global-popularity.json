@@ -3,7 +3,7 @@
   "source": "google-analytics",
   "metric": "catalog_product_search",
   "windowDays": 28,
-  "generatedAt": "2026-10-19T18:51:31.866Z",
+  "generatedAt": "2026-10-20T05:20:51.801Z",
   "products": [
     {
       "url": "https://vaad.ar/producto/pure-de-tomate-marca-arcor/",
@@ -15,7 +15,7 @@
     },
     {
       "url": "https://vaad.ar/producto/pure-de-tomate-marca-la-campagnola/",
-      "searches": 12
+      "searches": 13
     },
     {
       "url": "https://vaad.ar/producto/dulce-de-batata-marca-arcor/",
@@ -62,6 +62,10 @@
       "searches": 7
     },
     {
+      "url": "https://vaad.ar/producto/pure-de-tomate-marca-la-campagnola-2/",
+      "searches": 7
+    },
+    {
       "url": "https://vaad.ar/producto/acelga-congelada-marca-greens/",
       "searches": 6
     },
@@ -79,10 +83,6 @@
     },
     {
       "url": "https://vaad.ar/producto/mermelada-de-durazno-bc-marca-la-campagnola/",
-      "searches": 6
-    },
-    {
-      "url": "https://vaad.ar/producto/mermelada-de-naranja-con-trozos-de-fruta-marca-arcor/",
       "searches": 6
     }
   ]
