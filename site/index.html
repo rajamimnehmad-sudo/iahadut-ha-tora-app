@@ -18,8 +18,8 @@
   </script>
   <link rel="preload" href="/iahadut-ha-tora-app/assets/manrope-latin-wght-normal-DHIcAJRg.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="preload" href="/iahadut-ha-tora-app/assets/logo-transparent-v1-CAttCddD.png" as="image" fetchpriority="high">
-  <script type="module" crossorigin src="/iahadut-ha-tora-app/assets/index-CxqE4TUy.js"></script>
-  <link rel="stylesheet" crossorigin href="/iahadut-ha-tora-app/assets/index-CO64QLBk.css">
+  <script type="module" crossorigin src="/iahadut-ha-tora-app/assets/index-BbbgIlEe.js"></script>
+  <link rel="stylesheet" crossorigin href="/iahadut-ha-tora-app/assets/index-Bj7nDmzJ.css">
 </head>
 <body data-active-view="homeView">
   <section class="install-gate" id="installGate" hidden>
@@ -58,6 +58,120 @@
       <div class="home-intro"><h1>Buscá un producto</h1></div>
       <search class="search-wrap"><form id="homeForm" class="search-row"><label class="search-box"><svg class="home-search-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.8" cy="10.8" r="6.8"/><path d="m16 16 4.5 4.5"/></svg><input id="homeQuery" type="search" placeholder="Producto o marca" autocomplete="off" spellcheck="false" autocapitalize="none"><button class="clear" id="homeClear" type="button" hidden aria-label="Borrar búsqueda"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m7 7 10 10M17 7 7 17"/></svg></button></label><button class="scan" id="homeScan" type="button" aria-label="Abrir escáner de código de barras"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6V4h2M18 4h2v2M4 18v2h2M20 18v2h-2M8 8v8M10.5 8v8M13.5 8v8M16 8v8"/></svg></button></form></search>
       <button class="catalog-news-link" type="button" data-open-timeline="all"><span data-experience-text="additionsLabel">Últimos cambios del catálogo</span><span aria-hidden="true">›</span></button>
+      <section class="home-banners" id="homeBanners" aria-label="Avisos del catálogo"><div class="home-banners-track"><div class="home-banner-slide"><article class="mehadrin-banner" data-background="pastel"><p>Todos los productos de nuestro catálogo cumplen con estándares <strong>Mehadrín</strong>.</p><button class="mehadrin-banner-close" type="button" data-dismiss-mehadrin="mehadrin" aria-label="Cerrar aviso 1"><svg viewBox="0 0 24 24" width="12" height="12" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg></button></article></div></div></section>
+      <script data-home-banners-bootstrap>(function(){
+const BANNER_DISMISSED_KEY = 'iht_home_banner_dismissed_v1';
+const BANNER_BACKGROUNDS = ['pastel', 'mint', 'cream', 'lilac', 'peach', 'sky'];
+const plain = (value, max, empty = false) => typeof value === 'string' && value === value.trim() && (empty || value.length > 0) && value.length <= max && !/[<>\u0000-\u001f]/.test(value);
+function validateHomeBanners(value) {
+  if (value === undefined) return value;
+  if (!Array.isArray(value) || value.length > 20) throw Error('Lista de banners inválida');
+  const ids = new Set();
+  for (const banner of value) {
+    if (!banner || typeof banner !== 'object' || Array.isArray(banner) || Object.keys(banner).some(key => !['id','enabled','dismissible','title','text','emphasis','background','fontSize'].includes(key))
+      || !/^[a-zA-Z0-9_-]{1,80}$/.test(banner.id || '') || ids.has(banner.id)
+      || typeof banner.enabled !== 'boolean' || (banner.dismissible !== undefined && typeof banner.dismissible !== 'boolean')
+      || !plain(banner.title ?? '', 60, true) || !plain(banner.text, 240)
+      || (banner.emphasis !== undefined && !plain(banner.emphasis, 80, true))
+      || (banner.fontSize !== undefined && (!Number.isFinite(banner.fontSize) || banner.fontSize < 11 || banner.fontSize > 12))
+      || (banner.background !== undefined && !BANNER_BACKGROUNDS.includes(banner.background))) throw Error('Banner remoto inválido');
+    ids.add(banner.id);
+  }
+  return value;
+}
+function homeBannerSettings(presentation, fallback) {
+  const banners = Object.hasOwn(presentation, 'homeBanners') ? presentation.homeBanners : fallback.homeBanners;
+  return validateHomeBanners(banners) || [];
+}
+const bannerCampaignKey = banner => JSON.stringify([banner.id, banner.title || '', banner.text]);
+function dismissedKeys(storage) {
+  try { const keys = JSON.parse(storage.getItem(BANNER_DISMISSED_KEY) || '[]'); return Array.isArray(keys) ? keys.filter(key => typeof key === 'string').slice(-100) : []; } catch { return []; }
+}
+function visibleHomeBanners(banners, storage) {
+  const dismissed = new Set(dismissedKeys(storage));
+  return banners.filter(banner => banner.enabled && (banner.dismissible === false || !dismissed.has(bannerCampaignKey(banner))));
+}
+function dismissHomeBanner(root, banners, storage, id) {
+  const banner = banners.find(item => item.id === id);
+  if (!banner || banner.dismissible === false) return;
+  const keys = [...new Set([...dismissedKeys(storage), bannerCampaignKey(banner)])].slice(-100);
+  try { storage.setItem(BANNER_DISMISSED_KEY, JSON.stringify(keys)); } catch { /* Closing still works without persistent storage. */ }
+  const host = root.querySelector('#homeBanners');
+  const track = host?.querySelector('.home-banners-track');
+  const index = track ? Math.round(track.scrollLeft / track.clientWidth) : 0;
+  // Keep a session dismissal when storage is unavailable.
+  if (host) host._dismissedBanners = new Set([...(host._dismissedBanners || []), bannerCampaignKey(banner)]);
+  renderHomeBanner(root, banners, storage);
+  const nextTrack = host?.querySelector('.home-banners-track');
+  if (nextTrack) nextTrack.scrollLeft = Math.min(index, nextTrack.children.length - 1) * nextTrack.clientWidth;
+}
+function renderHomeBanner(root, banners, storage) {
+  const host = root.querySelector('#homeBanners');
+  if (!host) return;
+  const visible = visibleHomeBanners(banners, storage).filter(item => !host._dismissedBanners?.has(bannerCampaignKey(item)) || item.dismissible === false);
+  const signature = JSON.stringify(visible);
+  if (host.dataset.signature === signature) return;
+  host._cleanupBannerVisibility?.();
+  host.dataset.signature = signature;
+  host.hidden = !visible.length;
+  const track = root.createElement('div');
+  track.className = 'home-banners-track';
+  track.tabIndex = 0;
+  track.setAttribute('aria-label', 'Avisos: deslizá para ver más');
+  for (const [index, banner] of visible.entries()) {
+    const slide = root.createElement('div'); slide.className = 'home-banner-slide';
+    const card = root.createElement('article'); card.className = 'mehadrin-banner'; card.dataset.background = banner.background || 'pastel';
+    card.style.setProperty('--home-banner-font-size', `${banner.fontSize ?? 12}px`);
+    card.setAttribute('aria-label', `Aviso ${index + 1} de ${visible.length}`);
+    const copy = root.createElement('p');
+    if (banner.title) { const title = root.createElement('strong'); title.textContent = banner.title; copy.append(title, root.createTextNode(' ')); }
+    const emphasis = banner.emphasis && banner.text.includes(banner.emphasis) ? banner.emphasis : '';
+    if (emphasis) {
+      const offset = banner.text.indexOf(emphasis), strong = root.createElement('strong'); strong.textContent = emphasis;
+      copy.append(root.createTextNode(banner.text.slice(0, offset)), strong, root.createTextNode(banner.text.slice(offset + emphasis.length)));
+    } else copy.append(root.createTextNode(banner.text));
+    card.append(copy);
+    if (banner.dismissible !== false) {
+      const close = root.createElement('button'); close.type = 'button'; close.className = 'mehadrin-banner-close'; close.dataset.dismissMehadrin = banner.id;
+      close.setAttribute('aria-label', `Cerrar aviso ${index + 1}`);
+      close.innerHTML = '<svg viewBox="0 0 24 24" width="12" height="12" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg>';
+      card.append(close);
+    }
+    slide.append(card); track.append(slide);
+  }
+  host.replaceChildren(track);
+  const Observer = root.defaultView?.IntersectionObserver;
+  if (Observer) {
+    const observer = new Observer(entries => {
+      for (const entry of entries) entry.target.dataset.bannerActive = String(entry.isIntersecting && entry.intersectionRatio >= .6);
+    }, {threshold:[0,.6]});
+    const observe = () => {for (const slide of track.children) observer.observe(slide);};
+    const visibility = () => {
+      observer.disconnect();
+      for (const slide of track.children) slide.dataset.bannerActive = 'false';
+      if (!root.hidden) observe();
+    };
+    observe(); root.addEventListener('visibilitychange', visibility);
+    host._cleanupBannerVisibility = () => {observer.disconnect(); root.removeEventListener('visibilitychange', visibility);};
+  } else {
+    const updateActive = () => {
+      const index = Math.round(track.scrollLeft / (track.clientWidth || 1));
+      [...track.children].forEach((slide,i) => {slide.dataset.bannerActive = String(i === index);});
+    };
+    track.addEventListener('scroll',updateActive,{passive:true}); updateActive();
+  }
+  if (visible.length > 1) {
+    const dots = root.createElement('div'); dots.className = 'home-banner-dots';
+    visible.forEach((banner, index) => {
+      const dot = root.createElement('button'); dot.type = 'button'; dot.setAttribute('aria-label', `Ver aviso ${index + 1}`);
+      dot.addEventListener('click', () => track.scrollTo({left: index * track.clientWidth, behavior: 'smooth'})); dots.append(dot);
+    });
+    const update = () => { const index = Math.round(track.scrollLeft / track.clientWidth); [...dots.children].forEach((dot, i) => dot.setAttribute('aria-current', String(i === index))); };
+    track.addEventListener('scroll', update, {passive:true}); update(); host.append(dots);
+  }
+}
+
+const fallback={"revision":"2026-10-20T01:53:50.971Z","homeBanners":[{"id":"mehadrin","enabled":true,"dismissible":true,"title":"","text":"Todos los productos de nuestro catálogo cumplen con estándares Mehadrín.","emphasis":"Mehadrín","background":"pastel","fontSize":12}]};let settings=fallback.homeBanners;let storage;try{storage=localStorage;const cached=JSON.parse(storage.getItem('iht_catalog_presentation_v1')||'null');if(Date.parse(cached?.revision)>Date.parse(fallback.revision))settings=homeBannerSettings(cached,fallback);}catch(_){}renderHomeBanner(document,settings,storage);})();</script>
 <section class="section recent-products-section"><div class="section-head"><h2>Destacados</h2><div class="tablet-featured-controls"><button type="button" data-featured-step="-1" aria-label="Destacados anteriores">‹</button><button type="button" data-featured-step="1" aria-label="Destacados siguientes">›</button></div></div><div class="recent-products-viewport" role="region" aria-label="Productos destacados"><div class="recent-products" id="recentProducts"><div class="recent-product recent-product-skeleton" aria-hidden="true"><span class="recent-product-media"></span><span class="tablet-featured-copy"><i></i><i></i></span></div><div class="recent-product recent-product-skeleton" aria-hidden="true"><span class="recent-product-media"></span><span class="tablet-featured-copy"><i></i><i></i></span></div><div class="recent-product recent-product-skeleton" aria-hidden="true"><span class="recent-product-media"></span><span class="tablet-featured-copy"><i></i><i></i></span></div><div class="recent-product recent-product-skeleton" aria-hidden="true"><span class="recent-product-media"></span><span class="tablet-featured-copy"><i></i><i></i></span></div><div class="recent-product recent-product-skeleton" aria-hidden="true"><span class="recent-product-media"></span><span class="tablet-featured-copy"><i></i><i></i></span></div><div class="recent-product recent-product-skeleton" aria-hidden="true"><span class="recent-product-media"></span><span class="tablet-featured-copy"><i></i><i></i></span></div><div class="recent-product recent-product-skeleton" aria-hidden="true"><span class="recent-product-media"></span><span class="tablet-featured-copy"><i></i><i></i></span></div><div class="recent-product recent-product-skeleton" aria-hidden="true"><span class="recent-product-media"></span><span class="tablet-featured-copy"><i></i><i></i></span></div></div></div><button class="explore-categories-action" type="button" data-explore-categories><svg class="row-icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="6" height="6" rx="1"/><rect x="14" y="4" width="6" height="6" rx="1"/><rect x="4" y="14" width="6" height="6" rx="1"/><rect x="14" y="14" width="6" height="6" rx="1"/></svg><span>Ver todas las categorías</span><span>›</span></button></section>
       <section class="section" id="recentAlert" hidden><div class="section-head"><h2>Alerta reciente</h2><button class="text-btn" id="seeAlerts">Ver todas</button></div><button class="alert-card" id="alertPreview"></button></section>
       <section class="section useful-section"><div class="section-head"><h2>Información útil</h2></div><div class="useful-grid"><button class="link-row" data-info="shops"><img class="info-icon info-icon-3d" src="./category-icons/f0b0740d427e067f1cf5d4ac0552dc9a437ce9207be6d2c864441cff7d816a28.png" alt="" aria-hidden="true"><span>Tiendas certificadas</span></button><button class="link-row" data-info="catering"><img class="info-icon info-icon-3d" src="./category-icons/3792dce422144d5805b98fc1e954423e8da9692c3f4b272bc5da0c73287377cc.png" alt="" aria-hidden="true"><span>Servicios de catering</span></button><button class="link-row" data-info="notes"><img class="info-icon info-icon-3d" src="./category-icons/a649a3a32f948a1c797b75c6f575523ffc9e07299210f4c9eaf0c1d682e8618f.png" alt="" aria-hidden="true"><span>Notas Kashrut</span></button><a class="link-row whatsapp-tile" href="https://chat.whatsapp.com/JXI8X8QwexH44TzuJm1GmC" target="_blank" rel="noopener"><img class="info-icon info-icon-3d whatsapp-logo" src="./category-icons/9477174a2aeb91d3ef393ed70a50838215d3d748e22f4ce3f917d801a327da13.png" alt="" aria-hidden="true"><span>Sumarse al canal</span></a></div></section>
@@ -67,7 +181,7 @@
       <section class="trusted-brands" aria-label="Plantas certificadas que confían en nosotros"><p>PLANTAS CERTIFICADAS</p><h2>Marcas que confían en nosotros</h2><div class="trusted-brands-window"><div class="trusted-brands-track"><div class="trusted-brands-group"><img src="/iahadut-ha-tora-app/assets/brand-00-ecu8eiw-.png" style="width:90px;height:43px" width="90" height="43" alt="noel" loading="lazy" decoding="async"><img src="/iahadut-ha-tora-app/assets/brand-01-Ctst9JKB.png" style="width:90px;height:39px" width="90" height="39" alt="la campagnola" loading="lazy" decoding="async"><img src="/iahadut-ha-tora-app/assets/brand-02-BwS6O_L6.png" style="width:54px;height:44px" width="54" height="44" alt="barba roja" loading="lazy" decoding="async"><img src="/iahadut-ha-tora-app/assets/brand-03-lpFS7rFp.png" style="width:68px;height:44px" width="68" height="44" alt="arcor" loading="lazy" decoding="async"><img src="/iahadut-ha-tora-app/assets/brand-04-ZP4gpggr.png" style="width:45px;height:44px" width="45" height="44" alt="Planta certificada" loading="lazy" decoding="async"><img src="/iahadut-ha-tora-app/assets/brand-05-DOEkjiHB.png" style="width:45px;height:44px" width="45" height="44" alt="Planta certificada" loading="lazy" decoding="async"><img src="/iahadut-ha-tora-app/assets/brand-06-Dnpmu92_.png" style="width:90px;height:19px" width="90" height="19" alt="monda_300x300" loading="lazy" decoding="async"><img src="/iahadut-ha-tora-app/assets/brand-07-ClhGbmUe.png" style="width:90px;height:29px" width="90" height="29" alt="rodez" loading="lazy" decoding="async"><img src="/iahadut-ha-tora-app/assets/brand-08-JKjoUNuD.png" style="width:43px;height:44px" width="43" height="44" alt="pomona" loading="lazy" decoding="async"><img src="/iahadut-ha-tora-app/assets/brand-09-4Gk3lPGc.png" style="width:35px;height:44px" width="35" height="44" alt="el parque" loading="lazy" decoding="async"><img src="/iahadut-ha-tora-app/assets/brand-10-B8iUGJTT.png" style="width:69px;height:44px" width="69" height="44" alt="la parmesana" loading="lazy" decoding="async"><img src="/iahadut-ha-tora-app/assets/brand-11-C4WyQWQ6.png" style="width:90px;height:41px" width="90" height="41" alt="karu" loading="lazy" decoding="async"><img src="/iahadut-ha-tora-app/assets/brand-12-_JxluxGs.png" style="width:90px;height:34px" width="90" height="34" alt="sozoe" loading="lazy" decoding="async"><img src="/iahadut-ha-tora-app/assets/brand-13-DwebteTX.png" style="width:41px;height:44px" width="41" height="44" alt="av" loading="lazy" decoding="async"><img src="/iahadut-ha-tora-app/assets/brand-14-CgrJegmz.png" style="width:90px;height:39px" width="90" height="39" alt="pura fruta" loading="lazy" decoding="async"><img src="/iahadut-ha-tora-app/assets/brand-15-CbJAwdfn.png" style="width:79px;height:44px" width="79" height="44" alt="ait" loading="lazy" decoding="async"><img src="/iahadut-ha-tora-app/assets/brand-16-BWknpMFP.png" style="width:90px;height:21px" width="90" height="21" alt="alnuna" loading="lazy" decoding="async"><img src="/iahadut-ha-tora-app/assets/brand-17-ByvM759u.png" style="width:44px;height:44px" width="44" height="44" alt="almirante" loading="lazy" decoding="async"><img src="/iahadut-ha-tora-app/assets/brand-18-CrteTeme.png" style="width:90px;height:42px" width="90" height="42" alt="amande" loading="lazy" decoding="async"><img src="/iahadut-ha-tora-app/assets/brand-19-BnECaCo9.png" style="width:44px;height:44px" width="44" height="44" alt="ancestral" loading="lazy" decoding="async"><img src="/iahadut-ha-tora-app/assets/brand-20-Bwswr24e.png" style="width:44px;height:44px" width="44" height="44" alt="api frank" loading="lazy" decoding="async"><img src="/iahadut-ha-tora-app/assets/brand-21-DxPc4lSC.png" style="width:45px;height:44px" width="45" height="44" alt="finca balcarce" loading="lazy" decoding="async"><img src="/iahadut-ha-tora-app/assets/brand-22-DuA94sA4.png" style="width:85px;height:44px" width="85" height="44" alt="la simona" loading="lazy" decoding="async"><img src="/iahadut-ha-tora-app/assets/brand-23-DxupL0Xj.png" style="width:54px;height:44px" width="54" height="44" alt="mudra" loading="lazy" decoding="async"><img src="/iahadut-ha-tora-app/assets/brand-24-DJ0mXYV6.png" style="width:90px;height:15px" width="90" height="15" alt="vitalgy" loading="lazy" decoding="async"><img src="/iahadut-ha-tora-app/assets/brand-25-DJEt9wRw.png" style="width:56px;height:44px" width="56" height="44" alt="wik" loading="lazy" decoding="async"></div><div class="trusted-brands-group" aria-hidden="true"><img src="/iahadut-ha-tora-app/assets/brand-00-ecu8eiw-.png" style="width:90px;height:43px" width="90" height="43" alt="" loading="lazy" decoding="async"><img src="/iahadut-ha-tora-app/assets/brand-01-Ctst9JKB.png" style="width:90px;height:39px" width="90" height="39" alt="" loading="lazy" decoding="async"><img src="/iahadut-ha-tora-app/assets/brand-02-BwS6O_L6.png" style="width:54px;height:44px" width="54" height="44" alt="" loading="lazy" decoding="async"><img src="/iahadut-ha-tora-app/assets/brand-03-lpFS7rFp.png" style="width:68px;height:44px" width="68" height="44" alt="" loading="lazy" decoding="async"><img src="/iahadut-ha-tora-app/assets/brand-04-ZP4gpggr.png" style="width:45px;height:44px" width="45" height="44" alt="" loading="lazy" decoding="async"><img src="/iahadut-ha-tora-app/assets/brand-05-DOEkjiHB.png" style="width:45px;height:44px" width="45" height="44" alt="" loading="lazy" decoding="async"><img src="/iahadut-ha-tora-app/assets/brand-06-Dnpmu92_.png" style="width:90px;height:19px" width="90" height="19" alt="" loading="lazy" decoding="async"><img src="/iahadut-ha-tora-app/assets/brand-07-ClhGbmUe.png" style="width:90px;height:29px" width="90" height="29" alt="" loading="lazy" decoding="async"><img src="/iahadut-ha-tora-app/assets/brand-08-JKjoUNuD.png" style="width:43px;height:44px" width="43" height="44" alt="" loading="lazy" decoding="async"><img src="/iahadut-ha-tora-app/assets/brand-09-4Gk3lPGc.png" style="width:35px;height:44px" width="35" height="44" alt="" loading="lazy" decoding="async"><img src="/iahadut-ha-tora-app/assets/brand-10-B8iUGJTT.png" style="width:69px;height:44px" width="69" height="44" alt="" loading="lazy" decoding="async"><img src="/iahadut-ha-tora-app/assets/brand-11-C4WyQWQ6.png" style="width:90px;height:41px" width="90" height="41" alt="" loading="lazy" decoding="async"><img src="/iahadut-ha-tora-app/assets/brand-12-_JxluxGs.png" style="width:90px;height:34px" width="90" height="34" alt="" loading="lazy" decoding="async"><img src="/iahadut-ha-tora-app/assets/brand-13-DwebteTX.png" style="width:41px;height:44px" width="41" height="44" alt="" loading="lazy" decoding="async"><img src="/iahadut-ha-tora-app/assets/brand-14-CgrJegmz.png" style="width:90px;height:39px" width="90" height="39" alt="" loading="lazy" decoding="async"><img src="/iahadut-ha-tora-app/assets/brand-15-CbJAwdfn.png" style="width:79px;height:44px" width="79" height="44" alt="" loading="lazy" decoding="async"><img src="/iahadut-ha-tora-app/assets/brand-16-BWknpMFP.png" style="width:90px;height:21px" width="90" height="21" alt="" loading="lazy" decoding="async"><img src="/iahadut-ha-tora-app/assets/brand-17-ByvM759u.png" style="width:44px;height:44px" width="44" height="44" alt="" loading="lazy" decoding="async"><img src="/iahadut-ha-tora-app/assets/brand-18-CrteTeme.png" style="width:90px;height:42px" width="90" height="42" alt="" loading="lazy" decoding="async"><img src="/iahadut-ha-tora-app/assets/brand-19-BnECaCo9.png" style="width:44px;height:44px" width="44" height="44" alt="" loading="lazy" decoding="async"><img src="/iahadut-ha-tora-app/assets/brand-20-Bwswr24e.png" style="width:44px;height:44px" width="44" height="44" alt="" loading="lazy" decoding="async"><img src="/iahadut-ha-tora-app/assets/brand-21-DxPc4lSC.png" style="width:45px;height:44px" width="45" height="44" alt="" loading="lazy" decoding="async"><img src="/iahadut-ha-tora-app/assets/brand-22-DuA94sA4.png" style="width:85px;height:44px" width="85" height="44" alt="" loading="lazy" decoding="async"><img src="/iahadut-ha-tora-app/assets/brand-23-DxupL0Xj.png" style="width:54px;height:44px" width="54" height="44" alt="" loading="lazy" decoding="async"><img src="/iahadut-ha-tora-app/assets/brand-24-DJ0mXYV6.png" style="width:90px;height:15px" width="90" height="15" alt="" loading="lazy" decoding="async"><img src="/iahadut-ha-tora-app/assets/brand-25-DJEt9wRw.png" style="width:56px;height:44px" width="56" height="44" alt="" loading="lazy" decoding="async"></div></div></div></section>
     </section>
 
-    <section class="view" id="searchView"><div class="page-head"><h1>¿Qué estás buscando?</h1><p>Encontrá productos, marcas o categorías.</p></div><form id="searchForm" class="search-row padded"><button class="back search-inline-back" id="searchBack" type="button" aria-label="Volver"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 5-7 7 7 7"/></svg></button><label class="search-box"><input id="query" type="search" placeholder="Buscá un producto o marca" autocomplete="off" spellcheck="false" autocapitalize="none"><button class="clear" id="clear" type="button" hidden aria-label="Borrar búsqueda"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m7 7 10 10M17 7 7 17"/></svg></button></label><button class="scan" id="searchScan" type="button" aria-label="Abrir escáner de código de barras"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6V4h2M18 4h2v2M4 18v2h2M20 18v2h-2M8 8v8M10.5 8v8M13.5 8v8M16 8v8"/></svg></button></form><p class="catalog-mehadrin" data-experience-text="catalogStandard">Todo el catálogo cumple con los estándares Mehadrin</p><div id="recentSearches" class="chips"></div><div id="searchCategories" class="category-list"></div><div id="results" hidden><div class="results-head"><div><h2 id="resultsTitle">Resultados</h2><small id="resultsMeta"></small></div><button class="filter-btn" id="filterBtn" type="button">Filtrar</button></div><div id="searchScope" class="search-scope" hidden aria-live="polite"><span>Buscando en <strong id="searchScopeLabel"></strong></span><button id="clearSearchScope" type="button">Quitar filtro</button></div><div class="product-list" id="productList"></div></div></section>
+    <section class="view" id="searchView"><div class="page-head"><h1>¿Qué estás buscando?</h1><p>Encontrá productos, marcas o categorías.</p></div><form id="searchForm" class="search-row padded"><button class="back search-inline-back" id="searchBack" type="button" aria-label="Volver"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 5-7 7 7 7"/></svg></button><label class="search-box"><input id="query" type="search" placeholder="Buscá un producto o marca" autocomplete="off" spellcheck="false" autocapitalize="none"><button class="clear" id="clear" type="button" hidden aria-label="Borrar búsqueda"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m7 7 10 10M17 7 7 17"/></svg></button></label><button class="scan" id="searchScan" type="button" aria-label="Abrir escáner de código de barras"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6V4h2M18 4h2v2M4 18v2h2M20 18v2h-2M8 8v8M10.5 8v8M13.5 8v8M16 8v8"/></svg></button></form><div id="recentSearches" class="chips"></div><div id="searchCategories" class="category-list"></div><div id="results" hidden><div class="results-head"><div><h2 id="resultsTitle">Resultados</h2><small id="resultsMeta"></small></div><button class="filter-btn" id="filterBtn" type="button">Filtrar</button></div><div id="searchScope" class="search-scope" hidden aria-live="polite"><span>Buscando en <strong id="searchScopeLabel"></strong></span><button id="clearSearchScope" type="button">Quitar filtro</button></div><div class="product-list" id="productList"></div></div></section>
 
     <section class="view" id="categoryDirectoryView"><div class="detail-head"><button class="back" id="categoryDirectoryBack" type="button" aria-label="Volver"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 5-7 7 7 7"/></svg></button><strong>Explorar por categorías</strong><span></span></div><div class="page-head category-page-head"><h1>Categorías</h1><p>Todos los productos ordenados por tipo.</p></div><div class="alphabetical-category-list" id="alphabeticalCategoryList"></div></section>
     <section class="view" id="subcategoryDirectoryView"><div class="detail-head"><button class="back" id="subcategoryDirectoryBack" type="button" aria-label="Volver"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 5-7 7 7 7"/></svg></button><strong id="subcategoryDirectoryTop">Subcategorías</strong><span></span></div><div class="page-head category-page-head"><h1 id="subcategoryDirectoryTitle">Subcategorías</h1><p id="subcategoryDirectoryMeta"></p></div><div class="alphabetical-category-list" id="subcategoryList"></div><div class="product-list" id="subcategoryDirectProductList" hidden></div></section>
