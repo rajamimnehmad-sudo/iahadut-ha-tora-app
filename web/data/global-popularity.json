@@ -3,7 +3,7 @@
   "source": "google-analytics",
   "metric": "catalog_product_search",
   "windowDays": 28,
-  "generatedAt": "2026-10-20T17:33:28.916Z",
+  "generatedAt": "2026-10-21T05:21:11.126Z",
   "products": [
     {
       "url": "https://vaad.ar/producto/pure-de-tomate-marca-arcor/",
@@ -19,7 +19,7 @@
     },
     {
       "url": "https://vaad.ar/producto/298235/",
-      "searches": 10
+      "searches": 11
     },
     {
       "url": "https://vaad.ar/producto/dulce-de-batata-marca-arcor/",
@@ -34,11 +34,23 @@
       "searches": 9
     },
     {
+      "url": "https://vaad.ar/producto/papas-marca-carrefour-2/",
+      "searches": 9
+    },
+    {
       "url": "https://vaad.ar/producto/pastillas-marca-dorins/",
       "searches": 9
     },
     {
+      "url": "https://vaad.ar/producto/barrita-proteica-marca-wik/",
+      "searches": 8
+    },
+    {
       "url": "https://vaad.ar/producto/cafe-marca-juan-valdes/",
+      "searches": 8
+    },
+    {
+      "url": "https://vaad.ar/producto/choclo-marca-arcor/",
       "searches": 8
     },
     {
@@ -46,15 +58,7 @@
       "searches": 8
     },
     {
-      "url": "https://vaad.ar/producto/papas-marca-carrefour-2/",
-      "searches": 8
-    },
-    {
       "url": "https://vaad.ar/producto/aceite-de-maiz-marca-arcor/",
-      "searches": 7
-    },
-    {
-      "url": "https://vaad.ar/producto/barrita-proteica-marca-wik/",
       "searches": 7
     },
     {
@@ -62,7 +66,15 @@
       "searches": 7
     },
     {
+      "url": "https://vaad.ar/producto/granola-cereal-mix-marca-3-arroyos/",
+      "searches": 7
+    },
+    {
       "url": "https://vaad.ar/producto/mermelada-de-durazno-bc-marca-la-campagnola/",
+      "searches": 7
+    },
+    {
+      "url": "https://vaad.ar/producto/pan-revanado-clasico-y-salvado-marca-deli/",
       "searches": 7
     },
     {
@@ -71,18 +83,6 @@
     },
     {
       "url": "https://vaad.ar/producto/acelga-congelada-marca-greens/",
-      "searches": 6
-    },
-    {
-      "url": "https://vaad.ar/producto/atun-marca-mar-caribe/",
-      "searches": 6
-    },
-    {
-      "url": "https://vaad.ar/producto/atun-marca-mare-pronto/",
-      "searches": 6
-    },
-    {
-      "url": "https://vaad.ar/producto/barrita-full-arandanos-y-almendras/",
       "searches": 6
     }
   ]
