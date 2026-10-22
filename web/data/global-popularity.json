@@ -3,7 +3,7 @@
   "source": "google-analytics",
   "metric": "catalog_product_search",
   "windowDays": 28,
-  "generatedAt": "2026-10-21T17:41:17.039Z",
+  "generatedAt": "2026-10-22T05:24:10.231Z",
   "products": [
     {
       "url": "https://vaad.ar/producto/pure-de-tomate-marca-arcor/",
@@ -18,15 +18,23 @@
       "searches": 14
     },
     {
+      "url": "https://vaad.ar/producto/dulce-de-batata-marca-arcor/",
+      "searches": 12
+    },
+    {
       "url": "https://vaad.ar/producto/298235/",
       "searches": 11
     },
     {
-      "url": "https://vaad.ar/producto/dulce-de-batata-marca-arcor/",
+      "url": "https://vaad.ar/producto/obleas-marca-santa-maria/",
       "searches": 11
     },
     {
-      "url": "https://vaad.ar/producto/obleas-marca-santa-maria/",
+      "url": "https://vaad.ar/producto/cafe-marca-juan-valdes/",
+      "searches": 10
+    },
+    {
+      "url": "https://vaad.ar/producto/papas-marca-carrefour-2/",
       "searches": 10
     },
     {
@@ -35,10 +43,6 @@
     },
     {
       "url": "https://vaad.ar/producto/mermelada-blend-de-frutas-durazno-mango-marca-arcor/",
-      "searches": 9
-    },
-    {
-      "url": "https://vaad.ar/producto/papas-marca-carrefour-2/",
       "searches": 9
     },
     {
@@ -55,10 +59,6 @@
     },
     {
       "url": "https://vaad.ar/producto/barrita-proteica-marca-wik/",
-      "searches": 8
-    },
-    {
-      "url": "https://vaad.ar/producto/cafe-marca-juan-valdes/",
       "searches": 8
     },
     {
