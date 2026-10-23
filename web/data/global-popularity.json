@@ -3,15 +3,15 @@
   "source": "google-analytics",
   "metric": "catalog_product_search",
   "windowDays": 28,
-  "generatedAt": "2026-10-22T17:39:31.975Z",
+  "generatedAt": "2026-10-23T05:25:00.965Z",
   "products": [
     {
       "url": "https://vaad.ar/producto/pure-de-tomate-marca-arcor/",
-      "searches": 25
+      "searches": 29
     },
     {
       "url": "https://vaad.ar/producto/dulce-de-batata-con-chocolate-marca-arcor/",
-      "searches": 15
+      "searches": 16
     },
     {
       "url": "https://vaad.ar/producto/pure-de-tomate-marca-la-campagnola/",
@@ -22,15 +22,31 @@
       "searches": 12
     },
     {
+      "url": "https://vaad.ar/producto/obleas-marca-santa-maria/",
+      "searches": 12
+    },
+    {
+      "url": "https://vaad.ar/producto/pastillas-marca-dorins/",
+      "searches": 12
+    },
+    {
+      "url": "https://vaad.ar/producto/pure-de-tomate-marca-la-campagnola-2/",
+      "searches": 12
+    },
+    {
       "url": "https://vaad.ar/producto/298235/",
       "searches": 11
     },
     {
-      "url": "https://vaad.ar/producto/obleas-marca-santa-maria/",
+      "url": "https://vaad.ar/producto/cafe-marca-juan-valdes/",
       "searches": 11
     },
     {
-      "url": "https://vaad.ar/producto/cafe-marca-juan-valdes/",
+      "url": "https://vaad.ar/producto/atun-marca-mar-caribe/",
+      "searches": 10
+    },
+    {
+      "url": "https://vaad.ar/producto/mermelada-blend-de-frutas-durazno-mango-marca-arcor/",
       "searches": 10
     },
     {
@@ -42,19 +58,15 @@
       "searches": 9
     },
     {
-      "url": "https://vaad.ar/producto/mermelada-blend-de-frutas-durazno-mango-marca-arcor/",
-      "searches": 9
-    },
-    {
-      "url": "https://vaad.ar/producto/pastillas-marca-dorins/",
-      "searches": 9
-    },
-    {
-      "url": "https://vaad.ar/producto/pure-de-tomate-marca-la-campagnola-2/",
+      "url": "https://vaad.ar/producto/golosina-marca-ring-pop-2/",
       "searches": 9
     },
     {
       "url": "https://vaad.ar/producto/acelga-congelada-marca-greens/",
+      "searches": 8
+    },
+    {
+      "url": "https://vaad.ar/producto/atun-marca-mare-pronto/",
       "searches": 8
     },
     {
@@ -70,20 +82,8 @@
       "searches": 8
     },
     {
-      "url": "https://vaad.ar/producto/mermelada-de-durazno-bc-marca-la-campagnola/",
+      "url": "https://vaad.ar/producto/golosina-ring-pop/",
       "searches": 8
-    },
-    {
-      "url": "https://vaad.ar/producto/aceite-de-maiz-marca-arcor/",
-      "searches": 7
-    },
-    {
-      "url": "https://vaad.ar/producto/atun-marca-mar-caribe/",
-      "searches": 7
-    },
-    {
-      "url": "https://vaad.ar/producto/atun-marca-mare-pronto/",
-      "searches": 7
     }
   ]
 }
