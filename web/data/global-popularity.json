@@ -3,7 +3,7 @@
   "source": "google-analytics",
   "metric": "catalog_product_search",
   "windowDays": 28,
-  "generatedAt": "2026-10-23T17:29:02.833Z",
+  "generatedAt": "2026-10-24T05:03:30.732Z",
   "products": [
     {
       "url": "https://vaad.ar/producto/pure-de-tomate-marca-arcor/",
@@ -14,19 +14,19 @@
       "searches": 16
     },
     {
+      "url": "https://vaad.ar/producto/obleas-marca-santa-maria/",
+      "searches": 14
+    },
+    {
       "url": "https://vaad.ar/producto/pure-de-tomate-marca-la-campagnola/",
       "searches": 14
     },
     {
-      "url": "https://vaad.ar/producto/dulce-de-batata-marca-arcor/",
-      "searches": 12
-    },
-    {
-      "url": "https://vaad.ar/producto/obleas-marca-santa-maria/",
-      "searches": 12
-    },
-    {
       "url": "https://vaad.ar/producto/pastillas-marca-dorins/",
+      "searches": 13
+    },
+    {
+      "url": "https://vaad.ar/producto/dulce-de-batata-marca-arcor/",
       "searches": 12
     },
     {
@@ -46,6 +46,10 @@
       "searches": 10
     },
     {
+      "url": "https://vaad.ar/producto/golosina-marca-ring-pop-2/",
+      "searches": 10
+    },
+    {
       "url": "https://vaad.ar/producto/mermelada-blend-de-frutas-durazno-mango-marca-arcor/",
       "searches": 10
     },
@@ -55,10 +59,6 @@
     },
     {
       "url": "https://vaad.ar/producto/espinaca-congelada-marca-greens/",
-      "searches": 9
-    },
-    {
-      "url": "https://vaad.ar/producto/golosina-marca-ring-pop-2/",
       "searches": 9
     },
     {
