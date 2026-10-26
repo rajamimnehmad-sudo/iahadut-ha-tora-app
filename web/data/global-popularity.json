@@ -3,22 +3,30 @@
   "source": "google-analytics",
   "metric": "catalog_product_search",
   "windowDays": 28,
-  "generatedAt": "2026-10-25T16:50:26.854Z",
+  "generatedAt": "2026-10-26T05:21:17.524Z",
   "products": [
     {
       "url": "https://vaad.ar/producto/pure-de-tomate-marca-arcor/",
-      "searches": 29
+      "searches": 32
     },
     {
       "url": "https://vaad.ar/producto/dulce-de-batata-con-chocolate-marca-arcor/",
       "searches": 16
     },
     {
+      "url": "https://vaad.ar/producto/papas-marca-carrefour-2/",
+      "searches": 16
+    },
+    {
+      "url": "https://vaad.ar/producto/pure-de-tomate-marca-la-campagnola/",
+      "searches": 15
+    },
+    {
       "url": "https://vaad.ar/producto/obleas-marca-santa-maria/",
       "searches": 14
     },
     {
-      "url": "https://vaad.ar/producto/pure-de-tomate-marca-la-campagnola/",
+      "url": "https://vaad.ar/producto/papas-marca-carrefour/",
       "searches": 14
     },
     {
@@ -42,19 +50,31 @@
       "searches": 11
     },
     {
-      "url": "https://vaad.ar/producto/papas-marca-carrefour-2/",
+      "url": "https://vaad.ar/producto/espinaca-congelada-marca-greens/",
       "searches": 11
     },
     {
-      "url": "https://vaad.ar/producto/atun-marca-mar-caribe/",
-      "searches": 10
-    },
-    {
       "url": "https://vaad.ar/producto/golosina-marca-ring-pop-2/",
-      "searches": 10
+      "searches": 11
     },
     {
       "url": "https://vaad.ar/producto/mermelada-blend-de-frutas-durazno-mango-marca-arcor/",
+      "searches": 11
+    },
+    {
+      "url": "https://vaad.ar/producto/papas-marca-carrefour-3/",
+      "searches": 11
+    },
+    {
+      "url": "https://vaad.ar/producto/papas-marca-carrefour-4/",
+      "searches": 11
+    },
+    {
+      "url": "https://vaad.ar/producto/acelga-congelada-marca-greens/",
+      "searches": 10
+    },
+    {
+      "url": "https://vaad.ar/producto/atun-marca-mar-caribe/",
       "searches": 10
     },
     {
@@ -62,28 +82,8 @@
       "searches": 9
     },
     {
-      "url": "https://vaad.ar/producto/espinaca-congelada-marca-greens/",
+      "url": "https://vaad.ar/producto/galletas-de-arroz-marca-rodez/",
       "searches": 9
-    },
-    {
-      "url": "https://vaad.ar/producto/papas-marca-carrefour/",
-      "searches": 9
-    },
-    {
-      "url": "https://vaad.ar/producto/salsa-basilico-marca-la-campagnola/",
-      "searches": 9
-    },
-    {
-      "url": "https://vaad.ar/producto/acelga-congelada-marca-greens/",
-      "searches": 8
-    },
-    {
-      "url": "https://vaad.ar/producto/atun-marca-mare-pronto/",
-      "searches": 8
-    },
-    {
-      "url": "https://vaad.ar/producto/barrita-proteica-marca-wik/",
-      "searches": 8
     }
   ]
 }
