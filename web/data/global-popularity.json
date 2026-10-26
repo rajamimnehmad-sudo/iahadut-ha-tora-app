@@ -3,7 +3,7 @@
   "source": "google-analytics",
   "metric": "catalog_product_search",
   "windowDays": 28,
-  "generatedAt": "2026-10-26T05:21:17.524Z",
+  "generatedAt": "2026-10-26T18:53:04.103Z",
   "products": [
     {
       "url": "https://vaad.ar/producto/pure-de-tomate-marca-arcor/",
@@ -78,11 +78,11 @@
       "searches": 10
     },
     {
-      "url": "https://vaad.ar/producto/coctel-de-frutas-marca-arcor/",
-      "searches": 9
+      "url": "https://vaad.ar/producto/choclo-marca-arcor/",
+      "searches": 10
     },
     {
-      "url": "https://vaad.ar/producto/galletas-de-arroz-marca-rodez/",
+      "url": "https://vaad.ar/producto/coctel-de-frutas-marca-arcor/",
       "searches": 9
     }
   ]
