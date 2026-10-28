@@ -3,7 +3,7 @@
   "source": "google-analytics",
   "metric": "catalog_product_search",
   "windowDays": 28,
-  "generatedAt": "2026-10-28T06:20:00.599Z",
+  "generatedAt": "2026-10-28T18:34:07.187Z",
   "products": [
     {
       "url": "https://vaad.ar/producto/pure-de-tomate-marca-arcor/",
@@ -38,11 +38,19 @@
       "searches": 14
     },
     {
+      "url": "https://vaad.ar/producto/papas-marca-carrefour-3/",
+      "searches": 13
+    },
+    {
       "url": "https://vaad.ar/producto/dulce-de-batata-marca-arcor/",
       "searches": 12
     },
     {
       "url": "https://vaad.ar/producto/mermelada-blend-de-frutas-durazno-mango-marca-arcor/",
+      "searches": 12
+    },
+    {
+      "url": "https://vaad.ar/producto/papas-marca-carrefour-4/",
       "searches": 12
     },
     {
@@ -63,14 +71,6 @@
     },
     {
       "url": "https://vaad.ar/producto/golosina-marca-ring-pop-2/",
-      "searches": 11
-    },
-    {
-      "url": "https://vaad.ar/producto/papas-marca-carrefour-3/",
-      "searches": 11
-    },
-    {
-      "url": "https://vaad.ar/producto/papas-marca-carrefour-4/",
       "searches": 11
     },
     {
