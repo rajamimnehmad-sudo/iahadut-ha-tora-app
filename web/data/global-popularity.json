@@ -3,7 +3,7 @@
   "source": "google-analytics",
   "metric": "catalog_product_search",
   "windowDays": 28,
-  "generatedAt": "2026-10-28T18:34:07.187Z",
+  "generatedAt": "2026-10-29T06:30:18.976Z",
   "products": [
     {
       "url": "https://vaad.ar/producto/pure-de-tomate-marca-arcor/",
@@ -11,7 +11,7 @@
     },
     {
       "url": "https://vaad.ar/producto/dulce-de-batata-con-chocolate-marca-arcor/",
-      "searches": 16
+      "searches": 17
     },
     {
       "url": "https://vaad.ar/producto/papas-marca-carrefour-2/",
@@ -22,6 +22,10 @@
       "searches": 16
     },
     {
+      "url": "https://vaad.ar/producto/pastillas-marca-dorins/",
+      "searches": 15
+    },
+    {
       "url": "https://vaad.ar/producto/obleas-marca-santa-maria/",
       "searches": 14
     },
@@ -30,20 +34,16 @@
       "searches": 14
     },
     {
-      "url": "https://vaad.ar/producto/pastillas-marca-dorins/",
-      "searches": 14
-    },
-    {
       "url": "https://vaad.ar/producto/pure-de-tomate-marca-la-campagnola-2/",
       "searches": 14
     },
     {
-      "url": "https://vaad.ar/producto/papas-marca-carrefour-3/",
+      "url": "https://vaad.ar/producto/dulce-de-batata-marca-arcor/",
       "searches": 13
     },
     {
-      "url": "https://vaad.ar/producto/dulce-de-batata-marca-arcor/",
-      "searches": 12
+      "url": "https://vaad.ar/producto/papas-marca-carrefour-3/",
+      "searches": 13
     },
     {
       "url": "https://vaad.ar/producto/mermelada-blend-de-frutas-durazno-mango-marca-arcor/",
@@ -62,6 +62,10 @@
       "searches": 11
     },
     {
+      "url": "https://vaad.ar/producto/atun-marca-mar-caribe/",
+      "searches": 11
+    },
+    {
       "url": "https://vaad.ar/producto/cafe-marca-juan-valdes/",
       "searches": 11
     },
@@ -74,16 +78,12 @@
       "searches": 11
     },
     {
-      "url": "https://vaad.ar/producto/atun-marca-mar-caribe/",
-      "searches": 10
-    },
-    {
       "url": "https://vaad.ar/producto/choclo-marca-arcor/",
       "searches": 10
     },
     {
-      "url": "https://vaad.ar/producto/coctel-de-frutas-marca-arcor/",
-      "searches": 9
+      "url": "https://vaad.ar/producto/galletas-de-arroz-marca-rodez/",
+      "searches": 10
     }
   ]
 }
