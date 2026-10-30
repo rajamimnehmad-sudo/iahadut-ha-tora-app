@@ -3,14 +3,22 @@
   "source": "google-analytics",
   "metric": "catalog_product_search",
   "windowDays": 28,
-  "generatedAt": "2026-10-29T18:40:20.386Z",
+  "generatedAt": "2026-10-30T06:30:09.008Z",
   "products": [
     {
       "url": "https://vaad.ar/producto/pure-de-tomate-marca-arcor/",
-      "searches": 35
+      "searches": 36
     },
     {
       "url": "https://vaad.ar/producto/dulce-de-batata-con-chocolate-marca-arcor/",
+      "searches": 17
+    },
+    {
+      "url": "https://vaad.ar/producto/pastillas-marca-dorins/",
+      "searches": 17
+    },
+    {
+      "url": "https://vaad.ar/producto/pure-de-tomate-marca-la-campagnola/",
       "searches": 17
     },
     {
@@ -18,15 +26,15 @@
       "searches": 16
     },
     {
-      "url": "https://vaad.ar/producto/pure-de-tomate-marca-la-campagnola/",
-      "searches": 16
-    },
-    {
-      "url": "https://vaad.ar/producto/pastillas-marca-dorins/",
+      "url": "https://vaad.ar/producto/obleas-marca-santa-maria/",
       "searches": 15
     },
     {
-      "url": "https://vaad.ar/producto/obleas-marca-santa-maria/",
+      "url": "https://vaad.ar/producto/pure-de-tomate-marca-la-campagnola-2/",
+      "searches": 15
+    },
+    {
+      "url": "https://vaad.ar/producto/papas-marca-carrefour-3/",
       "searches": 14
     },
     {
@@ -34,19 +42,15 @@
       "searches": 14
     },
     {
-      "url": "https://vaad.ar/producto/pure-de-tomate-marca-la-campagnola-2/",
-      "searches": 14
-    },
-    {
       "url": "https://vaad.ar/producto/dulce-de-batata-marca-arcor/",
       "searches": 13
     },
     {
-      "url": "https://vaad.ar/producto/papas-marca-carrefour-3/",
+      "url": "https://vaad.ar/producto/mermelada-blend-de-frutas-durazno-mango-marca-arcor/",
       "searches": 13
     },
     {
-      "url": "https://vaad.ar/producto/mermelada-blend-de-frutas-durazno-mango-marca-arcor/",
+      "url": "https://vaad.ar/producto/atun-marca-mar-caribe/",
       "searches": 12
     },
     {
@@ -62,7 +66,7 @@
       "searches": 11
     },
     {
-      "url": "https://vaad.ar/producto/atun-marca-mar-caribe/",
+      "url": "https://vaad.ar/producto/atun-marca-mare-pronto/",
       "searches": 11
     },
     {
@@ -79,10 +83,6 @@
     },
     {
       "url": "https://vaad.ar/producto/choclo-marca-arcor/",
-      "searches": 10
-    },
-    {
-      "url": "https://vaad.ar/producto/galletas-de-arroz-marca-rodez/",
       "searches": 10
     }
   ]
