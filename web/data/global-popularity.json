@@ -3,15 +3,15 @@
   "source": "google-analytics",
   "metric": "catalog_product_search",
   "windowDays": 28,
-  "generatedAt": "2026-10-30T18:14:51.498Z",
+  "generatedAt": "2026-10-31T06:19:51.334Z",
   "products": [
     {
       "url": "https://vaad.ar/producto/pure-de-tomate-marca-arcor/",
-      "searches": 36
+      "searches": 37
     },
     {
       "url": "https://vaad.ar/producto/dulce-de-batata-con-chocolate-marca-arcor/",
-      "searches": 17
+      "searches": 18
     },
     {
       "url": "https://vaad.ar/producto/pastillas-marca-dorins/",
@@ -70,6 +70,10 @@
       "searches": 11
     },
     {
+      "url": "https://vaad.ar/producto/barrita-marca-alnuna-sabor-almond-bar/",
+      "searches": 11
+    },
+    {
       "url": "https://vaad.ar/producto/cafe-marca-juan-valdes/",
       "searches": 11
     },
@@ -78,12 +82,8 @@
       "searches": 11
     },
     {
-      "url": "https://vaad.ar/producto/golosina-marca-ring-pop-2/",
+      "url": "https://vaad.ar/producto/galletas-de-arroz-marca-rodez/",
       "searches": 11
-    },
-    {
-      "url": "https://vaad.ar/producto/choclo-marca-arcor/",
-      "searches": 10
     }
   ]
 }
