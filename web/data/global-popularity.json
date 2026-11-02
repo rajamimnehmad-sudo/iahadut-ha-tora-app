@@ -3,15 +3,19 @@
   "source": "google-analytics",
   "metric": "catalog_product_search",
   "windowDays": 28,
-  "generatedAt": "2026-11-01T18:08:36.952Z",
+  "generatedAt": "2026-11-02T06:53:08.669Z",
   "products": [
     {
       "url": "https://vaad.ar/producto/pure-de-tomate-marca-arcor/",
-      "searches": 37
+      "searches": 39
     },
     {
       "url": "https://vaad.ar/producto/dulce-de-batata-con-chocolate-marca-arcor/",
       "searches": 18
+    },
+    {
+      "url": "https://vaad.ar/producto/papas-marca-carrefour-2/",
+      "searches": 17
     },
     {
       "url": "https://vaad.ar/producto/pastillas-marca-dorins/",
@@ -22,8 +26,8 @@
       "searches": 17
     },
     {
-      "url": "https://vaad.ar/producto/papas-marca-carrefour-2/",
-      "searches": 16
+      "url": "https://vaad.ar/producto/dulce-de-batata-marca-arcor/",
+      "searches": 15
     },
     {
       "url": "https://vaad.ar/producto/obleas-marca-santa-maria/",
@@ -42,15 +46,15 @@
       "searches": 14
     },
     {
-      "url": "https://vaad.ar/producto/dulce-de-batata-marca-arcor/",
-      "searches": 13
-    },
-    {
       "url": "https://vaad.ar/producto/mermelada-blend-de-frutas-durazno-mango-marca-arcor/",
       "searches": 13
     },
     {
-      "url": "https://vaad.ar/producto/atun-marca-mar-caribe/",
+      "url": "https://vaad.ar/producto/cafe-marca-juan-valdes/",
+      "searches": 12
+    },
+    {
+      "url": "https://vaad.ar/producto/galletas-de-arroz-marca-rodez/",
       "searches": 12
     },
     {
@@ -66,7 +70,7 @@
       "searches": 11
     },
     {
-      "url": "https://vaad.ar/producto/atun-marca-mare-pronto/",
+      "url": "https://vaad.ar/producto/atun-marca-mar-caribe/",
       "searches": 11
     },
     {
@@ -74,15 +78,11 @@
       "searches": 11
     },
     {
-      "url": "https://vaad.ar/producto/cafe-marca-juan-valdes/",
-      "searches": 11
-    },
-    {
       "url": "https://vaad.ar/producto/espinaca-congelada-marca-greens/",
       "searches": 11
     },
     {
-      "url": "https://vaad.ar/producto/galletas-de-arroz-marca-rodez/",
+      "url": "https://vaad.ar/producto/mermelada-de-damasco-bc-marca-la-campagnola/",
       "searches": 11
     }
   ]
