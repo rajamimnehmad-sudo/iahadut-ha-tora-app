@@ -3,11 +3,11 @@
   "source": "google-analytics",
   "metric": "catalog_product_search",
   "windowDays": 28,
-  "generatedAt": "2026-11-03T19:55:33.357Z",
+  "generatedAt": "2026-11-04T07:00:11.617Z",
   "products": [
     {
       "url": "https://vaad.ar/producto/pure-de-tomate-marca-arcor/",
-      "searches": 34
+      "searches": 36
     },
     {
       "url": "https://vaad.ar/producto/dulce-de-batata-con-chocolate-marca-arcor/",
@@ -15,30 +15,18 @@
     },
     {
       "url": "https://vaad.ar/producto/papas-marca-carrefour-2/",
-      "searches": 17
-    },
-    {
-      "url": "https://vaad.ar/producto/pure-de-tomate-marca-la-campagnola-2/",
       "searches": 16
     },
     {
+      "url": "https://vaad.ar/producto/pure-de-tomate-marca-la-campagnola-2/",
+      "searches": 15
+    },
+    {
+      "url": "https://vaad.ar/producto/cafe-marca-juan-valdes/",
+      "searches": 14
+    },
+    {
       "url": "https://vaad.ar/producto/dulce-de-batata-marca-arcor/",
-      "searches": 15
-    },
-    {
-      "url": "https://vaad.ar/producto/pastillas-marca-dorins/",
-      "searches": 15
-    },
-    {
-      "url": "https://vaad.ar/producto/obleas-marca-santa-maria/",
-      "searches": 14
-    },
-    {
-      "url": "https://vaad.ar/producto/papas-marca-carrefour-3/",
-      "searches": 14
-    },
-    {
-      "url": "https://vaad.ar/producto/papas-marca-carrefour/",
       "searches": 14
     },
     {
@@ -46,8 +34,12 @@
       "searches": 13
     },
     {
-      "url": "https://vaad.ar/producto/cafe-marca-juan-valdes/",
-      "searches": 12
+      "url": "https://vaad.ar/producto/papas-marca-carrefour-3/",
+      "searches": 13
+    },
+    {
+      "url": "https://vaad.ar/producto/papas-marca-carrefour/",
+      "searches": 13
     },
     {
       "url": "https://vaad.ar/producto/espinaca-congelada-marca-greens/",
@@ -58,16 +50,12 @@
       "searches": 12
     },
     {
+      "url": "https://vaad.ar/producto/obleas-marca-santa-maria/",
+      "searches": 12
+    },
+    {
       "url": "https://vaad.ar/producto/papas-marca-carrefour-4/",
       "searches": 12
-    },
-    {
-      "url": "https://vaad.ar/producto/pure-de-tomate-marca-la-campagnola/",
-      "searches": 12
-    },
-    {
-      "url": "https://vaad.ar/producto/298235/",
-      "searches": 11
     },
     {
       "url": "https://vaad.ar/producto/atun-marca-mar-caribe/",
@@ -78,12 +66,24 @@
       "searches": 11
     },
     {
-      "url": "https://vaad.ar/producto/leche-de-almendras-marca-amande-sabor-coco-y-almendras/",
+      "url": "https://vaad.ar/producto/mermelada-blend-de-frutas-durazno-mango-marca-arcor/",
       "searches": 11
     },
     {
-      "url": "https://vaad.ar/producto/mermelada-blend-de-frutas-durazno-mango-marca-arcor/",
+      "url": "https://vaad.ar/producto/mermelada-de-damasco-bc-marca-la-campagnola/",
       "searches": 11
+    },
+    {
+      "url": "https://vaad.ar/producto/pure-de-tomate-marca-la-campagnola/",
+      "searches": 11
+    },
+    {
+      "url": "https://vaad.ar/producto/298235/",
+      "searches": 10
+    },
+    {
+      "url": "https://vaad.ar/producto/acelga-congelada-marca-greens/",
+      "searches": 10
     }
   ]
 }
