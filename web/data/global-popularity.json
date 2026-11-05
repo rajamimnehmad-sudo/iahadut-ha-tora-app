@@ -3,15 +3,15 @@
   "source": "google-analytics",
   "metric": "catalog_product_search",
   "windowDays": 28,
-  "generatedAt": "2026-11-04T20:04:02.708Z",
+  "generatedAt": "2026-11-05T07:26:01.970Z",
   "products": [
     {
       "url": "https://vaad.ar/producto/pure-de-tomate-marca-arcor/",
-      "searches": 36
+      "searches": 35
     },
     {
       "url": "https://vaad.ar/producto/dulce-de-batata-con-chocolate-marca-arcor/",
-      "searches": 19
+      "searches": 20
     },
     {
       "url": "https://vaad.ar/producto/papas-marca-carrefour-2/",
@@ -26,11 +26,15 @@
       "searches": 14
     },
     {
-      "url": "https://vaad.ar/producto/dulce-de-batata-marca-arcor/",
+      "url": "https://vaad.ar/producto/galletas-de-arroz-marca-rodez/",
       "searches": 14
     },
     {
-      "url": "https://vaad.ar/producto/atun-marca-mare-pronto/",
+      "url": "https://vaad.ar/producto/dulce-de-batata-marca-arcor/",
+      "searches": 13
+    },
+    {
+      "url": "https://vaad.ar/producto/obleas-marca-santa-maria/",
       "searches": 13
     },
     {
@@ -42,19 +46,19 @@
       "searches": 13
     },
     {
+      "url": "https://vaad.ar/producto/atun-marca-mare-pronto/",
+      "searches": 12
+    },
+    {
       "url": "https://vaad.ar/producto/espinaca-congelada-marca-greens/",
       "searches": 12
     },
     {
-      "url": "https://vaad.ar/producto/galletas-de-arroz-marca-rodez/",
-      "searches": 12
-    },
-    {
-      "url": "https://vaad.ar/producto/obleas-marca-santa-maria/",
-      "searches": 12
-    },
-    {
       "url": "https://vaad.ar/producto/papas-marca-carrefour-4/",
+      "searches": 12
+    },
+    {
+      "url": "https://vaad.ar/producto/pure-de-tomate-marca-la-campagnola/",
       "searches": 12
     },
     {
@@ -74,15 +78,11 @@
       "searches": 11
     },
     {
-      "url": "https://vaad.ar/producto/pure-de-tomate-marca-la-campagnola/",
-      "searches": 11
-    },
-    {
       "url": "https://vaad.ar/producto/298235/",
       "searches": 10
     },
     {
-      "url": "https://vaad.ar/producto/acelga-congelada-marca-greens/",
+      "url": "https://vaad.ar/producto/choclo-marca-arcor/",
       "searches": 10
     }
   ]
