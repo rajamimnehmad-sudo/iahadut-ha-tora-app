@@ -3,15 +3,11 @@
   "source": "google-analytics",
   "metric": "catalog_product_search",
   "windowDays": 28,
-  "generatedAt": "2026-11-08T18:06:23.522Z",
+  "generatedAt": "2026-11-09T07:14:02.963Z",
   "products": [
     {
       "url": "https://vaad.ar/producto/pure-de-tomate-marca-arcor/",
-      "searches": 36
-    },
-    {
-      "url": "https://vaad.ar/producto/dulce-de-batata-con-chocolate-marca-arcor/",
-      "searches": 19
+      "searches": 34
     },
     {
       "url": "https://vaad.ar/producto/galletas-de-arroz-marca-rodez/",
@@ -23,10 +19,22 @@
     },
     {
       "url": "https://vaad.ar/producto/pure-de-tomate-marca-la-campagnola-2/",
-      "searches": 15
+      "searches": 16
     },
     {
       "url": "https://vaad.ar/producto/atun-marca-mare-pronto/",
+      "searches": 15
+    },
+    {
+      "url": "https://vaad.ar/producto/dulce-de-batata-con-chocolate-marca-arcor/",
+      "searches": 14
+    },
+    {
+      "url": "https://vaad.ar/producto/pure-de-tomate-marca-la-campagnola/",
+      "searches": 14
+    },
+    {
+      "url": "https://vaad.ar/producto/atun-marca-mar-caribe/",
       "searches": 13
     },
     {
@@ -34,35 +42,11 @@
       "searches": 13
     },
     {
-      "url": "https://vaad.ar/producto/dulce-de-batata-marca-arcor/",
+      "url": "https://vaad.ar/producto/papas-marca-carrefour-3/",
       "searches": 13
-    },
-    {
-      "url": "https://vaad.ar/producto/pure-de-tomate-marca-la-campagnola/",
-      "searches": 13
-    },
-    {
-      "url": "https://vaad.ar/producto/atun-marca-mar-caribe/",
-      "searches": 12
-    },
-    {
-      "url": "https://vaad.ar/producto/mermelada-blend-de-frutas-durazno-mango-marca-arcor/",
-      "searches": 12
     },
     {
       "url": "https://vaad.ar/producto/obleas-marca-santa-maria/",
-      "searches": 12
-    },
-    {
-      "url": "https://vaad.ar/producto/papas-marca-carrefour-3/",
-      "searches": 12
-    },
-    {
-      "url": "https://vaad.ar/producto/papas-marca-carrefour-4/",
-      "searches": 12
-    },
-    {
-      "url": "https://vaad.ar/producto/papas-marca-carrefour/",
       "searches": 12
     },
     {
@@ -70,11 +54,19 @@
       "searches": 12
     },
     {
-      "url": "https://vaad.ar/producto/barrita-marca-alnuna-sabor-almond-bar/",
+      "url": "https://vaad.ar/producto/polenta-marca-arcor/",
+      "searches": 12
+    },
+    {
+      "url": "https://vaad.ar/producto/mermelada-blend-de-frutas-durazno-mango-marca-arcor/",
       "searches": 11
     },
     {
-      "url": "https://vaad.ar/producto/polenta-marca-arcor/",
+      "url": "https://vaad.ar/producto/papas-marca-carrefour-4/",
+      "searches": 11
+    },
+    {
+      "url": "https://vaad.ar/producto/papas-marca-carrefour/",
       "searches": 11
     },
     {
@@ -82,7 +74,15 @@
       "searches": 11
     },
     {
+      "url": "https://vaad.ar/producto/barrita-marca-alnuna-sabor-almond-bar/",
+      "searches": 10
+    },
+    {
       "url": "https://vaad.ar/producto/barrita-marca-alnuna-sabor-cacao-bar/",
+      "searches": 10
+    },
+    {
+      "url": "https://vaad.ar/producto/dulce-de-batata-marca-arcor/",
       "searches": 10
     }
   ]
