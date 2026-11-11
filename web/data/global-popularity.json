@@ -3,7 +3,7 @@
   "source": "google-analytics",
   "metric": "catalog_product_search",
   "windowDays": 28,
-  "generatedAt": "2026-11-10T20:02:42.592Z",
+  "generatedAt": "2026-11-11T07:11:19.817Z",
   "products": [
     {
       "url": "https://vaad.ar/producto/pure-de-tomate-marca-arcor/",
@@ -11,7 +11,11 @@
     },
     {
       "url": "https://vaad.ar/producto/galletas-de-arroz-marca-rodez/",
-      "searches": 17
+      "searches": 18
+    },
+    {
+      "url": "https://vaad.ar/producto/papas-marca-carrefour-2/",
+      "searches": 16
     },
     {
       "url": "https://vaad.ar/producto/pure-de-tomate-marca-la-campagnola-2/",
@@ -19,10 +23,6 @@
     },
     {
       "url": "https://vaad.ar/producto/atun-marca-mare-pronto/",
-      "searches": 15
-    },
-    {
-      "url": "https://vaad.ar/producto/papas-marca-carrefour-2/",
       "searches": 15
     },
     {
@@ -34,15 +34,15 @@
       "searches": 13
     },
     {
-      "url": "https://vaad.ar/producto/cafe-marca-juan-valdes/",
-      "searches": 13
-    },
-    {
       "url": "https://vaad.ar/producto/dulce-de-batata-con-chocolate-marca-arcor/",
       "searches": 13
     },
     {
       "url": "https://vaad.ar/producto/obleas-marca-santa-maria/",
+      "searches": 13
+    },
+    {
+      "url": "https://vaad.ar/producto/cafe-marca-juan-valdes/",
       "searches": 12
     },
     {
@@ -56,6 +56,10 @@
     {
       "url": "https://vaad.ar/producto/polenta-marca-arcor/",
       "searches": 12
+    },
+    {
+      "url": "https://vaad.ar/producto/dulce-de-batata-marca-arcor/",
+      "searches": 11
     },
     {
       "url": "https://vaad.ar/producto/mermelada-blend-de-frutas-durazno-mango-marca-arcor/",
@@ -74,15 +78,11 @@
       "searches": 10
     },
     {
-      "url": "https://vaad.ar/producto/dulce-de-batata-marca-arcor/",
+      "url": "https://vaad.ar/producto/leche-de-almendras-marca-amande-sabor-coco-y-almendras/",
       "searches": 10
     },
     {
-      "url": "https://vaad.ar/producto/papas-marca-carrefour-4/",
-      "searches": 10
-    },
-    {
-      "url": "https://vaad.ar/producto/papas-marca-carrefour/",
+      "url": "https://vaad.ar/producto/pan-revanado-clasico-y-salvado-marca-deli/",
       "searches": 10
     }
   ]
