@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 1,
+  "kind": "catalog-owner-confirmation",
+  "confirmedAt": "2026-11-10T13:05:08.962Z",
+  "confirmedBy": "Propietario del catálogo",
+  "instruction": "Agrega sin tacc a los 3 caramelos nuevos",
+  "statementOrigin": "Confirmación del propietario en esta conversación; no se atribuye a una declaración del fabricante ni a un certificado externo.",
+  "products": [
+    {
+      "url": "https://vaad.ar/producto/caramelo-de-jengibre-marca-argendiet/",
+      "title": "Caramelo de jengibre marca «Argendiet»",
+      "label": "glutenFree",
+      "displayText": "Sin TACC"
+    },
+    {
+      "url": "https://vaad.ar/producto/caramelos-de-miel-marca-argendiet/",
+      "title": "Caramelo de miel marca «Argendiet»",
+      "label": "glutenFree",
+      "displayText": "Sin TACC"
+    },
+    {
+      "url": "https://vaad.ar/producto/sin-titulo/",
+      "title": "Caramelo de eucaliptus marca «Argendiet»",
+      "label": "glutenFree",
+      "displayText": "Sin TACC"
+    }
+  ]
+}
