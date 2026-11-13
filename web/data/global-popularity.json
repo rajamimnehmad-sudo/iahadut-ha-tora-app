@@ -3,7 +3,7 @@
   "source": "google-analytics",
   "metric": "catalog_product_search",
   "windowDays": 28,
-  "generatedAt": "2026-11-13T07:21:01.286Z",
+  "generatedAt": "2026-11-13T10:31:41.616Z",
   "products": [
     {
       "url": "https://vaad.ar/producto/pure-de-tomate-marca-arcor/",
@@ -46,6 +46,10 @@
       "searches": 11
     },
     {
+      "url": "https://vaad.ar/producto/pastillas-marca-dorins/",
+      "searches": 11
+    },
+    {
       "url": "https://vaad.ar/producto/dulce-de-batata-marca-arcor/",
       "searches": 10
     },
@@ -55,10 +59,6 @@
     },
     {
       "url": "https://vaad.ar/producto/papas-marca-carrefour-6/",
-      "searches": 10
-    },
-    {
-      "url": "https://vaad.ar/producto/pastillas-marca-dorins/",
       "searches": 10
     },
     {
