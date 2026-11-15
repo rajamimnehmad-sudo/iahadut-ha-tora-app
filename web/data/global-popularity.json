@@ -3,15 +3,15 @@
   "source": "google-analytics",
   "metric": "catalog_product_search",
   "windowDays": 28,
-  "generatedAt": "2026-11-15T07:14:07.031Z",
+  "generatedAt": "2026-11-15T19:08:08.601Z",
   "products": [
     {
       "url": "https://vaad.ar/producto/pure-de-tomate-marca-arcor/",
-      "searches": 26
+      "searches": 28
     },
     {
       "url": "https://vaad.ar/producto/papas-marca-carrefour-2/",
-      "searches": 17
+      "searches": 18
     },
     {
       "url": "https://vaad.ar/producto/galletas-de-arroz-marca-rodez/",
@@ -27,6 +27,10 @@
     },
     {
       "url": "https://vaad.ar/producto/papas-marca-carrefour/",
+      "searches": 14
+    },
+    {
+      "url": "https://vaad.ar/producto/papas-marca-carrefour-5/",
       "searches": 13
     },
     {
@@ -38,8 +42,12 @@
       "searches": 11
     },
     {
-      "url": "https://vaad.ar/producto/papas-marca-carrefour-5/",
+      "url": "https://vaad.ar/producto/pastillas-marca-dorins/",
       "searches": 11
+    },
+    {
+      "url": "https://vaad.ar/producto/dulce-de-batata-marca-arcor/",
+      "searches": 10
     },
     {
       "url": "https://vaad.ar/producto/leche-de-almendras-marca-amande-sabor-coco-y-almendras/",
@@ -54,20 +62,16 @@
       "searches": 10
     },
     {
-      "url": "https://vaad.ar/producto/pastillas-marca-dorins/",
-      "searches": 10
-    },
-    {
-      "url": "https://vaad.ar/producto/dulce-de-batata-marca-arcor/",
-      "searches": 9
-    },
-    {
       "url": "https://vaad.ar/producto/papas-marca-carrefour-6/",
-      "searches": 9
+      "searches": 10
     },
     {
       "url": "https://vaad.ar/producto/polenta-marca-arcor/",
       "searches": 9
+    },
+    {
+      "url": "https://vaad.ar/producto/alaga-de-sushi/",
+      "searches": 8
     },
     {
       "url": "https://vaad.ar/producto/cafe-nescafe-rich-caramel-marca-gold/",
@@ -79,10 +83,6 @@
     },
     {
       "url": "https://vaad.ar/producto/choclo-marca-arcor/",
-      "searches": 8
-    },
-    {
-      "url": "https://vaad.ar/producto/leche-de-almendras-marca-amande-sabor-original/",
       "searches": 8
     }
   ]
