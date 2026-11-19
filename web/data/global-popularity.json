@@ -3,11 +3,11 @@
   "source": "google-analytics",
   "metric": "catalog_product_search",
   "windowDays": 28,
-  "generatedAt": "2026-11-18T20:55:28.717Z",
+  "generatedAt": "2026-11-19T07:58:21.170Z",
   "products": [
     {
       "url": "https://vaad.ar/producto/pure-de-tomate-marca-arcor/",
-      "searches": 24
+      "searches": 27
     },
     {
       "url": "https://vaad.ar/producto/papas-marca-carrefour-2/",
@@ -23,11 +23,11 @@
     },
     {
       "url": "https://vaad.ar/producto/papas-marca-carrefour-5/",
-      "searches": 14
+      "searches": 13
     },
     {
       "url": "https://vaad.ar/producto/papas-marca-carrefour/",
-      "searches": 14
+      "searches": 13
     },
     {
       "url": "https://vaad.ar/producto/pastillas-marca-dorins/",
@@ -38,19 +38,19 @@
       "searches": 10
     },
     {
-      "url": "https://vaad.ar/producto/leche-de-almendras-marca-amande-sabor-coco-y-almendras/",
-      "searches": 10
-    },
-    {
       "url": "https://vaad.ar/producto/papas-marca-carrefour-4/",
       "searches": 10
     },
     {
-      "url": "https://vaad.ar/producto/polenta-marca-arcor/",
-      "searches": 10
+      "url": "https://vaad.ar/producto/alaga-de-sushi/",
+      "searches": 9
     },
     {
       "url": "https://vaad.ar/producto/atun-marca-mar-caribe/",
+      "searches": 9
+    },
+    {
+      "url": "https://vaad.ar/producto/leche-de-almendras-marca-amande-sabor-coco-y-almendras/",
       "searches": 9
     },
     {
@@ -62,28 +62,28 @@
       "searches": 9
     },
     {
-      "url": "https://vaad.ar/producto/pure-de-tomate-marca-la-campagnola-2/",
+      "url": "https://vaad.ar/producto/pita-chips-marca-almadre/",
       "searches": 9
     },
     {
-      "url": "https://vaad.ar/producto/alaga-de-sushi/",
-      "searches": 8
+      "url": "https://vaad.ar/producto/polenta-marca-arcor/",
+      "searches": 9
+    },
+    {
+      "url": "https://vaad.ar/producto/pure-de-tomate-marca-la-campagnola-2/",
+      "searches": 9
     },
     {
       "url": "https://vaad.ar/producto/cafe-nescafe-rich-caramel-marca-gold/",
       "searches": 8
     },
     {
+      "url": "https://vaad.ar/producto/dulce-de-batata-con-chocolate-marca-arcor/",
+      "searches": 8
+    },
+    {
       "url": "https://vaad.ar/producto/dulce-de-batata-marca-arcor/",
       "searches": 8
-    },
-    {
-      "url": "https://vaad.ar/producto/obleas-marca-santa-maria/",
-      "searches": 8
-    },
-    {
-      "url": "https://vaad.ar/producto/aceite-de-sesamo-marca-nutrasem/",
-      "searches": 7
     }
   ]
 }
