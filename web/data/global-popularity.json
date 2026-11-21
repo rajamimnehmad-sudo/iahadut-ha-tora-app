@@ -3,7 +3,7 @@
   "source": "google-analytics",
   "metric": "catalog_product_search",
   "windowDays": 28,
-  "generatedAt": "2026-11-20T20:45:27.640Z",
+  "generatedAt": "2026-11-21T07:44:12.294Z",
   "products": [
     {
       "url": "https://vaad.ar/producto/pure-de-tomate-marca-arcor/",
@@ -34,6 +34,18 @@
       "searches": 12
     },
     {
+      "url": "https://vaad.ar/producto/dulce-de-batata-con-chocolate-marca-arcor/",
+      "searches": 10
+    },
+    {
+      "url": "https://vaad.ar/producto/dulce-de-batata-marca-arcor/",
+      "searches": 10
+    },
+    {
+      "url": "https://vaad.ar/producto/polenta-marca-arcor/",
+      "searches": 10
+    },
+    {
       "url": "https://vaad.ar/producto/alaga-de-sushi/",
       "searches": 9
     },
@@ -58,22 +70,6 @@
       "searches": 9
     },
     {
-      "url": "https://vaad.ar/producto/polenta-marca-arcor/",
-      "searches": 9
-    },
-    {
-      "url": "https://vaad.ar/producto/cafe-nescafe-rich-caramel-marca-gold/",
-      "searches": 8
-    },
-    {
-      "url": "https://vaad.ar/producto/dulce-de-batata-con-chocolate-marca-arcor/",
-      "searches": 8
-    },
-    {
-      "url": "https://vaad.ar/producto/dulce-de-batata-marca-arcor/",
-      "searches": 8
-    },
-    {
       "url": "https://vaad.ar/producto/mermelada-blend-de-frutas-durazno-mango-marca-arcor/",
       "searches": 8
     },
@@ -82,7 +78,11 @@
       "searches": 7
     },
     {
-      "url": "https://vaad.ar/producto/galletita-marca-santa-maria/",
+      "url": "https://vaad.ar/producto/choclo-marca-arcor/",
+      "searches": 7
+    },
+    {
+      "url": "https://vaad.ar/producto/leche-de-almendras-marca-amande-sabor-original/",
       "searches": 7
     }
   ]
